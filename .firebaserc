@@ -1,0 +1,13 @@
+{
+  "projects": {},
+  "targets": {
+    "beauty-user": {
+      "hosting": {
+        "beauty-admin-app": [
+          "beauty-admin-app"
+        ]
+      }
+    }
+  },
+  "etags": {}
+}

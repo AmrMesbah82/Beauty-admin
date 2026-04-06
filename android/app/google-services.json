@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "1008435332908",
+    "project_id": "beauty-user",
+    "storage_bucket": "beauty-user.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1008435332908:android:23c9a9ecfb729ec6bbce89",
+        "android_client_info": {
+          "package_name": "com.beautyadmin.bayanatz"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA717oQJvOAioo9KAStmwWWvKOT9RoOGsk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1008435332908:android:da8880c87ed99390bbce89",
+        "android_client_info": {
+          "package_name": "com.beautyuser.bayanatz"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA717oQJvOAioo9KAStmwWWvKOT9RoOGsk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
