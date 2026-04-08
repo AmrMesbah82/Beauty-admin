@@ -1,12 +1,17 @@
 import 'package:beauty_admin/repo/home_repo/home_repository_impl.dart';
+import 'package:beauty_admin/repo/master/master_repo_imp.dart';
+import 'package:beauty_admin/repo/overview/overview_repo_imp.dart';
+import 'package:beauty_admin/repo/client_services/client_services_repo_imp.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
-
 import 'controller/home/home_cubit.dart';
 import 'controller/home/lang_state.dart';
+import 'controller/master/master_cubit.dart';
+import 'controller/overview/overview_cubit.dart';
+import 'controller/client_services/client_services_cubit.dart';
 import 'dashboard/main_page/home_main_page.dart';
 import 'firebase_options.dart';
 
@@ -60,9 +65,24 @@ class MyApp extends StatelessWidget {
                 repository: HomeRepositoryImpl(),
               )..load(),
             ),
+            BlocProvider<MasterCmsCubit>(
+              create: (_) => MasterCmsCubit(
+                MasterRepoImp(),
+              ),
+            ),
+            BlocProvider<OverviewCmsCubit>(
+              create: (_) => OverviewCmsCubit(
+                OverviewRepoImp(),
+              ),
+            ),
+            BlocProvider<ClientServicesCmsCubit>(
+              create: (_) => ClientServicesCmsCubit(
+                ClientServicesRepoImp(),
+              ),
+            ),
           ],
           child: MaterialApp(
-            title: 'Beauty User',
+            title: 'Beauty Admin',
             debugShowCheckedModeBanner: false,
             home: HomeMainPage(),
           ),
