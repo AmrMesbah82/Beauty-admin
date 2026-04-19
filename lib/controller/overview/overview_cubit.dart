@@ -5,7 +5,7 @@
 ///              Gallery (add/remove/upload), Client Comments (add/remove/update/upload),
 ///              Download Applications, Publish Schedule.
 /// Created by: Amr Mesbah
-/// Last Update: 07/04/2026
+/// Last Update: 09/04/2026
 
 import 'dart:typed_data';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -70,15 +70,14 @@ class OverviewCmsCubit extends Cubit<OverviewCmsState> {
     );
   }
 
+// SERVICES
   void addServiceItem() {
-    final items =
-    List<OverviewServiceItemModel>.from(_current.services.items);
+    final items = List<OverviewServiceItemModel>.from(_current.services.items);
     items.add(OverviewServiceItemModel(
-      id: 'svc_${DateTime.now().millisecondsSinceEpoch}',
+      id: 'svc_${DateTime.now().millisecondsSinceEpoch}_${items.length}',  // ← unique
       order: items.length,
     ));
-    _current =
-        _current.copyWith(services: _current.services.copyWith(items: items));
+    _current = _current.copyWith(services: _current.services.copyWith(items: items));
   }
 
   void removeServiceItem(String id) {
@@ -91,6 +90,16 @@ class OverviewCmsCubit extends Cubit<OverviewCmsState> {
       {required String en, required String ar}) {
     final items = _current.services.items.map((e) {
       if (e.id == id) return e.copyWith(name: BiText(en: en, ar: ar));
+      return e;
+    }).toList();
+    _current =
+        _current.copyWith(services: _current.services.copyWith(items: items));
+  }
+
+  /// Patches an existing URL back onto a service item (no upload needed).
+  void updateServiceItemImageUrl(String id, String url) {
+    final items = _current.services.items.map((e) {
+      if (e.id == id) return e.copyWith(imageUrl: url);
       return e;
     }).toList();
     _current =
@@ -111,23 +120,28 @@ class OverviewCmsCubit extends Cubit<OverviewCmsState> {
         _current.copyWith(services: _current.services.copyWith(items: items));
   }
 
-  // ═══════════════════════════════════════════════════════════════════════════
-  // GALLERY
-  // ═══════════════════════════════════════════════════════════════════════════
   void addGallerySlot() {
-    final images =
-    List<OverviewGalleryImageModel>.from(_current.gallery.images);
+    final images = List<OverviewGalleryImageModel>.from(_current.gallery.images);
     images.add(OverviewGalleryImageModel(
-      id: 'gal_${DateTime.now().millisecondsSinceEpoch}',
+      id: 'gal_${DateTime.now().millisecondsSinceEpoch}_${images.length}',  // ← unique
       order: images.length,
     ));
-    _current = _current.copyWith(
-        gallery: _current.gallery.copyWith(images: images));
+    _current = _current.copyWith(gallery: _current.gallery.copyWith(images: images));
   }
 
   void removeGalleryImage(String id) {
     final images =
     _current.gallery.images.where((e) => e.id != id).toList();
+    _current = _current.copyWith(
+        gallery: _current.gallery.copyWith(images: images));
+  }
+
+  /// Patches an existing URL back onto a gallery slot (no upload needed).
+  void updateGalleryImageUrl(String id, String url) {
+    final images = _current.gallery.images.map((e) {
+      if (e.id == id) return e.copyWith(imageUrl: url);
+      return e;
+    }).toList();
     _current = _current.copyWith(
         gallery: _current.gallery.copyWith(images: images));
   }
@@ -149,8 +163,7 @@ class OverviewCmsCubit extends Cubit<OverviewCmsState> {
   // ═══════════════════════════════════════════════════════════════════════════
   // CLIENT COMMENTS
   // ═══════════════════════════════════════════════════════════════════════════
-  void updateClientCommentsTitle(
-      {required String en, required String ar}) {
+  void updateClientCommentsTitle({required String en, required String ar}) {
     _current = _current.copyWith(
       clientComments:
       _current.clientComments.copyWith(title: BiText(en: en, ar: ar)),
@@ -158,15 +171,14 @@ class OverviewCmsCubit extends Cubit<OverviewCmsState> {
   }
 
   void addClientComment() {
-    final comments = List<OverviewClientCommentModel>.from(
-        _current.clientComments.comments);
+    final comments = List<OverviewClientCommentModel>.from(_current.clientComments.comments);
     comments.add(OverviewClientCommentModel(
-      id: 'cmt_${DateTime.now().millisecondsSinceEpoch}',
+      id: 'cmt_${DateTime.now().millisecondsSinceEpoch}_${comments.length}',  // ← unique
       order: comments.length,
     ));
     _current = _current.copyWith(
-        clientComments:
-        _current.clientComments.copyWith(comments: comments));
+      clientComments: _current.clientComments.copyWith(comments: comments),
+    );
   }
 
   void removeClientComment(String id) {
@@ -203,6 +215,17 @@ class OverviewCmsCubit extends Cubit<OverviewCmsState> {
       {required String en, required String ar}) {
     final comments = _current.clientComments.comments.map((e) {
       if (e.id == id) return e.copyWith(feedback: BiText(en: en, ar: ar));
+      return e;
+    }).toList();
+    _current = _current.copyWith(
+        clientComments:
+        _current.clientComments.copyWith(comments: comments));
+  }
+
+  /// Patches an existing URL back onto a comment item (no upload needed).
+  void updateClientCommentImageUrl(String id, String url) {
+    final comments = _current.clientComments.comments.map((e) {
+      if (e.id == id) return e.copyWith(imageUrl: url);
       return e;
     }).toList();
     _current = _current.copyWith(

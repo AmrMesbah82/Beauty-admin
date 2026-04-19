@@ -30,7 +30,7 @@ const Color _kDivider    = Color(0xFFDDE8DD);
 
 // ── Preview-page-only colours ─────────────────────────────────────────────────
 class _C {
-  static const Color primary     = Color(0xFF008037);
+  static const Color primary     = Color(0xFFD16F9A);
   static const Color secondary   = Color(0xFFE8F5EE);   // fallback secondary
   static const Color sectionBg   = Color(0xFFF5F5F5);
   static const Color cardBg      = Color(0xFFFFFFFF);
@@ -205,7 +205,7 @@ class _AboutPreviewPageLastState extends State<AboutPreviewPageLast>
             child: Column(
               children: [
                 SizedBox(height: 20.h),
-                AdminSubNavBar(activeIndex: 3),
+                AdminSubNavBar(activeIndex: 5),
                 SizedBox(
                   width: 1000.w,
                   child: Column(
@@ -1635,7 +1635,7 @@ Future<bool?> _showConfirmDialog(BuildContext context) {
                 color: const Color(0xFFE8F5EE),
                 borderRadius: BorderRadius.circular(40.r)),
             child: Icon(Icons.edit_note,
-                size: 40.sp, color: const Color(0xFF008037)),
+                size: 40.sp, color: const Color(0xFFD16F9A)),
           ),
           SizedBox(height: 16.h),
           Text('EDITING ABOUT US DETAILS',
@@ -1673,7 +1673,7 @@ Future<bool?> _showConfirmDialog(BuildContext context) {
                 child: ElevatedButton(
                   onPressed: () => Navigator.pop(context, true),
                   style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF008037),
+                      backgroundColor: const Color(0xFFD16F9A),
                       shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(8.r))),
                   child: Text('Confirm',

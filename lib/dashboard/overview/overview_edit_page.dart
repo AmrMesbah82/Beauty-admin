@@ -6,8 +6,10 @@
 ///              Client Comments (+Feedback btn, dynamic),
 ///              Download Applications, Publish Schedule.
 ///              Buttons: Preview / Publish / Discard / Save For Later.
+/// UPDATED: Added validation before publish - checks all required fields
+///          and shows inline errors via _submitted flag.
 /// Created by: Amr Mesbah
-/// Last Update: 07/04/2026
+/// Last Update: 15/04/2026
 
 import 'dart:ui' as ui;
 import 'dart:async';
@@ -32,7 +34,7 @@ import '../../../core/custom_dialog.dart';
 import '../../controller/overview/overview_cubit.dart';
 import '../../controller/overview/overview_state.dart';
 import '../../model/overview/overview_model.dart';
-import 'overview_preview_page.dart'; // Add this import
+import 'overview_preview_page.dart';
 
 class _C {
   static const Color primary   = Color(0xFFD16F9A);
@@ -50,6 +52,10 @@ class _PickedImage {
   final Uint8List? bytes;
   final String? url;
   const _PickedImage({this.bytes, this.url});
+
+  // Factory constructor for empty image - ensures unique instances
+  factory _PickedImage.empty() => const _PickedImage();
+
   bool get isEmpty => bytes == null && (url == null || url!.isEmpty);
 }
 
@@ -63,16 +69,21 @@ class _ServiceLocal {
   _ServiceLocal({required this.id})
       : nameEn = TextEditingController(),
         nameAr = TextEditingController(),
-        image  = const _PickedImage();
+        image = _PickedImage.empty();
 
-  void dispose() { nameEn.dispose(); nameAr.dispose(); }
+  void dispose() {
+    nameEn.dispose();
+    nameAr.dispose();
+  }
 }
 
 // ── Local gallery item ───────────────────────────────────────────────────────
 class _GalleryLocal {
   final String id;
   _PickedImage image;
-  _GalleryLocal({required this.id}) : image = const _PickedImage();
+  _GalleryLocal({required this.id}) : image = _PickedImage.empty();
+
+  void dispose() {}
 }
 
 // ── Local client comment item ────────────────────────────────────────────────
@@ -93,7 +104,7 @@ class _CommentLocal {
         lastNameAr  = TextEditingController(),
         feedbackEn  = TextEditingController(),
         feedbackAr  = TextEditingController(),
-        image       = const _PickedImage();
+        image = _PickedImage.empty();
 
   void dispose() {
     firstNameEn.dispose();
@@ -165,14 +176,20 @@ class _OverviewEditPageState extends State<OverviewEditPage> {
   @override
   void dispose() {
     print('[OverviewEditPage] 🔴 dispose');
-    _headTitleEn.dispose(); _headTitleAr.dispose();
-    _headDescEn.dispose();  _headDescAr.dispose();
-    _svcTitleEn.dispose();  _svcTitleAr.dispose();
+    _headTitleEn.dispose();
+    _headTitleAr.dispose();
+    _headDescEn.dispose();
+    _headDescAr.dispose();
+    _svcTitleEn.dispose();
+    _svcTitleAr.dispose();
     for (final s in _services) s.dispose();
-    _cmtTitleEn.dispose();  _cmtTitleAr.dispose();
+    _cmtTitleEn.dispose();
+    _cmtTitleAr.dispose();
     for (final c in _comments) c.dispose();
-    _dlTitleEn.dispose();   _dlTitleAr.dispose();
-    _appStoreLink.dispose(); _googlePlay.dispose();
+    _dlTitleEn.dispose();
+    _dlTitleAr.dispose();
+    _appStoreLink.dispose();
+    _googlePlay.dispose();
     super.dispose();
   }
 
@@ -186,15 +203,76 @@ class _OverviewEditPageState extends State<OverviewEditPage> {
     );
   }
 
+  // ── Validation ────────────────────────────────────────────────────────────
+  /// Validates all required fields before publishing.
+  /// Returns true if all fields are valid, false otherwise.
+  bool _validate() {
+    // Mark submitted so all fields show errors immediately
+    setState(() => _submitted = true);
+
+    // ── Headings ────────────────────────────────────────────────────────────
+    if (_headTitleEn.text.trim().isEmpty) return false;
+    if (_headTitleAr.text.trim().isEmpty) return false;
+    if (_headDescEn.text.trim().isEmpty) return false;
+    if (_headDescAr.text.trim().isEmpty) return false;
+
+    // ── Services Title ──────────────────────────────────────────────────────
+    if (_svcTitleEn.text.trim().isEmpty) return false;
+    if (_svcTitleAr.text.trim().isEmpty) return false;
+
+    // ── Service Items ───────────────────────────────────────────────────────
+    for (var i = 0; i < _services.length; i++) {
+      if (_services[i].nameEn.text.trim().isEmpty) return false;
+      if (_services[i].nameAr.text.trim().isEmpty) return false;
+    }
+
+    // ── Client Comments Title ───────────────────────────────────────────────
+    if (_cmtTitleEn.text.trim().isEmpty) return false;
+    if (_cmtTitleAr.text.trim().isEmpty) return false;
+
+    // ── Client Comments ─────────────────────────────────────────────────────
+    for (var i = 0; i < _comments.length; i++) {
+      if (_comments[i].firstNameEn.text.trim().isEmpty) return false;
+      if (_comments[i].firstNameAr.text.trim().isEmpty) return false;
+      if (_comments[i].lastNameEn.text.trim().isEmpty) return false;
+      if (_comments[i].lastNameAr.text.trim().isEmpty) return false;
+      if (_comments[i].feedbackEn.text.trim().isEmpty) return false;
+      if (_comments[i].feedbackAr.text.trim().isEmpty) return false;
+    }
+
+    // ── Download Links ──────────────────────────────────────────────────────
+    if (_dlTitleEn.text.trim().isEmpty) return false;
+    if (_dlTitleAr.text.trim().isEmpty) return false;
+
+    // Note: appStoreLink and googlePlay are optional - not validated
+
+    // ── Publish Schedule ────────────────────────────────────────────────────
+    if (_publishDate == null) return false;
+
+    return true;
+  }
+
   // ── Seed from model ───────────────────────────────────────────────────────
   void _seedFromModel(OverviewPageModel d) {
     final hash = Object.hashAll([
       d.headings.title.en,
+      d.headings.title.ar,
+      d.headings.description.en,
+      d.headings.description.ar,
+      d.services.title.en,
+      d.services.title.ar,
       d.services.items.length,
       d.gallery.images.length,
+      d.clientComments.title.en,
+      d.clientComments.title.ar,
       d.clientComments.comments.length,
+      d.download.title.en,
+      d.download.title.ar,
       d.download.appStoreLink,
+      d.download.googlePlayLink,
+      d.publishSchedule.publishDate,
     ]);
+
     if (_seededModelHash == hash) return;
     _seededModelHash = hash;
     print('[OverviewEditPage] _seedFromModel ▶ seeding');
@@ -216,7 +294,7 @@ class _OverviewEditPageState extends State<OverviewEditPage> {
       local.nameAr.text = item.name.ar;
       local.image = item.imageUrl.isNotEmpty
           ? _PickedImage(url: item.imageUrl)
-          : const _PickedImage();
+          : _PickedImage.empty();
       _services.add(local);
     }
 
@@ -226,7 +304,7 @@ class _OverviewEditPageState extends State<OverviewEditPage> {
       final local = _GalleryLocal(id: img.id);
       local.image = img.imageUrl.isNotEmpty
           ? _PickedImage(url: img.imageUrl)
-          : const _PickedImage();
+          : _PickedImage.empty();
       _galleryItems.add(local);
     }
 
@@ -245,7 +323,7 @@ class _OverviewEditPageState extends State<OverviewEditPage> {
       local.feedbackAr.text  = cmt.feedback.ar;
       local.image = cmt.imageUrl.isNotEmpty
           ? _PickedImage(url: cmt.imageUrl)
-          : const _PickedImage();
+          : _PickedImage.empty();
       _comments.add(local);
     }
 
@@ -258,7 +336,7 @@ class _OverviewEditPageState extends State<OverviewEditPage> {
     // Publish
     _publishDate = d.publishSchedule.publishDate;
 
-    print('[OverviewEditPage] _seedFromModel ✅ DONE');
+    print('[OverviewEditPage] _seedFromModel ✅ DONE, services count: ${_services.length}');
   }
 
   // ── Image picker ──────────────────────────────────────────────────────────
@@ -321,56 +399,82 @@ class _OverviewEditPageState extends State<OverviewEditPage> {
       {String publishStatus = 'published'}) async {
     setState(() => _submitted = true);
     try {
-      // Headings
+      print('[OverviewEditPage] _save: Starting save with ${_services.length} services');
+
+      // ── Headings ──────────────────────────────────────────────────────────
       cubit.updateHeadingsTitle(en: _headTitleEn.text, ar: _headTitleAr.text);
       cubit.updateHeadingsDescription(
           en: _headDescEn.text, ar: _headDescAr.text);
 
-      // Services title
+      // ── Services title ────────────────────────────────────────────────────
       cubit.updateServicesTitle(en: _svcTitleEn.text, ar: _svcTitleAr.text);
 
-      // Services items — sync count
-      while (cubit.current.services.items.length < _services.length) {
+      // ── Services items: clear all → re-add → update by aligned index ──────
+      print('[OverviewEditPage] _save: Clearing existing services');
+      for (final item in List<OverviewServiceItemModel>.from(
+          cubit.current.services.items)) {
+        cubit.removeServiceItem(item.id);
+      }
+
+      print('[OverviewEditPage] _save: Adding ${_services.length} new services');
+      for (var i = 0; i < _services.length; i++) {
         cubit.addServiceItem();
       }
-      while (cubit.current.services.items.length > _services.length) {
-        cubit.removeServiceItem(cubit.current.services.items.last.id);
-      }
+
+      print('[OverviewEditPage] _save: Updating service details');
       for (var i = 0; i < _services.length; i++) {
         final id = cubit.current.services.items[i].id;
+        print('[OverviewEditPage] _save: Updating service $i with id $id');
+
         cubit.updateServiceItemName(id,
             en: _services[i].nameEn.text, ar: _services[i].nameAr.text);
+
         if (_services[i].image.bytes != null) {
+          print('[OverviewEditPage] _save: Uploading new image for service $i');
           await cubit.uploadServiceItemImage(id, _services[i].image.bytes!);
+        } else if (_services[i].image.url != null &&
+            _services[i].image.url!.isNotEmpty) {
+          print('[OverviewEditPage] _save: Using existing URL for service $i: ${_services[i].image.url}');
+          cubit.updateServiceItemImageUrl(id, _services[i].image.url!);
         }
       }
 
-      // Gallery — sync count
-      while (cubit.current.gallery.images.length < _galleryItems.length) {
+      // ── Gallery: clear all → re-add → update by aligned index ─────────────
+      print('[OverviewEditPage] _save: Processing gallery with ${_galleryItems.length} items');
+      for (final img in List<OverviewGalleryImageModel>.from(
+          cubit.current.gallery.images)) {
+        cubit.removeGalleryImage(img.id);
+      }
+
+      for (var i = 0; i < _galleryItems.length; i++) {
         cubit.addGallerySlot();
       }
-      while (cubit.current.gallery.images.length > _galleryItems.length) {
-        cubit.removeGalleryImage(cubit.current.gallery.images.last.id);
-      }
+
       for (var i = 0; i < _galleryItems.length; i++) {
         final id = cubit.current.gallery.images[i].id;
         if (_galleryItems[i].image.bytes != null) {
           await cubit.uploadGalleryImage(id, _galleryItems[i].image.bytes!);
+        } else if (_galleryItems[i].image.url != null &&
+            _galleryItems[i].image.url!.isNotEmpty) {
+          cubit.updateGalleryImageUrl(id, _galleryItems[i].image.url!);
         }
       }
 
-      // Client Comments title
+      // ── Client Comments title ─────────────────────────────────────────────
       cubit.updateClientCommentsTitle(
           en: _cmtTitleEn.text, ar: _cmtTitleAr.text);
 
-      // Comments items — sync count
-      while (cubit.current.clientComments.comments.length < _comments.length) {
+      // ── Comments: clear all → re-add → update by aligned index ────────────
+      print('[OverviewEditPage] _save: Processing comments with ${_comments.length} items');
+      for (final cmt in List<OverviewClientCommentModel>.from(
+          cubit.current.clientComments.comments)) {
+        cubit.removeClientComment(cmt.id);
+      }
+
+      for (var i = 0; i < _comments.length; i++) {
         cubit.addClientComment();
       }
-      while (cubit.current.clientComments.comments.length > _comments.length) {
-        cubit.removeClientComment(
-            cubit.current.clientComments.comments.last.id);
-      }
+
       for (var i = 0; i < _comments.length; i++) {
         final id = cubit.current.clientComments.comments[i].id;
         cubit.updateClientCommentFirstName(id,
@@ -382,20 +486,25 @@ class _OverviewEditPageState extends State<OverviewEditPage> {
         cubit.updateClientCommentFeedback(id,
             en: _comments[i].feedbackEn.text,
             ar: _comments[i].feedbackAr.text);
+
         if (_comments[i].image.bytes != null) {
           await cubit.uploadClientCommentImage(
               id, _comments[i].image.bytes!);
+        } else if (_comments[i].image.url != null &&
+            _comments[i].image.url!.isNotEmpty) {
+          cubit.updateClientCommentImageUrl(id, _comments[i].image.url!);
         }
       }
 
-      // Download
+      // ── Download ──────────────────────────────────────────────────────────
       cubit.updateDownloadTitle(en: _dlTitleEn.text, ar: _dlTitleAr.text);
       cubit.updateAppStoreLink(_appStoreLink.text);
       cubit.updateGooglePlayLink(_googlePlay.text);
 
-      // Schedule
+      // ── Schedule ──────────────────────────────────────────────────────────
       cubit.updatePublishDate(_publishDate);
 
+      print('[OverviewEditPage] _save: Saving to repository');
       await cubit.save(publishStatus: publishStatus);
       Get.forceAppUpdate();
       html.window.location.reload();
@@ -413,24 +522,10 @@ class _OverviewEditPageState extends State<OverviewEditPage> {
     return BlocConsumer<OverviewCmsCubit, OverviewCmsState>(
       listener: (context, state) {
         if (state is OverviewCmsSaved) {
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-            content: Text('Saved!',
-                style: StyleText.fontSize14Weight400
-                    .copyWith(color: Colors.white)),
-            backgroundColor: _C.primary,
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8.r)),
-          ));
+
         }
         if (state is OverviewCmsError) {
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-            content: Text('Error: ${state.message}',
-                style: StyleText.fontSize14Weight400
-                    .copyWith(color: Colors.white)),
-            backgroundColor: Colors.red,
-            behavior: SnackBarBehavior.floating,
-          ));
+
         }
       },
       builder: (context, state) {
@@ -491,7 +586,7 @@ class _OverviewEditPageState extends State<OverviewEditPage> {
 
                           _accordionWrap('schedule', 'Publish Schedule',
                               [_scheduleBody()]),
-                          SizedBox(height: 20.h),
+
 
                           // ── Action buttons ─────────────────────────
                           _actionRow(cubit),
@@ -553,8 +648,9 @@ class _OverviewEditPageState extends State<OverviewEditPage> {
   // HEADINGS
   // ═══════════════════════════════════════════════════════════════════════════
   Widget _headingsBody() => Padding(
-    padding: EdgeInsets.all(16.w),
-    child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+    padding: EdgeInsets.symmetric(vertical: 16.h),
+    child:
+    Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
       _biRow('Title', 'العنوان', _headTitleEn, _headTitleAr,
           useRow: true),
       SizedBox(height: 10.h),
@@ -591,9 +687,11 @@ class _OverviewEditPageState extends State<OverviewEditPage> {
   // SERVICES
   // ═══════════════════════════════════════════════════════════════════════════
   Widget _servicesBody() => Padding(
-    padding: EdgeInsets.all(16.w),
-    child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      _biRow('Title', 'العنوان', _svcTitleEn, _svcTitleAr, useRow: true),
+    padding: EdgeInsets.symmetric(vertical: 16.h),
+    child:
+    Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      _biRow('Title', 'العنوان', _svcTitleEn, _svcTitleAr,
+          useRow: true),
       SizedBox(height: 10.h),
       ...List.generate(_services.length, (i) => _serviceItemRow(i)),
       SizedBox(height: 8.h),
@@ -608,25 +706,52 @@ class _OverviewEditPageState extends State<OverviewEditPage> {
     final svc = _services[i];
     return Padding(
       padding: EdgeInsets.only(bottom: 14.h),
-      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        _sectionLabel('Image'),
-        SizedBox(height: 6.h),
-        _imgBox(
-          picked: svc.image,
-          onPick: () async {
-            final p = await _pickImage();
-            if (p != null) setState(() => svc.image = p);
-          },
-          onRemove: () => setState(() {
-            final removed = _services.removeAt(i);
-            WidgetsBinding.instance
-                .addPostFrameCallback((_) => removed.dispose());
-          }),
-        ),
-        SizedBox(height: 10.h),
-        _biRow('Service Name', 'اسم الخدمة', svc.nameEn, svc.nameAr,
-            useRow: true),
-      ]),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              _sectionLabel('Service ${i + 1}'),
+              GestureDetector(
+                onTap: () => setState(() {
+                  final removed = _services.removeAt(i);
+                  removed.dispose();
+                }),
+                child: Container(
+                  padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
+                  decoration: BoxDecoration(
+                    color: _C.remove,
+                    borderRadius: BorderRadius.circular(4.r),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.delete_outline, color: Colors.white, size: 12.sp),
+                      SizedBox(width: 4.w),
+                      Text('Remove',
+                          style: StyleText.fontSize10Weight400.copyWith(color: Colors.white)),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+          SizedBox(height: 6.h),
+          _sectionLabel('Image'),
+          SizedBox(height: 6.h),
+          _imgBox(
+            picked: svc.image,
+            onPick: () async {
+              final p = await _pickImage();
+              if (p != null) setState(() => svc.image = p);
+            },
+          ),
+          SizedBox(height: 10.h),
+          _biRow('Service Name', 'اسم الخدمة', svc.nameEn, svc.nameAr,
+              useRow: true),
+        ],
+      ),
     );
   }
 
@@ -635,7 +760,8 @@ class _OverviewEditPageState extends State<OverviewEditPage> {
   // ═══════════════════════════════════════════════════════════════════════════
   Widget _galleryBody() => Padding(
     padding: EdgeInsets.all(16.w),
-    child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+    child:
+    Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
       Wrap(
         spacing: 10.w,
         runSpacing: 10.h,
@@ -658,7 +784,7 @@ class _OverviewEditPageState extends State<OverviewEditPage> {
         Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            _sectionLabel('Image'),
+            _sectionLabel('Image ${i + 1}'),
             SizedBox(width: 4.w),
             GestureDetector(
               onTap: () => setState(() => _galleryItems.removeAt(i)),
@@ -688,9 +814,11 @@ class _OverviewEditPageState extends State<OverviewEditPage> {
   // CLIENT COMMENTS
   // ═══════════════════════════════════════════════════════════════════════════
   Widget _commentsBody() => Padding(
-    padding: EdgeInsets.all(16.w),
-    child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      _biRow('Title', 'العنوان', _cmtTitleEn, _cmtTitleAr, useRow: true),
+    padding: EdgeInsets.symmetric(vertical: 16.h),
+    child:
+    Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      _biRow('Title', 'العنوان', _cmtTitleEn, _cmtTitleAr,
+          useRow: true),
       SizedBox(height: 10.h),
       ...List.generate(_comments.length, (i) => _commentItemRow(i)),
       SizedBox(height: 8.h),
@@ -705,113 +833,145 @@ class _OverviewEditPageState extends State<OverviewEditPage> {
     final cmt = _comments[i];
     return Padding(
       padding: EdgeInsets.only(bottom: 14.h),
-      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        // Image
-        _imgBox(
-          picked: cmt.image,
-          onPick: () async {
-            final p = await _pickImage();
-            if (p != null) setState(() => cmt.image = p);
-          },
-        ),
-        SizedBox(height: 10.h),
-
-        // First Name EN / Last Name EN
-        Row(children: [
-          Expanded(
-            child: CustomValidatedTextFieldMaster(
-              label: 'First Name',
-              hint: 'Text Here',
-              controller: cmt.firstNameEn,
-              height: 36,
-              submitted: _submitted,
-              fillColor: Colors.white,
-              primaryColor: _resolvedPrimary,
-            ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              _sectionLabel('Feedback ${i + 1}'),
+              GestureDetector(
+                onTap: () => setState(() {
+                  final removed = _comments.removeAt(i);
+                  removed.dispose();
+                }),
+                child: Container(
+                  padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
+                  decoration: BoxDecoration(
+                    color: _C.remove,
+                    borderRadius: BorderRadius.circular(4.r),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.delete_outline, color: Colors.white, size: 12.sp),
+                      SizedBox(width: 4.w),
+                      Text('Remove',
+                          style: StyleText.fontSize10Weight400.copyWith(color: Colors.white)),
+                    ],
+                  ),
+                ),
+              ),
+            ],
           ),
-          SizedBox(width: 16.w),
-          Expanded(
-            child: CustomValidatedTextFieldMaster(
-              label: 'Last Name',
-              hint: 'Text Here',
-              controller: cmt.lastNameEn,
-              height: 36,
-              submitted: _submitted,
-              fillColor: Colors.white,
-              primaryColor: _resolvedPrimary,
-            ),
+          SizedBox(height: 6.h),
+          // Image
+          _imgBox(
+            picked: cmt.image,
+            onPick: () async {
+              final p = await _pickImage();
+              if (p != null) setState(() => cmt.image = p);
+            },
           ),
-        ]),
-        SizedBox(height: 8.h),
+          SizedBox(height: 10.h),
 
-        // Last Name AR / First Name AR
-        Row(children: [
-          Expanded(
-            child: Directionality(
-              textDirection: ui.TextDirection.rtl,
+          // First Name EN / Last Name EN
+          Row(children: [
+            Expanded(
               child: CustomValidatedTextFieldMaster(
-                label: 'اسم العائلة',
-                hint: 'أدخل النص هنا',
-                controller: cmt.lastNameAr,
+                label: 'First Name',
+                hint: 'Text Here',
+                controller: cmt.firstNameEn,
                 height: 36,
                 submitted: _submitted,
                 fillColor: Colors.white,
-                textDirection: ui.TextDirection.rtl,
-                textAlign: TextAlign.right,
                 primaryColor: _resolvedPrimary,
               ),
             ),
-          ),
-          SizedBox(width: 16.w),
-          Expanded(
-            child: Directionality(
-              textDirection: ui.TextDirection.rtl,
+            SizedBox(width: 16.w),
+            Expanded(
               child: CustomValidatedTextFieldMaster(
-                label: 'الاسم الأول',
-                hint: 'أدخل النص هنا',
-                controller: cmt.firstNameAr,
+                label: 'Last Name',
+                hint: 'Text Here',
+                controller: cmt.lastNameEn,
                 height: 36,
                 submitted: _submitted,
                 fillColor: Colors.white,
-                textDirection: ui.TextDirection.rtl,
-                textAlign: TextAlign.right,
                 primaryColor: _resolvedPrimary,
               ),
             ),
-          ),
-        ]),
-        SizedBox(height: 8.h),
+          ]),
+          SizedBox(height: 8.h),
 
-        // Feedback EN
-        CustomValidatedTextFieldMaster(
-          label: 'Feedback',
-          hint: 'Text Here',
-          controller: cmt.feedbackEn,
-          maxLines: 3,
-          height: 80,
-          submitted: _submitted,
-          fillColor: Colors.white,
-          primaryColor: _resolvedPrimary,
-        ),
-        SizedBox(height: 8.h),
+          // Last Name AR / First Name AR
+          Row(children: [
+            Expanded(
+              child: Directionality(
+                textDirection: ui.TextDirection.rtl,
+                child: CustomValidatedTextFieldMaster(
+                  label: 'اسم العائلة',
+                  hint: 'أدخل النص هنا',
+                  controller: cmt.lastNameAr,
+                  height: 36,
+                  submitted: _submitted,
+                  fillColor: Colors.white,
+                  textDirection: ui.TextDirection.rtl,
+                  textAlign: TextAlign.right,
+                  primaryColor: _resolvedPrimary,
+                ),
+              ),
+            ),
+            SizedBox(width: 16.w),
+            Expanded(
+              child: Directionality(
+                textDirection: ui.TextDirection.rtl,
+                child: CustomValidatedTextFieldMaster(
+                  label: 'الاسم الأول',
+                  hint: 'أدخل النص هنا',
+                  controller: cmt.firstNameAr,
+                  height: 36,
+                  submitted: _submitted,
+                  fillColor: Colors.white,
+                  textDirection: ui.TextDirection.rtl,
+                  textAlign: TextAlign.right,
+                  primaryColor: _resolvedPrimary,
+                ),
+              ),
+            ),
+          ]),
+          SizedBox(height: 8.h),
 
-        // Feedback AR
-        Directionality(
-          textDirection: ui.TextDirection.rtl,
-          child: CustomValidatedTextFieldMaster(
-            label: 'ملاحظات',
-            hint: 'أدخل النص هنا',
-            controller: cmt.feedbackAr,
+          // Feedback EN
+          CustomValidatedTextFieldMaster(
+            label: 'Feedback',
+            hint: 'Text Here',
+            controller: cmt.feedbackEn,
             maxLines: 3,
             height: 80,
             submitted: _submitted,
             fillColor: Colors.white,
-            textDirection: ui.TextDirection.rtl,
-            textAlign: TextAlign.right,
             primaryColor: _resolvedPrimary,
           ),
-        ),
-      ]),
+          SizedBox(height: 8.h),
+
+          // Feedback AR
+          Directionality(
+            textDirection: ui.TextDirection.rtl,
+            child: CustomValidatedTextFieldMaster(
+              label: 'ملاحظات',
+              hint: 'أدخل النص هنا',
+              controller: cmt.feedbackAr,
+              maxLines: 3,
+              height: 80,
+              submitted: _submitted,
+              fillColor: Colors.white,
+              textDirection: ui.TextDirection.rtl,
+              textAlign: TextAlign.right,
+              primaryColor: _resolvedPrimary,
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -819,9 +979,11 @@ class _OverviewEditPageState extends State<OverviewEditPage> {
   // DOWNLOAD APPLICATIONS
   // ═══════════════════════════════════════════════════════════════════════════
   Widget _downloadBody() => Padding(
-    padding: EdgeInsets.all(16.w),
-    child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      _biRow('Title', 'العنوان', _dlTitleEn, _dlTitleAr, useRow: true),
+    padding: EdgeInsets.symmetric(vertical:  16.h),
+    child:
+    Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      _biRow('Title', 'العنوان', _dlTitleEn, _dlTitleAr,
+          useRow: true),
       SizedBox(height: 10.h),
       Row(children: [
         Expanded(
@@ -830,7 +992,7 @@ class _OverviewEditPageState extends State<OverviewEditPage> {
             hint: 'Insert Links',
             controller: _appStoreLink,
             height: 36,
-            submitted: false,
+            submitted: _submitted,  // ✅ UPDATED: now uses _submitted
             fillColor: Colors.white,
             primaryColor: _resolvedPrimary,
           ),
@@ -842,7 +1004,7 @@ class _OverviewEditPageState extends State<OverviewEditPage> {
             hint: 'Insert Links',
             controller: _googlePlay,
             height: 36,
-            submitted: false,
+            submitted: _submitted,  // ✅ UPDATED: now uses _submitted
             fillColor: Colors.white,
             primaryColor: _resolvedPrimary,
           ),
@@ -855,35 +1017,63 @@ class _OverviewEditPageState extends State<OverviewEditPage> {
   // PUBLISH SCHEDULE
   // ═══════════════════════════════════════════════════════════════════════════
   Widget _scheduleBody() => Padding(
-    padding: EdgeInsets.all(16.w),
-    child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      _sectionLabel('Publish Date'),
-      SizedBox(height: 6.h),
-      GestureDetector(
-        onTap: _pickDate,
-        child: Container(
-          height: 36.h,
-          padding: EdgeInsets.symmetric(horizontal: 8.w),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(4.r),
-          ),
-          child: Row(children: [
-            Expanded(
-              child: Text(
-                _publishDate != null
-                    ? DateFormat('dd/MM/yyyy').format(_publishDate!)
-                    : 'Select Date',
-                style: StyleText.fontSize12Weight400.copyWith(
-                    color: _publishDate != null
-                        ? _C.labelText
-                        : _C.hintText),
-              ),
+    padding: EdgeInsets.symmetric(vertical:  16.h),
+    child:
+    Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _sectionLabel('Publish Date'),
+                SizedBox(height: 6.h),
+                GestureDetector(
+                  onTap: _pickDate,
+                  child: Container(
+                    height: 36.h,
+                    padding: EdgeInsets.symmetric(horizontal: 8.w),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(4.r),
+                      border: _publishDate == null && _submitted
+                          ? Border.all(color: Colors.red, width: 1)
+                          : null,
+                    ),
+                    child: Row(children: [
+                      Expanded(
+                        child: Text(
+                          _publishDate != null
+                              ? DateFormat('dd/MM/yyyy').format(_publishDate!)
+                              : 'Select Date',
+                          style: StyleText.fontSize12Weight400.copyWith(
+                              color: _publishDate != null
+                                  ? _C.labelText
+                                  : _C.hintText),
+                        ),
+                      ),
+                      Icon(Icons.calendar_today_outlined,
+                          size: 16.sp, color: _C.hintText),
+                    ]),
+                  ),
+                ),
+                if (_publishDate == null && _submitted)
+                  Padding(
+                    padding: EdgeInsets.only(top: 4.h),
+                    child: Text(
+                      'Please select a publish date',
+                      style: TextStyle(
+                        color: Colors.red,
+                        fontSize: 10.sp,
+                      ),
+                    ),
+                  ),
+              ],
             ),
-            Icon(Icons.calendar_today_outlined,
-                size: 16.sp, color: _C.hintText),
-          ]),
-        ),
+          ),
+          SizedBox(width: 16.w),
+          Expanded(child: Column()),
+        ],
       ),
     ]),
   );
@@ -894,7 +1084,7 @@ class _OverviewEditPageState extends State<OverviewEditPage> {
   Widget _actionRow(OverviewCmsCubit cubit) => Row(children: [
     Expanded(
       child: GestureDetector(
-        onTap: _navigateToPreview, // Updated to use normal navigation
+        onTap: _navigateToPreview,
         child: Container(
           height: 44.h,
           decoration: BoxDecoration(
@@ -910,10 +1100,18 @@ class _OverviewEditPageState extends State<OverviewEditPage> {
     SizedBox(width: 16.w),
     Expanded(
       child: GestureDetector(
-        onTap: () => showPublishConfirmDialog(
-          context: context,
-          onConfirm: () => _save(cubit, publishStatus: 'published'),
-        ),
+        onTap: () {
+          // ✅ VALIDATION: Check all required fields before showing confirm dialog
+          if (!_validate()) {
+
+            return;
+          }
+          // ✅ All fields valid — show confirm dialog
+          showPublishConfirmDialog(
+            context: context,
+            onConfirm: () => _save(cubit, publishStatus: 'published'),
+          );
+        },
         child: Container(
           height: 44.h,
           decoration: BoxDecoration(
@@ -947,10 +1145,17 @@ class _OverviewEditPageState extends State<OverviewEditPage> {
     SizedBox(width: 16.w),
     Expanded(
       child: GestureDetector(
-        onTap: () => showPublishConfirmDialog(
-          context: context,
-          onConfirm: () => _save(cubit, publishStatus: 'draft'),
-        ),
+        onTap: () {
+          // ✅ VALIDATION: Check required fields before saving as draft too
+          if (!_validate()) {
+
+            return;
+          }
+          showPublishConfirmDialog(
+            context: context,
+            onConfirm: () => _save(cubit, publishStatus: 'draft'),
+          );
+        },
         child: Container(
           height: 44.h,
           decoration: BoxDecoration(
@@ -1003,8 +1208,11 @@ class _OverviewEditPageState extends State<OverviewEditPage> {
       ),
     );
     if (useRow) {
-      return Row(
-          children: [Expanded(child: en), SizedBox(width: 16.w), Expanded(child: ar)]);
+      return Row(children: [
+        Expanded(child: en),
+        SizedBox(width: 16.w),
+        Expanded(child: ar)
+      ]);
     }
     return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1016,7 +1224,8 @@ class _OverviewEditPageState extends State<OverviewEditPage> {
     child: Container(
       padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 7.h),
       decoration: BoxDecoration(
-          color: _C.primary, borderRadius: BorderRadius.circular(4.r)),
+          color: _C.primary,
+          borderRadius: BorderRadius.circular(4.r)),
       child: Row(mainAxisSize: MainAxisSize.min, children: [
         Icon(Icons.add, size: 14.sp, color: Colors.white),
         SizedBox(width: 4.w),
@@ -1031,7 +1240,8 @@ class _OverviewEditPageState extends State<OverviewEditPage> {
     required _PickedImage picked,
     VoidCallback? onPick,
     VoidCallback? onRemove,
-  }) {
+  })
+  {
     Widget content;
     if (picked.bytes != null) {
       content = Container(

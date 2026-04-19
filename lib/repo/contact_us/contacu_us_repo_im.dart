@@ -1,47 +1,49 @@
 // ******************* FILE INFO *******************
 // File Name: contact_us_cms_repo_impl.dart
-// Created by: Claude Assistant
-
+// Created by: Amr Mesbah
+// Last Update: 18/04/2026
+// UPDATED: save() now versions ALL fields using Versioned.append()
+//          — full audit trail in Firestore ✅
+// FIX: socialIcons versioned via _versionListField() which stores history as
+//      a Map { "v0": [...], "v1": [...] } instead of a nested List,
+//      avoiding Firestore's "nested arrays not supported" error.
+import 'dart:convert';
 import 'dart:typed_data';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
-
 
 import '../../model/contact_us/contact_model_location.dart';
 import 'contact_us_location.dart';
 
 class ContactUsCmsRepoImpl implements ContactUsCmsRepo {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-  final FirebaseStorage _storage = FirebaseStorage.instance;
+  final FirebaseStorage   _storage   = FirebaseStorage.instance;
 
-  static const String _collectionName = 'contact_us_cms';
-  static const String _docId = 'main';
+  static const String _collectionName = 'contactUs';
+  static const String _docId          = 'main';
 
+  DocumentReference<Map<String, dynamic>> get _docRef =>
+      _firestore.collection(_collectionName).doc(_docId);
+
+  // ── Load ───────────────────────────────────────────────────────────────────
   @override
   Future<ContactUsCmsModel> load() async {
     try {
-      final doc = await _firestore
-          .collection(_collectionName)
-          .doc(_docId)
-          .get();
+      final doc = await _docRef.get();
 
       if (!doc.exists || doc.data() == null) {
         return _defaultModel();
       }
 
       final model = ContactUsCmsModel.fromJson(doc.data()!);
-
-      // ── Extract Firestore Timestamp and inject into model ──
-      final raw = doc.data()!['lastUpdatedAt'];
-      final lastUpdatedAt = raw is Timestamp ? raw.toDate() : null;
-
-      return model.copyWith(lastUpdatedAt: lastUpdatedAt); // ← THIS was missing
+      return model;
     } catch (e) {
       print('❌ ContactUsCmsRepo.load error: $e');
       rethrow;
     }
   }
 
+  // ── Save (ALL fields versioned) ────────────────────────────────────────────
   @override
   Future<void> save({
     required ContactUsCmsModel model,
@@ -55,61 +57,148 @@ class ContactUsCmsRepoImpl implements ContactUsCmsRepo {
 
       final updatedModel = _updateModelWithUrls(model, uploadedUrls);
 
-      final json = updatedModel.toJson();
-      json['lastUpdatedAt'] = FieldValue.serverTimestamp(); // ← THIS was missing
+      // ── Step 1: read existing raw Firestore data ────────────────────────
+      print('🟡 [ContactCmsRepo] save → reading existing doc...');
+      final existingSnap = await _docRef
+          .get(const GetOptions(source: Source.server));
+      final existingData =
+          (existingSnap.exists ? existingSnap.data() : null) ?? {};
+      print('   existing keys = ${existingData.keys.toList()}');
 
-      await _firestore
-          .collection(_collectionName)
-          .doc(_docId)
-          .set(json, SetOptions(merge: true));
+      // ── Step 2: plain map from model ────────────────────────────────────
+      final newMap = updatedModel.toJson();
 
-      print('✅ ContactUsCmsRepo.save: saved successfully');
+      // ── Step 3: build versioned map — ALL fields ────────────────────────
+      //
+      // NOTE: socialIcons cannot use Versioned.append() because socialIcons
+      // is itself a List, and appending it into another List creates a nested
+      // array which Firestore does not support.
+      // Instead, _versionListField() stores history as a Map:
+      //   { "v0": [...icons...], "v1": [...icons...], ... }
+      // Firestore allows Maps that contain Arrays, just not Arrays of Arrays.
+      final versionedMap = <String, dynamic>{
+        'publishStatus': Versioned.append(
+          existingData['publishStatus'],
+          newMap['publishStatus'],
+        ),
+        'headings': Versioned.append(
+          existingData['headings'],
+          newMap['headings'],
+        ),
+        'clientDescription': Versioned.append(
+          existingData['clientDescription'],
+          newMap['clientDescription'],
+        ),
+        'ownerDescription': Versioned.append(
+          existingData['ownerDescription'],
+          newMap['ownerDescription'],
+        ),
+
+        // ✅ FIX: socialIcons versioned as Map to avoid nested array error
+        'socialIcons': _versionListField(
+          existingData['socialIcons'],
+          newMap['socialIcons'] as List<dynamic>,
+        ),
+
+        'lastUpdatedAt': Versioned.append(
+          existingData['lastUpdatedAt'],
+          DateTime.now().toUtc().toIso8601String(), // ✅ plain string, safe in arrays
+        ),
+      };
+
+      // ── Step 4: write to Firestore ──────────────────────────────────────
+      print('🟡 [ContactCmsRepo] save → writing versioned map...');
+      print('   publishStatus history length     = ${(versionedMap['publishStatus'] as List).length}');
+      print('   headings history length          = ${(versionedMap['headings'] as List).length}');
+      print('   clientDescription history length = ${(versionedMap['clientDescription'] as List).length}');
+      print('   ownerDescription history length  = ${(versionedMap['ownerDescription'] as List).length}');
+      print('   socialIcons version count        = ${(versionedMap['socialIcons'] as Map).length}');
+
+      await _docRef.set(versionedMap, SetOptions(merge: true));
+      print('✅ ContactUsCmsRepo.save: ALL fields versioned DONE');
     } catch (e) {
       print('❌ ContactUsCmsRepo.save error: $e');
       rethrow;
     }
   }
 
-  // ── Upload images and return URLs ─────────────────────────────────────────
+  // ── Version a List-typed field as a Map ───────────────────────────────────
+  //
+  // Stores history as { "v0": [...], "v1": [...], ... }
+  // Firestore supports Maps containing Arrays, but not Arrays containing Arrays.
+  //
+  // Handles existing data in three formats:
+  //   • Map  { "v0": [...] }   — already versioned-map (normal path post-fix)
+  //   • List [ {...}, {...} ]  — legacy plain list (pre-versioning)
+  //   • null / missing         — first save
+  Map<String, dynamic> _versionListField(
+      dynamic existing,
+      List<dynamic> newValue,
+      ) {
+    final history = <String, dynamic>{};
+
+    if (existing is Map) {
+      // Already versioned-map — copy all existing versions
+      existing.forEach((k, v) => history[k.toString()] = v);
+    } else if (existing is List) {
+      // Legacy plain list — treat the whole list as v0
+      history['v0'] = existing;
+    }
+    // null / missing → history stays empty, first entry will be v0
+
+    // Skip write if the value is unchanged from the last version
+    if (history.isNotEmpty) {
+      final lastKey = 'v${history.length - 1}';
+      if (jsonEncode(history[lastKey]) == jsonEncode(newValue)) {
+        print('   socialIcons unchanged — skipping version bump');
+        return history;
+      }
+    }
+
+    final nextKey = 'v${history.length}';
+    history[nextKey] = newValue;
+    return history;
+  }
+
+  // ── Upload images ─────────────────────────────────────────────────────────
 
   Future<Map<String, String>> _uploadImages(Map<String, Uint8List> uploads) async {
     final Map<String, String> urls = {};
 
     for (final entry in uploads.entries) {
-      final path = entry.key;
+      final path  = entry.key;
       final bytes = entry.value;
 
       try {
-        // Determine content type based on file signature
         final contentType = _detectContentType(bytes);
-
-        final ref = _storage.ref().child(path);
+        final ref      = _storage.ref().child(path);
         final metadata = SettableMetadata(contentType: contentType);
 
-        // Upload the file
         await ref.putData(bytes, metadata);
-
-        // ✅ Get the download URL
         final downloadUrl = await ref.getDownloadURL();
 
         urls[path] = downloadUrl;
         print('✅ Uploaded: $path → $downloadUrl');
       } catch (e) {
         print('❌ Failed to upload $path: $e');
-        // Continue with other uploads even if one fails
       }
     }
 
     return urls;
   }
 
-  // ── Update model with new URLs ────────────────────────────────────────────
+  // ── Update model with uploaded URLs ───────────────────────────────────────
 
   ContactUsCmsModel _updateModelWithUrls(
       ContactUsCmsModel model,
       Map<String, String> uploadedUrls,
       ) {
-    // Update social icons
+    String headingSvgUrl = model.headings.svgUrl;
+    const headingSvgPath = 'contact_cms/headings/svg';
+    if (uploadedUrls.containsKey(headingSvgPath)) {
+      headingSvgUrl = uploadedUrls[headingSvgPath]!;
+    }
+
     final updatedSocialIcons = model.socialIcons.map((icon) {
       final iconPath = 'contact_cms/social_icons/${icon.id}/icon';
       if (uploadedUrls.containsKey(iconPath)) {
@@ -118,34 +207,9 @@ class ContactUsCmsRepoImpl implements ContactUsCmsRepo {
       return icon;
     }).toList();
 
-    // Update office locations
-    final updatedOfficeLocations = model.officeLocations.map((location) {
-      final iconPath = 'contact_cms/office_locations/${location.id}/icon';
-      if (uploadedUrls.containsKey(iconPath)) {
-        return location.copyWith(iconUrl: uploadedUrls[iconPath]!);
-      }
-      return location;
-    }).toList();
-
-    // Update confirm message SVG
-    String confirmSvgUrl = model.confirmMessage.svgUrl;
-    final svgPath = 'contact_cms/confirm_message/svg';
-    if (uploadedUrls.containsKey(svgPath)) {
-      confirmSvgUrl = uploadedUrls[svgPath]!;
-    }
-
-    // Return updated model
-    return ContactUsCmsModel(
-      publishStatus: model.publishStatus,
-      subDescription: model.subDescription,
-      email: model.email,
+    return model.copyWith(
+      headings:    model.headings.copyWith(svgUrl: headingSvgUrl),
       socialIcons: updatedSocialIcons,
-      officeLocations: updatedOfficeLocations,
-      confirmMessage: ContactConfirmMessage(
-        svgUrl: confirmSvgUrl,
-        title: model.confirmMessage.title,
-        description: model.confirmMessage.description,
-      ),
     );
   }
 
@@ -154,33 +218,14 @@ class ContactUsCmsRepoImpl implements ContactUsCmsRepo {
   String _detectContentType(Uint8List bytes) {
     if (bytes.length < 4) return 'application/octet-stream';
 
-    // Check for PNG signature
-    if (bytes[0] == 0x89 &&
-        bytes[1] == 0x50 &&
-        bytes[2] == 0x4E &&
-        bytes[3] == 0x47) {
+    if (bytes[0] == 0x89 && bytes[1] == 0x50 &&
+        bytes[2] == 0x4E && bytes[3] == 0x47) {
       return 'image/png';
     }
-
-    // Check for JPEG signature
     if (bytes[0] == 0xFF && bytes[1] == 0xD8 && bytes[2] == 0xFF) {
       return 'image/jpeg';
     }
 
-    // Check for WebP signature
-    if (bytes.length >= 12 &&
-        bytes[0] == 0x52 &&
-        bytes[1] == 0x49 &&
-        bytes[2] == 0x46 &&
-        bytes[3] == 0x46 &&
-        bytes[8] == 0x57 &&
-        bytes[9] == 0x45 &&
-        bytes[10] == 0x42 &&
-        bytes[11] == 0x50) {
-      return 'image/webp';
-    }
-
-    // Check for SVG (text-based, starts with < or whitespace then <)
     final header = String.fromCharCodes(
         bytes.sublist(0, bytes.length > 100 ? 100 : bytes.length));
     if (header.trim().startsWith('<svg') || header.trim().startsWith('<?xml')) {
@@ -195,53 +240,37 @@ class ContactUsCmsRepoImpl implements ContactUsCmsRepo {
   ContactUsCmsModel _defaultModel() {
     return ContactUsCmsModel(
       publishStatus: 'draft',
-      subDescription: ContactBilingualText(
-        en: 'Achieve Your Goals Efficiently And Without Disruption Through Seamless, Uninterrupted Workflows',
-        ar: 'حقق أهدافك بكفاءة ودون انقطاع من خلال سير عمل سلس ومتواصل',
-      ),
-      email: 'info@bayanatz.com',
-      socialIcons: [
-        ContactSocialIcon(
-          id: 'social_1',
-          iconUrl: '',
-          link: '',
-        ),
-        ContactSocialIcon(
-          id: 'social_2',
-          iconUrl: '',
-          link: '',
-        ),
-        ContactSocialIcon(
-          id: 'social_3',
-          iconUrl: '',
-          link: '',
-        ),
-        ContactSocialIcon(
-          id: 'social_4',
-          iconUrl: '',
-          link: '',
-        ),
-      ],
-      officeLocations: [
-        ContactOfficeLocation(
-          id: 'office_1',
-          iconUrl: '',
-          locationName: ContactBilingualText(en: 'Egypt', ar: 'مصر'),
-          text1: ContactBilingualText(en: 'Location Details', ar: 'تفاصيل الموقع'),
-          text2: ContactBilingualText(en: '', ar: ''),
-        ),
-      ],
-      confirmMessage: ContactConfirmMessage(
+      headings: ContactHeadings(
         svgUrl: '',
-        title: ContactBilingualText(
-          en: "WE'VE RECEIVED YOUR MESSAGE — AND WE'RE ON IT!",
-          ar: 'لقد استلمنا رسالتك - ونحن نعمل عليها!',
-        ),
-        description: ContactBilingualText(
-          en: "Thanks For Getting In Touch — Your Message Is On Its Way To Our Team. We're Already Reviewing It And Will Connect With You Soon To Keep The Conversation Going.",
-          ar: 'شكرا لك على التواصل - رسالتك في طريقها إلى فريقنا. نحن نراجعها بالفعل وسنتواصل معك قريبا لمواصلة المحادثة.',
-        ),
+        title: ContactBilingualText(en: '', ar: ''),
+        shortDescription: ContactBilingualText(en: '', ar: ''),
       ),
+      clientDescription: ContactDescriptionSection(
+        description: ContactBilingualText(en: '', ar: ''),
+        reasons: [
+          ContactReasonItem(
+            id:         'reason_client_1',
+            label:      ContactBilingualText(en: '', ar: ''),
+            isRequired: true,
+          ),
+        ],
+      ),
+      ownerDescription: ContactDescriptionSection(
+        description: ContactBilingualText(en: '', ar: ''),
+        reasons: [
+          ContactReasonItem(
+            id:         'reason_owner_1',
+            label:      ContactBilingualText(en: '', ar: ''),
+            isRequired: false,
+          ),
+        ],
+      ),
+      socialIcons: [
+        ContactSocialIcon(id: 'social_1', iconUrl: '', link: ''),
+        ContactSocialIcon(id: 'social_2', iconUrl: '', link: ''),
+        ContactSocialIcon(id: 'social_3', iconUrl: '', link: ''),
+        ContactSocialIcon(id: 'social_4', iconUrl: '', link: ''),
+      ],
     );
   }
 }

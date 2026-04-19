@@ -6,8 +6,11 @@
 ///              Mockups (dynamic: SVG picker + Remove, Left/Centered/Right chips,
 ///              Title, Description, + Mockup button),
 ///              Preview / Discard / Save buttons.
+/// UPDATED: Added validation before publish - checks all required fields
+///          and shows inline errors via _submitted flag.
+///          Publish date is NOT required (can be null).
 /// Created by: Amr Mesbah
-/// Last Update: 08/04/2026
+/// Last Update: 15/04/2026
 
 import 'dart:async';
 import 'dart:typed_data';
@@ -48,6 +51,9 @@ class _PickedImage {
   final Uint8List? bytes;
   final String? url;
   const _PickedImage({this.bytes, this.url});
+
+  factory _PickedImage.empty() => const _PickedImage();
+
   bool get isEmpty => bytes == null && (url == null || url!.isEmpty);
 }
 
@@ -65,7 +71,7 @@ class _MockupLocal {
         titleAr = TextEditingController(),
         descEn  = TextEditingController(),
         descAr  = TextEditingController(),
-        svg     = const _PickedImage(),
+        svg     = _PickedImage.empty(),
         layout  = MockupLayout.left;
 
   void dispose() {
@@ -90,7 +96,7 @@ class _ClientServicesEditPageState extends State<ClientServicesEditPage> {
   final _hdrTitleAr = TextEditingController();
   final _hdrDescEn  = TextEditingController();
   final _hdrDescAr  = TextEditingController();
-  _PickedImage _hdrSvg = const _PickedImage();
+  _PickedImage _hdrSvg = _PickedImage.empty();
 
   // ── Download ──────────────────────────────────────────────────────────────
   final _dlTitleEn    = TextEditingController();
@@ -119,6 +125,38 @@ class _ClientServicesEditPageState extends State<ClientServicesEditPage> {
     super.dispose();
   }
 
+  // ── Validation ────────────────────────────────────────────────────────────
+  /// Validates all required fields before publishing.
+  /// Returns true if all fields are valid, false otherwise.
+  /// Note: Publish date is NOT required (can be null)
+  bool _validate() {
+    // Mark submitted so all fields show errors immediately
+    setState(() => _submitted = true);
+
+    // ── Header ──────────────────────────────────────────────────────────────
+    if (_hdrTitleEn.text.trim().isEmpty) return false;
+    if (_hdrTitleAr.text.trim().isEmpty) return false;
+    if (_hdrDescEn.text.trim().isEmpty) return false;
+    if (_hdrDescAr.text.trim().isEmpty) return false;
+    // SVG is optional - not validated
+
+    // ── Download Title ──────────────────────────────────────────────────────
+    if (_dlTitleEn.text.trim().isEmpty) return false;
+    if (_dlTitleAr.text.trim().isEmpty) return false;
+    // appStoreLink and googlePlay are optional - not validated
+
+    // ── Mockups ─────────────────────────────────────────────────────────────
+    for (var i = 0; i < _mockups.length; i++) {
+      if (_mockups[i].titleEn.text.trim().isEmpty) return false;
+      if (_mockups[i].titleAr.text.trim().isEmpty) return false;
+      if (_mockups[i].descEn.text.trim().isEmpty) return false;
+      if (_mockups[i].descAr.text.trim().isEmpty) return false;
+      // SVG is optional - not validated
+    }
+
+    return true;
+  }
+
   // ── Seed ──────────────────────────────────────────────────────────────────
   void _seed(ClientServicesPageModel d) {
     final h = Object.hashAll([d.header.svgUrl, d.mockups.items.length, d.download.appStoreLink]);
@@ -129,7 +167,7 @@ class _ClientServicesEditPageState extends State<ClientServicesEditPage> {
     _hdrTitleAr.text = d.header.title.ar;
     _hdrDescEn.text  = d.header.description.en;
     _hdrDescAr.text  = d.header.description.ar;
-    _hdrSvg = d.header.svgUrl.isNotEmpty ? _PickedImage(url: d.header.svgUrl) : const _PickedImage();
+    _hdrSvg = d.header.svgUrl.isNotEmpty ? _PickedImage(url: d.header.svgUrl) : _PickedImage.empty();
 
     _dlTitleEn.text    = d.download.title.en;
     _dlTitleAr.text    = d.download.title.ar;
@@ -145,19 +183,33 @@ class _ClientServicesEditPageState extends State<ClientServicesEditPage> {
       local.descEn.text  = item.description.en;
       local.descAr.text  = item.description.ar;
       local.layout = item.layout;
-      local.svg = item.svgUrl.isNotEmpty ? _PickedImage(url: item.svgUrl) : const _PickedImage();
+      local.svg = item.svgUrl.isNotEmpty ? _PickedImage(url: item.svgUrl) : _PickedImage.empty();
       _mockups.add(local);
     }
   }
 
-  // ── Image picker ──────────────────────────────────────────────────────────
+// ── Image picker ──────────────────────────────────────────────────────────
   Future<_PickedImage?> _pickImage() async {
     final c = Completer<_PickedImage?>();
     bool done = false;
-    final input = html.FileUploadInputElement()..accept = '.svg,.png,.jpg,.jpeg,image/*';
+    final input = html.FileUploadInputElement()..accept = '.svg';  // ONLY SVG
     input.onChange.listen((_) {
       final files = input.files;
       if (files == null || files.isEmpty) { if (!done) { done = true; c.complete(null); } return; }
+
+      // Optional: Add file type validation
+      final file = files.first;
+      if (!file.name.toLowerCase().endsWith('.svg')) {
+        if (!done) {
+          done = true;
+          ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Only SVG files are allowed'), backgroundColor: Colors.red)
+          );
+          c.complete(null);
+        }
+        return;
+      }
+
       final reader = html.FileReader();
       reader.onLoadEnd.listen((_) {
         if (!done) { done = true;
@@ -166,7 +218,7 @@ class _ClientServicesEditPageState extends State<ClientServicesEditPage> {
         }
       });
       reader.onError.listen((_) { if (!done) { done = true; c.complete(null); } });
-      reader.readAsArrayBuffer(files.first);
+      reader.readAsArrayBuffer(file);
     });
     input.click();
     Future.delayed(const Duration(minutes: 5), () { if (!done) { done = true; c.complete(null); } });
@@ -257,14 +309,26 @@ class _ClientServicesEditPageState extends State<ClientServicesEditPage> {
                                 () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ClientServicesPreviewPage())))),
                         SizedBox(width: 16.w),
                         Expanded(child: _btn('Publish', _C.primary,
-                                () => showPublishConfirmDialog(context: context, onConfirm: () => _save(cubit)))),
+                                () {
+                              // ✅ VALIDATION: Check all required fields before showing confirm dialog
+                              if (!_validate()) {
+                                return;
+                              }
+                              showPublishConfirmDialog(context: context, onConfirm: () => _save(cubit));
+                            })),
                       ]),
                       SizedBox(height: 10.h),
                       Row(children: [
                         Expanded(child: _btn('Discard', _C.addBtn, () => Navigator.pop(context))),
                         SizedBox(width: 16.w),
-                        Expanded(child: _btn('Save', _C.addBtn,
-                                () => showPublishConfirmDialog(context: context, onConfirm: () => _save(cubit, status: 'draft')))),
+                        Expanded(child: _btn('Save For Later', _C.addBtn,
+                                () {
+                              // ✅ VALIDATION: Check required fields before saving as draft too
+                              if (!_validate()) {
+                                return;
+                              }
+                              showPublishConfirmDialog(context: context, onConfirm: () => _save(cubit, status: 'draft'));
+                            })),
                       ]),
                       SizedBox(height: 40.h),
                     ]),
@@ -302,60 +366,58 @@ class _ClientServicesEditPageState extends State<ClientServicesEditPage> {
                   color: Colors.white, size: 20.sp),
             ])),
       ),
-      if (isOpen) Column(crossAxisAlignment: CrossAxisAlignment.start, children: children),
+      if (isOpen)
+        Padding(
+          padding: EdgeInsets.symmetric(vertical: 16.h), // Changed from all(16) to symmetric(vertical: 16.h)
+          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: children),
+        ),
     ]);
   }
 
   // ═══════════════════════════════════════════════════════════════════════════
   // HEADER
   // ═══════════════════════════════════════════════════════════════════════════
-  Widget _headerBody() => Padding(
-      padding: EdgeInsets.all(16.w),
-      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-          _label('SVG'),
-          if (!_hdrSvg.isEmpty) _removeChip(() => setState(() => _hdrSvg = const _PickedImage())),
-        ]),
-        SizedBox(height: 6.h),
-        _imgBox(picked: _hdrSvg, onPick: () async {
-          final p = await _pickImage();
-          if (p != null) setState(() => _hdrSvg = p);
-        }),
-        SizedBox(height: 14.h),
-        _biRow('Title', 'العنوان', _hdrTitleEn, _hdrTitleAr, useRow: true),
-        SizedBox(height: 10.h),
-        _descFields(_hdrDescEn, _hdrDescAr),
-      ]));
+  Widget _headerBody() => Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+    Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+      _label('SVG'),
+      if (!_hdrSvg.isEmpty) _removeChip(() => setState(() => _hdrSvg = _PickedImage.empty())),
+    ]),
+    SizedBox(height: 6.h),
+    _imgBox(picked: _hdrSvg, onPick: () async {
+      final p = await _pickImage();
+      if (p != null) setState(() => _hdrSvg = p);
+    }),
+    SizedBox(height: 14.h),
+    _biRow('Title', 'العنوان', _hdrTitleEn, _hdrTitleAr, useRow: true),
+    SizedBox(height: 10.h),
+    _descFields(_hdrDescEn, _hdrDescAr),
+  ]);
 
   // ═══════════════════════════════════════════════════════════════════════════
   // DOWNLOAD
   // ═══════════════════════════════════════════════════════════════════════════
-  Widget _downloadBody() => Padding(
-      padding: EdgeInsets.all(16.w),
-      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        _biRow('Title', 'العنوان', _dlTitleEn, _dlTitleAr, useRow: true),
-        SizedBox(height: 10.h),
-        Row(children: [
-          Expanded(child: CustomValidatedTextFieldMaster(label: 'Apple Store Link', hint: 'Insert Links',
-              controller: _appStoreLink, height: 36, submitted: false, fillColor: Colors.white, primaryColor: _prim)),
-          SizedBox(width: 16.w),
-          Expanded(child: CustomValidatedTextFieldMaster(label: 'Android Link', hint: 'Insert Links',
-              controller: _googlePlay, height: 36, submitted: false, fillColor: Colors.white, primaryColor: _prim)),
-        ]),
-      ]));
+  Widget _downloadBody() => Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+    _biRow('Title', 'العنوان', _dlTitleEn, _dlTitleAr, useRow: true),
+    SizedBox(height: 10.h),
+    Row(children: [
+      Expanded(child: CustomValidatedTextFieldMaster(label: 'Apple Store Link', hint: 'Insert Links',
+          controller: _appStoreLink, height: 36, submitted: _submitted, fillColor: Colors.white, primaryColor: _prim)),
+      SizedBox(width: 16.w),
+      Expanded(child: CustomValidatedTextFieldMaster(label: 'Android Link', hint: 'Insert Links',
+          controller: _googlePlay, height: 36, submitted: _submitted, fillColor: Colors.white, primaryColor: _prim)),
+    ]),
+  ]);
 
   // ═══════════════════════════════════════════════════════════════════════════
   // MOCKUPS
   // ═══════════════════════════════════════════════════════════════════════════
-  Widget _mockupsBody() => Padding(
-      padding: EdgeInsets.all(16.w),
-      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        ...List.generate(_mockups.length, (i) => _mockupRow(i)),
-        SizedBox(height: 8.h),
-        _addButton('Mockup', () {
-          setState(() => _mockups.add(_MockupLocal(id: 'mock_${DateTime.now().millisecondsSinceEpoch}')));
-        }),
-      ]));
+  Widget _mockupsBody() => Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+    ...List.generate(_mockups.length, (i) => _mockupRow(i)),
+    SizedBox(height: 8.h),
+    _addButton('Mockup', () {
+      setState(() => _mockups.add(_MockupLocal(id: 'mock_${DateTime.now().millisecondsSinceEpoch}')));
+    }),
+  ]);
 
   Widget _mockupRow(int i) {
     final m = _mockups[i];
@@ -488,5 +550,9 @@ class _ClientServicesEditPageState extends State<ClientServicesEditPage> {
 
   Widget _placeholder() => Container(width: 50.w, height: 50.h,
       decoration: const BoxDecoration(color: Color(0xFFD9D9D9), shape: BoxShape.circle),
-      child: Center(child: Icon(Icons.add_circle_outline, size: 24.sp, color: _C.hintText)));
+      child: Center(child: CustomSvg(
+          assetPath: 'assets/home_control/image.svg',
+          width: 20.w,
+          height: 20.h,
+          fit: BoxFit.fill)));
 }

@@ -3,6 +3,11 @@
 // Screen 2 of 3 — Our Strategy CMS: Edit page
 // UPDATED: Added Strategic House - ENG and Strategic House - ARB accordions
 // UPDATED: Added device preview tabs (Large Screen / Tablet / Mobile)
+// UPDATED: SVG-only validation with publish restrictions
+// UPDATED: Fixed SVG reload on text input
+// UPDATED: Added publish confirmation dialog with validation
+// UPDATED: Fixed text input causing SVG reload - optimized rebuilds
+// UPDATED: Removed white backgrounds, changed padding to symmetric
 
 // ignore_for_file: avoid_web_libraries_in_flutter
 import 'dart:async';
@@ -26,10 +31,9 @@ import 'package:beauty_admin/widgets/app_navbar.dart';
 import '../../../model/about_us/about_us.dart';
 import 'strategy_preview_page.dart';
 
-const Color _kGreen      = Color(0xFF2D8C4E);
-const Color _kGreenSolid = Color(0xFF008037);
+const Color _kGreen      = Color(0xFFD16F9A);
+const Color _kGreenSolid = Color(0xFFD16F9A);
 const Color _kRed        = Color(0xFFD32F2F);
-const Color _kSurface    = Color(0xFFFFFFFF);
 const Color _kBg         = Color(0xFFF2F2F2);
 
 // ── Device preview tab enum ─────────────────────────────────────────────────
@@ -50,14 +54,17 @@ class _StrategyEditPageState extends State<StrategyEditPage> {
   final _navTitleArCtrl = TextEditingController();
   Uint8List? _navIconBytes;
   String _navIconUrl = '';
+  bool _navIconIsSvg = false;
 
   // ── Strategic House — ENG ──
   Uint8List? _strategicHouseEnBytes;
   String _strategicHouseEnUrl = '';
+  bool _strategicHouseEnIsSvg = false;
 
   // ── Strategic House — ARB ──
   Uint8List? _strategicHouseArBytes;
   String _strategicHouseArUrl = '';
+  bool _strategicHouseArIsSvg = false;
 
   bool _navLabelOpen        = true;
   bool _strategicHouseEnOpen = true;
@@ -67,9 +74,22 @@ class _StrategyEditPageState extends State<StrategyEditPage> {
   bool _seeded    = false;
   bool _isSaving  = false;
 
+  // ── Validation errors ──
+  String? _navIconError;
+  String? _strategicHouseEnError;
+  String? _strategicHouseArError;
+
   // ── Device preview tabs ──
   DeviceTab _strategicHouseEnTab = DeviceTab.largeScreen;
   DeviceTab _strategicHouseArTab = DeviceTab.largeScreen;
+
+  // ── Cache for loaded SVG URLs to prevent reloading ──
+  final Map<String, Uint8List> _svgCache = {};
+
+  // ── Keys to prevent unnecessary rebuilds ──
+  final _navIconKey = GlobalKey();
+  final _strategicHouseEnKey = GlobalKey();
+  final _strategicHouseArKey = GlobalKey();
 
   @override
   void initState() {
@@ -84,11 +104,29 @@ class _StrategyEditPageState extends State<StrategyEditPage> {
     super.dispose();
   }
 
-  // ── File pickers ──────────────────────────────────────────────────────────
-  Future<Uint8List?> _pickImage() async {
+  // ── SVG validation helpers ────────────────────────────────────────────────
+  bool _isSvgBytes(Uint8List bytes) {
+    if (bytes.length < 5) return false;
+    final checkLen = bytes.length > 200 ? 200 : bytes.length;
+    final header = bytes.sublist(0, checkLen);
+    final headerStr = String.fromCharCodes(header);
+    return headerStr.contains('<svg') ||
+        headerStr.contains('<?xml') && headerStr.contains('svg');
+  }
+
+  bool _isSvgUrl(String url) {
+    if (url.isEmpty) return false;
+    final decodedUrl = Uri.decodeFull(url).toLowerCase();
+    return decodedUrl.contains('.svg') ||
+        decodedUrl.contains('%2Esvg') ||
+        decodedUrl.contains('image/svg+xml');
+  }
+
+  // ── File picker - SVG ONLY ────────────────────────────────────────────────
+  Future<Uint8List?> _pickSvgImage() async {
     final c = Completer<Uint8List?>();
     final input = html.FileUploadInputElement()
-      ..accept = 'image/png,image/jpeg,image/jpg,image/webp,image/svg+xml';
+      ..accept = 'image/svg+xml,.svg';  // SVG ONLY
 
     input.onChange.listen((_) {
       final files = input.files;
@@ -98,10 +136,23 @@ class _StrategyEditPageState extends State<StrategyEditPage> {
       }
 
       final file = files.first;
-      final reader = html.FileReader();
 
-      // Read as array buffer
+      // Validate file extension
+      if (!file.name.toLowerCase().endsWith('.svg')) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Only SVG files are allowed!'),
+            backgroundColor: _kRed,
+            duration: Duration(seconds: 3),
+          ),
+        );
+        c.complete(null);
+        return;
+      }
+
+      final reader = html.FileReader();
       reader.readAsArrayBuffer(file);
+
       reader.onLoadEnd.listen((_) {
         final r = reader.result;
         Uint8List? bytes;
@@ -112,30 +163,38 @@ class _StrategyEditPageState extends State<StrategyEditPage> {
         }
 
         if (bytes != null) {
-          // Log for debugging
-          print('File loaded: ${file.name}, size: ${bytes.length} bytes');
-
-          // Check if it's SVG by file extension or content
-          final isSvgByExtension = file.name.toLowerCase().endsWith('.svg');
-          final isSvgByType = file.type == 'image/svg+xml';
-
-          if (isSvgByExtension || isSvgByType) {
-            print('Detected SVG file');
-          } else {
-            // For non-SVG, we could validate header here
-            print('Detected raster image');
+          // Validate that it's actually an SVG file by content
+          if (!_isSvgBytes(bytes)) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Invalid SVG file! Please upload a valid SVG.'),
+                backgroundColor: _kRed,
+                duration: Duration(seconds: 3),
+              ),
+            );
+            c.complete(null);
+            return;
           }
 
+          print('✅ Valid SVG file loaded: ${file.name}, size: ${bytes.length} bytes');
           c.complete(bytes);
         } else {
           c.complete(null);
         }
       });
+
       reader.onError.listen((e) {
         print('Error reading file: $e');
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error reading file: $e'),
+            backgroundColor: _kRed,
+          ),
+        );
         c.complete(null);
       });
     });
+
     input.click();
     return c.future;
   }
@@ -149,56 +208,119 @@ class _StrategyEditPageState extends State<StrategyEditPage> {
     print('  - Nav icon URL: ${m.navigationLabel.iconUrl}');
     print('  - Strategic House EN URL: ${m.strategicHouseEnUrl}');
     print('  - Strategic House AR URL: ${m.strategicHouseArUrl}');
-    print('  - Nav title EN: ${m.navigationLabel.title.en}');
-    print('  - Nav title AR: ${m.navigationLabel.title.ar}');
 
     _navTitleEnCtrl.text = m.navigationLabel.title.en;
     _navTitleArCtrl.text = m.navigationLabel.title.ar;
     _navIconUrl = m.navigationLabel.iconUrl;
+    _navIconIsSvg = _isSvgUrl(m.navigationLabel.iconUrl);
+
     _strategicHouseEnUrl = m.strategicHouseEnUrl;
+    _strategicHouseEnIsSvg = _isSvgUrl(m.strategicHouseEnUrl);
+
     _strategicHouseArUrl = m.strategicHouseArUrl;
+    _strategicHouseArIsSvg = _isSvgUrl(m.strategicHouseArUrl);
+
+    setState(() {});
   }
 
-// Update _buildModel to include current URLs
+  // ── Build Model ───────────────────────────────────────────────────────────
   OurStrategyModel _buildModel(String status) => OurStrategyModel(
     publishStatus: status,
     navigationLabel: AboutNavigationLabel(
-      iconUrl: _navIconUrl,  // Use the current URL
+      iconUrl: _navIconUrl,
       title: AboutBilingualText(
         en: _navTitleEnCtrl.text.trim(),
         ar: _navTitleArCtrl.text.trim(),
       ),
     ),
-    vision: const StrategySection(),
-    strategicHouseEnUrl: _strategicHouseEnUrl,  // Use the current URL
-    strategicHouseArUrl: _strategicHouseArUrl,  // Use the current URL
+    strategicHouseEnUrl: _strategicHouseEnUrl,
+    strategicHouseArUrl: _strategicHouseArUrl,
   );
 
   Map<String, Uint8List> _collectUploads() {
     final uploads = <String, Uint8List>{};
-    if (_navIconBytes != null)
+    if (_navIconBytes != null && _navIconIsSvg)
       uploads['strategy_cms/navLabel/icon'] = _navIconBytes!;
-    if (_strategicHouseEnBytes != null)
+    if (_strategicHouseEnBytes != null && _strategicHouseEnIsSvg)
       uploads['strategy_cms/strategicHouse/en'] = _strategicHouseEnBytes!;
-    if (_strategicHouseArBytes != null)
+    if (_strategicHouseArBytes != null && _strategicHouseArIsSvg)
       uploads['strategy_cms/strategicHouse/ar'] = _strategicHouseArBytes!;
     return uploads;
   }
 
-  bool _validate() {
-    return [
-      _navTitleEnCtrl,
-      _navTitleArCtrl,
-    ].every((c) => c.text.trim().isNotEmpty);
+  // ── Validation ────────────────────────────────────────────────────────────
+  bool _validate({bool forPublish = false}) {
+    bool isValid = true;
+
+    // Clear previous errors
+    setState(() {
+      _navIconError = null;
+      _strategicHouseEnError = null;
+      _strategicHouseArError = null;
+    });
+
+    // Validate text fields
+    if (_navTitleEnCtrl.text.trim().isEmpty) {
+      isValid = false;
+    }
+    if (_navTitleArCtrl.text.trim().isEmpty) {
+      isValid = false;
+    }
+
+    // Validate Navigation Icon
+    final hasNavIcon = _navIconBytes != null || _navIconUrl.isNotEmpty;
+    if (!hasNavIcon) {
+      setState(() => _navIconError = 'Navigation icon is required');
+      isValid = false;
+    } else {
+      final isSvg = _navIconBytes != null ? _navIconIsSvg : _isSvgUrl(_navIconUrl);
+      if (!isSvg) {
+        setState(() => _navIconError = 'Navigation icon must be an SVG file');
+        isValid = false;
+      }
+    }
+
+    // For publish, Strategic House images are REQUIRED
+    if (forPublish) {
+      // Validate Strategic House EN
+      final hasEnImage = _strategicHouseEnBytes != null || _strategicHouseEnUrl.isNotEmpty;
+      if (!hasEnImage) {
+        setState(() => _strategicHouseEnError = 'Strategic House (ENG) image is required for publishing');
+        isValid = false;
+      } else {
+        final isSvg = _strategicHouseEnBytes != null ? _strategicHouseEnIsSvg : _isSvgUrl(_strategicHouseEnUrl);
+        if (!isSvg) {
+          setState(() => _strategicHouseEnError = 'Strategic House (ENG) must be an SVG file');
+          isValid = false;
+        }
+      }
+
+      // Validate Strategic House AR
+      final hasArImage = _strategicHouseArBytes != null || _strategicHouseArUrl.isNotEmpty;
+      if (!hasArImage) {
+        setState(() => _strategicHouseArError = 'Strategic House (ARB) image is required for publishing');
+        isValid = false;
+      } else {
+        final isSvg = _strategicHouseArBytes != null ? _strategicHouseArIsSvg : _isSvgUrl(_strategicHouseArUrl);
+        if (!isSvg) {
+          setState(() => _strategicHouseArError = 'Strategic House (ARB) must be an SVG file');
+          isValid = false;
+        }
+      }
+    }
+
+    return isValid;
   }
 
   // ── Preview ───────────────────────────────────────────────────────────────
   void _onPreview() {
     setState(() => _submitted = true);
-    if (!_validate()) return;
+    if (!_validate(forPublish: false)) return;
+
     final cubit   = context.read<StrategyCubit>();
     final model   = _buildModel('draft');
     final uploads = _collectUploads();
+
     Navigator.push(
       context,
       MaterialPageRoute(
@@ -213,18 +335,31 @@ class _StrategyEditPageState extends State<StrategyEditPage> {
   // ── Save ──────────────────────────────────────────────────────────────────
   Future<void> _save(String status) async {
     setState(() => _submitted = true);
-    if (!_validate()) return;
+
+    // Validate with stricter rules for publish
+    final forPublish = status == 'published';
+    if (!_validate(forPublish: forPublish)) {
+      if (forPublish) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Cannot publish: All fields must be filled and all images must be valid SVG files!'),
+            backgroundColor: _kRed,
+            duration: Duration(seconds: 4),
+          ),
+        );
+      }
+      return;
+    }
+
     setState(() => _isSaving = true);
 
     final model = _buildModel(status);
     final uploads = _collectUploads();
 
     print('🔵 Saving strategy:');
-    print('  - Nav icon bytes: ${_navIconBytes != null}');
-    print('  - Strategic House EN bytes: ${_strategicHouseEnBytes != null}');
-    print('  - Strategic House AR bytes: ${_strategicHouseArBytes != null}');
-    print('  - Current EN URL: $_strategicHouseEnUrl');
-    print('  - Current AR URL: $_strategicHouseArUrl');
+    print('  - Nav icon SVG: $_navIconIsSvg');
+    print('  - Strategic House EN SVG: $_strategicHouseEnIsSvg');
+    print('  - Strategic House AR SVG: $_strategicHouseArIsSvg');
 
     await context.read<StrategyCubit>().save(
       model: model,
@@ -244,6 +379,36 @@ class _StrategyEditPageState extends State<StrategyEditPage> {
     }
   }
 
+  // ── Load SVG from URL with caching ────────────────────────────────────────
+  Future<Uint8List> _loadSvgBytes(String url) async {
+    // Check cache first
+    if (_svgCache.containsKey(url)) {
+      print('🟢 Using cached SVG: $url');
+      return _svgCache[url]!;
+    }
+
+    try {
+      print('🟡 Loading SVG from URL: $url');
+      final res = await html.HttpRequest.request(
+        url,
+        method: 'GET',
+        responseType: 'arraybuffer',
+      );
+      if (res.status != 200) {
+        throw Exception('Failed to load SVG: ${res.status}');
+      }
+      final bytes = (res.response as ByteBuffer).asUint8List();
+      print('✅ SVG loaded successfully, size: ${bytes.length} bytes');
+
+      // Store in cache
+      _svgCache[url] = bytes;
+      return bytes;
+    } catch (e) {
+      print('❌ Error loading SVG: $e');
+      rethrow;
+    }
+  }
+
   // ── BUILD ─────────────────────────────────────────────────────────────────
   @override
   Widget build(BuildContext context) {
@@ -255,21 +420,30 @@ class _StrategyEditPageState extends State<StrategyEditPage> {
         if (state is StrategySaved) {
           setState(() => _isSaving = false);
 
-          // Update local URLs with the saved ones
           setState(() {
             _navIconUrl = state.data.navigationLabel.iconUrl;
+            _navIconIsSvg = _isSvgUrl(state.data.navigationLabel.iconUrl);
+
             _strategicHouseEnUrl = state.data.strategicHouseEnUrl;
+            _strategicHouseEnIsSvg = _isSvgUrl(state.data.strategicHouseEnUrl);
+
             _strategicHouseArUrl = state.data.strategicHouseArUrl;
+            _strategicHouseArIsSvg = _isSvgUrl(state.data.strategicHouseArUrl);
 
             print('🟢 URLs updated after save:');
-            print('  - Nav Icon URL: $_navIconUrl');
-            print('  - EN URL: $_strategicHouseEnUrl');
-            print('  - AR URL: $_strategicHouseArUrl');
+            print('  - Nav Icon URL: $_navIconUrl (SVG: $_navIconIsSvg)');
+            print('  - EN URL: $_strategicHouseEnUrl (SVG: $_strategicHouseEnIsSvg)');
+            print('  - AR URL: $_strategicHouseArUrl (SVG: $_strategicHouseArIsSvg)');
 
             // Clear bytes after successful upload
             _navIconBytes = null;
             _strategicHouseEnBytes = null;
             _strategicHouseArBytes = null;
+
+            // Clear cache for updated URLs
+            _svgCache.remove(_navIconUrl);
+            _svgCache.remove(_strategicHouseEnUrl);
+            _svgCache.remove(_strategicHouseArUrl);
           });
 
           ScaffoldMessenger.of(context).showSnackBar(
@@ -279,7 +453,6 @@ class _StrategyEditPageState extends State<StrategyEditPage> {
             ),
           );
 
-          // Navigate back after save
           Navigator.pop(context);
         }
         if (state is StrategyError) {
@@ -310,7 +483,7 @@ class _StrategyEditPageState extends State<StrategyEditPage> {
                         child: Column(
                           children: [
                             SizedBox(height: 20.h),
-                            AdminSubNavBar(activeIndex: 3),
+                            const AdminSubNavBar(activeIndex: 5),
                             SizedBox(height: 20.h),
                             loading
                                 ? const Center(
@@ -351,14 +524,30 @@ class _StrategyEditPageState extends State<StrategyEditPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _imageUploadCircle(
-                label: 'Icon',
+              _NavIconUploadWidget(
+                key: _navIconKey,
                 bytes: _navIconBytes,
                 url: _navIconUrl,
+                isSvg: _navIconIsSvg,
+                errorText: _navIconError,
+                loadSvgBytes: _loadSvgBytes,
                 onTap: () async {
-                  final b = await _pickImage();
-                  if (b != null) setState(() => _navIconBytes = b);
+                  final b = await _pickSvgImage();
+                  if (b != null) {
+                    setState(() {
+                      _navIconBytes = b;
+                      _navIconIsSvg = true;
+                      _navIconError = null;
+                    });
+                  }
                 },
+                onRemove: (_navIconBytes != null || _navIconUrl.isNotEmpty)
+                    ? () => setState(() {
+                  _navIconBytes = null;
+                  _navIconUrl = '';
+                  _navIconIsSvg = false;
+                })
+                    : null,
               ),
               SizedBox(height: 16.h),
               _fieldLabel('Title'),
@@ -391,20 +580,30 @@ class _StrategyEditPageState extends State<StrategyEditPage> {
                 ),
               ),
               SizedBox(height: 16.h),
-              _imageUploadBox(
-                label: 'Upload Image',
+              _StrategicHouseImageWidget(
+                key: _strategicHouseEnKey,
                 bytes: _strategicHouseEnBytes,
                 url: _strategicHouseEnUrl,
+                isSvg: _strategicHouseEnIsSvg,
+                errorText: _strategicHouseEnError,
                 previewWidth: _previewWidth(_strategicHouseEnTab),
+                loadSvgBytes: _loadSvgBytes,
                 onTap: () async {
-                  final b = await _pickImage();
-                  if (b != null) setState(() => _strategicHouseEnBytes = b);
+                  final b = await _pickSvgImage();
+                  if (b != null) {
+                    setState(() {
+                      _strategicHouseEnBytes = b;
+                      _strategicHouseEnIsSvg = true;
+                      _strategicHouseEnError = null;
+                    });
+                  }
                 },
                 onRemove: (_strategicHouseEnBytes != null ||
                     _strategicHouseEnUrl.isNotEmpty)
                     ? () => setState(() {
                   _strategicHouseEnBytes = null;
                   _strategicHouseEnUrl   = '';
+                  _strategicHouseEnIsSvg = false;
                 })
                     : null,
               ),
@@ -431,20 +630,30 @@ class _StrategyEditPageState extends State<StrategyEditPage> {
                 ),
               ),
               SizedBox(height: 16.h),
-              _imageUploadBox(
-                label: 'Upload Image',
+              _StrategicHouseImageWidget(
+                key: _strategicHouseArKey,
                 bytes: _strategicHouseArBytes,
                 url: _strategicHouseArUrl,
+                isSvg: _strategicHouseArIsSvg,
+                errorText: _strategicHouseArError,
                 previewWidth: _previewWidth(_strategicHouseArTab),
+                loadSvgBytes: _loadSvgBytes,
                 onTap: () async {
-                  final b = await _pickImage();
-                  if (b != null) setState(() => _strategicHouseArBytes = b);
+                  final b = await _pickSvgImage();
+                  if (b != null) {
+                    setState(() {
+                      _strategicHouseArBytes = b;
+                      _strategicHouseArIsSvg = true;
+                      _strategicHouseArError = null;
+                    });
+                  }
                 },
                 onRemove: (_strategicHouseArBytes != null ||
                     _strategicHouseArUrl.isNotEmpty)
                     ? () => setState(() {
                   _strategicHouseArBytes = null;
                   _strategicHouseArUrl   = '';
+                  _strategicHouseArIsSvg = false;
                 })
                     : null,
               ),
@@ -454,26 +663,274 @@ class _StrategyEditPageState extends State<StrategyEditPage> {
         SizedBox(height: 32.h),
 
         // ── Action buttons ────────────────────────────────────────────────
-        Row(children: [
-          Expanded(
-              child: _btn(
-                  label: 'Preview',
-                  color: const Color(0xFF4CAF50),
-                  onTap: _onPreview)),
-          SizedBox(width: 16.w),
-          Expanded(
-              child: _btn(
-                  label: 'Publish',
-                  color: _kGreenSolid,
-                  onTap: () => _save('published'))),
-        ]),
+        _actionRow(),
         SizedBox(height: 12.h),
-        _btn(
-            label: 'Discard',
-            color: const Color(0xFF9E9E9E),
-            onTap: () => Navigator.pop(context)),
+        _secondaryRow(),
         SizedBox(height: 48.h),
       ],
+    );
+  }
+
+  // ── Action Buttons Row ────────────────────────────────────────────────────
+  Widget _actionRow() {
+    return Row(children: [
+      Expanded(
+        child: _btn(
+          label: 'Preview',
+          color: const Color(0xFFD16F9A).withOpacity(.5),
+          onTap: _onPreview,
+        ),
+      ),
+      SizedBox(width: 16.w),
+      Expanded(
+        child: _btn(
+          label: 'Publish',
+          color: _kGreenSolid,
+          onTap: () {
+            // Mark as submitted to show errors
+            setState(() => _submitted = true);
+
+            // Validate before showing dialog
+            if (!_validate(forPublish: true)) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Please fill all required fields and ensure all images are valid SVG files'),
+                  backgroundColor: _kRed,
+                  duration: Duration(seconds: 3),
+                ),
+              );
+              return;
+            }
+
+            // Show publish confirmation dialog
+            _showPublishConfirmDialog();
+          },
+        ),
+      ),
+    ]);
+  }
+
+  // ── Secondary Buttons Row ─────────────────────────────────────────────────
+  Widget _secondaryRow() {
+    return Row(children: [
+      Expanded(
+        child: _btn(
+          label: 'Discard',
+          color: const Color(0xFF9E9E9E),
+          onTap: () => Navigator.pop(context),
+        ),
+      ),
+      SizedBox(width: 16.w),
+      Expanded(
+        child: _btn(
+          label: 'Save For Later',
+          color: const Color(0xFF9E9E9E),
+          onTap: () {
+            // Mark as submitted to show errors
+            setState(() => _submitted = true);
+
+            // Validate before saving as draft
+            if (!_validate(forPublish: false)) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Please fill all required fields'),
+                  backgroundColor: _kRed,
+                  duration: Duration(seconds: 3),
+                ),
+              );
+              return;
+            }
+
+            // Show save confirmation dialog
+            _showSaveConfirmDialog();
+          },
+        ),
+      ),
+    ]);
+  }
+
+  // ── Publish Confirmation Dialog ───────────────────────────────────────────
+  void _showPublishConfirmDialog() {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12.r),
+          ),
+          title: Column(
+            children: [
+              Container(
+                padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 12.h),
+                decoration: BoxDecoration(
+                  color: _kGreenSolid.withOpacity(0.1),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  Icons.check_circle_outline,
+                  color: _kGreenSolid,
+                  size: 40.sp,
+                ),
+              ),
+              SizedBox(height: 12.h),
+              Text(
+                'Confirm Publishing',
+                style: TextStyle(
+                  fontFamily: 'Cairo',
+                  fontSize: 18.sp,
+                  fontWeight: FontWeight.w700,
+                  color: Colors.black87,
+                ),
+              ),
+            ],
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                'Are you sure you want to publish this strategy?',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontFamily: 'Cairo',
+                  fontSize: 14.sp,
+                  color: Colors.black54,
+                ),
+              ),
+              SizedBox(height: 8.h),
+              Text(
+                'This will make it visible to all users.',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontFamily: 'Cairo',
+                  fontSize: 12.sp,
+                  color: Colors.black38,
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text(
+                'Cancel',
+                style: TextStyle(
+                  fontFamily: 'Cairo',
+                  fontSize: 14.sp,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.grey[600],
+                ),
+              ),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.pop(context);
+                _save('published');
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: _kGreenSolid,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8.r),
+                ),
+              ),
+              child: Text(
+                'Publish',
+                style: TextStyle(
+                  fontFamily: 'Cairo',
+                  fontSize: 14.sp,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.white,
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  // ── Save Confirmation Dialog ──────────────────────────────────────────────
+  void _showSaveConfirmDialog() {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12.r),
+          ),
+          title: Column(
+            children: [
+              Container(
+                padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 12.h),
+                decoration: BoxDecoration(
+                  color: _kGreenSolid.withOpacity(0.1),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  Icons.save_outlined,
+                  color: _kGreenSolid,
+                  size: 40.sp,
+                ),
+              ),
+              SizedBox(height: 12.h),
+              Text(
+                'Save as Draft',
+                style: TextStyle(
+                  fontFamily: 'Cairo',
+                  fontSize: 18.sp,
+                  fontWeight: FontWeight.w700,
+                  color: Colors.black87,
+                ),
+              ),
+            ],
+          ),
+          content: Text(
+            'Do you want to save this strategy as a draft?',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontFamily: 'Cairo',
+              fontSize: 14.sp,
+              color: Colors.black54,
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text(
+                'Cancel',
+                style: TextStyle(
+                  fontFamily: 'Cairo',
+                  fontSize: 14.sp,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.grey[600],
+                ),
+              ),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.pop(context);
+                _save('draft');
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: _kGreenSolid,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8.r),
+                ),
+              ),
+              child: Text(
+                'Save',
+                style: TextStyle(
+                  fontFamily: 'Cairo',
+                  fontSize: 14.sp,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.white,
+                ),
+              ),
+            ),
+          ],
+        );
+      },
     );
   }
 
@@ -520,11 +977,11 @@ class _StrategyEditPageState extends State<StrategyEditPage> {
         Container(
           width: double.infinity,
           decoration: BoxDecoration(
-            color: _kSurface,
+            // Removed white background - now transparent
             borderRadius:
             BorderRadius.vertical(bottom: Radius.circular(12.r)),
           ),
-          padding: EdgeInsets.all(20.w),
+          padding: EdgeInsets.symmetric(vertical: 16.h),
           child: child,
         ),
     ]);
@@ -564,7 +1021,7 @@ class _StrategyEditPageState extends State<StrategyEditPage> {
     }
 
     return Container(
-      padding: EdgeInsets.all(4.w),
+      padding: EdgeInsets.symmetric(horizontal: 4.w, vertical: 4.h),
       decoration: BoxDecoration(
         color: const Color(0xFFF0F0F0),
         borderRadius: BorderRadius.circular(10.r),
@@ -579,426 +1036,6 @@ class _StrategyEditPageState extends State<StrategyEditPage> {
         ],
       ),
     );
-  }
-
-  /// Large rectangular image upload area (for Strategic House sections)
-  Widget _imageUploadBox({
-    required String label,
-    required Uint8List? bytes,
-    required String url,
-    required VoidCallback onTap,
-    VoidCallback? onRemove,
-    double previewWidth = double.infinity,
-  }) {
-    final hasImage = bytes != null || url.isNotEmpty;
-
-    // Helper function to check if bytes contain SVG
-    bool _isSvgBytes(Uint8List? bytes) {
-      if (bytes == null || bytes.length < 5) return false;
-      final checkLen = bytes.length > 100 ? 100 : bytes.length;
-      final header = bytes.sublist(0, checkLen);
-      final headerStr = String.fromCharCodes(header);
-      return headerStr.contains('<svg') || headerStr.contains('<?xml');
-    }
-
-    // Helper function to check if URL points to SVG
-    bool _isSvgUrl(String url) {
-      final decodedUrl = Uri.decodeFull(url).toLowerCase();
-      return decodedUrl.contains('.svg') ||
-          decodedUrl.contains('%2Esvg') ||
-          decodedUrl.contains('image/svg+xml');
-    }
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        // ── image area ──
-        Center(
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 300),
-            curve: Curves.easeInOut,
-            width: previewWidth,
-            height: 220.h,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(8.r),
-
-            ),
-            child: hasImage
-                ? Stack(
-              alignment: Alignment.center,
-              children: [
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(8.r),
-                  child: Builder(
-                    builder: (context) {
-                      // Handle uploaded bytes (new upload)
-                      if (bytes != null) {
-                        final isSvg = _isSvgBytes(bytes);
-                        if (isSvg) {
-                          return SvgPicture.memory(
-                            bytes,
-                            width: previewWidth,
-                            height: 220.h,
-                            fit: BoxFit.contain,
-                            placeholderBuilder: (context) => const Center(
-                              child: CircularProgressIndicator(),
-                            ),
-                          );
-                        } else {
-                          return Image.memory(
-                            bytes,
-                            width: previewWidth,
-                            height: 220.h,
-                            fit: BoxFit.contain,
-                            errorBuilder: (_, __, ___) => Icon(
-                              Icons.broken_image,
-                              color: Colors.grey[400],
-                              size: 48.sp,
-                            ),
-                          );
-                        }
-                      }
-
-                      // Handle existing URL (from database)
-                      if (url.isNotEmpty) {
-                        final isSvg = _isSvgUrl(url);
-                        print('Displaying image from URL: $url, isSvg: $isSvg');
-
-                        if (isSvg) {
-                          // For SVG URLs, we need to fetch and display
-                          return FutureBuilder<Uint8List>(
-                            future: _loadSvgBytes(url),
-                            builder: (context, snapshot) {
-                              if (snapshot.connectionState == ConnectionState.waiting) {
-                                return const Center(
-                                  child: CircularProgressIndicator(),
-                                );
-                              }
-                              if (snapshot.hasData) {
-                                return SvgPicture.memory(
-                                  snapshot.data!,
-                                  width: previewWidth,
-                                  height: 220.h,
-                                  fit: BoxFit.contain,
-                                );
-                              }
-                              if (snapshot.hasError) {
-                                print('Error loading SVG: ${snapshot.error}');
-                                return Center(
-                                  child: Column(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      Icon(
-                                        Icons.broken_image,
-                                        color: Colors.grey[400],
-                                        size: 48.sp,
-                                      ),
-                                      SizedBox(height: 8.h),
-                                      Text(
-                                        'Failed to load image',
-                                        style: TextStyle(
-                                          fontSize: 12.sp,
-                                          color: Colors.grey[600],
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                );
-                              }
-                              return const SizedBox.shrink();
-                            },
-                          );
-                        } else {
-                          // For raster images, use Image.network
-                          return Image.network(
-                            url,
-                            width: previewWidth,
-                            height: 220.h,
-                            fit: BoxFit.contain,
-                            loadingBuilder: (context, child, loadingProgress) {
-                              if (loadingProgress == null) return child;
-                              return Center(
-                                child: CircularProgressIndicator(
-                                  value: loadingProgress.expectedTotalBytes != null
-                                      ? loadingProgress.cumulativeBytesLoaded /
-                                      loadingProgress.expectedTotalBytes!
-                                      : null,
-                                ),
-                              );
-                            },
-                            errorBuilder: (_, __, ___) => Icon(
-                              Icons.broken_image,
-                              color: Colors.grey[400],
-                              size: 48.sp,
-                            ),
-                          );
-                        }
-                      }
-
-                      return const SizedBox.shrink();
-                    },
-                  ),
-                ),
-                // Remove button (top-right)
-                if (onRemove != null)
-                  Positioned(
-                    top: 8.h,
-                    right: 8.w,
-                    child: GestureDetector(
-                      onTap: onRemove,
-                      child: Container(
-                        padding: EdgeInsets.symmetric(
-                            horizontal: 12.w, vertical: 6.h),
-                        decoration: BoxDecoration(
-                          color: _kRed,
-                          borderRadius: BorderRadius.circular(6.r),
-                        ),
-                        child: Text(
-                          'Remove',
-                          style: TextStyle(
-                            fontFamily: 'Cairo',
-                            fontSize: 12.sp,
-                            fontWeight: FontWeight.w600,
-                            color: Colors.white,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-              ],
-            )
-                : Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                CustomSvg(
-                  assetPath: "assets/images/upload-image.svg",
-                  width: 100.w,
-                  height: 100.h,
-                  fit: BoxFit.fill,
-                ),
-                SizedBox(height: 8.h),
-                Text(
-                  'Drop your image here',
-                  style: TextStyle(
-                    fontFamily: 'Cairo',
-                    fontSize: 13.sp,
-                    color: Colors.grey[500],
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-        SizedBox(height: 12.h),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            customButtonWithImage(
-              title: label,
-              function: onTap,
-              textStyle: StyleText.fontSize14Weight500.copyWith(
-                  color: Colors.white
-              ),
-              height: 38.h,
-              space: 8.sp,
-              width: 250.w,
-              radius: 8.r,
-              color: _kGreenSolid,
-              image: "",
-              widthImage: 16.w,
-              heightImage: 16.h,
-              colorBorder: Colors.transparent,
-            ),
-          ],
-        )
-      ],
-    );
-  }
-
-  Widget _imageUploadCircle({
-    required String label,
-    required Uint8List? bytes,
-    required String url,
-    required VoidCallback onTap,
-  }) {
-    final hasImage = bytes != null || url.isNotEmpty;
-
-    // Auto-detect if content is SVG
-    bool detectedSvg = false;
-    if (bytes != null && bytes.length > 5) {
-      final checkLen = bytes.length > 100 ? 100 : bytes.length;
-      final headerStr = String.fromCharCodes(bytes.sublist(0, checkLen));
-      detectedSvg = headerStr.contains('<svg') || headerStr.contains('<?xml');
-    }
-    if (!detectedSvg && url.isNotEmpty) {
-      final decodedUrl = Uri.decodeFull(url).toLowerCase();
-      detectedSvg = decodedUrl.contains('.svg') ||
-          decodedUrl.contains('%2Esvg') ||
-          decodedUrl.contains('image/svg+xml');
-    }
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(label,
-            style: TextStyle(
-                fontFamily: 'Cairo',
-                fontSize: 13.sp,
-                fontWeight: FontWeight.w600,
-                color: Colors.black87)),
-        SizedBox(height: 8.h),
-        GestureDetector(
-          onTap: onTap,
-          child: Stack(
-            clipBehavior: Clip.none,
-            children: [
-              Container(
-                width: 64.w,
-                height: 64.h,
-                decoration: const BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: Color(0xFFEEEEEE)),
-                child: hasImage
-                    ? ClipOval(child: _buildImgWidget(bytes, url, detectedSvg))
-                    : Icon(Icons.add,
-                    color: Colors.grey[600],
-                    size: 28.sp),
-              ),
-              Positioned(
-                bottom: -2, right: -2,
-                child: Container(
-                  width: 24.w,
-                  height: 24.h,
-                  decoration: const BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: _kGreenSolid),
-                  child: Icon(Icons.edit,
-                      color: Colors.white, size: 13.sp),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildImgWidget(Uint8List? bytes, String url, bool isSvg) {
-    // Check if bytes contain SVG data — check first 100 bytes instead of 5
-    bool isSvgData = false;
-    if (bytes != null && bytes.length > 5) {
-      final checkLen = bytes.length > 100 ? 100 : bytes.length;
-      final header = bytes.sublist(0, checkLen);
-      final headerStr = String.fromCharCodes(header);
-      isSvgData = headerStr.contains('<svg') || headerStr.contains('<?xml');
-    }
-
-    // Check if URL points to SVG
-    bool isSvgUrl = false;
-    if (url.isNotEmpty) {
-      final decodedUrl = Uri.decodeFull(url).toLowerCase();
-      isSvgUrl = decodedUrl.contains('.svg') ||
-          decodedUrl.contains('%2Esvg') ||
-          decodedUrl.contains('image/svg+xml');
-    }
-
-    print('_buildImgWidget - isSvg: $isSvg, isSvgData: $isSvgData, isSvgUrl: $isSvgUrl, url: $url');
-
-    // Handle SVG files (from bytes, URL, or explicit flag)
-    if (isSvg || isSvgData || isSvgUrl) {
-      // Handle SVG from bytes (new upload)
-      if (bytes != null) {
-        return SvgPicture.memory(
-          bytes,
-          fit: BoxFit.cover,
-          placeholderBuilder: (context) => const Center(
-            child: CircularProgressIndicator(),
-          ),
-        );
-      }
-
-      // Handle SVG from URL (existing image)
-      if (url.isNotEmpty) {
-        return FutureBuilder<Uint8List>(
-          future: _loadSvgBytes(url),
-          builder: (context, snapshot) {
-            if (snapshot.connectionState == ConnectionState.waiting) {
-              return const Center(child: CircularProgressIndicator());
-            }
-            if (snapshot.hasData) {
-              return SvgPicture.memory(
-                snapshot.data!,
-                fit: BoxFit.cover,
-              );
-            }
-            if (snapshot.hasError) {
-              print('Error loading SVG from URL: ${snapshot.error}');
-              return Icon(
-                Icons.broken_image,
-                color: Colors.grey[400],
-                size: 28.sp,
-              );
-            }
-            return const SizedBox.shrink();
-          },
-        );
-      }
-    }
-
-    // Handle raster images
-    if (bytes != null) {
-      return Image.memory(
-        bytes,
-        fit: BoxFit.cover,
-        errorBuilder: (_, __, ___) => Icon(
-          Icons.broken_image,
-          color: Colors.red[300],
-          size: 28.sp,
-        ),
-      );
-    }
-
-    if (url.isNotEmpty) {
-      return Image.network(
-        url,
-        fit: BoxFit.cover,
-        loadingBuilder: (context, child, loadingProgress) {
-          if (loadingProgress == null) return child;
-          return const Center(child: CircularProgressIndicator());
-        },
-        errorBuilder: (_, __, ___) => Icon(
-          Icons.broken_image,
-          color: Colors.red[300],
-          size: 28.sp,
-        ),
-      );
-    }
-
-    return Icon(
-      isSvg ? Icons.description : Icons.image,
-      color: Colors.grey,
-      size: 28.sp,
-    );
-  }
-
-  Future<Uint8List> _loadSvgBytes(String url) async {
-    try {
-      print('Loading SVG from URL: $url');
-      final res = await html.HttpRequest.request(
-        url,
-        method: 'GET',
-        responseType: 'arraybuffer',
-      );
-      if (res.status != 200) {
-        throw Exception('Failed to load SVG: ${res.status}');
-      }
-      final bytes = (res.response as ByteBuffer).asUint8List();
-      print('SVG loaded successfully, size: ${bytes.length} bytes');
-      return bytes;
-    } catch (e) {
-      print('Error loading SVG: $e');
-      rethrow;
-    }
   }
 
   Widget _bilingualRow({
@@ -1016,11 +1053,17 @@ class _StrategyEditPageState extends State<StrategyEditPage> {
             controller: enCtrl,
             height: 42,
             maxLines: 1,
+            fillColor: Colors.white,
             maxLength: 200,
             submitted: _submitted,
             textDirection: TextDirection.ltr,
             textAlign: TextAlign.start,
-            onChanged: (_) => setState(() {}),
+            onChanged: (_) {
+              // Only update validation state, don't trigger full rebuild
+              if (_submitted) {
+                setState(() {});
+              }
+            },
           ),
         ),
         SizedBox(width: 12.w),
@@ -1029,12 +1072,18 @@ class _StrategyEditPageState extends State<StrategyEditPage> {
             hint: arHint,
             controller: arCtrl,
             height: 42,
+            fillColor: Colors.white,
             maxLines: 1,
             maxLength: 200,
             submitted: _submitted,
             textDirection: TextDirection.rtl,
             textAlign: TextAlign.right,
-            onChanged: (_) => setState(() {}),
+            onChanged: (_) {
+              // Only update validation state, don't trigger full rebuild
+              if (_submitted) {
+                setState(() {});
+              }
+            },
           ),
         ),
       ],
@@ -1096,4 +1145,384 @@ class _StrategyEditPageState extends State<StrategyEditPage> {
       ),
     ),
   );
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// SEPARATE WIDGET CLASSES TO PREVENT REBUILDS
+// ═══════════════════════════════════════════════════════════════════════════════
+
+/// Separate widget for Navigation Icon to prevent rebuilds when text fields change
+class _NavIconUploadWidget extends StatelessWidget {
+  final Uint8List? bytes;
+  final String url;
+  final bool isSvg;
+  final String? errorText;
+  final Future<Uint8List> Function(String) loadSvgBytes;
+  final VoidCallback onTap;
+  final VoidCallback? onRemove;
+
+  const _NavIconUploadWidget({
+    super.key,
+    required this.bytes,
+    required this.url,
+    required this.isSvg,
+    this.errorText,
+    required this.loadSvgBytes,
+    required this.onTap,
+    this.onRemove,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final hasImage = bytes != null || url.isNotEmpty;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text('Icon',
+            style: TextStyle(
+                fontFamily: 'Cairo',
+                fontSize: 13.sp,
+                fontWeight: FontWeight.w600,
+                color: Colors.black87)),
+        SizedBox(height: 8.h),
+        Row(
+          children: [
+            GestureDetector(
+              onTap: onTap,
+              child: Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  Container(
+                    width: 64.w,
+                    height: 64.h,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: const Color(0xFFEEEEEE),
+                      border: errorText != null
+                          ? Border.all(color: _kRed, width: 2)
+                          : null,
+                    ),
+                    child: hasImage
+                        ? ClipOval(
+                      child: Builder(
+                        builder: (context) {
+                          if (bytes != null && isSvg) {
+                            return SvgPicture.memory(
+                              bytes!,
+                              fit: BoxFit.cover,
+                              placeholderBuilder: (context) => const Center(
+                                child: CircularProgressIndicator(),
+                              ),
+                            );
+                          }
+
+                          if (url.isNotEmpty && isSvg) {
+                            return FutureBuilder<Uint8List>(
+                              key: ValueKey(url),
+                              future: loadSvgBytes(url),
+                              builder: (context, snapshot) {
+                                if (snapshot.connectionState == ConnectionState.waiting) {
+                                  return const Center(
+                                    child: CircularProgressIndicator(),
+                                  );
+                                }
+                                if (snapshot.hasData) {
+                                  return SvgPicture.memory(
+                                    snapshot.data!,
+                                    fit: BoxFit.cover,
+                                  );
+                                }
+                                return Icon(
+                                  Icons.broken_image,
+                                  color: Colors.grey[400],
+                                  size: 28.sp,
+                                );
+                              },
+                            );
+                          }
+
+                          return Icon(
+                            Icons.broken_image,
+                            color: Colors.grey[400],
+                            size: 28.sp,
+                          );
+                        },
+                      ),
+                    )
+                        : Icon(Icons.add,
+                        color: errorText != null ? _kRed : Colors.grey[600],
+                        size: 28.sp),
+                  ),
+                  if (hasImage && onRemove != null)
+                    Positioned(
+                      top: -4,
+                      right: -4,
+                      child: GestureDetector(
+                        onTap: onRemove,
+                        child: Container(
+                          width: 20.w,
+                          height: 20.h,
+                          decoration: const BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: _kRed,
+                          ),
+                          child: Icon(
+                            Icons.close,
+                            color: Colors.white,
+                            size: 12.sp,
+                          ),
+                        ),
+                      ),
+                    ),
+                  if (!hasImage)
+                    Positioned(
+                      bottom: -2, right: -2,
+                      child: Container(
+                        width: 24.w,
+                        height: 24.h,
+                        decoration: const BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: _kGreenSolid),
+                        child: Icon(Icons.edit,
+                            color: Colors.white, size: 13.sp),
+                      ),
+                    ),
+                ],
+              ),
+            ),
+            // if (hasImage && onRemove != null) ...[
+            //   SizedBox(width: 12.w),
+            //   GestureDetector(
+            //     onTap: onRemove,
+            //     child: Text(
+            //       'Remove',
+            //       style: TextStyle(
+            //         fontFamily: 'Cairo',
+            //         fontSize: 12.sp,
+            //         color: _kRed,
+            //         fontWeight: FontWeight.w600,
+            //       ),
+            //     ),
+            //   ),
+          //  ],
+          ],
+        ),
+        if (errorText != null) ...[
+          SizedBox(height: 4.h),
+          Text(
+            errorText!,
+            style: TextStyle(
+              fontFamily: 'Cairo',
+              fontSize: 11.sp,
+              color: _kRed,
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+}
+
+/// Separate widget for Strategic House Images to prevent rebuilds
+class _StrategicHouseImageWidget extends StatelessWidget {
+  final Uint8List? bytes;
+  final String url;
+  final bool isSvg;
+  final String? errorText;
+  final double previewWidth;
+  final Future<Uint8List> Function(String) loadSvgBytes;
+  final VoidCallback onTap;
+  final VoidCallback? onRemove;
+
+  const _StrategicHouseImageWidget({
+    super.key,
+    required this.bytes,
+    required this.url,
+    required this.isSvg,
+    this.errorText,
+    required this.previewWidth,
+    required this.loadSvgBytes,
+    required this.onTap,
+    this.onRemove,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final hasImage = bytes != null || url.isNotEmpty;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // ── image area ──
+        Center(
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 300),
+            curve: Curves.easeInOut,
+            width: previewWidth,
+            height: 220.h,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(8.r),
+              border: errorText != null
+                  ? Border.all(color: _kRed, width: 2)
+                  : null,
+            ),
+            child: hasImage
+                ? Stack(
+              alignment: Alignment.center,
+              children: [
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(8.r),
+                  child: Builder(
+                    builder: (context) {
+                      if (bytes != null && isSvg) {
+                        return SvgPicture.memory(
+                          bytes!,
+                          width: previewWidth,
+                          height: 220.h,
+                          fit: BoxFit.contain,
+                          placeholderBuilder: (context) => const Center(
+                            child: CircularProgressIndicator(),
+                          ),
+                        );
+                      }
+
+                      if (url.isNotEmpty && isSvg) {
+                        return FutureBuilder<Uint8List>(
+                          key: ValueKey(url),
+                          future: loadSvgBytes(url),
+                          builder: (context, snapshot) {
+                            if (snapshot.connectionState == ConnectionState.waiting) {
+                              return const Center(
+                                child: CircularProgressIndicator(),
+                              );
+                            }
+                            if (snapshot.hasData) {
+                              return SvgPicture.memory(
+                                snapshot.data!,
+                                width: previewWidth,
+                                height: 220.h,
+                                fit: BoxFit.contain,
+                              );
+                            }
+                            if (snapshot.hasError) {
+                              return Center(
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Icon(
+                                      Icons.broken_image,
+                                      color: Colors.grey[400],
+                                      size: 48.sp,
+                                    ),
+                                    SizedBox(height: 8.h),
+                                    Text(
+                                      'Failed to load SVG',
+                                      style: TextStyle(
+                                        fontSize: 12.sp,
+                                        color: Colors.grey[600],
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              );
+                            }
+                            return const SizedBox.shrink();
+                          },
+                        );
+                      }
+
+                      return const SizedBox.shrink();
+                    },
+                  ),
+                ),
+                // Remove button
+                if (onRemove != null)
+                  Positioned(
+                    top: 8.h,
+                    right: 8.w,
+                    child: GestureDetector(
+                      onTap: onRemove,
+                      child: Container(
+                        padding: EdgeInsets.symmetric(
+                            horizontal: 12.w, vertical: 6.h),
+                        decoration: BoxDecoration(
+                          color: _kRed,
+                          borderRadius: BorderRadius.circular(6.r),
+                        ),
+                        child: Text(
+                          'Remove',
+                          style: TextStyle(
+                            fontFamily: 'Cairo',
+                            fontSize: 12.sp,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
+            )
+                : Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                CustomSvg(
+                  assetPath: "assets/images/upload-image.svg",
+                  width: 100.w,
+                  height: 100.h,
+                  fit: BoxFit.fill,
+                ),
+                SizedBox(height: 8.h),
+                Text(
+                  'Drop your SVG image here',
+                  style: TextStyle(
+                    fontFamily: 'Cairo',
+                    fontSize: 13.sp,
+                    color: errorText != null ? _kRed : Colors.grey[500],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+        if (errorText != null) ...[
+          SizedBox(height: 8.h),
+          Padding(
+            padding: EdgeInsets.only(left: 12.w),
+            child: Text(
+              errorText!,
+              style: TextStyle(
+                fontFamily: 'Cairo',
+                fontSize: 12.sp,
+                color: _kRed,
+              ),
+            ),
+          ),
+        ],
+        SizedBox(height: 12.h),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            customButtonWithImage(
+              title: 'Upload SVG Image',
+              function: onTap,
+              textStyle: StyleText.fontSize14Weight500.copyWith(
+                  color: Colors.white
+              ),
+              height: 38.h,
+              space: 8.sp,
+              width: 250.w,
+              radius: 8.r,
+              color: _kGreenSolid,
+              image: "",
+              widthImage: 16.w,
+              heightImage: 16.h,
+              colorBorder: Colors.transparent,
+            ),
+          ],
+        )
+      ],
+    );
+  }
 }

@@ -23,7 +23,7 @@ import '../../../model/about_us/about_us.dart';
 import 'terms_edit_page.dart';
 
 class _C {
-  static const Color primary   = Color(0xFF008037);
+  static const Color primary   = Color(0xFFD16F9A);
   static const Color sectionBg = Color(0xFFF5F5F5);
   static const Color cardBg    = Color(0xFFFFFFFF);
   static const Color labelText = Color(0xFF333333);
@@ -377,7 +377,7 @@ class _TermsMainViewState extends State<TermsMainView> {
               children: [
                 // ── PDF SVG icon ──────────────────────────────────────────
                 SvgPicture.asset(
-                  'assets/images/pdf 1.svg',
+                  'assets/pdf_svg.svg',
                   width: 28.w,
                   height: 28.h,
                   fit: BoxFit.contain,

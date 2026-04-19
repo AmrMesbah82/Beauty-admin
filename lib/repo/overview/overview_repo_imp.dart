@@ -2,7 +2,9 @@
 /// File Name: overview_repo_imp.dart
 /// Description: Firebase implementation of OverviewRepo.
 /// Created by: Amr Mesbah
-/// Last Update: 07/04/2026
+/// Last Update: 18/04/2026
+/// UPDATED: saveOverviewPage() now versions ALL fields using
+///          Versioned.append() — full audit trail in Firestore ✅
 
 import 'dart:typed_data';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -25,6 +27,7 @@ class OverviewRepoImp implements OverviewRepo {
   DocumentReference _docRef(String gender) =>
       _firestore.collection(_collection).doc(gender);
 
+  // ── Fetch ──────────────────────────────────────────────────────────────────
   @override
   Future<OverviewPageModel> fetchOverviewPage(
       {required String gender}) async {
@@ -46,20 +49,95 @@ class OverviewRepoImp implements OverviewRepo {
     }
   }
 
+  // ── Save (ALL fields versioned) ────────────────────────────────────────────
   @override
   Future<void> saveOverviewPage(OverviewPageModel model) async {
-    print('🟡 [OverviewRepoImp] saveOverviewPage: id=${model.id} status=${model.status}');
+    final docGender = model.gender.isEmpty ? 'female' : model.gender;
+    print('🟡 [OverviewRepoImp] saveOverviewPage: id=${model.id} '
+        'status=${model.status} gender=$docGender');
+
     try {
-      final data = model.copyWith(lastUpdated: DateTime.now()).toMap();
-      await _docRef(model.gender.isEmpty ? 'female' : model.gender)
-          .set(data, SetOptions(merge: true));
-      print('🟢 [OverviewRepoImp] saveOverviewPage: ✅ DONE');
+      // ── Step 1: read existing raw Firestore data ────────────────────────
+      print('🟡 [OverviewRepoImp] saveOverviewPage → reading existing doc...');
+      final existingSnap = await _docRef(docGender)
+          .get(const GetOptions(source: Source.server));
+      final existingData =
+          (existingSnap.exists ? existingSnap.data() : null)
+          as Map<String, dynamic>? ??
+              {};
+      print('   existing keys = ${existingData.keys.toList()}');
+
+      // ── Step 2: plain map from model ────────────────────────────────────
+      final updatedModel = model.copyWith(lastUpdated: DateTime.now());
+      final newMap = updatedModel.toMap();
+
+      // ── Step 3: build versioned map — ALL fields ────────────────────────
+      final versionedMap = <String, dynamic>{
+        'id': Versioned.append(
+          existingData['id'],
+          newMap['id'],
+        ),
+        'status': Versioned.append(
+          existingData['status'],
+          newMap['status'],
+        ),
+        'gender': Versioned.append(
+          existingData['gender'],
+          newMap['gender'],
+        ),
+        'headings': Versioned.append(
+          existingData['headings'],
+          newMap['headings'],
+        ),
+        'services': Versioned.append(
+          existingData['services'],
+          newMap['services'],
+        ),
+        'gallery': Versioned.append(
+          existingData['gallery'],
+          newMap['gallery'],
+        ),
+        'clientComments': Versioned.append(
+          existingData['clientComments'],
+          newMap['clientComments'],
+        ),
+        'download': Versioned.append(
+          existingData['download'],
+          newMap['download'],
+        ),
+        'publishSchedule': Versioned.append(
+          existingData['publishSchedule'],
+          newMap['publishSchedule'],
+        ),
+        'lastUpdated': Versioned.append(
+          existingData['lastUpdated'],
+          newMap['lastUpdated'],
+        ),
+      };
+
+      // ── Step 4: write to Firestore ──────────────────────────────────────
+      print('🟡 [OverviewRepoImp] saveOverviewPage → writing versioned map...');
+      print('   id history length              = ${(versionedMap['id'] as List).length}');
+      print('   status history length          = ${(versionedMap['status'] as List).length}');
+      print('   gender history length          = ${(versionedMap['gender'] as List).length}');
+      print('   headings history length        = ${(versionedMap['headings'] as List).length}');
+      print('   services history length        = ${(versionedMap['services'] as List).length}');
+      print('   gallery history length         = ${(versionedMap['gallery'] as List).length}');
+      print('   clientComments history length  = ${(versionedMap['clientComments'] as List).length}');
+      print('   download history length        = ${(versionedMap['download'] as List).length}');
+      print('   publishSchedule history length = ${(versionedMap['publishSchedule'] as List).length}');
+      print('   lastUpdated history length     = ${(versionedMap['lastUpdated'] as List).length}');
+
+      await _docRef(docGender).set(versionedMap, SetOptions(merge: true));
+      print('🟢 [OverviewRepoImp] saveOverviewPage: ✅ ALL fields versioned DONE');
+
     } catch (e, st) {
       print('🔴 [OverviewRepoImp] saveOverviewPage: ERROR $e\n$st');
       rethrow;
     }
   }
 
+  // ── Upload image ───────────────────────────────────────────────────────────
   @override
   Future<String> uploadImage({
     required String path,
@@ -91,6 +169,7 @@ class OverviewRepoImp implements OverviewRepo {
     }
   }
 
+  // ── Delete image ───────────────────────────────────────────────────────────
   @override
   Future<void> deleteImage(String url) async {
     if (url.isEmpty) return;

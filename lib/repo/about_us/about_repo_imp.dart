@@ -1,7 +1,9 @@
 // ******************* FILE INFO *******************
 // File Name: about_repo_impl.dart
 // Created by: Amr Mesbah
-// UPDATED: Fixed storage paths for strategy images
+// Last Update: 18/04/2026
+// UPDATED: All save methods now version ALL fields using Versioned.append()
+//          — full audit trail in Firestore for AboutPage, OurStrategy, Terms ✅
 
 import 'dart:typed_data';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -11,7 +13,6 @@ import '../../model/about_us/about_us.dart';
 import 'about_repo.dart';
 
 class AboutRepoImpl implements AboutRepo {
-  static const String _collection = 'cms';
   static const String _aboutDoc    = 'about_page';
   static const String _strategyDoc = 'our_strategy';
   static const String _termsDoc    = 'terms_of_service';
@@ -19,146 +20,235 @@ class AboutRepoImpl implements AboutRepo {
   final FirebaseFirestore _db      = FirebaseFirestore.instance;
   final FirebaseStorage   _storage = FirebaseStorage.instance;
 
-  DocumentReference<Map<String, dynamic>> _ref(String doc) =>
-      _db.collection(_collection).doc(doc);
+  DocumentReference<Map<String, dynamic>> _docRef(String docId) =>
+      _db.collection(docId).doc('data');
 
+  // ── Fetch About Page ───────────────────────────────────────────────────────
   @override
   Future<AboutPageModel> fetchAboutPage() async {
     try {
-      final snap = await _ref(_aboutDoc)
+      final snap = await _docRef(_aboutDoc)
           .get(const GetOptions(source: Source.server));
       if (!snap.exists || snap.data() == null) {
         return AboutPageModel.empty();
       }
-
       final raw = snap.data()!;
-
-      // ── Extract lastUpdatedAt BEFORE sanitize() removes it ──
-      DateTime? lastUpdatedAt;
-      final ts = raw['lastUpdatedAt'];
-      if (ts is Timestamp) {
-        lastUpdatedAt = ts.toDate();
-      } else if (ts is String) {
-        lastUpdatedAt = DateTime.tryParse(ts);
-      }
-
-      final model = AboutPageModel.fromMap(_sanitize(raw));
-      return model.copyWith(lastUpdatedAt: lastUpdatedAt); // ← inject it back
-
+      final model = AboutPageModel.fromMap(raw);
+      return model;
     } catch (e) {
       _log('🔴 [AboutRepo] fetchAboutPage ERROR: $e');
       rethrow;
     }
   }
 
+  // ── Save About Page (ALL fields versioned) ─────────────────────────────────
   @override
   Future<void> saveAboutPage(AboutPageModel model) async {
     try {
-      final data = model.toMap();
-      // Overwrite the ISO string from toMap() with the accurate server timestamp
-      data['lastUpdatedAt'] = FieldValue.serverTimestamp();
-      await _ref(_aboutDoc).set(data);
-      _log('🟢 [AboutRepo] saveAboutPage OK');
+      print('🟡 [AboutRepo] saveAboutPage → reading existing doc...');
+      final existingSnap = await _docRef(_aboutDoc)
+          .get(const GetOptions(source: Source.server));
+      final existingData =
+          (existingSnap.exists ? existingSnap.data() : null) ?? {};
+      print('   existing keys = ${existingData.keys.toList()}');
+
+      final newMap = model.toMap();
+
+      final versionedMap = <String, dynamic>{
+        'publishStatus': Versioned.append(
+          existingData['publishStatus'],
+          newMap['publishStatus'],
+        ),
+        'title': Versioned.append(
+          existingData['title'],
+          newMap['title'],
+        ),
+        'svgUrl': Versioned.append(
+          existingData['svgUrl'],
+          newMap['svgUrl'],
+        ),
+        'navigationLabel': Versioned.append(
+          existingData['navigationLabel'],
+          newMap['navigationLabel'],
+        ),
+        'vision': Versioned.append(
+          existingData['vision'],
+          newMap['vision'],
+        ),
+        'mission': Versioned.append(
+          existingData['mission'],
+          newMap['mission'],
+        ),
+        'values': Versioned.append(
+          existingData['values'],
+          newMap['values'],
+        ),
+        'lastUpdatedAt': Versioned.append(
+          existingData['lastUpdatedAt'],
+          newMap['lastUpdatedAt'],
+        ),
+      };
+
+      print('🟡 [AboutRepo] saveAboutPage → writing versioned map...');
+      print('   publishStatus history length = ${(versionedMap['publishStatus'] as List).length}');
+      print('   title history length         = ${(versionedMap['title'] as List).length}');
+      print('   svgUrl history length        = ${(versionedMap['svgUrl'] as List).length}');
+      print('   navigationLabel history len  = ${(versionedMap['navigationLabel'] as List).length}');
+      print('   vision history length        = ${(versionedMap['vision'] as List).length}');
+      print('   mission history length       = ${(versionedMap['mission'] as List).length}');
+      print('   values history length        = ${(versionedMap['values'] as List).length}');
+      print('   lastUpdatedAt history length = ${(versionedMap['lastUpdatedAt'] as List).length}');
+
+      await _docRef(_aboutDoc).set(versionedMap, SetOptions(merge: true));
+      _log('🟢 [AboutRepo] saveAboutPage: ✅ ALL fields versioned DONE');
     } catch (e) {
       _log('🔴 [AboutRepo] saveAboutPage ERROR: $e');
       rethrow;
     }
   }
 
+  // ── Fetch Strategy ─────────────────────────────────────────────────────────
   @override
   Future<OurStrategyModel> fetchStrategy() async {
     try {
-      final snap = await _ref(_strategyDoc)
+      final snap = await _docRef(_strategyDoc)
           .get(const GetOptions(source: Source.server));
       if (!snap.exists || snap.data() == null) {
         return OurStrategyModel.empty();
       }
-
       final raw = snap.data()!;
-
-      // ── Extract lastUpdatedAt BEFORE _sanitize() removes it ──
-      DateTime? lastUpdatedAt;
-      final ts = raw['lastUpdatedAt'];
-      if (ts is Timestamp) {
-        lastUpdatedAt = ts.toDate();
-      } else if (ts is String) {
-        lastUpdatedAt = DateTime.tryParse(ts);
-      }
-
-      final model = OurStrategyModel.fromMap(_sanitize(raw));
-      return model.copyWith(lastUpdatedAt: lastUpdatedAt);  // ← inject back
-
+      final model = OurStrategyModel.fromMap(raw);
+      return model;
     } catch (e) {
       _log('🔴 [AboutRepo] fetchStrategy ERROR: $e');
       rethrow;
     }
   }
 
+  // ── Save Strategy (ALL fields versioned) ───────────────────────────────────
   @override
   Future<void> saveStrategy(OurStrategyModel model) async {
     try {
-      final data = model.toMap()
-        ..['lastUpdatedAt'] = FieldValue.serverTimestamp();
+      print('🟡 [AboutRepo] saveStrategy → reading existing doc...');
+      final existingSnap = await _docRef(_strategyDoc)
+          .get(const GetOptions(source: Source.server));
+      final existingData =
+          (existingSnap.exists ? existingSnap.data() : null) ?? {};
+      print('   existing keys = ${existingData.keys.toList()}');
 
-      _log('   [AboutRepo] saveStrategy - strategicHouseEnUrl: ${model.strategicHouseEnUrl}');
-      _log('   [AboutRepo] saveStrategy - strategicHouseArUrl: ${model.strategicHouseArUrl}');
+      final newMap = model.toMap();
 
-      await _ref(_strategyDoc).set(data);
-      _log('🟢 [AboutRepo] saveStrategy OK');
+      final versionedMap = <String, dynamic>{
+        'publishStatus': Versioned.append(
+          existingData['publishStatus'],
+          newMap['publishStatus'],
+        ),
+        'navigationLabel': Versioned.append(
+          existingData['navigationLabel'],
+          newMap['navigationLabel'],
+        ),
+        'vision': Versioned.append(
+          existingData['vision'],
+          newMap['vision'],
+        ),
+        'strategicHouseEnUrl': Versioned.append(
+          existingData['strategicHouseEnUrl'],
+          newMap['strategicHouseEnUrl'],
+        ),
+        'strategicHouseArUrl': Versioned.append(
+          existingData['strategicHouseArUrl'],
+          newMap['strategicHouseArUrl'],
+        ),
+        'lastUpdatedAt': Versioned.append(
+          existingData['lastUpdatedAt'],
+          FieldValue.serverTimestamp(),
+        ),
+      };
+
+      print('🟡 [AboutRepo] saveStrategy → writing versioned map...');
+      print('   publishStatus history length     = ${(versionedMap['publishStatus'] as List).length}');
+      print('   navigationLabel history length   = ${(versionedMap['navigationLabel'] as List).length}');
+      print('   vision history length            = ${(versionedMap['vision'] as List).length}');
+      print('   strategicHouseEnUrl history len  = ${(versionedMap['strategicHouseEnUrl'] as List).length}');
+      print('   strategicHouseArUrl history len  = ${(versionedMap['strategicHouseArUrl'] as List).length}');
+
+      await _docRef(_strategyDoc).set(versionedMap, SetOptions(merge: true));
+      _log('🟢 [AboutRepo] saveStrategy: ✅ ALL fields versioned DONE');
     } catch (e) {
       _log('🔴 [AboutRepo] saveStrategy ERROR: $e');
       rethrow;
     }
   }
 
+  // ── Fetch Terms ────────────────────────────────────────────────────────────
   @override
   Future<TermsOfServiceModel> fetchTerms() async {
     try {
-      final snap = await _ref(_termsDoc)
+      final snap = await _docRef(_termsDoc)
           .get(const GetOptions(source: Source.server));
       if (!snap.exists || snap.data() == null) {
         return TermsOfServiceModel.empty();
       }
-
       final raw = snap.data()!;
-
-      // ── Debug: print what lastUpdatedAt looks like in Firestore ──
-      print('🟡 [TermsRepo] raw lastUpdatedAt = ${raw['lastUpdatedAt']} (${raw['lastUpdatedAt']?.runtimeType})');
-
-      DateTime? lastUpdatedAt;
-      final ts = raw['lastUpdatedAt'];
-      if (ts is Timestamp) {
-        lastUpdatedAt = ts.toDate();
-        print('🟢 [TermsRepo] parsed Timestamp → $lastUpdatedAt');
-      } else if (ts is String) {
-        lastUpdatedAt = DateTime.tryParse(ts);
-        print('🟢 [TermsRepo] parsed String → $lastUpdatedAt');
-      } else {
-        print('🔴 [TermsRepo] lastUpdatedAt is null or unknown type');
-      }
-
-      final model = TermsOfServiceModel.fromMap(_sanitize(raw));
-      return model.copyWith(lastUpdatedAt: lastUpdatedAt);
-
+      final model = TermsOfServiceModel.fromMap(raw);
+      return model;
     } catch (e) {
       _log('🔴 [AboutRepo] fetchTerms ERROR: $e');
       rethrow;
     }
   }
 
+  // ── Save Terms (ALL fields versioned) ──────────────────────────────────────
   @override
   Future<void> saveTerms(TermsOfServiceModel model) async {
     try {
-      final data = model.toMap()
-        ..['lastUpdatedAt'] = FieldValue.serverTimestamp();
-      await _ref(_termsDoc).set(data);
-      _log('🟢 [AboutRepo] saveTerms OK');
+      print('🟡 [AboutRepo] saveTerms → reading existing doc...');
+      final existingSnap = await _docRef(_termsDoc)
+          .get(const GetOptions(source: Source.server));
+      final existingData =
+          (existingSnap.exists ? existingSnap.data() : null) ?? {};
+      print('   existing keys = ${existingData.keys.toList()}');
+
+      final newMap = model.toMap();
+
+      final versionedMap = <String, dynamic>{
+        'publishStatus': Versioned.append(
+          existingData['publishStatus'],
+          newMap['publishStatus'],
+        ),
+        'navigationLabel': Versioned.append(
+          existingData['navigationLabel'],
+          newMap['navigationLabel'],
+        ),
+        'termsAndConditions': Versioned.append(
+          existingData['termsAndConditions'],
+          newMap['termsAndConditions'],
+        ),
+        'privacyPolicy': Versioned.append(
+          existingData['privacyPolicy'],
+          newMap['privacyPolicy'],
+        ),
+        'lastUpdatedAt': Versioned.append(
+          existingData['lastUpdatedAt'],
+          FieldValue.serverTimestamp(),
+        ),
+      };
+
+      print('🟡 [AboutRepo] saveTerms → writing versioned map...');
+      print('   publishStatus history length      = ${(versionedMap['publishStatus'] as List).length}');
+      print('   navigationLabel history length    = ${(versionedMap['navigationLabel'] as List).length}');
+      print('   termsAndConditions history length = ${(versionedMap['termsAndConditions'] as List).length}');
+      print('   privacyPolicy history length      = ${(versionedMap['privacyPolicy'] as List).length}');
+
+      await _docRef(_termsDoc).set(versionedMap, SetOptions(merge: true));
+      _log('🟢 [AboutRepo] saveTerms: ✅ ALL fields versioned DONE');
     } catch (e) {
       _log('🔴 [AboutRepo] saveTerms ERROR: $e');
       rethrow;
     }
   }
 
+  // ── Upload image ───────────────────────────────────────────────────────────
   @override
   Future<String> uploadImage({
     required Uint8List bytes,
@@ -166,8 +256,6 @@ class AboutRepoImpl implements AboutRepo {
   }) async {
     try {
       _log('🔵 [AboutRepo] uploadImage → $storagePath');
-
-      // Generate a unique filename to avoid conflicts
       final timestamp = DateTime.now().millisecondsSinceEpoch;
       final extension = _detectExtension(bytes);
       final uniquePath = storagePath.contains('.')
@@ -176,7 +264,6 @@ class AboutRepoImpl implements AboutRepo {
 
       final mime = _detectMime(bytes);
       final ref = _storage.ref(uniquePath);
-
       await ref.putData(bytes, SettableMetadata(contentType: mime));
       final url = await ref.getDownloadURL();
       _log('🟢 [AboutRepo] uploadImage → $url');
@@ -187,6 +274,7 @@ class AboutRepoImpl implements AboutRepo {
     }
   }
 
+  // ── Upload document ────────────────────────────────────────────────────────
   @override
   Future<String> uploadDocument({
     required Uint8List bytes,
@@ -209,11 +297,7 @@ class AboutRepoImpl implements AboutRepo {
     }
   }
 
-  Map<String, dynamic> _sanitize(Map<String, dynamic> raw) {
-    final copy = Map<String, dynamic>.from(raw);
-    copy.remove('lastUpdatedAt');
-    return copy;
-  }
+  // ── Helpers ────────────────────────────────────────────────────────────────
 
   String _detectMime(Uint8List bytes) {
     if (bytes.length >= 4) {

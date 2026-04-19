@@ -1,40 +1,26 @@
 // ******************* FILE INFO *******************
-// File Name: contact_us_cms_state.dart
-// Created by: Claude Assistant
-
+// File Name: contacu_us_location_state.dart
+// Created by: Amr Mesbah
 
 import '../../model/contact_us/contact_model_location.dart';
 
 abstract class ContactUsCmsState {}
 
-// ── Initial state ─────────────────────────────────────────────────────────
-
 class ContactUsCmsInitial extends ContactUsCmsState {}
-
-// ── Loading state ─────────────────────────────────────────────────────────
 
 class ContactUsCmsLoading extends ContactUsCmsState {}
 
-// ── Loaded state ──────────────────────────────────────────────────────────
-
 class ContactUsCmsLoaded extends ContactUsCmsState {
   final ContactUsCmsModel data;
-
   ContactUsCmsLoaded(this.data);
 }
 
-// ── Saved state ───────────────────────────────────────────────────────────
-
 class ContactUsCmsSaved extends ContactUsCmsState {
-  final ContactUsCmsModel data;  // ✅ Added data field
-
+  final ContactUsCmsModel data;
   ContactUsCmsSaved(this.data);
 }
 
-// ── Error state ───────────────────────────────────────────────────────────
-
 class ContactUsCmsError extends ContactUsCmsState {
   final String message;
-
   ContactUsCmsError(this.message);
 }

@@ -1,134 +1,150 @@
 // ═══════════════════════════════════════════════════════════════════
-// FILE: inquiry_state.dart
-// Path: lib/controller/inquiry/inquiry_state.dart
-// UPDATED: Added filter fields for status, entity type, location, month
+// FILE: inquiry_state.dart  (UPDATED — Figma-aligned states)
+// Path: lib/controller/inquire/inquiry_state.dart
+// NEW: userTypeFilter, genderFilter, countryFilter,
+//      reasonCounts, genderCounts, languageCounts,
+//      priorityCounts, relevanceCounts, requiredActionCounts
 // ═══════════════════════════════════════════════════════════════════
-
 
 import '../../model/inquire/inquire.dart';
 
 abstract class InquiryState {}
 
 class InquiryInitial extends InquiryState {}
-
 class InquiryLoading extends InquiryState {}
 
 class InquiryLoaded extends InquiryState {
-  final List<InquiryModel> inquiries;
-  final String searchQuery;
+  final List<InquiryModel> inquiries;       // full unfiltered list
+  final List<InquiryModel> filtered;        // after search + filters
+
+  // summary
+  final int totalCount;
+  final int newCount;
+  final int repliedCount;
+  final int closedCount;
+
+  // chart data
+  final Map<int, int>    monthlySubmissions;
+  final Map<String, int> reasonCounts;          // Figma "Reasons" pie
+  final Map<String, int> languageCounts;        // Figma "Language" pie
+  final Map<String, int> genderCounts;          // Figma "Gender" pie
+  final Map<String, int> locationCounts;        // Figma "Location" bar
+  final Map<String, int> priorityCounts;        // Figma "Inquiry Priority" donut
+  final Map<String, int> relevanceCounts;       // Figma "Inquiry Relevance" donut (left)
+  final Map<String, int> requiredActionCounts;  // Figma "Inquiry Relevance" donut (right)
+
+  // filter options
+  final List<String> uniqueStatuses;
+  final List<String> uniqueGenders;
+  final List<String> uniqueCountries;
+  final List<int>    uniqueMonths;
+
+  // active filters
   final String? statusFilter;
-  final String? entityTypeFilter;
-  final String? locationFilter;
-  final int? monthFilter;
+  final String? userTypeFilter;   // 'Client' | 'Owner'
+  final String? genderFilter;
+  final String? countryFilter;
+  final int?    monthFilter;
 
   InquiryLoaded({
     required this.inquiries,
-    this.searchQuery = '',
+    required this.searchQuery,
     this.statusFilter,
-    this.entityTypeFilter,
-    this.locationFilter,
+    this.userTypeFilter,
+    this.genderFilter,
+    this.countryFilter,
     this.monthFilter,
-  });
+  })  : filtered        = _applyFilters(inquiries, searchQuery, statusFilter, userTypeFilter, genderFilter, countryFilter, monthFilter),
+        totalCount      = inquiries.length,
+        newCount        = inquiries.where((i) => i.status == InquiryStatus.newInquiry).length,
+        repliedCount    = inquiries.where((i) => i.status == InquiryStatus.replied).length,
+        closedCount     = inquiries.where((i) => i.status == InquiryStatus.closed).length,
+        monthlySubmissions  = _countByMonth(inquiries),
+        reasonCounts        = _countByField(inquiries, (i) => i.reason),
+        languageCounts      = _countByField(inquiries, (i) => i.preferredLanguage),
+        genderCounts        = _countByField(inquiries, (i) => i.gender),
+        locationCounts      = _countByField(inquiries, (i) => i.country),
+        priorityCounts      = _countByField(inquiries, (i) => i.inquiryPriority?.label ?? ''),
+        relevanceCounts     = _countByField(inquiries, (i) => i.inquiryRelevance?.label ?? ''),
+        requiredActionCounts = _countByField(inquiries, (i) => i.requiredAction?.label ?? ''),
+        uniqueStatuses   = _unique(inquiries, (i) => i.status.label),
+        uniqueGenders    = _unique(inquiries, (i) => i.gender),
+        uniqueCountries  = _unique(inquiries, (i) => i.country),
+        uniqueMonths     = _uniqueMonths(inquiries);
 
-  List<InquiryModel> get filtered {
-    var list = inquiries.toList();
+  final String searchQuery;
 
-    // ── Status filter ──
-    if (statusFilter != null && statusFilter!.isNotEmpty) {
-      list = list.where((i) => i.status.label == statusFilter).toList();
-    }
+  // ── helpers ──────────────────────────────────────────────────────────────
 
-    // ── Entity type filter ──
-    if (entityTypeFilter != null && entityTypeFilter!.isNotEmpty) {
-      list = list.where((i) => i.entityType == entityTypeFilter).toList();
-    }
-
-    // ── Location filter ──
-    if (locationFilter != null && locationFilter!.isNotEmpty) {
-      list = list.where((i) => i.location == locationFilter).toList();
-    }
-
-    // ── Month filter ──
-    if (monthFilter != null) {
-      list = list.where((i) =>
-      i.submissionDate != null && i.submissionDate!.month == monthFilter,
-      ).toList();
-    }
-
-    // ── Search filter ──
-    if (searchQuery.isNotEmpty) {
-      final q = searchQuery.toLowerCase();
-      list = list.where((i) {
-        return i.fullName.toLowerCase().contains(q) ||
-            i.email.toLowerCase().contains(q) ||
-            i.subject.toLowerCase().contains(q) ||
-            i.entityName.toLowerCase().contains(q) ||
-            i.phone.toLowerCase().contains(q) ||
-            i.location.toLowerCase().contains(q);
-      }).toList();
-    }
-
-    return list;
+  static List<InquiryModel> _applyFilters(
+      List<InquiryModel> all,
+      String search,
+      String? status,
+      String? userType,
+      String? gender,
+      String? country,
+      int? month,
+      ) {
+    return all.where((i) {
+      if (status   != null && i.status.label.toLowerCase()  != status.toLowerCase())   return false;
+      if (userType != null && i.userType.toLowerCase()       != userType.toLowerCase()) return false;
+      if (gender   != null && i.gender.toLowerCase()         != gender.toLowerCase())   return false;
+      if (country  != null && i.country.toLowerCase()        != country.toLowerCase())  return false;
+      if (month    != null && i.submissionDate?.month        != month)                  return false;
+      if (search.isNotEmpty) {
+        final q = search.toLowerCase();
+        final inName    = i.fullName.toLowerCase().contains(q);
+        final inEmail   = i.email.toLowerCase().contains(q);
+        final inSubject = i.subject.toLowerCase().contains(q);
+        final inCountry = i.country.toLowerCase().contains(q);
+        if (!inName && !inEmail && !inSubject && !inCountry) return false;
+      }
+      return true;
+    }).toList();
   }
 
-  int get totalCount   => filtered.length;
-  int get newCount     => filtered.where((i) => i.status == InquiryStatus.newInquiry).length;
-  int get repliedCount => filtered.where((i) => i.status == InquiryStatus.replied).length;
-  int get closedCount  => filtered.where((i) => i.status == InquiryStatus.closed).length;
-
-  // ── Unique values for dropdown items ──
-  List<String> get uniqueStatuses =>
-      inquiries.map((i) => i.status.label).toSet().toList()..sort();
-
-  List<String> get uniqueEntityTypes =>
-      inquiries.map((i) => i.entityType).where((e) => e.isNotEmpty).toSet().toList()..sort();
-
-  List<String> get uniqueLocations =>
-      inquiries.map((i) => i.location).where((e) => e.isNotEmpty).toSet().toList()..sort();
-
-  List<int> get uniqueMonths {
-    final months = inquiries
-        .where((i) => i.submissionDate != null)
-        .map((i) => i.submissionDate!.month)
-        .toSet()
-        .toList()
-      ..sort();
-    return months;
-  }
-
-  // ── Chart data (uses ALL inquiries, not filtered) ──
-  Map<String, int> get entityTypeCounts {
-    final map = <String, int>{};
-    for (final i in inquiries) {
-      if (i.entityType.isNotEmpty) map[i.entityType] = (map[i.entityType] ?? 0) + 1;
-    }
-    return map;
-  }
-
-  Map<String, int> get entitySizeCounts {
-    final map = <String, int>{};
-    for (final i in inquiries) {
-      if (i.entitySize.isNotEmpty) map[i.entitySize] = (map[i.entitySize] ?? 0) + 1;
-    }
-    return map;
-  }
-
-  Map<String, int> get locationCounts {
-    final map = <String, int>{};
-    for (final i in inquiries) {
-      if (i.location.isNotEmpty) map[i.location] = (map[i.location] ?? 0) + 1;
-    }
-    return map;
-  }
-
-  Map<int, int> get monthlySubmissions {
+  static Map<int, int> _countByMonth(List<InquiryModel> list) {
     final map = <int, int>{};
-    for (final i in inquiries) {
+    for (final i in list) {
       if (i.submissionDate != null) {
-        map[i.submissionDate!.month] = (map[i.submissionDate!.month] ?? 0) + 1;
+        final m = i.submissionDate!.month;
+        map[m] = (map[m] ?? 0) + 1;
       }
     }
     return map;
+  }
+
+  static Map<String, int> _countByField(List<InquiryModel> list, String Function(InquiryModel) fn) {
+    final map = <String, int>{};
+    for (final i in list) {
+      final key = fn(i).trim();
+      if (key.isEmpty) continue;
+      map[key] = (map[key] ?? 0) + 1;
+    }
+    return map;
+  }
+
+  static List<String> _unique(List<InquiryModel> list, String Function(InquiryModel) fn) {
+    final seen = <String>{};
+    final result = <String>[];
+    for (final i in list) {
+      final v = fn(i).trim();
+      if (v.isNotEmpty && seen.add(v)) result.add(v);
+    }
+    return result;
+  }
+
+  static List<int> _uniqueMonths(List<InquiryModel> list) {
+    final seen = <int>{};
+    final result = <int>[];
+    for (final i in list) {
+      if (i.submissionDate != null) {
+        final m = i.submissionDate!.month;
+        if (seen.add(m)) result.add(m);
+      }
+    }
+    result.sort();
+    return result;
   }
 }
 

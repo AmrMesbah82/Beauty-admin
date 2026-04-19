@@ -2,7 +2,9 @@
 /// File Name: client_services_repo_imp.dart
 /// Description: Firebase implementation of ClientServicesRepo.
 /// Created by: Amr Mesbah
-/// Last Update: 08/04/2026
+/// Last Update: 18/04/2026
+/// UPDATED: savePage() now versions ALL fields using Versioned.append()
+///          — full audit trail in Firestore ✅
 
 import 'dart:typed_data';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -25,6 +27,7 @@ class ClientServicesRepoImp implements ClientServicesRepo {
   DocumentReference _docRef(String gender) =>
       _firestore.collection(_collection).doc(gender);
 
+  // ── Fetch ──────────────────────────────────────────────────────────────────
   @override
   Future<ClientServicesPageModel> fetchPage({required String gender}) async {
     print('🟡 [ClientServicesRepoImp] fetchPage: gender=$gender');
@@ -46,20 +49,80 @@ class ClientServicesRepoImp implements ClientServicesRepo {
     }
   }
 
+  // ── Save (ALL fields versioned) ────────────────────────────────────────────
   @override
   Future<void> savePage(ClientServicesPageModel model) async {
-    print('🟡 [ClientServicesRepoImp] savePage: id=${model.id}');
+    final docGender = model.gender.isEmpty ? 'female' : model.gender;
+    print('🟡 [ClientServicesRepoImp] savePage: id=${model.id} '
+        'status=${model.status} gender=$docGender');
+
     try {
-      final data = model.copyWith(lastUpdated: DateTime.now()).toMap();
-      await _docRef(model.gender.isEmpty ? 'female' : model.gender)
-          .set(data, SetOptions(merge: true));
-      print('🟢 [ClientServicesRepoImp] savePage: ✅ DONE');
+      // ── Step 1: read existing raw Firestore data ────────────────────────
+      print('🟡 [ClientServicesRepoImp] savePage → reading existing doc...');
+      final existingSnap = await _docRef(docGender)
+          .get(const GetOptions(source: Source.server));
+      final existingData =
+          (existingSnap.exists ? existingSnap.data() : null)
+          as Map<String, dynamic>? ??
+              {};
+      print('   existing keys = ${existingData.keys.toList()}');
+
+      // ── Step 2: plain map from model ────────────────────────────────────
+      final updatedModel = model.copyWith(lastUpdated: DateTime.now());
+      final newMap = updatedModel.toMap();
+
+      // ── Step 3: build versioned map — ALL fields ────────────────────────
+      final versionedMap = <String, dynamic>{
+        'id': Versioned.append(
+          existingData['id'],
+          newMap['id'],
+        ),
+        'status': Versioned.append(
+          existingData['status'],
+          newMap['status'],
+        ),
+        'gender': Versioned.append(
+          existingData['gender'],
+          newMap['gender'],
+        ),
+        'header': Versioned.append(
+          existingData['header'],
+          newMap['header'],
+        ),
+        'download': Versioned.append(
+          existingData['download'],
+          newMap['download'],
+        ),
+        'mockups': Versioned.append(
+          existingData['mockups'],
+          newMap['mockups'],
+        ),
+        'lastUpdated': Versioned.append(
+          existingData['lastUpdated'],
+          newMap['lastUpdated'],
+        ),
+      };
+
+      // ── Step 4: write to Firestore ──────────────────────────────────────
+      print('🟡 [ClientServicesRepoImp] savePage → writing versioned map...');
+      print('   id history length          = ${(versionedMap['id'] as List).length}');
+      print('   status history length      = ${(versionedMap['status'] as List).length}');
+      print('   gender history length      = ${(versionedMap['gender'] as List).length}');
+      print('   header history length      = ${(versionedMap['header'] as List).length}');
+      print('   download history length    = ${(versionedMap['download'] as List).length}');
+      print('   mockups history length     = ${(versionedMap['mockups'] as List).length}');
+      print('   lastUpdated history length = ${(versionedMap['lastUpdated'] as List).length}');
+
+      await _docRef(docGender).set(versionedMap, SetOptions(merge: true));
+      print('🟢 [ClientServicesRepoImp] savePage: ✅ ALL fields versioned DONE');
+
     } catch (e, st) {
       print('🔴 [ClientServicesRepoImp] savePage: ERROR $e\n$st');
       rethrow;
     }
   }
 
+  // ── Upload image ───────────────────────────────────────────────────────────
   @override
   Future<String> uploadImage({
     required String path,
@@ -85,6 +148,7 @@ class ClientServicesRepoImp implements ClientServicesRepo {
     }
   }
 
+  // ── Delete image ───────────────────────────────────────────────────────────
   @override
   Future<void> deleteImage(String url) async {
     if (url.isEmpty) return;

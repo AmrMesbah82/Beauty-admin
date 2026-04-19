@@ -1,9 +1,7 @@
 // ******************* FILE INFO *******************
 // File Name: about_edit_page.dart
 // Screen 2 — About Us CMS: Edit all sections
-// Navigates to: AboutPreviewPage (screen 3)
-// UPDATE: Values section — first item labeled "Main Icon", rest labeled "Icon"
-//         matching Figma design exactly.
+// UPDATED: ALL image uploads are SVG-only
 
 // ignore_for_file: avoid_web_libraries_in_flutter
 import 'dart:async';
@@ -18,18 +16,18 @@ import 'package:go_router/go_router.dart';
 
 import 'package:beauty_admin/controller/about_us/about_us_cubit.dart';
 import 'package:beauty_admin/controller/about_us/about_us_state.dart';
+import 'package:beauty_admin/core/custom_dialog.dart';
 import 'package:beauty_admin/core/custom_svg.dart';
 import 'package:beauty_admin/core/widget/textfield.dart';
 import 'package:beauty_admin/theme/appcolors.dart';
 import 'package:beauty_admin/theme/new_theme.dart';
 import 'package:beauty_admin/widgets/admin_sub_navbar.dart';
-import 'package:beauty_admin/widgets/app_navbar.dart';
 
 import '../../model/about_us/about_us.dart';
 import 'about_preview_page.dart';
 
-const Color _kGreen = Color(0xFF2D8C4E);
-const Color _kGreenSolid = Color(0xFF008037);
+const Color _kGreen = Color(0xFFD16F9A);
+const Color _kGreenSolid = Color(0xFFD16F9A);
 const Color _kGreenLight = Color(0xFFE8F5EE);
 const Color _kRed = Color(0xFFD32F2F);
 const Color _kSurface = Color(0xFFFFFFFF);
@@ -47,9 +45,23 @@ class AboutEditPageMaster extends StatefulWidget {
 }
 
 class _AboutEditPageMasterState extends State<AboutEditPageMaster> {
+  bool _submitted = false;
+  bool _hasChanges = false;
+  bool _seeded = false;
+  bool _isSaving = false;
+  int? _seededModelHash;
+
   // ── Headings ──
   final _titleEnCtrl = TextEditingController();
   final _titleArCtrl = TextEditingController();
+  Uint8List? _headingsSvgBytes;
+  String _headingsSvgUrl = '';
+
+  // ── Navigation Label ──
+  final _navLabelTitleEnCtrl = TextEditingController();
+  final _navLabelTitleArCtrl = TextEditingController();
+  Uint8List? _navLabelIconBytes;
+  String _navLabelIconUrl = '';
 
   // ── Vision ──
   final _visionSubEnCtrl = TextEditingController();
@@ -77,27 +89,42 @@ class _AboutEditPageMasterState extends State<AboutEditPageMaster> {
 
   // ── Accordion open/close ──
   bool _headingsOpen = true;
+  bool _navLabelOpen = true;
   bool _visionOpen = true;
   bool _missionOpen = true;
   bool _valuesOpen = true;
 
-  bool _submitted = false;
-  bool _seeded = false;
-  bool _isSaving = false;
-
-  // ── URL → bytes cache (avoids re-fetching on every rebuild) ──
+  // ── URL → bytes cache ──
   final Map<String, Future<Uint8List>> _urlBytesCache = {};
 
   @override
   void initState() {
     super.initState();
     context.read<AboutCubit>().load();
+    _setupChangeListeners();
+  }
+
+  void _setupChangeListeners() {
+    _titleEnCtrl.addListener(() => setState(() => _hasChanges = true));
+    _titleArCtrl.addListener(() => setState(() => _hasChanges = true));
+    _navLabelTitleEnCtrl.addListener(() => setState(() => _hasChanges = true));
+    _navLabelTitleArCtrl.addListener(() => setState(() => _hasChanges = true));
+    _visionSubEnCtrl.addListener(() => setState(() => _hasChanges = true));
+    _visionSubArCtrl.addListener(() => setState(() => _hasChanges = true));
+    _visionDescEnCtrl.addListener(() => setState(() => _hasChanges = true));
+    _visionDescArCtrl.addListener(() => setState(() => _hasChanges = true));
+    _missionSubEnCtrl.addListener(() => setState(() => _hasChanges = true));
+    _missionSubArCtrl.addListener(() => setState(() => _hasChanges = true));
+    _missionDescEnCtrl.addListener(() => setState(() => _hasChanges = true));
+    _missionDescArCtrl.addListener(() => setState(() => _hasChanges = true));
   }
 
   @override
   void dispose() {
     _titleEnCtrl.dispose();
     _titleArCtrl.dispose();
+    _navLabelTitleEnCtrl.dispose();
+    _navLabelTitleArCtrl.dispose();
     _visionSubEnCtrl.dispose();
     _visionSubArCtrl.dispose();
     _visionDescEnCtrl.dispose();
@@ -116,44 +143,13 @@ class _AboutEditPageMasterState extends State<AboutEditPageMaster> {
   }
 
   // ══════════════════════════════════════════════════════════════════════════
-  // File pickers
+  // STRICT SVG-ONLY PICKER - Only allows SVG files (for ALL uploads)
   // ══════════════════════════════════════════════════════════════════════════
-
-  Future<Uint8List?> _pickImageIcon() async {
-    final completer = Completer<Uint8List?>();
-    final input = html.FileUploadInputElement()
-      ..accept = 'image/png,image/jpeg,image/jpg,image/webp,image/svg+xml';
-
-    input.onChange.listen((_) {
-      final files = input.files;
-      if (files == null || files.isEmpty) {
-        completer.complete(null);
-        return;
-      }
-      final file = files.first;
-      final reader = html.FileReader();
-      reader.readAsArrayBuffer(file);
-      reader.onLoadEnd.listen((_) {
-        if (reader.readyState == html.FileReader.DONE) {
-          final result = reader.result;
-          if (result is ByteBuffer)
-            completer.complete(result.asUint8List());
-          else if (result is Uint8List)
-            completer.complete(result);
-          else
-            completer.complete(null);
-        }
-      });
-      reader.onError.listen((_) => completer.complete(null));
-    });
-
-    input.click();
-    return completer.future;
-  }
 
   Future<Uint8List?> _pickSvgFile() async {
     final completer = Completer<Uint8List?>();
-    final input = html.FileUploadInputElement();
+    final input = html.FileUploadInputElement()
+      ..accept = '.svg,image/svg+xml';
 
     input.onChange.listen((_) {
       final files = input.files;
@@ -162,95 +158,68 @@ class _AboutEditPageMasterState extends State<AboutEditPageMaster> {
         return;
       }
       final file = files.first;
-      if (!file.name.toLowerCase().endsWith('.svg')) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              '❌ Please upload SVG files only! You selected: ${file.name}',
-            ),
-            backgroundColor: _kRed,
-            duration: const Duration(seconds: 3),
-          ),
-        );
+      final fileName = file.name.toLowerCase();
+      final fileType = file.type.toLowerCase();
+
+      bool isValidSvg = fileName.endsWith('.svg') || fileType == 'image/svg+xml';
+
+      if (!isValidSvg) {
+        // _showErrorSnackBar('❌ SVG files only! "${file.name}" is not an SVG file.');
         completer.complete(null);
         return;
       }
+
       final reader = html.FileReader();
       reader.readAsArrayBuffer(file);
       reader.onLoadEnd.listen((_) {
         if (reader.readyState == html.FileReader.DONE) {
           final result = reader.result;
-          if (result is ByteBuffer)
-            completer.complete(result.asUint8List());
-          else if (result is Uint8List)
-            completer.complete(result);
-          else
+          Uint8List? bytes;
+          if (result is ByteBuffer) {
+            bytes = result.asUint8List();
+          } else if (result is Uint8List) {
+            bytes = result;
+          }
+
+          if (bytes != null && !_isValidSvgContent(bytes)) {
+            // _showErrorSnackBar('❌ Invalid SVG file format. Please upload a valid SVG file.');
             completer.complete(null);
+            return;
+          }
+
+          completer.complete(bytes);
         }
       });
-      reader.onError.listen((_) => completer.complete(null));
-    });
-
-    input.click();
-    return completer.future;
-  }
-
-  Future<Uint8List?> _pickImage() async {
-    final completer = Completer<Uint8List?>();
-    final input = html.FileUploadInputElement()..accept = 'image/*';
-
-    input.onChange.listen((_) {
-      final files = input.files;
-      if (files == null || files.isEmpty) {
+      reader.onError.listen((_) {
+        // _showErrorSnackBar('❌ Error reading SVG file.');
         completer.complete(null);
-        return;
-      }
-      final reader = html.FileReader();
-      reader.readAsArrayBuffer(files.first);
-      reader.onLoadEnd.listen((_) {
-        if (reader.readyState == html.FileReader.DONE) {
-          final result = reader.result;
-          if (result is ByteBuffer)
-            completer.complete(result.asUint8List());
-          else if (result is Uint8List)
-            completer.complete(result);
-          else
-            completer.complete(null);
-        }
       });
-      reader.onError.listen((_) => completer.complete(null));
     });
 
     input.click();
     return completer.future;
   }
 
-  // ══════════════════════════════════════════════════════════════════════════
-  // URL loaders (XHR — CORS-safe for Firebase Storage)
-  // ══════════════════════════════════════════════════════════════════════════
-
-  /// Returns a cached Future so FutureBuilder never re-fetches on rebuild.
-  Future<Uint8List> _cachedLoad(String url, {bool isSvg = false}) {
-    return _urlBytesCache.putIfAbsent(
-      url,
-      () => isSvg ? _loadSvg(url) : _loadImageBytes(url),
-    );
+  bool _isValidSvgContent(Uint8List bytes) {
+    if (bytes.length < 10) return false;
+    try {
+      final content = String.fromCharCodes(bytes.sublist(0, bytes.length.clamp(0, 200)));
+      final trimmed = content.trimLeft();
+      return trimmed.startsWith('<svg') ||
+          trimmed.startsWith('<?xml') && trimmed.contains('<svg');
+    } catch (e) {
+      return false;
+    }
   }
 
-  Future<Uint8List> _loadImageBytes(String url) async {
-    try {
-      final response = await html.HttpRequest.request(
-        url,
-        method: 'GET',
-        responseType: 'arraybuffer',
-      );
-      if (response.status == 200 && response.response != null) {
-        return (response.response as ByteBuffer).asUint8List();
-      }
-      throw Exception('HTTP ${response.status}');
-    } catch (e) {
-      throw Exception('Failed to load image: $e');
-    }
+  
+
+  // ══════════════════════════════════════════════════════════════════════════
+  // URL loaders
+  // ══════════════════════════════════════════════════════════════════════════
+
+  Future<Uint8List> _cachedLoad(String url) {
+    return _urlBytesCache.putIfAbsent(url, () => _loadSvg(url));
   }
 
   Future<Uint8List> _loadSvg(String url) async {
@@ -262,7 +231,11 @@ class _AboutEditPageMasterState extends State<AboutEditPageMaster> {
         mimeType: 'image/svg+xml',
       );
       if (response.status == 200 && response.response != null) {
-        return (response.response as ByteBuffer).asUint8List();
+        final bytes = (response.response as ByteBuffer).asUint8List();
+        if (!_isValidSvgContent(bytes)) {
+          throw Exception('Invalid SVG content');
+        }
+        return bytes;
       }
       throw Exception('HTTP ${response.status}');
     } catch (e) {
@@ -272,11 +245,38 @@ class _AboutEditPageMasterState extends State<AboutEditPageMaster> {
 
   // ── Seed from loaded model ─────────────────────────────────────────────────
   void _seedFromModel(AboutPageModel m) {
-    if (_seeded) return;
-    _seeded = true;
+    final modelHash = Object.hashAll([
+      m.title.en,
+      m.title.ar,
+      m.svgUrl,
+      m.navigationLabel.iconUrl,
+      m.navigationLabel.title.en,
+      m.navigationLabel.title.ar,
+      m.vision.iconUrl,
+      m.vision.svgUrl,
+      m.vision.subDescription.en,
+      m.vision.subDescription.ar,
+      m.vision.description.en,
+      m.vision.description.ar,
+      m.mission.iconUrl,
+      m.mission.svgUrl,
+      m.mission.subDescription.en,
+      m.mission.subDescription.ar,
+      m.mission.description.en,
+      m.mission.description.ar,
+      m.values.length,
+    ]);
+
+    if (_seededModelHash == modelHash) return;
+    _seededModelHash = modelHash;
 
     _titleEnCtrl.text = m.title.en;
     _titleArCtrl.text = m.title.ar;
+    _headingsSvgUrl = m.svgUrl;
+
+    _navLabelIconUrl = m.navigationLabel.iconUrl;
+    _navLabelTitleEnCtrl.text = m.navigationLabel.title.en;
+    _navLabelTitleArCtrl.text = m.navigationLabel.title.ar;
 
     _visionSubEnCtrl.text = m.vision.subDescription.en;
     _visionSubArCtrl.text = m.vision.subDescription.ar;
@@ -302,6 +302,9 @@ class _AboutEditPageMasterState extends State<AboutEditPageMaster> {
       item.iconUrl = v.iconUrl;
       _valueItems.add(item);
     }
+
+    _hasChanges = false;
+    _seeded = true;
   }
 
   // ── Build model from current state ────────────────────────────────────────
@@ -311,6 +314,14 @@ class _AboutEditPageMasterState extends State<AboutEditPageMaster> {
       title: AboutBilingualText(
         en: _titleEnCtrl.text.trim(),
         ar: _titleArCtrl.text.trim(),
+      ),
+      svgUrl: _headingsSvgUrl,
+      navigationLabel: AboutNavigationLabel(
+        iconUrl: _navLabelIconUrl,
+        title: AboutBilingualText(
+          en: _navLabelTitleEnCtrl.text.trim(),
+          ar: _navLabelTitleArCtrl.text.trim(),
+        ),
       ),
       vision: AboutSection(
         iconUrl: _visionIconUrl,
@@ -339,25 +350,32 @@ class _AboutEditPageMasterState extends State<AboutEditPageMaster> {
       values: _valueItems
           .map(
             (v) => AboutValueItem(
-              id: v.id,
-              iconUrl: v.iconUrl,
-              title: AboutBilingualText(
-                en: v.titleEnCtrl.text.trim(),
-                ar: v.titleArCtrl.text.trim(),
-              ),
-              shortDescription: AboutBilingualText(
-                en: v.shortDescEnCtrl.text.trim(),
-                ar: v.shortDescArCtrl.text.trim(),
-              ),
-            ),
-          )
+          id: v.id,
+          iconUrl: v.iconUrl,
+          title: AboutBilingualText(
+            en: v.titleEnCtrl.text.trim(),
+            ar: v.titleArCtrl.text.trim(),
+          ),
+          shortDescription: AboutBilingualText(
+            en: v.shortDescEnCtrl.text.trim(),
+            ar: v.shortDescArCtrl.text.trim(),
+          ),
+        ),
+      )
           .toList(),
     );
   }
 
-  // ── Collect image uploads ──────────────────────────────────────────────────
+  // ── Collect SVG uploads ──────────────────────────────────────────────────
   Map<String, Uint8List> _collectUploads() {
     final uploads = <String, Uint8List>{};
+
+    if (_headingsSvgBytes != null)
+      uploads['about_cms/headings/svg'] = _headingsSvgBytes!;
+
+    if (_navLabelIconBytes != null)
+      uploads['about_cms/navLabel/icon'] = _navLabelIconBytes!;
+
     if (_visionIconBytes != null)
       uploads['about_cms/vision/icon'] = _visionIconBytes!;
     if (_visionSvgBytes != null)
@@ -373,33 +391,56 @@ class _AboutEditPageMasterState extends State<AboutEditPageMaster> {
     return uploads;
   }
 
-  // ── Validate fields ────────────────────────────────────────────────────────
-  bool _validateFields() {
-    final requiredCtrls = [
-      _titleEnCtrl,
-      _titleArCtrl,
-      _visionSubEnCtrl,
-      _visionSubArCtrl,
-      _visionDescEnCtrl,
-      _visionDescArCtrl,
-      _missionSubEnCtrl,
-      _missionSubArCtrl,
-      _missionDescEnCtrl,
-      _missionDescArCtrl,
-      for (final v in _valueItems) ...[
-        v.titleEnCtrl,
-        v.titleArCtrl,
-        v.shortDescEnCtrl,
-        v.shortDescArCtrl,
-      ],
-    ];
-    return !requiredCtrls.any((c) => c.text.trim().isEmpty);
+  // ── Validate fields ──────────────────────────────────────────────────────
+  bool _validate() {
+    setState(() => _submitted = true);
+
+    if (_titleEnCtrl.text.trim().isEmpty) return false;
+    if (_titleArCtrl.text.trim().isEmpty) return false;
+    if (_visionSubEnCtrl.text.trim().isEmpty) return false;
+    if (_visionSubArCtrl.text.trim().isEmpty) return false;
+    if (_visionDescEnCtrl.text.trim().isEmpty) return false;
+    if (_visionDescArCtrl.text.trim().isEmpty) return false;
+    if (_missionSubEnCtrl.text.trim().isEmpty) return false;
+    if (_missionSubArCtrl.text.trim().isEmpty) return false;
+    if (_missionDescEnCtrl.text.trim().isEmpty) return false;
+    if (_missionDescArCtrl.text.trim().isEmpty) return false;
+
+    for (final v in _valueItems) {
+      if (v.titleEnCtrl.text.trim().isEmpty) return false;
+      if (v.titleArCtrl.text.trim().isEmpty) return false;
+      if (v.shortDescEnCtrl.text.trim().isEmpty) return false;
+      if (v.shortDescArCtrl.text.trim().isEmpty) return false;
+    }
+
+    return true;
+  }
+
+  bool _validateSilent() {
+    if (_titleEnCtrl.text.trim().isEmpty) return false;
+    if (_titleArCtrl.text.trim().isEmpty) return false;
+    if (_visionSubEnCtrl.text.trim().isEmpty) return false;
+    if (_visionSubArCtrl.text.trim().isEmpty) return false;
+    if (_visionDescEnCtrl.text.trim().isEmpty) return false;
+    if (_visionDescArCtrl.text.trim().isEmpty) return false;
+    if (_missionSubEnCtrl.text.trim().isEmpty) return false;
+    if (_missionSubArCtrl.text.trim().isEmpty) return false;
+    if (_missionDescEnCtrl.text.trim().isEmpty) return false;
+    if (_missionDescArCtrl.text.trim().isEmpty) return false;
+
+    for (final v in _valueItems) {
+      if (v.titleEnCtrl.text.trim().isEmpty) return false;
+      if (v.titleArCtrl.text.trim().isEmpty) return false;
+      if (v.shortDescEnCtrl.text.trim().isEmpty) return false;
+      if (v.shortDescArCtrl.text.trim().isEmpty) return false;
+    }
+
+    return true;
   }
 
   // ── Preview ────────────────────────────────────────────────────────────────
   void _onPreview() {
-    setState(() => _submitted = true);
-    if (!_validateFields()) return;
+    if (!_validate()) return;
     final model = _buildModel('draft');
     final uploads = _collectUploads();
     final cubit = context.read<AboutCubit>();
@@ -417,7 +458,7 @@ class _AboutEditPageMasterState extends State<AboutEditPageMaster> {
   // ── Save / Publish ─────────────────────────────────────────────────────────
   Future<void> _save(String status) async {
     setState(() => _submitted = true);
-    if (!_validateFields()) return;
+    if (!_validate()) return;
 
     setState(() => _isSaving = true);
     final model = _buildModel(status);
@@ -437,11 +478,15 @@ class _AboutEditPageMasterState extends State<AboutEditPageMaster> {
           counter: ++_valueCounter,
         ),
       );
+      _hasChanges = true;
     });
   }
 
   void _removeValueItem(String id) {
-    setState(() => _valueItems.removeWhere((v) => v.id == id));
+    setState(() {
+      _valueItems.removeWhere((v) => v.id == id);
+      _hasChanges = true;
+    });
   }
 
   // ═════════════════════════════════════════════════════════════════════════
@@ -461,23 +506,27 @@ class _AboutEditPageMasterState extends State<AboutEditPageMaster> {
               backgroundColor: _kGreenSolid,
             ),
           );
-          // no navigation — stay on edit page after publish
+          if (mounted) {
+            Navigator.pop(context);
+          }
         }
         if (state is AboutError) {
           setState(() => _isSaving = false);
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Error: ${state.message}'),
-              backgroundColor: _kRed,
-            ),
-          );
+          // ScaffoldMessenger.of(context).showSnackBar(
+          //   SnackBar(
+          //     content: Text('Error: ${state.message}'),
+          //     backgroundColor: _kRed,
+          //   ),
+          // );
         }
       },
       builder: (context, state) {
         final isLoading = state is AboutLoading || state is AboutInitial;
+        final bool isFormValid = _validateSilent();
+        final bool canPublish = isFormValid && _hasChanges && !_isSaving;
 
         return Scaffold(
-          backgroundColor: Color(0xFFF1F2ED),
+          backgroundColor: const Color(0xFFF1F2ED),
           body: Stack(
             children: [
               SingleChildScrollView(
@@ -486,16 +535,16 @@ class _AboutEditPageMasterState extends State<AboutEditPageMaster> {
                   child: Column(
                     children: [
                       SizedBox(height: 20.h),
-                      AdminSubNavBar(activeIndex: 3),
+                      AdminSubNavBar(activeIndex: 5),
                       SizedBox(
                         width: 1000.w,
                         child: isLoading
                             ? const Center(
-                                child: CircularProgressIndicator(
-                                  color: _kGreenSolid,
-                                ),
-                              )
-                            : _buildForm(),
+                          child: CircularProgressIndicator(
+                            color: _kGreenSolid,
+                          ),
+                        )
+                            : _buildForm(canPublish),
                       ),
                     ],
                   ),
@@ -510,7 +559,7 @@ class _AboutEditPageMasterState extends State<AboutEditPageMaster> {
   }
 
   // ── Form ───────────────────────────────────────────────────────────────────
-  Widget _buildForm() {
+  Widget _buildForm(bool canPublish) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -532,6 +581,13 @@ class _AboutEditPageMasterState extends State<AboutEditPageMaster> {
         ),
 
         _accordion(
+          title: 'Navigation Label',
+          isOpen: _navLabelOpen,
+          onToggle: () => setState(() => _navLabelOpen = !_navLabelOpen),
+          child: _navigationLabelSection(),
+        ),
+
+        _accordion(
           title: 'Vision',
           isOpen: _visionOpen,
           onToggle: () => setState(() => _visionOpen = !_visionOpen),
@@ -541,12 +597,18 @@ class _AboutEditPageMasterState extends State<AboutEditPageMaster> {
             iconUrl: _visionIconUrl,
             svgUrl: _visionSvgUrl,
             onPickIcon: () async {
-              final b = await _pickImageIcon();
-              if (b != null) setState(() => _visionIconBytes = b);
+              final b = await _pickSvgFile(); // CHANGED: SVG only
+              if (b != null) {
+                setState(() => _visionIconBytes = b);
+                _hasChanges = true;
+              }
             },
             onPickSvg: () async {
               final b = await _pickSvgFile();
-              if (b != null) setState(() => _visionSvgBytes = b);
+              if (b != null) {
+                setState(() => _visionSvgBytes = b);
+                _hasChanges = true;
+              }
             },
             subEnCtrl: _visionSubEnCtrl,
             subArCtrl: _visionSubArCtrl,
@@ -566,12 +628,18 @@ class _AboutEditPageMasterState extends State<AboutEditPageMaster> {
             iconUrl: _missionIconUrl,
             svgUrl: _missionSvgUrl,
             onPickIcon: () async {
-              final b = await _pickImageIcon();
-              if (b != null) setState(() => _missionIconBytes = b);
+              final b = await _pickSvgFile(); // CHANGED: SVG only
+              if (b != null) {
+                setState(() => _missionIconBytes = b);
+                _hasChanges = true;
+              }
             },
             onPickSvg: () async {
               final b = await _pickSvgFile();
-              if (b != null) setState(() => _missionSvgBytes = b);
+              if (b != null) {
+                setState(() => _missionSvgBytes = b);
+                _hasChanges = true;
+              }
             },
             subEnCtrl: _missionSubEnCtrl,
             subArCtrl: _missionSubArCtrl,
@@ -589,7 +657,7 @@ class _AboutEditPageMasterState extends State<AboutEditPageMaster> {
         ),
         SizedBox(height: 32.h),
 
-        _actionButtons(),
+        _actionButtons(canPublish),
         SizedBox(height: 48.h),
       ],
     );
@@ -639,6 +707,7 @@ class _AboutEditPageMasterState extends State<AboutEditPageMaster> {
         if (isOpen)
           Container(
             width: double.infinity,
+            padding: EdgeInsets.symmetric(vertical: 16.h),
             decoration: BoxDecoration(
               borderRadius: BorderRadius.vertical(
                 bottom: Radius.circular(12.r),
@@ -650,11 +719,26 @@ class _AboutEditPageMasterState extends State<AboutEditPageMaster> {
     );
   }
 
-  // ── Headings section ───────────────────────────────────────────────────────
+  // ══════════════════════════════════════════════════════════════════════════
+  // Headings section
+  // ══════════════════════════════════════════════════════════════════════════
+
   Widget _headingsSection() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        _imageUploadCircle(
+          label: 'Image',
+          bytes: _headingsSvgBytes,
+          url: _headingsSvgUrl,
+          onTap: () async {
+            final b = await _pickSvgFile();
+            if (b != null) {
+              setState(() => _headingsSvgBytes = b);
+              _hasChanges = true;
+            }
+          },
+        ),
         SizedBox(height: 20.h),
 
         _fieldLabel('Title'),
@@ -662,6 +746,40 @@ class _AboutEditPageMasterState extends State<AboutEditPageMaster> {
         _bilingualRow(
           enCtrl: _titleEnCtrl,
           arCtrl: _titleArCtrl,
+          enHint: 'Text Here',
+          arHint: 'أدخل النص هنا',
+        ),
+      ],
+    );
+  }
+
+  // ══════════════════════════════════════════════════════════════════════════
+  // Navigation Label section
+  // ══════════════════════════════════════════════════════════════════════════
+
+  Widget _navigationLabelSection() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _imageUploadCircle(
+          label: 'Image', // CHANGED: label
+          bytes: _navLabelIconBytes,
+          url: _navLabelIconUrl,
+          onTap: () async {
+            final b = await _pickSvgFile(); // CHANGED: SVG only
+            if (b != null) {
+              setState(() => _navLabelIconBytes = b);
+              _hasChanges = true;
+            }
+          },
+        ),
+        SizedBox(height: 20.h),
+
+        _fieldLabel('Title'),
+        SizedBox(height: 8.h),
+        _bilingualRow(
+          enCtrl: _navLabelTitleEnCtrl,
+          arCtrl: _navLabelTitleArCtrl,
           enHint: 'Text Here',
           arHint: 'أدخل النص هنا',
         ),
@@ -685,24 +803,20 @@ class _AboutEditPageMasterState extends State<AboutEditPageMaster> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        SizedBox(height: 20.h),
-
         Row(
           children: [
             _imageUploadCircle(
-              label: 'Icon',
+              label: 'Image', // CHANGED: label
               bytes: iconBytes,
               url: iconUrl,
               onTap: onPickIcon,
-              isSvg: false,
             ),
             SizedBox(width: 24.w),
             _imageUploadCircle(
-              label: 'SVG',
+              label: 'Image',
               bytes: svgBytes,
               url: svgUrl,
               onTap: onPickSvg,
-              isSvg: true,
             ),
           ],
         ),
@@ -720,7 +834,7 @@ class _AboutEditPageMasterState extends State<AboutEditPageMaster> {
           submitted: _submitted,
           textDirection: TextDirection.ltr,
           textAlign: TextAlign.start,
-          onChanged: (_) => setState(() {}),
+          onChanged: (_) => setState(() => _hasChanges = true),
         ),
 
         _fieldLabelAr('وصف فرعي'),
@@ -736,7 +850,7 @@ class _AboutEditPageMasterState extends State<AboutEditPageMaster> {
           submitted: _submitted,
           textDirection: TextDirection.rtl,
           textAlign: TextAlign.right,
-          onChanged: (_) => setState(() {}),
+          onChanged: (_) => setState(() => _hasChanges = true),
         ),
 
         _fieldLabel('Description'),
@@ -752,7 +866,7 @@ class _AboutEditPageMasterState extends State<AboutEditPageMaster> {
           submitted: _submitted,
           textDirection: TextDirection.ltr,
           textAlign: TextAlign.start,
-          onChanged: (_) => setState(() {}),
+          onChanged: (_) => setState(() => _hasChanges = true),
         ),
 
         _fieldLabelAr('الوصف'),
@@ -768,14 +882,14 @@ class _AboutEditPageMasterState extends State<AboutEditPageMaster> {
           submitted: _submitted,
           textDirection: TextDirection.rtl,
           textAlign: TextAlign.right,
-          onChanged: (_) => setState(() {}),
+          onChanged: (_) => setState(() => _hasChanges = true),
         ),
       ],
     );
   }
 
   // ══════════════════════════════════════════════════════════════════════════
-  // VALUES SECTION — first item = "Main Icon", rest = "Icon"
+  // VALUES SECTION
   // ══════════════════════════════════════════════════════════════════════════
 
   Widget _valuesSection() {
@@ -819,34 +933,31 @@ class _AboutEditPageMasterState extends State<AboutEditPageMaster> {
   }
 
   Widget _valueItemWidget(_ValueItem v, {required bool isMain}) {
-    final String itemLabel = isMain ? 'Main Icon' : 'Icon';
+    final String itemLabel = isMain ? 'Main Image' : 'Image'; // CHANGED: label
 
     return Container(
       margin: EdgeInsets.only(bottom: 20.h),
-
       decoration: BoxDecoration(
-
-
-          borderRadius: BorderRadius.circular(10.r)),
+        borderRadius: BorderRadius.circular(10.r),
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-
           SizedBox(height: 20.h),
-          // ── Header row: label + icon upload on left, Remove on right ──
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              // Icon upload with "Main Icon" or "Icon" label
               _imageUploadCircle(
                 label: itemLabel,
                 bytes: v.iconBytes,
                 url: v.iconUrl,
-                isSvg: false,
                 onTap: () async {
-                  final b = await _pickImage();
-                  if (b != null) setState(() => v.iconBytes = b);
+                  final b = await _pickSvgFile(); // CHANGED: SVG only
+                  if (b != null) {
+                    setState(() => v.iconBytes = b);
+                    _hasChanges = true;
+                  }
                 },
               ),
               GestureDetector(
@@ -875,7 +986,6 @@ class _AboutEditPageMasterState extends State<AboutEditPageMaster> {
           ),
           SizedBox(height: 16.h),
 
-          // ── Title (bilingual) ──
           _fieldLabel('Title'),
           SizedBox(height: 8.h),
           _bilingualRow(
@@ -885,8 +995,6 @@ class _AboutEditPageMasterState extends State<AboutEditPageMaster> {
             arHint: 'أدخل النص هنا',
           ),
 
-
-          // ── Short Description (bilingual) ──
           _fieldLabel('Short Description'),
           SizedBox(height: 8.h),
           CustomValidatedTextFieldMaster(
@@ -900,7 +1008,7 @@ class _AboutEditPageMasterState extends State<AboutEditPageMaster> {
             submitted: _submitted,
             textDirection: TextDirection.ltr,
             textAlign: TextAlign.start,
-            onChanged: (_) => setState(() {}),
+            onChanged: (_) => setState(() => _hasChanges = true),
           ),
           SizedBox(height: 8.h),
           _fieldLabelAr('وصف مختصر'),
@@ -916,7 +1024,7 @@ class _AboutEditPageMasterState extends State<AboutEditPageMaster> {
             submitted: _submitted,
             textDirection: TextDirection.rtl,
             textAlign: TextAlign.right,
-            onChanged: (_) => setState(() {}),
+            onChanged: (_) => setState(() => _hasChanges = true),
           ),
         ],
       ),
@@ -924,7 +1032,7 @@ class _AboutEditPageMasterState extends State<AboutEditPageMaster> {
   }
 
   // ── Action buttons ─────────────────────────────────────────────────────────
-  Widget _actionButtons() {
+  Widget _actionButtons(bool canPublish) {
     return Column(
       children: [
         Row(
@@ -932,7 +1040,7 @@ class _AboutEditPageMasterState extends State<AboutEditPageMaster> {
             Expanded(
               child: _btn(
                 label: 'Preview',
-                color: const Color(0xFF608570),
+                color: const Color(0xFFD16F9A).withOpacity(0.5),
                 onTap: _onPreview,
               ),
             ),
@@ -940,8 +1048,29 @@ class _AboutEditPageMasterState extends State<AboutEditPageMaster> {
             Expanded(
               child: _btn(
                 label: 'Publish',
-                color: _kGreenSolid,
-                onTap: () => _save('published'),
+                color: canPublish ? _kGreenSolid : _kGreenSolid.withOpacity(0.5),
+                onTap: canPublish
+                    ? () {
+                  if (!_validate()) {
+                    // ScaffoldMessenger.of(context).showSnackBar(
+                    //   SnackBar(
+                    //     content: Text(
+                    //       'Please fill in all required fields before publishing.',
+                    //       style: StyleText.fontSize14Weight400
+                    //           .copyWith(color: Colors.white),
+                    //     ),
+                    //     backgroundColor: Colors.red,
+                    //     behavior: SnackBarBehavior.floating,
+                    //   ),
+                    // );
+                    return;
+                  }
+                  showPublishConfirmDialog(
+                    context: context,
+                    onConfirm: () => _save('published'),
+                  );
+                }
+                    : null,
               ),
             ),
           ],
@@ -1005,7 +1134,6 @@ class _AboutEditPageMasterState extends State<AboutEditPageMaster> {
     required Uint8List? bytes,
     required String url,
     required VoidCallback onTap,
-    bool isSvg = false,
   }) {
     final hasImage = bytes != null || url.isNotEmpty;
     return Column(
@@ -1024,7 +1152,7 @@ class _AboutEditPageMasterState extends State<AboutEditPageMaster> {
         GestureDetector(
           onTap: onTap,
           child: Stack(
-            alignment: AlignmentGeometry.bottomRight,
+            alignment: Alignment.bottomRight,
             clipBehavior: Clip.none,
             children: [
               Container(
@@ -1035,28 +1163,33 @@ class _AboutEditPageMasterState extends State<AboutEditPageMaster> {
                   color: Colors.white,
                 ),
                 child: hasImage
-                    ? ClipOval(child: _buildImageWidget(bytes, url, isSvg))
+                    ? ClipOval(child: _buildImageWidget(bytes, url))
                     : Icon(
-                        isSvg ? Icons.description_outlined : Icons.add,
-                        color: Colors.grey[600],
-                        size: 28.sp,
-                      ),
+                  Icons.add,
+                  color: Colors.grey[600],
+                  size: 28.sp,
+                ),
               ),
               Positioned(
                 bottom: 0,
                 right: 0,
                 child: GestureDetector(
-                  onTap: _pickImage,
+                  onTap: onTap,
                   child: Container(
                     width: 25.w,
                     height: 25.h,
                     decoration: BoxDecoration(
-                      color: Colors.green[700],
+                      color: const Color(0xFFD16F9A),
                       shape: BoxShape.circle,
                       border: Border.all(color: Colors.white, width: 2),
                     ),
                     child: Center(
-                        child: CustomSvg(assetPath: "assets/control/camera.svg",width: 10.w,height: 10.h,fit: BoxFit.scaleDown,)
+                      child: CustomSvg(
+                        assetPath: "assets/control/camera.svg",
+                        width: 10.w,
+                        height: 10.h,
+                        fit: BoxFit.scaleDown,
+                      ),
                     ),
                   ),
                 ),
@@ -1068,25 +1201,25 @@ class _AboutEditPageMasterState extends State<AboutEditPageMaster> {
     );
   }
 
-  Widget _buildImageWidget(Uint8List? bytes, String url, bool isSvg) {
-    // ── Helper: detect SVG from bytes ──
+  Widget _buildImageWidget(Uint8List? bytes, String url) {
     bool _isSvgBytes(Uint8List b) {
-      if (b.length < 5) return false;
-      final header = String.fromCharCodes(
-        b.sublist(0, b.length.clamp(0, 100)),
-      ).trimLeft();
-      return header.startsWith('<svg') || header.startsWith('<?xml');
+      if (b.length < 10) return false;
+      try {
+        final header = String.fromCharCodes(
+          b.sublist(0, b.length.clamp(0, 200)),
+        ).trimLeft();
+        return header.startsWith('<svg') ||
+            (header.startsWith('<?xml') && header.contains('<svg'));
+      } catch (e) {
+        return false;
+      }
     }
 
-    // ── Helper: render bytes (auto-detects SVG vs image) ──
     Widget _renderBytes(Uint8List b) {
-      if (isSvg || _isSvgBytes(b)) {
-        return Padding(
-          padding: EdgeInsets.all(16.r),
-          child: SvgPicture.memory(b, fit: BoxFit.contain),
-        );
-      }
-      return Image.memory(b, fit: BoxFit.cover);
+      return Padding(
+        padding: EdgeInsets.all(16.r),
+        child: SvgPicture.memory(b, fit: BoxFit.contain),
+      );
     }
 
     final Widget spinner = SizedBox(
@@ -1095,15 +1228,13 @@ class _AboutEditPageMasterState extends State<AboutEditPageMaster> {
       child: CircularProgressIndicator(strokeWidth: 2, color: _kGreenSolid),
     );
 
-    // ── 1. Already have bytes in memory (freshly picked) ──
     if (bytes != null) {
       return _renderBytes(bytes);
     }
 
-    // ── 2. Load from URL via XHR ──
     if (url.isNotEmpty) {
       return FutureBuilder<Uint8List>(
-        future: _cachedLoad(url, isSvg: isSvg),
+        future: _cachedLoad(url),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return Center(child: spinner);
@@ -1111,19 +1242,17 @@ class _AboutEditPageMasterState extends State<AboutEditPageMaster> {
           if (snapshot.hasData) {
             return _renderBytes(snapshot.data!);
           }
-          // error
           return Icon(
-            isSvg ? Icons.description_outlined : Icons.broken_image,
-            color: isSvg ? Colors.grey[400] : Colors.red[300],
+            Icons.broken_image,
+            color: Colors.red[300],
             size: 28.sp,
           );
         },
       );
     }
 
-    // ── 3. No bytes, no URL — placeholder ──
     return Icon(
-      isSvg ? Icons.description_outlined : Icons.image_outlined,
+      Icons.image_outlined,
       color: Colors.grey[500],
       size: 28.sp,
     );
@@ -1144,7 +1273,6 @@ class _AboutEditPageMasterState extends State<AboutEditPageMaster> {
           child: CustomValidatedTextFieldMaster(
             hint: enHint,
             controller: enCtrl,
-
             fillColor: Colors.white,
             height: 42,
             maxLines: 1,
@@ -1152,7 +1280,7 @@ class _AboutEditPageMasterState extends State<AboutEditPageMaster> {
             submitted: _submitted,
             textDirection: TextDirection.ltr,
             textAlign: TextAlign.start,
-            onChanged: (_) => setState(() {}),
+            onChanged: (_) => setState(() => _hasChanges = true),
           ),
         ),
         SizedBox(width: 12.w),
@@ -1167,7 +1295,7 @@ class _AboutEditPageMasterState extends State<AboutEditPageMaster> {
             submitted: _submitted,
             textDirection: TextDirection.rtl,
             textAlign: TextAlign.right,
-            onChanged: (_) => setState(() {}),
+            onChanged: (_) => setState(() => _hasChanges = true),
           ),
         ),
       ],
@@ -1200,7 +1328,7 @@ class _AboutEditPageMasterState extends State<AboutEditPageMaster> {
   Widget _btn({
     required String label,
     required Color color,
-    required VoidCallback onTap,
+    VoidCallback? onTap,
   }) {
     return GestureDetector(
       onTap: onTap,

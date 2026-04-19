@@ -27,15 +27,124 @@ import '../../controller/master/master_state.dart';
 import '../../model/master/master_model.dart';
 import 'master_edit_page.dart';
 
+/// Custom Segmented Tabs Widget
+class CustomSegmentedTabs extends StatelessWidget {
+  const CustomSegmentedTabs({
+    super.key,
+    required this.tabs,
+    required this.selectedIndex,
+    required this.onTabSelected,
+    this.containerPadding,
+    this.containerColor,
+    this.borderRadius,
+    this.spacing,
+    this.tabHorizontalPadding,
+    this.tabVerticalPadding,
+    this.selectedColor,
+    this.unselectedColor,
+    this.selectedTextColor,
+    this.unselectedTextColor,
+    this.textStyle,
+    this.equalWidth = false,
+  });
+
+  final List<String> tabs;
+  final int selectedIndex;
+  final ValueChanged<int> onTabSelected;
+  final EdgeInsets? containerPadding;
+  final Color? containerColor;
+  final double? borderRadius;
+  final double? spacing;
+  final double? tabHorizontalPadding;
+  final double? tabVerticalPadding;
+  final Color? selectedColor;
+  final Color? unselectedColor;
+  final Color? selectedTextColor;
+  final Color? unselectedTextColor;
+  final TextStyle? textStyle;
+  final bool equalWidth;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(borderRadius ?? 8.r),
+        color: containerColor ?? _C.sectionBg,
+      ),
+      padding: containerPadding ?? EdgeInsets.all(8.sp),
+      child: Row(
+        mainAxisSize: equalWidth ? MainAxisSize.max : MainAxisSize.min,
+        children: List.generate(tabs.length * 2 - 1, (index) {
+          if (index.isOdd) {
+            return SizedBox(width: spacing ?? 10.sp);
+          }
+
+          final tabIndex = index ~/ 2;
+          final isSelected = tabIndex == selectedIndex;
+
+          return equalWidth
+              ? Expanded(
+            child: _buildTab(
+              title: tabs[tabIndex],
+              isSelected: isSelected,
+              onTap: () => onTabSelected(tabIndex),
+            ),
+          )
+              : _buildTab(
+            title: tabs[tabIndex],
+            isSelected: isSelected,
+            onTap: () => onTabSelected(tabIndex),
+          );
+        }),
+      ),
+    );
+  }
+
+  Widget _buildTab({
+    required String title,
+    required bool isSelected,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(4.r),
+          color: isSelected
+              ? (selectedColor ?? _C.primary)
+              : (unselectedColor ?? _C.sectionBg),
+        ),
+        padding: EdgeInsets.symmetric(
+          vertical: tabVerticalPadding ?? 6.sp,
+          horizontal: tabHorizontalPadding ?? 6.sp,
+        ),
+        child: Center(
+          child: FittedBox(
+            child: Text(
+              title,
+              style: (textStyle ?? StyleText.fontSize14Weight500).copyWith(
+                height: 1,
+                color: isSelected
+                    ? (selectedTextColor ?? Colors.white)
+                    : (unselectedTextColor ?? _C.labelText),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 class _C {
-  static const Color primary   = Color(0xFFD16F9A);
+  static const Color primary = Color(0xFFD16F9A);
   static const Color sectionBg = Color(0xFFF5F5F5);
-  static const Color cardBg    = Color(0xFFFFFFFF);
-  static const Color border    = Color(0xFFE0E0E0);
+  static const Color cardBg = Color(0xFFFFFFFF);
+  static const Color border = Color(0xFFE0E0E0);
   static const Color labelText = Color(0xFF333333);
-  static const Color hintText  = Color(0xFFAAAAAA);
-  static const Color divider   = Color(0xFFE8E8E8);
-  static const Color back      = Color(0xFFF1F2ED);
+  static const Color hintText = Color(0xFFAAAAAA);
+  static const Color divider = Color(0xFFE8E8E8);
+  static const Color back = Color(0xFFF1F2ED);
   static const Color tabActive = Color(0xFFD16F9A);
   static const Color tabInactive = Color(0xFF999999);
 }
@@ -65,6 +174,11 @@ class _MasterMainPageState extends State<MasterMainPage> {
     'aboutUs': true,
     'footer': true,
   };
+
+  String _fmtDate(DateTime? date) {
+    if (date == null) return 'N/A';
+    return DateFormat('dd MMM yyyy').format(date);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -149,63 +263,53 @@ class _MasterMainPageState extends State<MasterMainPage> {
                               ),
                               SizedBox(height: 12.h),
 
-                              // ── Status tabs ──────────────────────────
-                              Row(
-                                children: List.generate(3, (i) {
-                                  final isActive = _statusTab == i;
-                                  return GestureDetector(
-                                    onTap: () =>
-                                        setState(() => _statusTab = i),
-                                    child: Padding(
-                                      padding:
-                                      EdgeInsets.only(right: 24.w),
-                                      child: Text(
-                                        _statusLabels[i],
-                                        style: StyleText.fontSize16Weight600
-                                            .copyWith(
-                                          color: isActive
-                                              ? _C.tabActive
-                                              : _C.tabInactive,
-                                        ),
-                                      ),
-                                    ),
-                                  );
-                                }),
+                              // ── Status tabs (CustomSegmentedTabs) ─────
+                              CustomSegmentedTabs(
+                                tabs: _statusLabels,
+                                selectedIndex: _statusTab,
+
+                                onTabSelected: (index) =>
+                                    setState(() => _statusTab = index),
+                                selectedColor: _C.tabActive,
+                                unselectedColor: _C.sectionBg,
+                                selectedTextColor: Colors.white,
+                                unselectedTextColor: _C.tabInactive,
+                                containerColor: Colors.white,
+                                equalWidth: false,
+                                spacing: 24,
+                                tabHorizontalPadding: 10,
+                                tabVerticalPadding: 8,
                               ),
                               SizedBox(height: 12.h),
 
                               // ── Gender toggle + Last Updated + Edit ──
                               Row(
                                 children: [
-                                  _genderChip('Female', 'female'),
-                                  SizedBox(width: 8.w),
-                                  _genderChip('Male', 'male'),
+                                  CustomSegmentedTabs(
+                                    tabs: const ['Female', 'Male'],
+                                    selectedIndex: _gender == 'female' ? 0 : 1,
+                                    onTabSelected: (index) {
+                                      final g = index == 0 ? 'female' : 'male';
+                                      setState(() => _gender = g);
+                                      context.read<MasterCmsCubit>().switchGender(g);
+                                    },
+                                    selectedColor: _C.primary,
+                                    unselectedColor: Colors.white,
+                                    selectedTextColor: Colors.white,
+                                    unselectedTextColor: _C.labelText,
+                                    equalWidth: false,
+
+                                    containerPadding: EdgeInsets.symmetric(horizontal: 8.sp,vertical: 4.sp),
+                                    containerColor: Colors.white,
+                                  ),
                                   const Spacer(),
-                                  if (model?.lastUpdated != null)
-                                    Text(
-                                      'Last Updated On ${DateFormat('dd MMM yyyy').format(model!.lastUpdated!)}',
-                                      style: StyleText.fontSize12Weight400
-                                          .copyWith(color: _C.tabActive),
-                                    ),
-                                  SizedBox(width: 16.w),
-                                  GestureDetector(
-                                    onTap: () => Navigator.push(
+                                  _lastUpdatedRow(
+                                    onEdit: () => Navigator.push(
                                       context,
-                                      MaterialPageRoute(builder: (context) => const MasterEditPage()), // Adjust widget name
+                                      MaterialPageRoute(
+                                          builder: (context) => const MasterEditPage()),
                                     ),
-                                    child: Row(
-                                      children: [
-                                        Text('Edit Home View',
-                                            style: StyleText
-                                                .fontSize12Weight500
-                                                .copyWith(
-                                                color: _C.labelText)),
-                                        SizedBox(width: 4.w),
-                                        Icon(Icons.edit_outlined,
-                                            size: 14.sp,
-                                            color: _C.labelText),
-                                      ],
-                                    ),
+                                    lastUpdated: model?.lastUpdated,
                                   ),
                                 ],
                               ),
@@ -216,11 +320,10 @@ class _MasterMainPageState extends State<MasterMainPage> {
                                 _buildReadOnlySection(
                                   key: 'header',
                                   title: 'Header Section',
+                                  showImage: true,
                                   section: model.sectionByKey('header'),
                                   showTitle: true,
                                   showShortDesc: true,
-                                  mainTitle: model.title,
-                                  mainShortDesc: model.shortDescription,
                                 ),
                                 SizedBox(height: 10.h),
                                 _buildReadOnlySection(
@@ -234,6 +337,7 @@ class _MasterMainPageState extends State<MasterMainPage> {
                                 _buildReadOnlySection(
                                   key: 'footer',
                                   title: 'Footer Section',
+                                  showImage: true,               // ← only here
                                   section: model.sectionByKey('footer'),
                                   showTitle: true,
                                   showDescription: true,
@@ -280,6 +384,56 @@ class _MasterMainPageState extends State<MasterMainPage> {
     );
   }
 
+  // ── Last Updated Row Widget ────────────────────────────────────────────────
+  Widget _lastUpdatedRow({
+    required VoidCallback onEdit,
+    DateTime? lastUpdated,
+  }) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,  // ← add this
+      children: [
+        Container(
+          padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 8.h),
+          decoration: BoxDecoration(
+              color: _C.cardBg, borderRadius: BorderRadius.circular(4.r)),
+          child: Text(
+            'Last Updated On ${_fmtDate(lastUpdated)}',
+            style: StyleText.fontSize13Weight500.copyWith(color: _C.primary),
+          ),
+        ),
+        SizedBox(width: 12.w),  // ← replace Spacer() with fixed gap
+        GestureDetector(
+          onTap: onEdit,
+          child: Container(
+            width: 130.w,
+            height: 36.h,
+            decoration: BoxDecoration(
+              color: _C.cardBg,
+              borderRadius: BorderRadius.circular(4.r),
+            ),
+            child: Center(
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text('Edit Details',
+                      style: StyleText.fontSize14Weight500
+                          .copyWith(color: Colors.black)),
+                  SizedBox(width: 6.w),
+                  CustomSvg(
+                      assetPath: "assets/control/edit_icon_pick.svg",
+                      width: 20.w,
+                      height: 20.h,
+                      fit: BoxFit.scaleDown,
+                      color: _C.primary),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
   // ── Read-only section accordion ────────────────────────────────────────────
   Widget _buildReadOnlySection({
     required String key,
@@ -290,6 +444,7 @@ class _MasterMainPageState extends State<MasterMainPage> {
     bool showTitle = false,
     bool showShortDesc = false,
     bool showDescription = false,
+    bool showImage = false,        // ← add this
   }) {
     final isOpen = _open[key] ?? true;
 
@@ -341,9 +496,9 @@ class _MasterMainPageState extends State<MasterMainPage> {
           if (isOpen)
             Container(
               width: double.infinity,
-              padding: EdgeInsets.all(16.w),
+              padding: EdgeInsets.symmetric(vertical: 16.h),
               decoration: BoxDecoration(
-                color: _C.cardBg,
+
                 borderRadius: BorderRadius.only(
                   bottomLeft: Radius.circular(6.r),
                   bottomRight: Radius.circular(6.r),
@@ -353,10 +508,12 @@ class _MasterMainPageState extends State<MasterMainPage> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   // ── Image ─────────────────────────────────────────────
-                  _readOnlyLabel('Image'),
-                  SizedBox(height: 6.h),
-                  _readOnlyImageCircle(imageUrl),
-                  SizedBox(height: 14.h),
+                  if (showImage) ...[
+                    _readOnlyLabel('Image'),
+                    SizedBox(height: 6.h),
+                    _readOnlyImageCircle(imageUrl),
+                    SizedBox(height: 14.h),
+                  ],
 
                   // ── Title EN / AR ─────────────────────────────────────
                   if (showTitle) ...[
@@ -396,8 +553,7 @@ class _MasterMainPageState extends State<MasterMainPage> {
                     ),
                     SizedBox(height: 6.h),
                     _readOnlyBox(displayDesc.ar,
-                        maxLines: 5,
-                        textDirection: ui.TextDirection.rtl),
+                        maxLines: 5, textDirection: ui.TextDirection.rtl),
                   ],
                 ],
               ),
@@ -452,10 +608,9 @@ class _MasterMainPageState extends State<MasterMainPage> {
     return Container(
       width: double.infinity,
       padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 10.h),
-      constraints:
-      maxLines > 1 ? BoxConstraints(minHeight: 80.h) : null,
+      constraints: maxLines > 1 ? BoxConstraints(minHeight: 80.h) : null,
       decoration: BoxDecoration(
-        color: _C.sectionBg,
+        color: Colors.white,
         borderRadius: BorderRadius.circular(4.r),
       ),
       child: Text(

@@ -817,7 +817,8 @@ Future<void> showPublishConfirmDialog({
   VoidCallback? onBack,
   /// Optional custom illustration asset path (SVG or PNG)
   String? illustrationAsset,
-}) {
+})
+{
   return showDialog(
     context: context,
     barrierDismissible: false, // prevent accidental dismiss while saving

@@ -22,18 +22,129 @@ import 'package:beauty_admin/widgets/admin_sub_navbar.dart';
 import '../../controller/client_services/client_services_cubit.dart';
 import '../../controller/client_services/client_services_state.dart';
 import '../../model/client_services/client_services_model.dart';
+import '../../widgets/app_admin_navbar.dart';
+import '../main_page/home_main_page.dart';
 import 'client_services_edit_page.dart';
 import 'client_services_preview_page.dart';
 
+/// Custom Segmented Tabs Widget (reused from master_main_page)
+class CustomSegmentedTabs extends StatelessWidget {
+  const CustomSegmentedTabs({
+    super.key,
+    required this.tabs,
+    required this.selectedIndex,
+    required this.onTabSelected,
+    this.containerPadding,
+    this.containerColor,
+    this.borderRadius,
+    this.spacing,
+    this.tabHorizontalPadding,
+    this.tabVerticalPadding,
+    this.selectedColor,
+    this.unselectedColor,
+    this.selectedTextColor,
+    this.unselectedTextColor,
+    this.textStyle,
+    this.equalWidth = false,
+  });
+
+  final List<String> tabs;
+  final int selectedIndex;
+  final ValueChanged<int> onTabSelected;
+  final EdgeInsets? containerPadding;
+  final Color? containerColor;
+  final double? borderRadius;
+  final double? spacing;
+  final double? tabHorizontalPadding;
+  final double? tabVerticalPadding;
+  final Color? selectedColor;
+  final Color? unselectedColor;
+  final Color? selectedTextColor;
+  final Color? unselectedTextColor;
+  final TextStyle? textStyle;
+  final bool equalWidth;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(borderRadius ?? 8.r),
+        color: containerColor ?? _C.sectionBg,
+      ),
+      padding: containerPadding ?? EdgeInsets.all(8.sp),
+      child: Row(
+        mainAxisSize: equalWidth ? MainAxisSize.max : MainAxisSize.min,
+        children: List.generate(tabs.length * 2 - 1, (index) {
+          if (index.isOdd) {
+            return SizedBox(width: spacing ?? 10.sp);
+          }
+
+          final tabIndex = index ~/ 2;
+          final isSelected = tabIndex == selectedIndex;
+
+          return equalWidth
+              ? Expanded(
+            child: _buildTab(
+              title: tabs[tabIndex],
+              isSelected: isSelected,
+              onTap: () => onTabSelected(tabIndex),
+            ),
+          )
+              : _buildTab(
+            title: tabs[tabIndex],
+            isSelected: isSelected,
+            onTap: () => onTabSelected(tabIndex),
+          );
+        }),
+      ),
+    );
+  }
+
+  Widget _buildTab({
+    required String title,
+    required bool isSelected,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(4.r),
+          color: isSelected
+              ? (selectedColor ?? _C.primary)
+              : (unselectedColor ?? _C.sectionBg),
+        ),
+        padding: EdgeInsets.symmetric(
+          vertical: tabVerticalPadding ?? 6.sp,
+          horizontal: tabHorizontalPadding ?? 6.sp,
+        ),
+        child: Center(
+          child: FittedBox(
+            child: Text(
+              title,
+              style: (textStyle ?? StyleText.fontSize14Weight500).copyWith(
+                height: 1,
+                color: isSelected
+                    ? (selectedTextColor ?? Colors.white)
+                    : (unselectedTextColor ?? _C.labelText),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 class _C {
-  static const Color primary     = Color(0xFFD16F9A);
-  static const Color sectionBg   = Color(0xFFF5F5F5);
-  static const Color cardBg      = Color(0xFFFFFFFF);
-  static const Color border      = Color(0xFFE0E0E0);
-  static const Color labelText   = Color(0xFF333333);
-  static const Color hintText    = Color(0xFFAAAAAA);
-  static const Color back        = Color(0xFFF1F2ED);
-  static const Color tabActive   = Color(0xFFD16F9A);
+  static const Color primary = Color(0xFFD16F9A);
+  static const Color sectionBg = Color(0xFFF5F5F5);
+  static const Color cardBg = Color(0xFFFFFFFF);
+  static const Color border = Color(0xFFE0E0E0);
+  static const Color labelText = Color(0xFF333333);
+  static const Color hintText = Color(0xFFAAAAAA);
+  static const Color back = Color(0xFFF1F2ED);
+  static const Color tabActive = Color(0xFFD16F9A);
   static const Color tabInactive = Color(0xFF999999);
 }
 
@@ -45,7 +156,7 @@ class ClientServicesMainPage extends StatefulWidget {
 }
 
 class _ClientServicesMainPageState extends State<ClientServicesMainPage> {
-  int _statusTab = 0;
+  int _statusTab = 0; // 0=Published, 1=Scheduled, 2=Draft
   String _gender = 'female';
   final List<String> _statusLabels = ['Published', 'Scheduled', 'Draft'];
 
@@ -55,10 +166,33 @@ class _ClientServicesMainPageState extends State<ClientServicesMainPage> {
     'mockups': true,
   };
 
+  String _fmtDate(DateTime? date) {
+    if (date == null) return 'N/A';
+    return DateFormat('dd MMM yyyy').format(date);
+  }
+
   @override
   void initState() {
     super.initState();
     context.read<ClientServicesCmsCubit>().load(gender: _gender);
+  }
+
+  void _navigateToEdit() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const ClientServicesEditPage(),
+      ),
+    );
+  }
+
+  void _navigateToPreview() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const ClientServicesPreviewPage(),
+      ),
+    );
   }
 
   @override
@@ -100,8 +234,14 @@ class _ClientServicesMainPageState extends State<ClientServicesMainPage> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
+                        AppAdminNavbar(
+                          activeLabel: 'Web Pages',
+                          homePage: HomeMainPage(),
+                          webPage: HomeMainPage(),
+                          jobListingPage: HomeMainPage(),
+                        ),
                         SizedBox(width: 20.w),
-                        const AdminSubNavBar(activeIndex: 3),
+                        AdminSubNavBar(activeIndex: 3),
                         Padding(
                           padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 20.h),
                           child: Column(
@@ -115,8 +255,7 @@ class _ClientServicesMainPageState extends State<ClientServicesMainPage> {
                                       style: StyleText.fontSize45Weight600
                                           .copyWith(color: _C.primary, fontWeight: FontWeight.w700)),
                                   GestureDetector(
-                                    onTap: () => Navigator.push(context,
-                                        MaterialPageRoute(builder: (_) => const ClientServicesPreviewPage())),
+                                    onTap: _navigateToPreview,
                                     child: Container(
                                       padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
                                       decoration: BoxDecoration(
@@ -129,28 +268,50 @@ class _ClientServicesMainPageState extends State<ClientServicesMainPage> {
                               ),
                               SizedBox(height: 12.h),
 
-                              // ── Gender + Last Updated + Edit ───────────
+                              // ── Status tabs (CustomSegmentedTabs) ─────
+                              CustomSegmentedTabs(
+                                tabs: _statusLabels,
+                                selectedIndex: _statusTab,
+                                onTabSelected: (index) =>
+                                    setState(() => _statusTab = index),
+                                selectedColor: _C.tabActive,
+                                unselectedColor: _C.sectionBg,
+                                selectedTextColor: Colors.white,
+                                unselectedTextColor: _C.tabInactive,
+                                containerColor: Colors.white,
+                                equalWidth: false,
+                                spacing: 24,
+                                tabHorizontalPadding: 10,
+                                tabVerticalPadding: 8,
+                              ),
+                              SizedBox(height: 12.h),
+
+                              // ── Gender toggle + Last Updated + Edit ──
                               Row(
                                 children: [
-                                  _genderChip('Female', 'female'),
-                                  SizedBox(width: 8.w),
-                                  _genderChip('Male', 'male'),
+                                  CustomSegmentedTabs(
+                                    tabs: const ['Female', 'Male'],
+                                    selectedIndex: _gender == 'female' ? 0 : 1,
+                                    onTabSelected: (index) {
+                                      final g = index == 0 ? 'female' : 'male';
+                                      setState(() => _gender = g);
+                                      context
+                                          .read<ClientServicesCmsCubit>()
+                                          .switchGender(g);
+                                    },
+                                    selectedColor: _C.primary,
+                                    unselectedColor: Colors.white,
+                                    selectedTextColor: Colors.white,
+                                    unselectedTextColor: _C.labelText,
+                                    equalWidth: false,
+                                    containerPadding: EdgeInsets.symmetric(
+                                        horizontal: 8.sp, vertical: 4.sp),
+                                    containerColor: Colors.white,
+                                  ),
                                   const Spacer(),
-                                  if (model.lastUpdated != null)
-                                    Text(
-                                      'Last Updated On ${DateFormat('dd MMM yyyy').format(model.lastUpdated!)}',
-                                      style: StyleText.fontSize12Weight400.copyWith(color: _C.tabActive),
-                                    ),
-                                  SizedBox(width: 16.w),
-                                  GestureDetector(
-                                    onTap: () => Navigator.push(context,
-                                        MaterialPageRoute(builder: (_) => const ClientServicesEditPage())),
-                                    child: Row(children: [
-                                      Text('Edit Client View',
-                                          style: StyleText.fontSize12Weight500.copyWith(color: _C.labelText)),
-                                      SizedBox(width: 4.w),
-                                      Icon(Icons.edit_outlined, size: 14.sp, color: _C.labelText),
-                                    ]),
+                                  _lastUpdatedRow(
+                                    onEdit: _navigateToEdit,
+                                    lastUpdated: model.lastUpdated,
                                   ),
                                 ],
                               ),
@@ -182,24 +343,53 @@ class _ClientServicesMainPageState extends State<ClientServicesMainPage> {
     );
   }
 
-  Widget _genderChip(String label, String value) {
-    final isActive = _gender == value;
-    return GestureDetector(
-      onTap: () {
-        setState(() => _gender = value);
-        context.read<ClientServicesCmsCubit>().switchGender(value);
-      },
-      child: Container(
-        padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 6.h),
-        decoration: BoxDecoration(
-          color: isActive ? _C.primary : Colors.white,
-          borderRadius: BorderRadius.circular(4.r),
-          border: Border.all(color: isActive ? _C.primary : _C.border),
+  // ── Last Updated Row Widget ────────────────────────────────────────────────
+  Widget _lastUpdatedRow({
+    required VoidCallback onEdit,
+    DateTime? lastUpdated,
+  }) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 8.h),
+          decoration: BoxDecoration(
+              color: _C.cardBg, borderRadius: BorderRadius.circular(4.r)),
+          child: Text(
+            'Last Updated On ${_fmtDate(lastUpdated)}',
+            style: StyleText.fontSize13Weight500.copyWith(color: _C.primary),
+          ),
         ),
-        child: Text(label,
-            style: StyleText.fontSize12Weight500
-                .copyWith(color: isActive ? Colors.white : _C.labelText)),
-      ),
+        SizedBox(width: 12.w),
+        GestureDetector(
+          onTap: onEdit,
+          child: Container(
+            width: 130.w,
+            height: 36.h,
+            decoration: BoxDecoration(
+              color: _C.cardBg,
+              borderRadius: BorderRadius.circular(4.r),
+            ),
+            child: Center(
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text('Edit Details',
+                      style: StyleText.fontSize14Weight500
+                          .copyWith(color: Colors.black)),
+                  SizedBox(width: 6.w),
+                  CustomSvg(
+                      assetPath: "assets/control/edit_icon_pick.svg",
+                      width: 20.w,
+                      height: 20.h,
+                      fit: BoxFit.scaleDown,
+                      color: _C.primary),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ],
     );
   }
 
@@ -227,9 +417,8 @@ class _ClientServicesMainPageState extends State<ClientServicesMainPage> {
       if (isOpen)
         Container(
           width: double.infinity,
-          padding: EdgeInsets.all(16.w),
+          padding: EdgeInsets.symmetric(vertical: 16.h), // Changed from all(16) to symmetric(vertical: 16.h)
           decoration: BoxDecoration(
-            color: _C.cardBg,
             borderRadius: BorderRadius.only(
                 bottomLeft: Radius.circular(6.r), bottomRight: Radius.circular(6.r)),
           ),
@@ -358,7 +547,7 @@ class _ClientServicesMainPageState extends State<ClientServicesMainPage> {
       width: double.infinity,
       padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 10.h),
       constraints: maxLines > 1 ? BoxConstraints(minHeight: 80.h) : null,
-      decoration: BoxDecoration(color: _C.sectionBg, borderRadius: BorderRadius.circular(4.r)),
+      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(4.r)),
       child: Text(text.isEmpty ? 'Text Here' : text,
           textDirection: textDirection,
           style: StyleText.fontSize12Weight400
@@ -382,7 +571,11 @@ class _ClientServicesMainPageState extends State<ClientServicesMainPage> {
     return Container(
       width: 70.w, height: 70.h,
       decoration: const BoxDecoration(color: Color(0xFFD9D9D9), shape: BoxShape.circle),
-      child: Center(child: Icon(Icons.add_circle_outline, size: 24.sp, color: _C.hintText)),
+      child: Center(child: CustomSvg(
+          assetPath: 'assets/home_control/image.svg',
+          width: 20.w,
+          height: 20.h,
+          fit: BoxFit.fill)),
     );
   }
 }

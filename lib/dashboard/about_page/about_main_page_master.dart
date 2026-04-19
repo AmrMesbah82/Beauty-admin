@@ -4,6 +4,7 @@
 // Sub-tabs: About Us | Our Strategy | Terms of Service
 // FIXED: Dynamic last-updated date (from model.lastUpdatedAt)
 // FIXED: Tab bar restyled to match ServicesMainPageMaster pattern
+// FIXED: Show empty model on first open instead of "No data found"
 
 // ignore_for_file: avoid_web_libraries_in_flutter
 import 'dart:html' as html;
@@ -15,7 +16,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:go_router/go_router.dart';
 
 import 'package:beauty_admin/controller/about_us/about_us_cubit.dart';
 import 'package:beauty_admin/controller/about_us/about_us_state.dart';
@@ -23,7 +23,6 @@ import 'package:beauty_admin/core/widget/navigator.dart';
 import 'package:beauty_admin/theme/appcolors.dart';
 import 'package:beauty_admin/theme/new_theme.dart';
 import 'package:beauty_admin/widgets/admin_sub_navbar.dart';
-import 'package:beauty_admin/widgets/app_navbar.dart';
 
 import '../../../core/widget/svg_image.dart';
 
@@ -34,7 +33,7 @@ import 'strategy_page/strategy_main_page.dart';
 import 'strategy_page/strategy_preview_page.dart';
 
 class _C {
-  static const Color primary   = Color(0xFF008037);
+  static const Color primary   = Color(0xFFD16F9A);
   static const Color sectionBg = Color(0xFFF5F5F5);
   static const Color cardBg    = Color(0xFFFFFFFF);
   static const Color labelText = Color(0xFF333333);
@@ -42,7 +41,6 @@ class _C {
   static const Color back      = Color(0xFFF1F2ED);
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
 class AboutMainPageMasterDashboard extends StatefulWidget {
   const AboutMainPageMasterDashboard({super.key});
 
@@ -53,11 +51,6 @@ class AboutMainPageMasterDashboard extends StatefulWidget {
 
 class _AboutMainPageMasterDashboardState
     extends State<AboutMainPageMasterDashboard> {
-
-  int _subNavIndex = 3;
-  final List<String> _subNavLabels = [
-    'Main', 'Home', 'Services', 'About Us', 'Contact Us', 'Careers'
-  ];
 
   int _tabIndex = 0;
   final List<String> _tabLabels = [
@@ -74,10 +67,8 @@ class _AboutMainPageMasterDashboardState
     'values':          true,
   };
 
-  // ── URL → bytes cache (avoids re-fetching on every rebuild) ──
   final Map<String, Future<Uint8List>> _urlBytesCache = {};
 
-  // ── Lifted cubits so Preview button can access them from any tab ──
   late final StrategyCubit _strategyCubit;
   late final TermsCubit    _termsCubit;
 
@@ -98,10 +89,6 @@ class _AboutMainPageMasterDashboardState
     super.dispose();
   }
 
-  // ══════════════════════════════════════════════════════════════════════════
-  // Date formatter (matches Services page pattern)
-  // ══════════════════════════════════════════════════════════════════════════
-
   String _fmtDate(DateTime? d) {
     if (d == null) return '—';
     const months = [
@@ -110,10 +97,6 @@ class _AboutMainPageMasterDashboardState
     ];
     return '${d.day} ${months[d.month]} ${d.year}';
   }
-
-  // ══════════════════════════════════════════════════════════════════════════
-  // XHR loaders
-  // ══════════════════════════════════════════════════════════════════════════
 
   Future<Uint8List> _cachedLoad(String url, {bool isSvg = false}) {
     return _urlBytesCache.putIfAbsent(
@@ -177,7 +160,6 @@ class _AboutMainPageMasterDashboardState
         color: Colors.grey[500], size: iconSize.sp,
       );
     }
-
     return FutureBuilder<Uint8List>(
       future: _cachedLoad(url, isSvg: isSvg),
       builder: (context, snapshot) {
@@ -185,8 +167,7 @@ class _AboutMainPageMasterDashboardState
           return Center(
             child: SizedBox(
               width: 16, height: 16,
-              child: CircularProgressIndicator(
-                  strokeWidth: 2, color: _C.primary),
+              child: CircularProgressIndicator(strokeWidth: 2, color: _C.primary),
             ),
           );
         }
@@ -202,9 +183,6 @@ class _AboutMainPageMasterDashboardState
     );
   }
 
-  // ── Admin-aware navbar tap handler ────────────────────────────────────────
-
-  // ── Preview button handler — respects active tab ──────────────────────────
   void _onPreviewTap(AboutPageModel aboutModel) {
     switch (_tabIndex) {
       case 0:
@@ -262,25 +240,20 @@ class _AboutMainPageMasterDashboardState
   Widget build(BuildContext context) {
     return BlocBuilder<AboutCubit, AboutState>(
       builder: (context, state) {
+        // ── Show loading spinner ──────────────────────────────────────────
         if (state is AboutLoading || state is AboutInitial) {
           return const Scaffold(
-            backgroundColor: _C.sectionBg,
+            backgroundColor: _C.back,
             body: Center(child: CircularProgressIndicator(color: _C.primary)),
           );
         }
 
-        final AboutPageModel? model = switch (state) {
+        // ── Extract model — fall back to empty() on first open ────────────
+        final AboutPageModel model = switch (state) {
           AboutLoaded s => s.data,
           AboutSaved  s => s.data,
-          _             => null,
+          _             => AboutPageModel.empty(), // ← FIXED: no more "No data found"
         };
-
-        if (model == null) {
-          return const Scaffold(
-            backgroundColor: _C.sectionBg,
-            body: Center(child: Text('No data found')),
-          );
-        }
 
         return Scaffold(
           backgroundColor: _C.back,
@@ -291,7 +264,7 @@ class _AboutMainPageMasterDashboardState
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   SizedBox(height: 20.h),
-                  AdminSubNavBar(activeIndex: 3),
+                  AdminSubNavBar(activeIndex: 5),
                   SizedBox(height: 20.h),
                   SizedBox(width: 1000.w, child: _body(model)),
                 ],
@@ -303,12 +276,10 @@ class _AboutMainPageMasterDashboardState
     );
   }
 
-  // ── Page body ──────────────────────────────────────────────────────────────
   Widget _body(AboutPageModel model) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // ── Title + Preview Screen ───────────────────────────────────────────
         Row(children: [
           Text('About Us',
               style: StyleText.fontSize45Weight600.copyWith(
@@ -322,18 +293,14 @@ class _AboutMainPageMasterDashboardState
                   color: _C.primary,
                   borderRadius: BorderRadius.circular(6.r)),
               child: Text('Preview Screen',
-                  style: StyleText.fontSize14Weight500
-                      .copyWith(color: Colors.white)),
+                  style: StyleText.fontSize14Weight500.copyWith(color: Colors.white)),
             ),
           ),
         ]),
         SizedBox(height: 14.h),
-
-        // ── Tab bar — matches ServicesMainPageMaster._buildTabBar() ─────────
         _buildTabBar(),
         SizedBox(height: 12.h),
 
-        // ── Tab content ──────────────────────────────────────────────────────
         if (_tabIndex == 0) _aboutUsTab(model),
         if (_tabIndex == 1)
           BlocProvider.value(
@@ -351,7 +318,6 @@ class _AboutMainPageMasterDashboardState
     );
   }
 
-  // ── FIXED: Tab bar — matches Services page style exactly ─────────────────
   Widget _buildTabBar() {
     return Row(
       children: List.generate(_tabLabels.length, (i) {
@@ -370,9 +336,7 @@ class _AboutMainPageMasterDashboardState
                       _tabLabels[i],
                       style: TextStyle(
                         fontSize: 15.sp,
-                        fontWeight: isActive
-                            ? FontWeight.w700
-                            : FontWeight.w500,
+                        fontWeight: isActive ? FontWeight.w700 : FontWeight.w500,
                         color: isActive ? _C.primary : _C.hintText,
                       ),
                     ),
@@ -390,21 +354,16 @@ class _AboutMainPageMasterDashboardState
     );
   }
 
-  // ══════════════════════════════════════════════════════════════════════════
-  // TAB 0 — About Us
-  // ══════════════════════════════════════════════════════════════════════════
   Widget _aboutUsTab(AboutPageModel model) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // ── FIXED: dynamic date from model.lastUpdatedAt ─────────────────
         _lastUpdatedRow(
           lastUpdated: model.lastUpdatedAt,
           onEdit: () => navigateTo(context, AboutEditPageMaster()),
         ),
         SizedBox(height: 16.h),
 
-        // ① Headings
         _accordion(
           key: 'headings',
           title: 'Headings',
@@ -420,7 +379,6 @@ class _AboutMainPageMasterDashboardState
         ),
         SizedBox(height: 12.h),
 
-        // ③ Vision
         _accordion(
           key: 'vision',
           title: 'Vision',
@@ -437,7 +395,6 @@ class _AboutMainPageMasterDashboardState
         ),
         SizedBox(height: 12.h),
 
-        // ④ Mission
         _accordion(
           key: 'mission',
           title: 'Mission',
@@ -454,7 +411,6 @@ class _AboutMainPageMasterDashboardState
         ),
         SizedBox(height: 12.h),
 
-        // ⑤ Values
         _accordion(
           key: 'values',
           title: 'Values',
@@ -476,7 +432,6 @@ class _AboutMainPageMasterDashboardState
     );
   }
 
-  // ── Section read view (Vision / Mission) ──────────────────────────────────
   Widget _sectionReadView({
     required String iconUrl, required String svgUrl,
     required String subDescEn, required String subDescAr,
@@ -497,8 +452,7 @@ class _AboutMainPageMasterDashboardState
         SizedBox(height: 8.h),
         _readFieldRtl('وصف فرعي', subDescAr, height: 80),
         SizedBox(height: 10.h),
-        _readField('Description', descEn.isEmpty ? 'Text Here' : descEn,
-            height: 80),
+        _readField('Description', descEn.isEmpty ? 'Text Here' : descEn, height: 80),
         SizedBox(height: 8.h),
         _readFieldRtl('الوصف', descAr, height: 80),
       ],
@@ -518,19 +472,11 @@ class _AboutMainPageMasterDashboardState
         SizedBox(height: 6.h),
         Container(
           width: 56.w, height: 56.w,
-          decoration: const BoxDecoration(
-            shape: BoxShape.circle,
-            color: Colors.white,
-          ),
+          decoration: const BoxDecoration(shape: BoxShape.circle, color: Colors.white),
           child: ClipOval(
             child: Padding(
               padding: EdgeInsets.all(14.r),
-              child: _networkImage(
-                url: url,
-                isSvg: isSvg,
-                fit: BoxFit.contain,
-                iconSize: 24,
-              ),
+              child: _networkImage(url: url, isSvg: isSvg, fit: BoxFit.contain, iconSize: 24),
             ),
           ),
         ),
@@ -555,8 +501,7 @@ class _AboutMainPageMasterDashboardState
                 child: _valueMiniCard(item),
               ),
             )),
-            ...List.generate(
-                4 - row.length, (_) => const Expanded(child: SizedBox())),
+            ...List.generate(4 - row.length, (_) => const Expanded(child: SizedBox())),
           ],
         ),
       )).toList(),
@@ -578,26 +523,19 @@ class _AboutMainPageMasterDashboardState
                 borderRadius: BorderRadius.circular(6.r)),
             child: ClipRRect(
               borderRadius: BorderRadius.circular(6.r),
-              child: _networkImage(
-                url: item.iconUrl,
-                isSvg: false,
-                fit: BoxFit.contain,
-                iconSize: 16,
-              ),
+              child: _networkImage(url: item.iconUrl, isSvg: false,
+                  fit: BoxFit.contain, iconSize: 16),
             ),
           ),
           SizedBox(height: 6.h),
           Text(
             item.title.en.isNotEmpty ? item.title.en : 'Title',
-            style: StyleText.fontSize12Weight600
-                .copyWith(color: const Color(0xFF1A1A1A)),
+            style: StyleText.fontSize12Weight600.copyWith(color: const Color(0xFF1A1A1A)),
             maxLines: 2, overflow: TextOverflow.ellipsis,
           ),
           SizedBox(height: 4.h),
           Text(
-            item.shortDescription.en.isNotEmpty
-                ? item.shortDescription.en
-                : 'Short Description',
+            item.shortDescription.en.isNotEmpty ? item.shortDescription.en : 'Short Description',
             style: StyleText.fontSize12Weight400.copyWith(
                 color: AppColors.secondaryBlack, height: 1.5),
             maxLines: 3, overflow: TextOverflow.ellipsis,
@@ -607,11 +545,7 @@ class _AboutMainPageMasterDashboardState
     );
   }
 
-  // ── FIXED: Last Updated row — now accepts dynamic DateTime? ───────────────
-  Widget _lastUpdatedRow({
-    required VoidCallback onEdit,
-    DateTime? lastUpdated,
-  }) {
+  Widget _lastUpdatedRow({required VoidCallback onEdit, DateTime? lastUpdated}) {
     return Row(
       children: [
         Container(
@@ -629,14 +563,11 @@ class _AboutMainPageMasterDashboardState
           child: Container(
             width: 130.w, height: 36.h,
             decoration: BoxDecoration(
-              color: AppColors.card,
-              borderRadius: BorderRadius.circular(4.r),
-            ),
+                color: AppColors.card, borderRadius: BorderRadius.circular(4.r)),
             child: Center(
               child: Row(mainAxisSize: MainAxisSize.min, children: [
                 Text('Edit Details',
-                    style: StyleText.fontSize14Weight500
-                        .copyWith(color: Colors.black)),
+                    style: StyleText.fontSize14Weight500.copyWith(color: Colors.black)),
                 SizedBox(width: 6.w),
                 CustomSvg(
                     assetPath: "assets/control/edit_icon_pick.svg",
@@ -650,7 +581,6 @@ class _AboutMainPageMasterDashboardState
     );
   }
 
-  // ── Accordion ──────────────────────────────────────────────────────────────
   Widget _accordion({
     required String key,
     required String title,
@@ -658,8 +588,7 @@ class _AboutMainPageMasterDashboardState
   }) {
     final isOpen = _open[key] ?? true;
     return Container(
-      decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(6.r)),
+      decoration: BoxDecoration(borderRadius: BorderRadius.circular(6.r)),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -678,8 +607,7 @@ class _AboutMainPageMasterDashboardState
               ),
               child: Row(children: [
                 Expanded(child: Text(title,
-                    style: StyleText.fontSize14Weight600
-                        .copyWith(color: Colors.white))),
+                    style: StyleText.fontSize14Weight600.copyWith(color: Colors.white))),
                 Icon(
                     isOpen
                         ? Icons.keyboard_arrow_up_rounded
@@ -689,15 +617,12 @@ class _AboutMainPageMasterDashboardState
             ),
           ),
           if (isOpen)
-            Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: children),
+            Column(crossAxisAlignment: CrossAxisAlignment.start, children: children),
         ],
       ),
     );
   }
 
-  // ── Read-only LTR ──────────────────────────────────────────────────────────
   Widget _readField(String label, String value, {double height = 36}) =>
       Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -710,8 +635,7 @@ class _AboutMainPageMasterDashboardState
             padding: EdgeInsets.symmetric(
                 horizontal: 10.w, vertical: height > 36 ? 8.h : 0),
             decoration: BoxDecoration(
-                color: AppColors.card,
-                borderRadius: BorderRadius.circular(4.r)),
+                color: AppColors.card, borderRadius: BorderRadius.circular(4.r)),
             alignment: height > 36 ? Alignment.topLeft : Alignment.centerLeft,
             child: Text(value,
                 style: StyleText.fontSize12Weight400.copyWith(color: _C.hintText),
@@ -721,7 +645,6 @@ class _AboutMainPageMasterDashboardState
         ],
       );
 
-  // ── Read-only RTL ──────────────────────────────────────────────────────────
   Widget _readFieldRtl(String label, String value, {double height = 36}) =>
       Directionality(
         textDirection: TextDirection.rtl,
@@ -729,22 +652,18 @@ class _AboutMainPageMasterDashboardState
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(label,
-                style: StyleText.fontSize12Weight500
-                    .copyWith(color: _C.labelText)),
+                style: StyleText.fontSize12Weight500.copyWith(color: _C.labelText)),
             SizedBox(height: 4.h),
             Container(
               width: double.infinity, height: height.h,
               padding: EdgeInsets.symmetric(
                   horizontal: 10.w, vertical: height > 36 ? 8.h : 0),
               decoration: BoxDecoration(
-                  color: AppColors.card,
-                  borderRadius: BorderRadius.circular(4.r)),
-              alignment:
-              height > 36 ? Alignment.topRight : Alignment.centerRight,
+                  color: AppColors.card, borderRadius: BorderRadius.circular(4.r)),
+              alignment: height > 36 ? Alignment.topRight : Alignment.centerRight,
               child: Text(
                   value.isEmpty ? 'أكتب هنا' : value,
-                  style: StyleText.fontSize12Weight400
-                      .copyWith(color: _C.hintText),
+                  style: StyleText.fontSize12Weight400.copyWith(color: _C.hintText),
                   textDirection: TextDirection.rtl,
                   maxLines: height > 36 ? 5 : 1,
                   overflow: TextOverflow.ellipsis),

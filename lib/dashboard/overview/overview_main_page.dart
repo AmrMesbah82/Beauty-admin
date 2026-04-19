@@ -26,18 +26,129 @@ import '../../controller/overview/overview_state.dart';
 import '../../model/overview/overview_model.dart';
 
 // Import your edit and preview pages (adjust paths as needed)
+import '../../widgets/app_admin_navbar.dart';
+import '../main_page/home_main_page.dart';
 import 'overview_edit_page.dart';  // Your edit page
 import 'overview_preview_page.dart';  // Your preview page
 
+/// Custom Segmented Tabs Widget (reused from master_main_page)
+class CustomSegmentedTabs extends StatelessWidget {
+  const CustomSegmentedTabs({
+    super.key,
+    required this.tabs,
+    required this.selectedIndex,
+    required this.onTabSelected,
+    this.containerPadding,
+    this.containerColor,
+    this.borderRadius,
+    this.spacing,
+    this.tabHorizontalPadding,
+    this.tabVerticalPadding,
+    this.selectedColor,
+    this.unselectedColor,
+    this.selectedTextColor,
+    this.unselectedTextColor,
+    this.textStyle,
+    this.equalWidth = false,
+  });
+
+  final List<String> tabs;
+  final int selectedIndex;
+  final ValueChanged<int> onTabSelected;
+  final EdgeInsets? containerPadding;
+  final Color? containerColor;
+  final double? borderRadius;
+  final double? spacing;
+  final double? tabHorizontalPadding;
+  final double? tabVerticalPadding;
+  final Color? selectedColor;
+  final Color? unselectedColor;
+  final Color? selectedTextColor;
+  final Color? unselectedTextColor;
+  final TextStyle? textStyle;
+  final bool equalWidth;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(borderRadius ?? 8.r),
+        color: containerColor ?? _C.sectionBg,
+      ),
+      padding: containerPadding ?? EdgeInsets.all(8.sp),
+      child: Row(
+        mainAxisSize: equalWidth ? MainAxisSize.max : MainAxisSize.min,
+        children: List.generate(tabs.length * 2 - 1, (index) {
+          if (index.isOdd) {
+            return SizedBox(width: spacing ?? 10.sp);
+          }
+
+          final tabIndex = index ~/ 2;
+          final isSelected = tabIndex == selectedIndex;
+
+          return equalWidth
+              ? Expanded(
+            child: _buildTab(
+              title: tabs[tabIndex],
+              isSelected: isSelected,
+              onTap: () => onTabSelected(tabIndex),
+            ),
+          )
+              : _buildTab(
+            title: tabs[tabIndex],
+            isSelected: isSelected,
+            onTap: () => onTabSelected(tabIndex),
+          );
+        }),
+      ),
+    );
+  }
+
+  Widget _buildTab({
+    required String title,
+    required bool isSelected,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(4.r),
+          color: isSelected
+              ? (selectedColor ?? _C.primary)
+              : (unselectedColor ?? _C.sectionBg),
+        ),
+        padding: EdgeInsets.symmetric(
+          vertical: tabVerticalPadding ?? 6.sp,
+          horizontal: tabHorizontalPadding ?? 6.sp,
+        ),
+        child: Center(
+          child: FittedBox(
+            child: Text(
+              title,
+              style: (textStyle ?? StyleText.fontSize14Weight500).copyWith(
+                height: 1,
+                color: isSelected
+                    ? (selectedTextColor ?? Colors.white)
+                    : (unselectedTextColor ?? _C.labelText),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 class _C {
-  static const Color primary     = Color(0xFFD16F9A);
-  static const Color sectionBg   = Color(0xFFF5F5F5);
-  static const Color cardBg      = Color(0xFFFFFFFF);
-  static const Color border      = Color(0xFFE0E0E0);
-  static const Color labelText   = Color(0xFF333333);
-  static const Color hintText    = Color(0xFFAAAAAA);
-  static const Color back        = Color(0xFFF1F2ED);
-  static const Color tabActive   = Color(0xFFD16F9A);
+  static const Color primary = Color(0xFFD16F9A);
+  static const Color sectionBg = Color(0xFFF5F5F5);
+  static const Color cardBg = Color(0xFFFFFFFF);
+  static const Color border = Color(0xFFE0E0E0);
+  static const Color labelText = Color(0xFF333333);
+  static const Color hintText = Color(0xFFAAAAAA);
+  static const Color back = Color(0xFFF1F2ED);
+  static const Color tabActive = Color(0xFFD16F9A);
   static const Color tabInactive = Color(0xFF999999);
 }
 
@@ -49,7 +160,7 @@ class OverviewMainPage extends StatefulWidget {
 }
 
 class _OverviewMainPageState extends State<OverviewMainPage> {
-  int _statusTab = 0;
+  int _statusTab = 0; // 0=Published, 1=Scheduled, 2=Draft
   String _gender = 'female';
   final List<String> _statusLabels = ['Published', 'Scheduled', 'Draft'];
 
@@ -67,12 +178,17 @@ class _OverviewMainPageState extends State<OverviewMainPage> {
     context.read<OverviewCmsCubit>().load(gender: _gender);
   }
 
+  String _fmtDate(DateTime? date) {
+    if (date == null) return 'N/A';
+    return DateFormat('dd MMM yyyy').format(date);
+  }
+
   // Navigation methods using Navigator.push with MaterialPageRoute
   void _navigateToEdit() {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => const OverviewEditPage(), // Your edit page widget
+        builder: (context) => const OverviewEditPage(),
       ),
     );
   }
@@ -81,7 +197,7 @@ class _OverviewMainPageState extends State<OverviewMainPage> {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => const OverviewPreviewPage(), // Your preview page widget
+        builder: (context) => const OverviewPreviewPage(),
       ),
     );
   }
@@ -128,8 +244,14 @@ class _OverviewMainPageState extends State<OverviewMainPage> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
+                        AppAdminNavbar(
+                          activeLabel: 'Web Pages',
+                          homePage: HomeMainPage(),
+                          webPage: HomeMainPage(),
+                          jobListingPage: HomeMainPage(),
+                        ),
                         SizedBox(width: 20.w),
-                        AdminSubNavBar(activeIndex: 1),
+                        AdminSubNavBar(activeIndex: 2),
                         Padding(
                           padding: EdgeInsets.symmetric(
                               horizontal: 20.w, vertical: 20.h),
@@ -147,7 +269,7 @@ class _OverviewMainPageState extends State<OverviewMainPage> {
                                           color: _C.primary,
                                           fontWeight: FontWeight.w700)),
                                   GestureDetector(
-                                    onTap: _navigateToPreview, // Updated
+                                    onTap: _navigateToPreview,
                                     child: Container(
                                       padding: EdgeInsets.symmetric(
                                           horizontal: 16.w, vertical: 8.h),
@@ -165,79 +287,67 @@ class _OverviewMainPageState extends State<OverviewMainPage> {
                               ),
                               SizedBox(height: 12.h),
 
-                              // ── Status tabs ──────────────────────────
-                              Row(
-                                children: List.generate(3, (i) {
-                                  final isActive = _statusTab == i;
-                                  return GestureDetector(
-                                    onTap: () =>
-                                        setState(() => _statusTab = i),
-                                    child: Padding(
-                                      padding:
-                                      EdgeInsets.only(right: 24.w),
-                                      child: Text(_statusLabels[i],
-                                          style: StyleText
-                                              .fontSize16Weight600
-                                              .copyWith(
-                                              color: isActive
-                                                  ? _C.tabActive
-                                                  : _C.tabInactive)),
-                                    ),
-                                  );
-                                }),
+                              // ── Status tabs (CustomSegmentedTabs) ─────
+                              CustomSegmentedTabs(
+                                tabs: _statusLabels,
+                                selectedIndex: _statusTab,
+                                onTabSelected: (index) =>
+                                    setState(() => _statusTab = index),
+                                selectedColor: _C.tabActive,
+                                unselectedColor: _C.sectionBg,
+                                selectedTextColor: Colors.white,
+                                unselectedTextColor: _C.tabInactive,
+                                containerColor: Colors.white,
+                                equalWidth: false,
+                                spacing: 24,
+                                tabHorizontalPadding: 10,
+                                tabVerticalPadding: 8,
                               ),
                               SizedBox(height: 12.h),
 
-                              // ── Gender + Last Updated + Edit ──────────
+                              // ── Gender toggle + Last Updated + Edit ──
                               Row(
                                 children: [
-                                  _genderChip('Female', 'female'),
-                                  SizedBox(width: 8.w),
-                                  _genderChip('Male', 'male'),
+                                  CustomSegmentedTabs(
+                                    tabs: const ['Female', 'Male'],
+                                    selectedIndex: _gender == 'female' ? 0 : 1,
+                                    onTabSelected: (index) {
+                                      final g = index == 0 ? 'female' : 'male';
+                                      setState(() => _gender = g);
+                                      context
+                                          .read<OverviewCmsCubit>()
+                                          .switchGender(g);
+                                    },
+                                    selectedColor: _C.primary,
+                                    unselectedColor: Colors.white,
+                                    selectedTextColor: Colors.white,
+                                    unselectedTextColor: _C.labelText,
+                                    equalWidth: false,
+                                    containerPadding: EdgeInsets.symmetric(
+                                        horizontal: 8.sp, vertical: 4.sp),
+                                    containerColor: Colors.white,
+                                  ),
                                   const Spacer(),
-                                  if (model.lastUpdated != null)
-                                    Text(
-                                      'Last Updated On ${DateFormat('dd MMM yyyy').format(model.lastUpdated!)}',
-                                      style: StyleText.fontSize12Weight400
-                                          .copyWith(color: _C.tabActive),
-                                    ),
-                                  SizedBox(width: 16.w),
-                                  GestureDetector(
-                                    onTap: _navigateToEdit, // Updated
-                                    child: Row(children: [
-                                      Text('Edit Overview',
-                                          style: StyleText
-                                              .fontSize12Weight500
-                                              .copyWith(
-                                              color: _C.labelText)),
-                                      SizedBox(width: 4.w),
-                                      Icon(Icons.edit_outlined,
-                                          size: 14.sp,
-                                          color: _C.labelText),
-                                    ]),
+                                  _lastUpdatedRow(
+                                    onEdit: _navigateToEdit,
+                                    lastUpdated: model.lastUpdated,
                                   ),
                                 ],
                               ),
                               SizedBox(height: 20.h),
 
-                              // ── Headings ──────────────────────────────
-                              _headingsSection(model),
-                              SizedBox(height: 10.h),
-
-                              // ── Services ──────────────────────────────
-                              _servicesSection(model),
-                              SizedBox(height: 10.h),
-
-                              // ── Gallery ────────────────────────────────
-                              _gallerySection(model),
-                              SizedBox(height: 10.h),
-
-                              // ── Client Comments ───────────────────────
-                              _clientCommentsSection(model),
-                              SizedBox(height: 10.h),
-
-                              // ── Download Applications ─────────────────
-                              _downloadSection(model),
+                              // ── Sections ─────────────────────────────
+                              if (model != null) ...[
+                                _headingsSection(model),
+                                SizedBox(height: 10.h),
+                                _servicesSection(model),
+                                SizedBox(height: 10.h),
+                                _gallerySection(model),
+                                SizedBox(height: 10.h),
+                                _clientCommentsSection(model),
+                                SizedBox(height: 10.h),
+                                _downloadSection(model),
+                              ],
                               SizedBox(height: 40.h),
                             ],
                           ),
@@ -254,25 +364,53 @@ class _OverviewMainPageState extends State<OverviewMainPage> {
     );
   }
 
-  // ── Gender chip ────────────────────────────────────────────────────────────
-  Widget _genderChip(String label, String value) {
-    final isActive = _gender == value;
-    return GestureDetector(
-      onTap: () {
-        setState(() => _gender = value);
-        context.read<OverviewCmsCubit>().switchGender(value);
-      },
-      child: Container(
-        padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 6.h),
-        decoration: BoxDecoration(
-          color: isActive ? _C.primary : Colors.white,
-          borderRadius: BorderRadius.circular(4.r),
-          border: Border.all(color: isActive ? _C.primary : _C.border),
+  // ── Last Updated Row Widget ────────────────────────────────────────────────
+  Widget _lastUpdatedRow({
+    required VoidCallback onEdit,
+    DateTime? lastUpdated,
+  }) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 8.h),
+          decoration: BoxDecoration(
+              color: _C.cardBg, borderRadius: BorderRadius.circular(4.r)),
+          child: Text(
+            'Last Updated On ${_fmtDate(lastUpdated)}',
+            style: StyleText.fontSize13Weight500.copyWith(color: _C.primary),
+          ),
         ),
-        child: Text(label,
-            style: StyleText.fontSize12Weight500.copyWith(
-                color: isActive ? Colors.white : _C.labelText)),
-      ),
+        SizedBox(width: 12.w),
+        GestureDetector(
+          onTap: onEdit,
+          child: Container(
+            width: 130.w,
+            height: 36.h,
+            decoration: BoxDecoration(
+              color: _C.cardBg,
+              borderRadius: BorderRadius.circular(4.r),
+            ),
+            child: Center(
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text('Edit Details',
+                      style: StyleText.fontSize14Weight500
+                          .copyWith(color: Colors.black)),
+                  SizedBox(width: 6.w),
+                  CustomSvg(
+                      assetPath: "assets/control/edit_icon_pick.svg",
+                      width: 20.w,
+                      height: 20.h,
+                      fit: BoxFit.scaleDown,
+                      color: _C.primary),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ],
     );
   }
 
@@ -314,16 +452,16 @@ class _OverviewMainPageState extends State<OverviewMainPage> {
       if (isOpen)
         Container(
           width: double.infinity,
-          padding: EdgeInsets.all(16.w),
+          padding: EdgeInsets.symmetric(vertical: 16.h),
           decoration: BoxDecoration(
-            color: _C.cardBg,
+
             borderRadius: BorderRadius.only(
               bottomLeft: Radius.circular(6.r),
               bottomRight: Radius.circular(6.r),
             ),
           ),
-          child:
-          Column(crossAxisAlignment: CrossAxisAlignment.start, children: children),
+          child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start, children: children),
         ),
     ]);
   }
@@ -356,8 +494,8 @@ class _OverviewMainPageState extends State<OverviewMainPage> {
     key: 'services',
     title: 'Services',
     children: [
-      _readOnlyBiRow('Title', 'العنوان', m.services.title.en,
-          m.services.title.ar),
+      _readOnlyBiRow(
+          'Title', 'العنوان', m.services.title.en, m.services.title.ar),
       SizedBox(height: 10.h),
       ...m.services.items.map((item) => Padding(
         padding: EdgeInsets.only(bottom: 14.h),
@@ -487,8 +625,8 @@ class _OverviewMainPageState extends State<OverviewMainPage> {
     key: 'download',
     title: 'Download Applications',
     children: [
-      _readOnlyBiRow('Title', 'العنوان', m.download.title.en,
-          m.download.title.ar),
+      _readOnlyBiRow(
+          'Title', 'العنوان', m.download.title.en, m.download.title.ar),
       SizedBox(height: 10.h),
       Row(children: [
         Expanded(
@@ -521,30 +659,31 @@ class _OverviewMainPageState extends State<OverviewMainPage> {
       style: StyleText.fontSize12Weight500.copyWith(color: _C.labelText));
 
   Widget _readOnlyBiRow(
-      String enLabel, String arLabel, String enVal, String arVal) =>
-      Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Expanded(
-            child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(enLabel,
-                      style: StyleText.fontSize14Weight400
-                          .copyWith(color: AppColors.text)),
-                  SizedBox(height: 6.h),
-                  _readOnlyBox(enVal),
-                ])),
-        SizedBox(width: 16.w),
-        Expanded(
-            child: Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Text(arLabel,
-                      style: StyleText.fontSize14Weight400
-                          .copyWith(color: AppColors.text)),
-                  SizedBox(height: 6.h),
-                  _readOnlyBox(arVal, textDirection: ui.TextDirection.rtl),
-                ])),
-      ]);
+      String enLabel, String arLabel, String enVal, String arVal) {
+    return Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      Expanded(
+          child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(enLabel,
+                    style: StyleText.fontSize14Weight400
+                        .copyWith(color: AppColors.text)),
+                SizedBox(height: 6.h),
+                _readOnlyBox(enVal),
+              ])),
+      SizedBox(width: 16.w),
+      Expanded(
+          child: Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Text(arLabel,
+                    style: StyleText.fontSize14Weight400
+                        .copyWith(color: AppColors.text)),
+                SizedBox(height: 6.h),
+                _readOnlyBox(arVal, textDirection: ui.TextDirection.rtl),
+              ])),
+    ]);
+  }
 
   Widget _readOnlyBox(String text,
       {int maxLines = 1,
@@ -554,7 +693,7 @@ class _OverviewMainPageState extends State<OverviewMainPage> {
       padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 10.h),
       constraints: maxLines > 1 ? BoxConstraints(minHeight: 80.h) : null,
       decoration: BoxDecoration(
-          color: _C.sectionBg, borderRadius: BorderRadius.circular(4.r)),
+          color: Colors.white, borderRadius: BorderRadius.circular(4.r)),
       child: Text(
         text.isEmpty ? 'Text Here' : text,
         textDirection: textDirection,

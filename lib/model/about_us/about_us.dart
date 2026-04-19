@@ -1,10 +1,66 @@
 // ******************* FILE INFO *******************
 // File Name: about_us.dart  (model)
 // Created by: Amr Mesbah
-// Updated: added OurStrategyModel + TermsOfServiceModel + strategicHouse ENG/ARB image fields
-// FIXED: added lastUpdatedAt to AboutPageModel (mirrors ServicePageModel pattern)
+// Last Update: 18/04/2026
+// UPDATED: ALL fields are now versioned — every field in Firestore is stored
+//          as a list for full history tracking. fromMap() uses Versioned.read()
+//          for every field. toMap() writes plain values (repo handles versioning).
 
 import 'dart:typed_data';
+import 'package:cloud_firestore/cloud_firestore.dart';
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Versioned Field Helper
+// ─────────────────────────────────────────────────────────────────────────────
+
+class Versioned {
+  static T read<T>(dynamic raw, T Function(dynamic) parser) {
+    if (raw is List && raw.isNotEmpty) return parser(raw.last);
+    if (raw != null) return parser(raw);
+    return parser(null);
+  }
+
+  static List<T> readList<T>(dynamic raw, T Function(dynamic) parser) {
+    if (raw is List && raw.isNotEmpty) {
+      final last = raw.last;
+      if (last is List) return last.map((e) => parser(e)).toList();
+      return raw.map((e) => parser(e)).toList();
+    }
+    return [];
+  }
+
+  static List<dynamic> append(dynamic existing, dynamic newValue) {
+    final history = <dynamic>[];
+    if (existing is List) {
+      history.addAll(existing);
+    } else if (existing != null) {
+      history.add(existing);
+    }
+    if (history.isNotEmpty) {
+      final lastEncoded = _encode(history.last);
+      final newEncoded  = _encode(newValue);
+      if (lastEncoded == newEncoded) return history;
+    }
+    history.add(newValue);
+    return history;
+  }
+
+  static String _encode(dynamic value) {
+    if (value == null) return 'null';
+    if (value is Map) {
+      final sorted = Map.fromEntries(
+        (value.entries.toList()
+          ..sort((a, b) => a.key.toString().compareTo(b.key.toString())))
+            .map((e) => MapEntry(e.key.toString(), _encode(e.value))),
+      );
+      return sorted.toString();
+    }
+    if (value is List) return value.map(_encode).toList().toString();
+    return value.toString();
+  }
+}
+
+// ── Bilingual text ────────────────────────────────────────────────────────────
 
 class AboutBilingualText {
   final String en;
@@ -166,87 +222,124 @@ class AboutSection {
       );
 }
 
-// ── About Us Main model ───────────────────────────────────────────────────────
+// ── About Us Main model — ALL fields versioned ───────────────────────────────
 
 class AboutPageModel {
   final String publishStatus;
   final AboutBilingualText title;
+  final String svgUrl;
   final AboutNavigationLabel navigationLabel;
   final AboutSection vision;
   final AboutSection mission;
   final List<AboutValueItem> values;
-
-  /// ADDED: tracks the last time this document was saved to Firestore.
-  /// Stored as ISO-8601 string in the DB; parsed on load.
   final DateTime? lastUpdatedAt;
 
   const AboutPageModel({
     this.publishStatus = 'draft',
     this.title = const AboutBilingualText(),
+    this.svgUrl = '',
     this.navigationLabel = const AboutNavigationLabel(),
     this.vision = const AboutSection(),
     this.mission = const AboutSection(),
     this.values = const [],
-    this.lastUpdatedAt,                          // ← NEW
+    this.lastUpdatedAt,
   });
 
   factory AboutPageModel.empty() => const AboutPageModel();
 
+  // ── fromMap — ALL fields use Versioned.read() ────────────────────────────
   factory AboutPageModel.fromMap(Map<String, dynamic> map) {
-    final rawValues = map['values'] as List<dynamic>? ?? [];
     return AboutPageModel(
-      publishStatus: (map['publishStatus'] as String?) ?? 'draft',
-      title: AboutBilingualText.fromMap(map['title'] as Map<String, dynamic>?),
-      navigationLabel: AboutNavigationLabel.fromMap(
-          map['navigationLabel'] as Map<String, dynamic>?),
-      vision: AboutSection.fromMap(map['vision'] as Map<String, dynamic>?),
-      mission: AboutSection.fromMap(map['mission'] as Map<String, dynamic>?),
-      values: rawValues
-          .map((e) => AboutValueItem.fromMap(e as Map<String, dynamic>))
-          .toList(),
-      // ← NEW: parse from stored ISO-8601 string, null-safe
-      lastUpdatedAt: map['lastUpdatedAt'] != null
-          ? DateTime.tryParse(map['lastUpdatedAt'] as String)
-          : null,
+      publishStatus: Versioned.read<String>(
+        map['publishStatus'],
+            (v) => v?.toString() ?? 'draft',
+      ),
+
+      title: Versioned.read<AboutBilingualText>(
+        map['title'],
+            (v) => AboutBilingualText.fromMap(
+            v is Map ? Map<String, dynamic>.from(v) : null),
+      ),
+
+      svgUrl: Versioned.read<String>(
+        map['svgUrl'],
+            (v) => v?.toString() ?? '',
+      ),
+
+      navigationLabel: Versioned.read<AboutNavigationLabel>(
+        map['navigationLabel'],
+            (v) => AboutNavigationLabel.fromMap(
+            v is Map ? Map<String, dynamic>.from(v) : null),
+      ),
+
+      vision: Versioned.read<AboutSection>(
+        map['vision'],
+            (v) => AboutSection.fromMap(
+            v is Map ? Map<String, dynamic>.from(v) : null),
+      ),
+
+      mission: Versioned.read<AboutSection>(
+        map['mission'],
+            (v) => AboutSection.fromMap(
+            v is Map ? Map<String, dynamic>.from(v) : null),
+      ),
+
+      values: Versioned.readList<AboutValueItem>(
+        map['values'],
+            (e) => AboutValueItem.fromMap(
+            e is Map ? Map<String, dynamic>.from(e) : {}),
+      ),
+
+      lastUpdatedAt: Versioned.read<DateTime?>(
+        map['lastUpdatedAt'],
+            (v) {
+          if (v == null) return null;
+          if (v is Timestamp) return v.toDate();
+          if (v is String) return DateTime.tryParse(v);
+          return null;
+        },
+      ),
     );
   }
 
+  // ── toMap — plain values (versioning handled in repo layer) ──────────────
   Map<String, dynamic> toMap() => {
     'publishStatus': publishStatus,
     'title': title.toMap(),
+    'svgUrl': svgUrl,
     'navigationLabel': navigationLabel.toMap(),
     'vision': vision.toMap(),
     'mission': mission.toMap(),
     'values': values.map((v) => v.toMap()).toList(),
-    // ← NEW: always write current timestamp on every save
     'lastUpdatedAt': DateTime.now().toIso8601String(),
   };
 
   AboutPageModel copyWith({
     String? publishStatus,
     AboutBilingualText? title,
+    String? svgUrl,
     AboutNavigationLabel? navigationLabel,
     AboutSection? vision,
     AboutSection? mission,
     List<AboutValueItem>? values,
-    DateTime? lastUpdatedAt,                     // ← NEW
+    DateTime? lastUpdatedAt,
   }) =>
       AboutPageModel(
         publishStatus: publishStatus ?? this.publishStatus,
         title: title ?? this.title,
+        svgUrl: svgUrl ?? this.svgUrl,
         navigationLabel: navigationLabel ?? this.navigationLabel,
         vision: vision ?? this.vision,
         mission: mission ?? this.mission,
         values: values ?? this.values,
-        lastUpdatedAt: lastUpdatedAt ?? this.lastUpdatedAt,  // ← NEW
+        lastUpdatedAt: lastUpdatedAt ?? this.lastUpdatedAt,
       );
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// OUR STRATEGY MODEL
+// OUR STRATEGY MODEL — ALL fields versioned
 // ═══════════════════════════════════════════════════════════════════════════════
 
-/// A single section inside Our Strategy (e.g. "Vision" accordion item)
 class StrategySection {
   final String svgUrl;
   final AboutBilingualText description;
@@ -288,7 +381,7 @@ class OurStrategyModel {
   final StrategySection vision;
   final String strategicHouseEnUrl;
   final String strategicHouseArUrl;
-  final DateTime? lastUpdatedAt;          // ← ADD
+  final DateTime? lastUpdatedAt;
 
   const OurStrategyModel({
     this.publishStatus = 'draft',
@@ -296,21 +389,53 @@ class OurStrategyModel {
     this.vision = const StrategySection(),
     this.strategicHouseEnUrl = '',
     this.strategicHouseArUrl = '',
-    this.lastUpdatedAt,                   // ← ADD
+    this.lastUpdatedAt,
   });
 
   factory OurStrategyModel.empty() => const OurStrategyModel();
 
-  factory OurStrategyModel.fromMap(Map<String, dynamic> map) => OurStrategyModel(
-    publishStatus: (map['publishStatus'] as String?) ?? 'draft',
-    navigationLabel: AboutNavigationLabel.fromMap(
-        map['navigationLabel'] as Map<String, dynamic>?),
-    vision: StrategySection.fromMap(map['vision'] as Map<String, dynamic>?),
-    strategicHouseEnUrl: (map['strategicHouseEnUrl'] as String?) ?? '',
-    strategicHouseArUrl: (map['strategicHouseArUrl'] as String?) ?? '',
-    // lastUpdatedAt intentionally omitted — injected by repo after Timestamp extraction
-  );
+  // ── fromMap — ALL fields use Versioned.read() ────────────────────────────
+  factory OurStrategyModel.fromMap(Map<String, dynamic> map) =>
+      OurStrategyModel(
+        publishStatus: Versioned.read<String>(
+          map['publishStatus'],
+              (v) => v?.toString() ?? 'draft',
+        ),
 
+        navigationLabel: Versioned.read<AboutNavigationLabel>(
+          map['navigationLabel'],
+              (v) => AboutNavigationLabel.fromMap(
+              v is Map ? Map<String, dynamic>.from(v) : null),
+        ),
+
+        vision: Versioned.read<StrategySection>(
+          map['vision'],
+              (v) => StrategySection.fromMap(
+              v is Map ? Map<String, dynamic>.from(v) : null),
+        ),
+
+        strategicHouseEnUrl: Versioned.read<String>(
+          map['strategicHouseEnUrl'],
+              (v) => v?.toString() ?? '',
+        ),
+
+        strategicHouseArUrl: Versioned.read<String>(
+          map['strategicHouseArUrl'],
+              (v) => v?.toString() ?? '',
+        ),
+
+        lastUpdatedAt: Versioned.read<DateTime?>(
+          map['lastUpdatedAt'],
+              (v) {
+            if (v == null) return null;
+            if (v is Timestamp) return v.toDate();
+            if (v is String) return DateTime.tryParse(v);
+            return null;
+          },
+        ),
+      );
+
+  // ── toMap — plain values (versioning handled in repo layer) ──────────────
   Map<String, dynamic> toMap() => {
     'publishStatus': publishStatus,
     'navigationLabel': navigationLabel.toMap(),
@@ -325,7 +450,7 @@ class OurStrategyModel {
     StrategySection? vision,
     String? strategicHouseEnUrl,
     String? strategicHouseArUrl,
-    DateTime? lastUpdatedAt,              // ← ADD
+    DateTime? lastUpdatedAt,
   }) =>
       OurStrategyModel(
         publishStatus: publishStatus ?? this.publishStatus,
@@ -333,38 +458,37 @@ class OurStrategyModel {
         vision: vision ?? this.vision,
         strategicHouseEnUrl: strategicHouseEnUrl ?? this.strategicHouseEnUrl,
         strategicHouseArUrl: strategicHouseArUrl ?? this.strategicHouseArUrl,
-        lastUpdatedAt: lastUpdatedAt ?? this.lastUpdatedAt,   // ← ADD
+        lastUpdatedAt: lastUpdatedAt ?? this.lastUpdatedAt,
       );
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// TERMS OF SERVICE MODEL
+// TERMS OF SERVICE MODEL — ALL fields versioned
 // ═══════════════════════════════════════════════════════════════════════════════
 
-/// Holds an SVG, bilingual description, and two optional document URLs
 class TermsSection {
   final String svgUrl;
   final AboutBilingualText description;
   final String attachEnUrl;
   final String attachArUrl;
+  final String? lastUpdate;
 
   const TermsSection({
     this.svgUrl = '',
     this.description = const AboutBilingualText(),
     this.attachEnUrl = '',
     this.attachArUrl = '',
+    this.lastUpdate,
   });
-
-  factory TermsSection.empty() => const TermsSection();
 
   factory TermsSection.fromMap(Map<String, dynamic>? map) {
     if (map == null) return const TermsSection();
     return TermsSection(
       svgUrl: (map['svgUrl'] as String?) ?? '',
-      description: AboutBilingualText.fromMap(
-          map['description'] as Map<String, dynamic>?),
+      description: AboutBilingualText.fromMap(map['description'] as Map<String, dynamic>?),
       attachEnUrl: (map['attachEnUrl'] as String?) ?? '',
       attachArUrl: (map['attachArUrl'] as String?) ?? '',
+      lastUpdate: map['lastUpdate'] as String?,
     );
   }
 
@@ -373,6 +497,7 @@ class TermsSection {
     'description': description.toMap(),
     'attachEnUrl': attachEnUrl,
     'attachArUrl': attachArUrl,
+    if (lastUpdate != null) 'lastUpdate': lastUpdate,
   };
 
   TermsSection copyWith({
@@ -380,12 +505,14 @@ class TermsSection {
     AboutBilingualText? description,
     String? attachEnUrl,
     String? attachArUrl,
+    String? lastUpdate,
   }) =>
       TermsSection(
         svgUrl: svgUrl ?? this.svgUrl,
         description: description ?? this.description,
         attachEnUrl: attachEnUrl ?? this.attachEnUrl,
         attachArUrl: attachArUrl ?? this.attachArUrl,
+        lastUpdate: lastUpdate ?? this.lastUpdate,
       );
 }
 
@@ -394,30 +521,56 @@ class TermsOfServiceModel {
   final AboutNavigationLabel navigationLabel;
   final TermsSection termsAndConditions;
   final TermsSection privacyPolicy;
-  final DateTime? lastUpdatedAt;          // ← ADD
+  final DateTime? lastUpdatedAt;
 
   const TermsOfServiceModel({
     this.publishStatus = 'draft',
     this.navigationLabel = const AboutNavigationLabel(),
     this.termsAndConditions = const TermsSection(),
     this.privacyPolicy = const TermsSection(),
-    this.lastUpdatedAt,                   // ← ADD
+    this.lastUpdatedAt,
   });
 
   factory TermsOfServiceModel.empty() => const TermsOfServiceModel();
 
+  // ── fromMap — ALL fields use Versioned.read() ────────────────────────────
   factory TermsOfServiceModel.fromMap(Map<String, dynamic> map) =>
       TermsOfServiceModel(
-        publishStatus: (map['publishStatus'] as String?) ?? 'draft',
-        navigationLabel: AboutNavigationLabel.fromMap(
-            map['navigationLabel'] as Map<String, dynamic>?),
-        termsAndConditions: TermsSection.fromMap(
-            map['termsAndConditions'] as Map<String, dynamic>?),
-        privacyPolicy: TermsSection.fromMap(
-            map['privacyPolicy'] as Map<String, dynamic>?),
-        // lastUpdatedAt intentionally omitted — injected by repo after Timestamp extraction
+        publishStatus: Versioned.read<String>(
+          map['publishStatus'],
+              (v) => v?.toString() ?? 'draft',
+        ),
+
+        navigationLabel: Versioned.read<AboutNavigationLabel>(
+          map['navigationLabel'],
+              (v) => AboutNavigationLabel.fromMap(
+              v is Map ? Map<String, dynamic>.from(v) : null),
+        ),
+
+        termsAndConditions: Versioned.read<TermsSection>(
+          map['termsAndConditions'],
+              (v) => TermsSection.fromMap(
+              v is Map ? Map<String, dynamic>.from(v) : null),
+        ),
+
+        privacyPolicy: Versioned.read<TermsSection>(
+          map['privacyPolicy'],
+              (v) => TermsSection.fromMap(
+              v is Map ? Map<String, dynamic>.from(v) : null),
+        ),
+
+        lastUpdatedAt: Versioned.read<DateTime?>(
+          map['lastUpdatedAt'],
+              (v) {
+            if (v == null) return null;
+            if (v is Timestamp) return v.toDate();
+            if (v is String) return DateTime.tryParse(v);
+            return null;
+          },
+        ),
       );
 
+  // ── toMap — plain values (versioning handled in repo layer) ──────────────
   Map<String, dynamic> toMap() => {
     'publishStatus': publishStatus,
     'navigationLabel': navigationLabel.toMap(),
@@ -430,14 +583,14 @@ class TermsOfServiceModel {
     AboutNavigationLabel? navigationLabel,
     TermsSection? termsAndConditions,
     TermsSection? privacyPolicy,
-    DateTime? lastUpdatedAt,              // ← ADD
+    DateTime? lastUpdatedAt,
   }) =>
       TermsOfServiceModel(
         publishStatus: publishStatus ?? this.publishStatus,
         navigationLabel: navigationLabel ?? this.navigationLabel,
         termsAndConditions: termsAndConditions ?? this.termsAndConditions,
         privacyPolicy: privacyPolicy ?? this.privacyPolicy,
-        lastUpdatedAt: lastUpdatedAt ?? this.lastUpdatedAt,   // ← ADD
+        lastUpdatedAt: lastUpdatedAt ?? this.lastUpdatedAt,
       );
 }
 

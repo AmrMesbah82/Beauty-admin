@@ -2,18 +2,8 @@
 // File Name: home_cubit.dart
 // Description: BLoC Cubit for Home CMS.
 // Created by: Amr Mesbah
-// FIXED: load() now calls _mergeDefaults() which ensures navButtons always
-//        contains all 5 default routes, filling in any missing ones from
-//        HomePageModel.defaultModel without overwriting existing saved items.
-// FIXED: _mergeDefaults() now PRESERVES Firestore order instead of rebuilding
-//        from defaultModel order — fixes reorder not persisting after save.
-// ADDED: reorderNavButtons() — reorders navButtons list and emits live update
-// ADDED: toggleNavButtonStatus() — toggles a nav button's status field
-// FIXED: updateSocialLink() now accepts visibility param ✅
-// ADDED: _applyFontsToStorage() — writes selected fonts to GetStorage so
-//        AppTextStyles picks them up immediately after load/save ✅
-// ADDED: updateScheduledPublishDate() — sets scheduledPublishDate on model
-// FIXED: save() now handles 'scheduled' publishStatus with scheduledPublishDate
+// UPDATED: updateAppDownloadLinks() now accepts labelEn, labelAr params ✅
+// ADDED: uploadAppLinkIcon() — uploads iOS/Android icon to Firebase Storage ✅
 
 import 'dart:math';
 import 'dart:typed_data';
@@ -89,6 +79,7 @@ class HomeCmsCubit extends Cubit<HomeCmsState> {
       print('   navButtons[$i] → '
           'en=${merged[i].name.en} '
           'route=${merged[i].route} '
+          'iconUrl=${merged[i].iconUrl} '
           'status=${merged[i].status}');
     }
 
@@ -110,6 +101,13 @@ class HomeCmsCubit extends Cubit<HomeCmsState> {
       print('   branding.logoUrl       = ${fetched.branding.logoUrl}');
       print('   publishStatus          = ${fetched.publishStatus}');
       print('   scheduledPublishDate   = ${fetched.scheduledPublishDate}');
+      print('   appDownloadLinks.iosUrl        = ${fetched.appDownloadLinks.iosUrl}');
+      print('   appDownloadLinks.androidUrl    = ${fetched.appDownloadLinks.androidUrl}');
+      print('   appDownloadLinks.labelEn       = ${fetched.appDownloadLinks.labelEn}');
+      print('   appDownloadLinks.labelAr       = ${fetched.appDownloadLinks.labelAr}');
+      print('   appDownloadLinks.iosIconUrl    = ${fetched.appDownloadLinks.iosIconUrl}');
+      print('   appDownloadLinks.androidIconUrl= ${fetched.appDownloadLinks.androidIconUrl}');
+      print('   appDownloadLinks.visibility    = ${fetched.appDownloadLinks.visibility}');
 
       final result = _mergeDefaults(fetched);
       print('   navButtons after merge = ${result.navButtons.length}');
@@ -117,6 +115,7 @@ class HomeCmsCubit extends Cubit<HomeCmsState> {
         print('   navButtons[$i] → '
             'en=${result.navButtons[i].name.en} | '
             'route=${result.navButtons[i].route} | '
+            'iconUrl=${result.navButtons[i].iconUrl} | '
             'status=${result.navButtons[i].status}');
       }
 
@@ -151,6 +150,7 @@ class HomeCmsCubit extends Cubit<HomeCmsState> {
           'id=${_model.navButtons[i].id} '
           'en=${_model.navButtons[i].name.en} '
           'route=${_model.navButtons[i].route} '
+          'iconUrl=${_model.navButtons[i].iconUrl} '
           'status=${_model.navButtons[i].status}');
     }
     for (var i = 0; i < _model.socialLinks.length; i++) {
@@ -158,11 +158,18 @@ class HomeCmsCubit extends Cubit<HomeCmsState> {
           'id=${_model.socialLinks[i].id} '
           'visibility=${_model.socialLinks[i].visibility}');
     }
+    print('   BEFORE SAVE appDownloadLinks → '
+        'iosUrl=${_model.appDownloadLinks.iosUrl} '
+        'androidUrl=${_model.appDownloadLinks.androidUrl} '
+        'labelEn=${_model.appDownloadLinks.labelEn} '
+        'labelAr=${_model.appDownloadLinks.labelAr} '
+        'iosIconUrl=${_model.appDownloadLinks.iosIconUrl} '
+        'androidIconUrl=${_model.appDownloadLinks.androidIconUrl} '
+        'visibility=${_model.appDownloadLinks.visibility}');
 
     emit(HomeCmsSaving(_model));
 
     try {
-      // ✅ Build the model to save with correct publishStatus + scheduledPublishDate
       HomePageModel saving;
       if (publishStatus == 'scheduled' && scheduledPublishDate != null) {
         saving = _model.copyWith(
@@ -170,13 +177,11 @@ class HomeCmsCubit extends Cubit<HomeCmsState> {
           scheduledPublishDate: scheduledPublishDate,
         );
       } else if (publishStatus == 'draft') {
-        // ✅ Draft — clear any previously scheduled date
         saving = _model.copyWith(
           publishStatus: 'draft',
           clearScheduledPublishDate: true,
         );
       } else {
-        // ✅ Published — clear scheduled date (it's live now)
         saving = _model.copyWith(
           publishStatus: 'published',
           clearScheduledPublishDate: true,
@@ -184,8 +189,6 @@ class HomeCmsCubit extends Cubit<HomeCmsState> {
       }
 
       print('🔵 [HomeCubit] save() → calling _repo.saveHomePage()...');
-      print('   saving.publishStatus        = ${saving.publishStatus}');
-      print('   saving.scheduledPublishDate  = ${saving.scheduledPublishDate}');
       await _repo.saveHomePage(saving);
       print('🟢 [HomeCubit] save() → saveHomePage() DONE');
 
@@ -196,19 +199,22 @@ class HomeCmsCubit extends Cubit<HomeCmsState> {
       final persisted = _mergeDefaults(fetched);
       print('   persisted.navButtons.length = ${persisted.navButtons.length}');
       print('   persisted.publishStatus     = ${persisted.publishStatus}');
-      print('   persisted.scheduledPublishDate = ${persisted.scheduledPublishDate}');
       for (var i = 0; i < persisted.navButtons.length; i++) {
         print('   AFTER SAVE navButtons[$i] → '
             'id=${persisted.navButtons[i].id} '
             'en=${persisted.navButtons[i].name.en} '
             'route=${persisted.navButtons[i].route} '
+            'iconUrl=${persisted.navButtons[i].iconUrl} '
             'status=${persisted.navButtons[i].status}');
       }
-      for (var i = 0; i < persisted.socialLinks.length; i++) {
-        print('   AFTER SAVE socialLinks[$i] → '
-            'id=${persisted.socialLinks[i].id} '
-            'visibility=${persisted.socialLinks[i].visibility}');
-      }
+      print('   AFTER SAVE appDownloadLinks → '
+          'iosUrl=${persisted.appDownloadLinks.iosUrl} '
+          'androidUrl=${persisted.appDownloadLinks.androidUrl} '
+          'labelEn=${persisted.appDownloadLinks.labelEn} '
+          'labelAr=${persisted.appDownloadLinks.labelAr} '
+          'iosIconUrl=${persisted.appDownloadLinks.iosIconUrl} '
+          'androidIconUrl=${persisted.appDownloadLinks.androidIconUrl} '
+          'visibility=${persisted.appDownloadLinks.visibility}');
 
       _model = persisted;
       _applyFontsToStorage(_model.branding);
@@ -224,7 +230,6 @@ class HomeCmsCubit extends Cubit<HomeCmsState> {
 
   // ── Scheduled Publish Date ────────────────────────────────────────────────
 
-  /// ✅ NEW: update scheduled publish date on the in-memory model
   void updateScheduledPublishDate(DateTime? date) {
     print('🔵 [HomeCubit] updateScheduledPublishDate() date=$date');
     if (date == null) {
@@ -317,6 +322,25 @@ class HomeCmsCubit extends Cubit<HomeCmsState> {
     print('🟢 [HomeCubit] toggleNavButtonStatus() id=$id after=$after ✅');
   }
 
+  // ── Nav Button Icon Upload ────────────────────────────────────────────────
+  Future<void> uploadNavButtonIcon(String id, Uint8List bytes) async {
+    print('🔵 [HomeCubit] uploadNavButtonIcon() id=$id bytes=${bytes.length}');
+    final path = 'home_cms/nav_icons/${id}_${_uid()}.svg';
+    try {
+      final url = await _repo.uploadImage(bytes: bytes, storagePath: path);
+      print('🟢 [HomeCubit] uploadNavButtonIcon() SUCCESS → url=$url');
+      _model = _model.copyWith(
+        navButtons: _model.navButtons
+            .map((b) => b.id == id ? b.copyWith(iconUrl: url) : b)
+            .toList(),
+      );
+    } catch (e, st) {
+      print('🔴 [HomeCubit] uploadNavButtonIcon() ERROR: $e');
+      print('   StackTrace: $st');
+      emit(HomeCmsError('Nav icon upload failed: $e', _model));
+    }
+  }
+
   // ── Sections ──────────────────────────────────────────────────────────────
 
   void updateSectionTextBoxColor(int index, String color) {
@@ -331,7 +355,6 @@ class HomeCmsCubit extends Cubit<HomeCmsState> {
         index, (s) => s.copyWith(description: BiText(en: en, ar: ar)));
   }
 
-  // ✅ NEW: update section visibility (show/hide on public site)
   void updateSectionVisibility(int index, bool visibility) {
     print('🔵 [HomeCubit] updateSectionVisibility() index=$index visibility=$visibility');
     _updateSection(index, (s) => s.copyWith(visibility: visibility));
@@ -552,6 +575,56 @@ class HomeCmsCubit extends Cubit<HomeCmsState> {
       print('🔴 [HomeCubit] uploadSocialLinkIcon() ERROR: $e');
       print('   StackTrace: $st');
       emit(HomeCmsError('Social icon upload failed: $e', _model));
+    }
+  }
+
+  // ── App Download Links ✅ UPDATED ─────────────────────────────────────────
+
+  void updateAppDownloadLinks({
+    String? iosUrl,
+    String? androidUrl,
+    String? labelEn,
+    String? labelAr,
+    bool? visibility,
+  }) {
+    print('🔵 [HomeCubit] updateAppDownloadLinks() '
+        'iosUrl=$iosUrl androidUrl=$androidUrl '
+        'labelEn=$labelEn labelAr=$labelAr visibility=$visibility');
+    _model = _model.copyWith(
+      appDownloadLinks: _model.appDownloadLinks.copyWith(
+        iosUrl:     iosUrl,
+        androidUrl: androidUrl,
+        labelEn:    labelEn,
+        labelAr:    labelAr,
+        visibility: visibility,
+      ),
+    );
+  }
+
+  // ── App Link Icon Upload ✅ NEW ───────────────────────────────────────────
+
+  /// Uploads an icon for the App Link section.
+  /// [platform] must be 'ios' or 'android'.
+  Future<void> uploadAppLinkIcon(String platform, Uint8List bytes) async {
+    print('🔵 [HomeCubit] uploadAppLinkIcon() '
+        'platform=$platform bytes=${bytes.length}');
+    final path = 'home_cms/app_link_icons/${platform}_${_uid()}.svg';
+    try {
+      final url = await _repo.uploadImage(bytes: bytes, storagePath: path);
+      print('🟢 [HomeCubit] uploadAppLinkIcon() SUCCESS → url=$url');
+      if (platform == 'ios') {
+        _model = _model.copyWith(
+          appDownloadLinks: _model.appDownloadLinks.copyWith(iosIconUrl: url),
+        );
+      } else {
+        _model = _model.copyWith(
+          appDownloadLinks: _model.appDownloadLinks.copyWith(androidIconUrl: url),
+        );
+      }
+    } catch (e, st) {
+      print('🔴 [HomeCubit] uploadAppLinkIcon() ERROR: $e');
+      print('   StackTrace: $st');
+      emit(HomeCmsError('App link icon upload failed: $e', _model));
     }
   }
 

@@ -106,7 +106,7 @@ class _CustomValidatedTextFieldMasterState
 
   @override
   Widget build(BuildContext context) {
-    final Color resolvedPrimary = widget.primaryColor ?? AppColors.primary;
+    final Color resolvedPrimary = widget.primaryColor ?? Color(0xFFD16F9A);
 
     final bool isArabicField  = widget.textDirection == TextDirection.rtl;
     final bool isEnglishField = widget.textDirection == TextDirection.ltr;

@@ -5,7 +5,10 @@
 ///              Download Applications (Title + Apple/Android links),
 ///              Mockups (repeating: SVG + Layout[left/centered/right] + Title + Description).
 /// Created by: Amr Mesbah
-/// Last Update: 08/04/2026
+/// Last Update: 18/04/2026
+/// UPDATED: ALL fields are now versioned — every field in Firestore is stored
+///          as a list for full history tracking. fromMap() uses Versioned.read()
+///          for every field. toMap() writes plain values (repo handles versioning).
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 
@@ -25,6 +28,57 @@ class BiText {
 
   BiText copyWith({String? en, String? ar}) =>
       BiText(en: en ?? this.en, ar: ar ?? this.ar);
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Versioned Field Helper
+// ─────────────────────────────────────────────────────────────────────────────
+
+class Versioned {
+  static T read<T>(dynamic raw, T Function(dynamic) parser) {
+    if (raw is List && raw.isNotEmpty) return parser(raw.last);
+    if (raw != null) return parser(raw);
+    return parser(null);
+  }
+
+  static List<T> readList<T>(dynamic raw, T Function(dynamic) parser) {
+    if (raw is List && raw.isNotEmpty) {
+      final last = raw.last;
+      if (last is List) return last.map((e) => parser(e)).toList();
+      return raw.map((e) => parser(e)).toList();
+    }
+    return [];
+  }
+
+  static List<dynamic> append(dynamic existing, dynamic newValue) {
+    final history = <dynamic>[];
+    if (existing is List) {
+      history.addAll(existing);
+    } else if (existing != null) {
+      history.add(existing);
+    }
+    if (history.isNotEmpty) {
+      final lastEncoded = _encode(history.last);
+      final newEncoded  = _encode(newValue);
+      if (lastEncoded == newEncoded) return history;
+    }
+    history.add(newValue);
+    return history;
+  }
+
+  static String _encode(dynamic value) {
+    if (value == null) return 'null';
+    if (value is Map) {
+      final sorted = Map.fromEntries(
+        (value.entries.toList()
+          ..sort((a, b) => a.key.toString().compareTo(b.key.toString())))
+            .map((e) => MapEntry(e.key.toString(), _encode(e.value))),
+      );
+      return sorted.toString();
+    }
+    if (value is List) return value.map(_encode).toList().toString();
+    return value.toString();
+  }
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -113,8 +167,6 @@ class ClientServicesDownloadModel {
 // MOCKUP ITEM — repeating section with layout control
 // ═══════════════════════════════════════════════════════════════════════════════
 
-/// Layout position for the mockup image relative to text.
-/// Maps to 'left', 'centered', 'right' strings in Firestore.
 enum MockupLayout {
   left,
   centered,
@@ -222,12 +274,12 @@ class ClientServicesMockupsSectionModel {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// ROOT MODEL
+// ROOT MODEL — ALL fields versioned
 // ═══════════════════════════════════════════════════════════════════════════════
 class ClientServicesPageModel {
   final String id;
-  final String status; // 'published', 'draft'
-  final String gender; // 'female', 'male'
+  final String status;
+  final String gender;
   final ClientServicesHeaderModel header;
   final ClientServicesDownloadModel download;
   final ClientServicesMockupsSectionModel mockups;
@@ -243,25 +295,56 @@ class ClientServicesPageModel {
     this.lastUpdated,
   });
 
+  // ── fromMap — ALL fields use Versioned.read() ────────────────────────────
   factory ClientServicesPageModel.fromMap(Map<String, dynamic> map,
       {String? docId}) {
-    DateTime? lastUpdated;
-    if (map['lastUpdated'] != null) {
-      if (map['lastUpdated'] is Timestamp) {
-        lastUpdated = (map['lastUpdated'] as Timestamp).toDate();
-      }
-    }
     return ClientServicesPageModel(
-      id: docId ?? map['id'] ?? '',
-      status: map['status'] ?? 'draft',
-      gender: map['gender'] ?? 'female',
-      header: ClientServicesHeaderModel.fromMap(map['header']),
-      download: ClientServicesDownloadModel.fromMap(map['download']),
-      mockups: ClientServicesMockupsSectionModel.fromMap(map['mockups']),
-      lastUpdated: lastUpdated,
+      id: docId ?? Versioned.read<String>(
+        map['id'],
+            (v) => v?.toString() ?? '',
+      ),
+
+      status: Versioned.read<String>(
+        map['status'],
+            (v) => v?.toString() ?? 'draft',
+      ),
+
+      gender: Versioned.read<String>(
+        map['gender'],
+            (v) => v?.toString() ?? 'female',
+      ),
+
+      header: Versioned.read<ClientServicesHeaderModel>(
+        map['header'],
+            (v) => ClientServicesHeaderModel.fromMap(
+            v is Map ? Map<String, dynamic>.from(v) : null),
+      ),
+
+      download: Versioned.read<ClientServicesDownloadModel>(
+        map['download'],
+            (v) => ClientServicesDownloadModel.fromMap(
+            v is Map ? Map<String, dynamic>.from(v) : null),
+      ),
+
+      mockups: Versioned.read<ClientServicesMockupsSectionModel>(
+        map['mockups'],
+            (v) => ClientServicesMockupsSectionModel.fromMap(
+            v is Map ? Map<String, dynamic>.from(v) : null),
+      ),
+
+      lastUpdated: Versioned.read<DateTime?>(
+        map['lastUpdated'],
+            (v) {
+          if (v == null) return null;
+          if (v is Timestamp) return v.toDate();
+          if (v is String) return DateTime.tryParse(v);
+          return null;
+        },
+      ),
     );
   }
 
+  // ── toMap — plain values (versioning handled in repo layer) ──────────────
   Map<String, dynamic> toMap() => {
     'id': id,
     'status': status,

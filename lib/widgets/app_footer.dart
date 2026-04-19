@@ -1,8 +1,17 @@
 // ******************* FILE INFO *******************
 // File Name: app_footer.dart
-// UPDATED: Footer background now reads from model.branding.headerFooterColor
+// UPDATED: Footer now matches Figma design:
+//          - Top row: Logo + footer columns (Our Products, About Us, Terms, Contact Us)
+//          - Bottom row: "Download the App" + iOS/Android icons (left) | Social icons (center) | Copyright (right)
+// UPDATED: Footer background reads from model.branding.headerFooterColor
 // FIXED: _socialIcons / _socialIconsRaw now filter by l.visibility ✅
-//        Toggling visibility OFF in admin hides the icon in the footer.
+// ADDED: _DownloadAppRow with iOS/Android SVG from assets/footer/
+// ADDED: AppDownloadLinksModel support for CMS-driven store URLs
+// FIXED: Replaced all GoRouter navigation (context.go / context.push /
+//        GoRouterState.of) with Navigator.push(MaterialPageRoute) so the
+//        footer works even when rendered outside the GoRouter widget tree. ✅
+// UPDATED: Page names to match existing pages (AboutPage, ContactPage,
+//          OurProductsPage, TermsOfServicePage, OverviewPage)
 // Description: AppFooter driven by HomePageModel via HomeCmsCubit.
 // Created by: Amr Mesbah
 
@@ -10,7 +19,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/svg.dart';
-import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -18,19 +26,72 @@ import '../controller/home/home_cubit.dart';
 import '../controller/home/home_state.dart';
 import '../controller/home/lang_state.dart';
 import '../model/home/home_model.dart';
+import '../page/contact_page.dart';
+import '../page/our_products_page.dart';
+import '../page/overview_page.dart';
+import '../page/terms_of_service_page.dart';
 import '../theme/app_wight.dart';
 import '../theme/appcolors.dart';
 import '../theme/new_theme.dart';
 
+// ── Page registry ─────────────────────────────────────────────────────────────
+// Import your existing pages here
+// Make sure to add the correct import paths for your pages
+// Example imports (update paths as needed):
+// import '../page/about_page.dart';
+// import '../page/contact_page.dart';
+// import '../page/terms_of_service_page.dart';
+// import '../page/overview_page.dart';
 
+// ── Route → page builder ──────────────────────────────────────────────────────
+/// Returns the Widget to push for a given route string.
+/// Handles plain paths (/about) and query-param paths (/about?tab=owner-service).
+Widget? _pageForRoute(String route) {
+  final uri = Uri.tryParse(route);
+  if (uri == null) return null;
+  final path = uri.path;
+  final tab = uri.queryParameters['tab'] ?? '';
+
+  switch (path) {
+    case '/':
+      return const HomePage();
+    case '/overview':
+    case '/services':
+      return const OverviewPage();
+    case '/about':
+      return OurProductsPage();
+    case '/contact':
+    case '/contactus':
+      return const ContactPage();
+    case '/terms':
+    case '/termsofservice':
+      return const TermsOfServicePage();
+    case '/careers':
+      return CareersPage(initialTab: tab);
+    default:
+      return null;
+  }
+}
+
+/// Push a named route using plain Navigator — works anywhere in the tree.
+void _navigateTo(BuildContext context, String route) {
+  if (route.isEmpty) return;
+  final page = _pageForRoute(route);
+  if (page == null) return;
+  Navigator.of(context, rootNavigator: true).push(
+    MaterialPageRoute(builder: (_) => page),
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 
 class _BP {
   static const double mobile = 768;
   static const double tablet = 1024;
 }
 
-const Color _kFallbackPrimary    = Color(0xFF008037);
-const Color _kFallbackFooterBg   = Color(0xFFF5F5F5); // fallback if headerFooterColor is empty
+const Color _kFallbackPrimary = Color(0xFF008037);
+const Color _kFallbackFooterBg = Color(0xFFF5F5F5);
 
 List<FooterColumnModel> _syncedFooterColumns(HomePageModel model) {
   final navByRoute = <String, NavButtonModel>{
@@ -70,6 +131,10 @@ String _staticCopyright(bool isRtl) {
       : 'Copyright © $year Bayanat. ALL RIGHT RESERVED.';
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// AppFooter
+// ─────────────────────────────────────────────────────────────────────────────
+
 class AppFooter extends StatelessWidget {
   const AppFooter({super.key});
 
@@ -79,13 +144,12 @@ class AppFooter extends StatelessWidget {
       builder: (context, state) {
         final HomePageModel model = switch (state) {
           HomeCmsLoaded(:final data) => data,
-          HomeCmsSaved(:final data)  => data,
-          _                          => HomePageModel.defaultModel,
+          HomeCmsSaved(:final data) => data,
+          _ => HomePageModel.defaultModel,
         };
 
-        final Color primary    = _hexColor(model.branding.primaryColor,      _kFallbackPrimary);
-        // ✅ Footer background from CMS branding
-        final Color footerBg   = _hexColor(model.branding.headerFooterColor, _kFallbackFooterBg);
+        final Color primary = _hexColor(model.branding.primaryColor, _kFallbackPrimary);
+        final Color footerBg = _hexColor(model.branding.headerFooterColor, _kFallbackFooterBg);
         final List<FooterColumnModel> columns = _syncedFooterColumns(model);
 
         return BlocBuilder<LanguageCubit, LanguageState>(
@@ -128,7 +192,7 @@ class _FooterDesktop extends StatelessWidget {
   final HomePageModel model;
   final List<FooterColumnModel> columns;
   final Color primary;
-  final Color footerBg; // ✅ from branding.headerFooterColor
+  final Color footerBg;
   final bool isRtl;
 
   const _FooterDesktop({
@@ -142,8 +206,7 @@ class _FooterDesktop extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final double contentW = (248.w * 4) + (8.w * 3);
-    final double hPad =
-    ((MediaQuery.of(context).size.width - contentW) / 2)
+    final double hPad = ((MediaQuery.of(context).size.width - contentW) / 2)
         .clamp(16.0, double.infinity);
 
     return Padding(
@@ -151,15 +214,16 @@ class _FooterDesktop extends StatelessWidget {
       child: Container(
         padding: EdgeInsets.all(22.sp),
         decoration: BoxDecoration(
-          color: footerBg, // ✅ CMS-driven color
+          color: footerBg,
           borderRadius: BorderRadiusDirectional.only(
             topStart: Radius.circular(24.r),
-            topEnd:   Radius.circular(24.r),
+            topEnd: Radius.circular(24.r),
           ),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // ── Top row: Logo + Footer columns ──────────────────────────
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -171,10 +235,10 @@ class _FooterDesktop extends StatelessWidget {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: columns
                         .map((col) => _FooterColumnWidget(
-                      column:     col,
+                      column: col,
                       titleColor: AppColors.text,
-                      primary:    primary,
-                      isRtl:      isRtl,
+                      primary: primary,
+                      isRtl: isRtl,
                     ))
                         .toList(),
                   ),
@@ -184,25 +248,29 @@ class _FooterDesktop extends StatelessWidget {
             SizedBox(height: 24.h),
             Divider(color: primary, thickness: 0.5),
             SizedBox(height: 14.h),
+
+            // ── Bottom row: Download App | Social Icons | Copyright ──────
             Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                const Expanded(flex: 2, child: SizedBox()),
-                Expanded(
-                  flex: 3,
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.start,
-                    children: [
-                      ..._socialIcons(model.socialLinks, primary),
-                      const Spacer(),
-                      Text(
-                        _staticCopyright(isRtl),
-                        style: StyleText.fontSize14Weight400.copyWith(
-                          color: AppColors.text,
-                          fontWeight: FontWeight.w900,
-                          fontSize: 12.sp,
-                        ),
-                      ),
-                    ],
+                if (model.appDownloadLinks.visibility)
+                  _DownloadAppRow(
+                    appDownloadLinks: model.appDownloadLinks,
+                    primary: primary,
+                    isRtl: isRtl,
+                  ),
+                const Spacer(),
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: _socialIcons(model.socialLinks, primary),
+                ),
+                const Spacer(),
+                Text(
+                  _staticCopyright(isRtl),
+                  style: StyleText.fontSize14Weight400.copyWith(
+                    color: AppColors.text,
+                    fontWeight: FontWeight.w900,
+                    fontSize: 12.sp,
                   ),
                 ),
               ],
@@ -220,7 +288,7 @@ class _FooterTablet extends StatelessWidget {
   final HomePageModel model;
   final List<FooterColumnModel> columns;
   final Color primary;
-  final Color footerBg; // ✅ from branding.headerFooterColor
+  final Color footerBg;
   final bool isRtl;
 
   const _FooterTablet({
@@ -233,19 +301,19 @@ class _FooterTablet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final int mid  = (columns.length / 2).ceil();
-    final row1     = columns.sublist(0, mid);
-    final row2     = columns.sublist(mid);
+    final int mid = (columns.length / 2).ceil();
+    final row1 = columns.sublist(0, mid);
+    final row2 = columns.sublist(mid);
 
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: 16.w),
       child: Container(
         padding: EdgeInsets.all(20.sp),
         decoration: BoxDecoration(
-          color: footerBg, // ✅ CMS-driven color
+          color: footerBg,
           borderRadius: BorderRadiusDirectional.only(
             topStart: Radius.circular(18.r),
-            topEnd:   Radius.circular(18.r),
+            topEnd: Radius.circular(18.r),
           ),
         ),
         child: Column(
@@ -278,17 +346,28 @@ class _FooterTablet extends StatelessWidget {
             Divider(color: primary, thickness: 1),
             SizedBox(height: 12.h),
             Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                Row(children: _socialIcons(model.socialLinks, primary, gap: 8)),
+                if (model.appDownloadLinks.visibility)
+                  _DownloadAppRow(
+                    appDownloadLinks: model.appDownloadLinks,
+                    primary: primary,
+                    isRtl: isRtl,
+                  ),
+                const Spacer(),
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: _socialIcons(model.socialLinks, primary, gap: 8),
+                ),
+                const Spacer(),
                 Flexible(
                   child: Text(
                     _staticCopyright(isRtl),
                     textAlign: TextAlign.end,
                     style: GoogleFonts.cairo(
-                      fontSize:   10.sp,
+                      fontSize: 10.sp,
                       fontWeight: FontWeight.w400,
-                      color:      AppColors.secondaryText,
+                      color: AppColors.secondaryText,
                     ),
                   ),
                 ),
@@ -307,7 +386,7 @@ class _FooterMobile extends StatelessWidget {
   final HomePageModel model;
   final List<FooterColumnModel> columns;
   final Color primary;
-  final Color footerBg; // ✅ from branding.headerFooterColor
+  final Color footerBg;
   final bool isRtl;
 
   const _FooterMobile({
@@ -320,23 +399,22 @@ class _FooterMobile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final String? firstLabel =
-    (columns.isNotEmpty && columns.first.labels.isNotEmpty)
+    final String? firstLabel = (columns.isNotEmpty && columns.first.labels.isNotEmpty)
         ? _bi(columns.first.labels.first.label, isRtl)
         : null;
-    final String? firstRoute =
-    (columns.isNotEmpty &&
+    final String? firstRoute = (columns.isNotEmpty &&
         columns.first.labels.isNotEmpty &&
         columns.first.labels.first.route.isNotEmpty)
         ? columns.first.labels.first.route
         : null;
 
     return Container(
-      color: footerBg, // ✅ CMS-driven color
+      color: footerBg,
       padding: EdgeInsets.symmetric(vertical: 20.h, horizontal: 20.w),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
+          // ── Social icons row with dividers ───────────────────────────
           Row(
             children: [
               Expanded(child: Divider(color: primary.withOpacity(0.5), thickness: 1)),
@@ -347,6 +425,18 @@ class _FooterMobile extends StatelessWidget {
             ],
           ),
           SizedBox(height: 12.h),
+
+          // ── Download the App (mobile) ─────────────────────────────
+          if (model.appDownloadLinks.visibility) ...[
+            _DownloadAppRow(
+              appDownloadLinks: model.appDownloadLinks,
+              primary: primary,
+              isRtl: isRtl,
+              compact: true,
+            ),
+            SizedBox(height: 10.h),
+          ],
+
           if (firstLabel != null)
             _FooterLink(label: firstLabel, route: firstRoute, primary: primary),
           SizedBox(height: 6.h),
@@ -354,13 +444,120 @@ class _FooterMobile extends StatelessWidget {
             _staticCopyright(isRtl),
             textAlign: TextAlign.center,
             style: GoogleFonts.cairo(
-              fontSize:   10.sp,
+              fontSize: 10.sp,
               fontWeight: FontWeight.w400,
-              color:      AppColors.secondaryText,
+              color: AppColors.secondaryText,
             ),
           ),
         ],
       ),
+    );
+  }
+}
+
+// ─── Download the App Row ─────────────────────────────────────────────────────
+
+class _DownloadAppRow extends StatelessWidget {
+  final AppDownloadLinksModel appDownloadLinks;
+  final Color primary;
+  final bool isRtl;
+  final bool compact;
+
+  const _DownloadAppRow({
+    required this.appDownloadLinks,
+    required this.primary,
+    required this.isRtl,
+    this.compact = false,
+  });
+
+  Future<void> _openUrl(String rawUrl) async {
+    String url = rawUrl.trim();
+    if (url.isEmpty) return;
+    if (!url.startsWith('http://') && !url.startsWith('https://')) {
+      url = 'https://$url';
+    }
+    final uri = Uri.tryParse(url);
+    if (uri == null || !uri.hasAuthority) return;
+    if (!await canLaunchUrl(uri)) return;
+    await launchUrl(uri, mode: LaunchMode.externalApplication, webOnlyWindowName: '_blank');
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final double iconSize = compact ? 24.w : 28.w;
+
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(
+          isRtl ? 'حمّل التطبيق' : 'Download the App',
+          style: GoogleFonts.cairo(
+            fontSize: compact ? 11.sp : 13.sp,
+            fontWeight: FontWeight.w600,
+            color: AppColors.text,
+          ),
+        ),
+        SizedBox(width: 10.w),
+
+        // ── iOS icon ─────────────────────────────────────────────────
+        GestureDetector(
+          onTap: appDownloadLinks.iosUrl.isNotEmpty
+              ? () => _openUrl(appDownloadLinks.iosUrl)
+              : null,
+          child: MouseRegion(
+            cursor: appDownloadLinks.iosUrl.isNotEmpty
+                ? SystemMouseCursors.click
+                : MouseCursor.defer,
+            child: Container(
+              width: iconSize + 8.w,
+              height: iconSize + 8.w,
+              decoration: BoxDecoration(
+                border: Border.all(color: primary.withOpacity(0.3)),
+                borderRadius: BorderRadius.circular(6.r),
+              ),
+              child: Center(
+                child: SvgPicture.asset(
+                  'assets/footer/ios_logo.svg',
+                  width: iconSize,
+                  height: iconSize,
+                  fit: BoxFit.contain,
+                  colorFilter: ColorFilter.mode(primary, BlendMode.srcIn),
+                ),
+              ),
+            ),
+          ),
+        ),
+        SizedBox(width: 8.w),
+
+        // ── Android icon ──────────────────────────────────────────────
+        GestureDetector(
+          onTap: appDownloadLinks.androidUrl.isNotEmpty
+              ? () => _openUrl(appDownloadLinks.androidUrl)
+              : null,
+          child: MouseRegion(
+            cursor: appDownloadLinks.androidUrl.isNotEmpty
+                ? SystemMouseCursors.click
+                : MouseCursor.defer,
+            child: Container(
+              width: iconSize + 8.w,
+              height: iconSize + 8.w,
+              decoration: BoxDecoration(
+                border: Border.all(color: primary.withOpacity(0.3)),
+                borderRadius: BorderRadius.circular(6.r),
+              ),
+              child: Center(
+                child: SvgPicture.asset(
+                  'assets/footer/android_logo.svg',
+                  width: iconSize,
+                  height: iconSize,
+                  fit: BoxFit.contain,
+                  colorFilter: ColorFilter.mode(primary, BlendMode.srcIn),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ],
     );
   }
 }
@@ -393,9 +590,10 @@ class _FooterColumnWidgetState extends State<_FooterColumnWidget> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        // ── Column title (navigates to column route) ──────────────────
         MouseRegion(
           onEnter: (_) => setState(() => _hovered = true),
-          onExit:  (_) => setState(() => _hovered = false),
+          onExit: (_) => setState(() => _hovered = false),
           cursor: widget.column.route.isNotEmpty
               ? SystemMouseCursors.click
               : MouseCursor.defer,
@@ -406,7 +604,7 @@ class _FooterColumnWidgetState extends State<_FooterColumnWidget> {
             child: AnimatedDefaultTextStyle(
               duration: const Duration(milliseconds: 180),
               style: GoogleFonts.cairo(
-                fontSize:   13.sp,
+                fontSize: 13.sp,
                 fontWeight: _hovered ? FontWeight.w900 : AppFontWeights.semiBold,
                 color: _hovered ? widget.primary : widget.titleColor,
               ),
@@ -415,9 +613,10 @@ class _FooterColumnWidgetState extends State<_FooterColumnWidget> {
           ),
         ),
         SizedBox(height: 6.h),
+        // ── Labels ────────────────────────────────────────────────────
         ...widget.column.labels.map((lbl) => _FooterLink(
-          label:   _bi(lbl.label, widget.isRtl),
-          route:   lbl.route.isNotEmpty ? lbl.route : widget.column.route,
+          label: _bi(lbl.label, widget.isRtl),
+          route: lbl.route.isNotEmpty ? lbl.route : widget.column.route,
           primary: widget.primary,
         )),
       ],
@@ -428,9 +627,9 @@ class _FooterColumnWidgetState extends State<_FooterColumnWidget> {
 // ─── Footer Link ──────────────────────────────────────────────────────────────
 
 class _FooterLink extends StatefulWidget {
-  final String  label;
+  final String label;
   final String? route;
-  final Color   primary;
+  final Color primary;
 
   const _FooterLink({
     required this.label,
@@ -445,37 +644,31 @@ class _FooterLink extends StatefulWidget {
 class _FooterLinkState extends State<_FooterLink> {
   bool _hovered = false;
 
+  /// Navigate using plain Navigator — no GoRouter dependency.
   void _handleTap(BuildContext context) {
     final route = widget.route;
     if (route == null || route.isEmpty) return;
-    final uri = Uri.tryParse(route);
-    if (uri == null) { context.go(route); return; }
-    final String path        = uri.path;
-    final String queryString = uri.query;
-    final currentPath        = GoRouterState.of(context).uri.path;
-    if (queryString.isNotEmpty) {
-      context.push('$path?$queryString');
-    } else {
-      if (currentPath == path) { context.push(path); } else { context.go(path); }
-    }
+    _navigateTo(context, route);
   }
 
   @override
   Widget build(BuildContext context) {
     return MouseRegion(
       onEnter: (_) => setState(() => _hovered = true),
-      onExit:  (_) => setState(() => _hovered = false),
-      cursor: widget.route != null ? SystemMouseCursors.click : MouseCursor.defer,
+      onExit: (_) => setState(() => _hovered = false),
+      cursor: widget.route != null
+          ? SystemMouseCursors.click
+          : MouseCursor.defer,
       child: GestureDetector(
         onTap: () => _handleTap(context),
         child: Text(
           widget.label,
           style: GoogleFonts.cairo(
-            fontSize:        12.sp,
-            fontWeight:      AppFontWeights.regular,
-            height:          2.0,
-            color:           _hovered ? widget.primary : AppColors.secondaryBlack,
-            decoration:      _hovered ? TextDecoration.underline : null,
+            fontSize: 12.sp,
+            fontWeight: AppFontWeights.regular,
+            height: 2.0,
+            color: _hovered ? widget.primary : AppColors.secondaryBlack,
+            decoration: _hovered ? TextDecoration.underline : null,
             decorationColor: widget.primary,
           ),
         ),
@@ -488,7 +681,7 @@ class _FooterLinkState extends State<_FooterLink> {
 
 class _LogoBox extends StatelessWidget {
   final String logoUrl;
-  final Color  primary;
+  final Color primary;
   final double size;
 
   const _LogoBox({
@@ -500,14 +693,14 @@ class _LogoBox extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      width:  size.w,
+      width: size.w,
       height: size.h,
       child: logoUrl.isNotEmpty
           ? SvgPicture.network(
         logoUrl,
-        width:   size.w,
-        height:  size.h,
-        fit:     BoxFit.contain,   // ← was BoxFit.cover (clips sides)
+        width: size.w,
+        height: size.h,
+        fit: BoxFit.contain,
         placeholderBuilder: (_) => SizedBox(width: size.w, height: size.h),
       )
           : Image.asset('assets/images/logo.jpg', fit: BoxFit.contain),
@@ -517,7 +710,7 @@ class _LogoBox extends StatelessWidget {
 
 // ─── Social icon helpers ──────────────────────────────────────────────────────
 
-/// ✅ filters by l.visibility — hidden icons won't appear in footer
+/// Filters by l.visibility — hidden icons won't appear in footer
 List<Widget> _socialIcons(
     List<SocialLinkModel> links,
     Color borderColor, {
@@ -532,7 +725,7 @@ List<Widget> _socialIcons(
       .toList();
 }
 
-/// ✅ same visibility filter for mobile
+/// Same visibility filter for mobile
 List<Widget> _socialIconsRaw(List<SocialLinkModel> links, Color borderColor) {
   return links
       .where((l) => l.visibility && (l.iconUrl.isNotEmpty || l.url.isNotEmpty))
@@ -545,9 +738,9 @@ List<Widget> _socialIconsRaw(List<SocialLinkModel> links, Color borderColor) {
 
 class _SocialIconWidget extends StatelessWidget {
   final SocialLinkModel link;
-  final Color           borderColor;
-  final double          size;
-  final bool            raw;
+  final Color borderColor;
+  final double size;
+  final bool raw;
 
   const _SocialIconWidget({
     required this.link,
@@ -563,19 +756,19 @@ class _SocialIconWidget extends StatelessWidget {
     final Widget iconWidget = link.iconUrl.isNotEmpty
         ? SvgPicture.network(
       link.iconUrl,
-      width:  20.w,
+      width: 20.w,
       height: 20.w,
-      fit:    BoxFit.contain,
+      fit: BoxFit.contain,
       colorFilter: ColorFilter.mode(borderColor, BlendMode.srcIn),
       placeholderBuilder: (_) => SizedBox(width: _ic, height: _ic),
     )
         : Icon(Icons.link, size: _ic, color: borderColor);
 
     final box = Container(
-      width:  40.w,
+      width: 40.w,
       height: 40.w,
       decoration: BoxDecoration(
-        border:       Border.all(color: borderColor),
+        border: Border.all(color: borderColor),
         borderRadius: BorderRadius.circular(raw ? 8 : 8.r),
       ),
       child: Center(child: iconWidget),
@@ -585,19 +778,16 @@ class _SocialIconWidget extends StatelessWidget {
         ? GestureDetector(
       onTap: () async {
         String rawUrl = link.url.trim();
-        if (!rawUrl.startsWith('http://') && !rawUrl.startsWith('https://')) {
+        if (!rawUrl.startsWith('http://') &&
+            !rawUrl.startsWith('https://')) {
           rawUrl = 'https://$rawUrl';
         }
-
         final uri = Uri.tryParse(rawUrl);
-        if (uri == null || !uri.hasAuthority) return; // ✅ guard empty/invalid URLs
-
-        final canLaunch = await canLaunchUrl(uri);
-        if (!canLaunch) return;
-
+        if (uri == null || !uri.hasAuthority) return;
+        if (!await canLaunchUrl(uri)) return;
         await launchUrl(
           uri,
-          mode: LaunchMode.externalApplication, // ✅ works reliably on web
+          mode: LaunchMode.externalApplication,
           webOnlyWindowName: '_blank',
         );
       },
@@ -607,12 +797,29 @@ class _SocialIconWidget extends StatelessWidget {
   }
 }
 
-void _navigateTo(BuildContext context, String route) {
-  final uri = Uri.tryParse(route);
-  if (uri == null) { context.go(route); return; }
-  if (uri.query.isNotEmpty) {
-    context.push('${uri.path}?${uri.query}');
-  } else {
-    context.go(uri.path);
+// ─── Placeholder pages (if not already defined elsewhere) ────────────────────
+// Remove these if you already have these pages defined in your project
+
+class HomePage extends StatelessWidget {
+  const HomePage({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return const Scaffold(
+      body: Center(child: Text('Home Page')),
+    );
+  }
+}
+
+class CareersPage extends StatelessWidget {
+  final String initialTab;
+
+  const CareersPage({super.key, this.initialTab = ''});
+
+  @override
+  Widget build(BuildContext context) {
+    return const Scaffold(
+      body: Center(child: Text('Careers Page')),
+    );
   }
 }

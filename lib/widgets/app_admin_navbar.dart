@@ -6,8 +6,12 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 import '../controller/home/home_cubit.dart';
 import '../controller/home/home_state.dart';
+import '../controller/inquire/inquiry_cubit.dart';
+import '../controller/inquire/inquiry_state.dart';
+import '../dashboard/inquire/inquiry_main_page.dart';
 import '../theme/app_wight.dart';
 import '../theme/appcolors.dart';
+
 
 class _BP {
   static const double mobile = 600;
@@ -41,16 +45,29 @@ Color _hexColor(String hex, Color fallback) {
   return fallback;
 }
 
-void _pushPage(BuildContext context, Widget page) {
+void _pushPage(BuildContext context, dynamic pageOrBuilder) {
+  final Widget page;
+  if (pageOrBuilder is Widget Function(BuildContext)) {
+    page = pageOrBuilder(context);
+  } else {
+    page = pageOrBuilder as Widget;
+  }
+
   Navigator.of(context).pushReplacement(
     MaterialPageRoute(builder: (_) => page),
   );
 }
 
 class _AdminNavItem {
-  final String  label;
+  final String label;
   final Widget? page;
-  const _AdminNavItem({required this.label, this.page});
+  final Widget Function(BuildContext)? pageBuilder;
+
+  const _AdminNavItem({
+    required this.label,
+    this.page,
+    this.pageBuilder
+  });
 }
 
 class AppAdminNavbar extends StatelessWidget {
@@ -70,7 +87,13 @@ class AppAdminNavbar extends StatelessWidget {
   });
 
   List<_AdminNavItem> get _navItems => [
-    _AdminNavItem(label: 'Inquires', page: homePage),
+    _AdminNavItem(
+      label: 'Inquiries',
+      pageBuilder: (context) {
+        // Use your existing InquiryMainPage
+        return const InquiryMainPage();
+      },
+    ),
   ];
 
   @override
@@ -149,7 +172,7 @@ class _AdminNavbarDesktop extends StatelessWidget {
         child: Row(
           children: [
             _AdminLogo(
-              onTap: () => _pushPage(context, navItems.first.page!),
+              onTap: () => _pushPage(context, navItems.first.page ?? navItems.first.pageBuilder!),
             ),
             SizedBox(width: 250.w),
             Row(
@@ -159,6 +182,7 @@ class _AdminNavbarDesktop extends StatelessWidget {
                   ...navItems.map((item) => _AdminNavLink(
                     label:       item.label,
                     page:        item.page,
+                    pageBuilder:  item.pageBuilder,
                     activeLabel: activeLabel,
                     primary:     primary,
                   )),
@@ -211,7 +235,7 @@ class _AdminNavbarTablet extends StatelessWidget {
         child: Row(
           children: [
             _AdminLogo(
-              onTap: () => _pushPage(context, navItems.first.page!),
+              onTap: () => _pushPage(context, navItems.first.page ?? navItems.first.pageBuilder!),
             ),
             SizedBox(width: 16.w),
             if (!showOnlyWebPage)
@@ -223,6 +247,7 @@ class _AdminNavbarTablet extends StatelessWidget {
                         .map((item) => _AdminNavLink(
                       label:       item.label,
                       page:        item.page,
+                      pageBuilder:  item.pageBuilder,
                       activeLabel: activeLabel,
                       primary:     primary,
                       compact:     true,
@@ -282,7 +307,7 @@ class _AdminNavbarMobile extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             _AdminLogo(
-              onTap: () => _pushPage(context, navItems.first.page!),
+              onTap: () => _pushPage(context, navItems.first.page ?? navItems.first.pageBuilder!),
             ),
             if (!showOnlyWebPage)
               GestureDetector(
@@ -367,7 +392,7 @@ class _AdminMobileDrawer extends StatelessWidget {
                     rawSize: true,
                     onTap: () {
                       Navigator.of(context).pop();
-                      _pushPage(context, navItems.first.page!);
+                      _pushPage(context, navItems.first.page ?? navItems.first.pageBuilder!);
                     },
                   ),
                   GestureDetector(
@@ -392,12 +417,12 @@ class _AdminMobileDrawer extends StatelessWidget {
                 children: [
                   ...navItems.map((item) {
                     final bool isActive  = activeLabel == item.label;
-                    final bool isEnabled = item.page != null;
+                    final bool isEnabled = item.page != null || item.pageBuilder != null;
                     return GestureDetector(
                       onTap: isEnabled
                           ? () {
                         Navigator.of(context).pop();
-                        _pushPage(context, item.page!);
+                        _pushPage(context, item.page ?? item.pageBuilder!);
                       }
                           : null,
                       child: Opacity(
@@ -477,6 +502,7 @@ bool _isLikelySvg(String url) {
       lower.contains('/svg/') ||
       lower.endsWith('/svg');
 }
+
 class _AdminLogo extends StatelessWidget {
   final bool         rawSize;
   final VoidCallback onTap;
@@ -545,13 +571,15 @@ class _AdminLogo extends StatelessWidget {
 class _AdminNavLink extends StatefulWidget {
   final String  label;
   final Widget? page;
+  final Widget Function(BuildContext)? pageBuilder;
   final String  activeLabel;
   final Color   primary;
   final bool    compact;
 
   const _AdminNavLink({
     required this.label,
-    required this.page,
+    this.page,
+    this.pageBuilder,
     required this.activeLabel,
     required this.primary,
     this.compact = false,
@@ -565,7 +593,7 @@ class _AdminNavLinkState extends State<_AdminNavLink> {
   bool _hovered = false;
 
   bool get _isActive  => widget.activeLabel == widget.label;
-  bool get _isEnabled => widget.page != null;
+  bool get _isEnabled => widget.page != null || widget.pageBuilder != null;
 
   @override
   Widget build(BuildContext context) {
@@ -574,7 +602,7 @@ class _AdminNavLinkState extends State<_AdminNavLink> {
       onEnter: _isEnabled ? (_) => setState(() => _hovered = true)  : null,
       onExit:  _isEnabled ? (_) => setState(() => _hovered = false) : null,
       child: GestureDetector(
-        onTap: _isEnabled ? () => _pushPage(context, widget.page!) : null,
+        onTap: _isEnabled ? () => _pushPage(context, widget.page ?? widget.pageBuilder!) : null,
         child: Opacity(
           opacity: _isEnabled ? 1.0 : 0.45,
           child: AnimatedContainer(

@@ -1,6 +1,7 @@
 // ******************* FILE INFO *******************
 // File Name: about_cubit.dart  (3 cubits in one file)
 // Created by: Amr Mesbah
+// UPDATED: Added headings/svg upload path handling in AboutCubit.save()
 
 import 'dart:typed_data';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -12,8 +13,6 @@ import 'package:beauty_admin/repo/about_us/about_repo_imp.dart';
 import '../../model/about_us/about_us.dart';
 
 // ── Safe emit — never throws "Cannot emit after close" ────────────────────────
-// This happens when Navigator.popUntil() disposes the page (and its cubit)
-// while an async save() is still running in the background.
 extension _SafeEmit<S> on Cubit<S> {
   void safeEmit(S state) {
     if (!isClosed) emit(state);
@@ -54,23 +53,34 @@ class AboutCubit extends Cubit<AboutState> {
           final url = await _repo.uploadImage(
               bytes: entry.value, storagePath: entry.key);
 
-          if (entry.key.contains('vision/icon')) {
+          // ✅ NEW: headings SVG
+          if (entry.key.contains('headings/svg')) {
+            updated = updated.copyWith(svgUrl: url);
+          }
+          // ✅ Navigation Label icon
+          else if (entry.key.contains('navLabel/icon')) {
+            updated = updated.copyWith(
+                navigationLabel:
+                updated.navigationLabel.copyWith(iconUrl: url));
+          }
+          // Vision
+          else if (entry.key.contains('vision/icon')) {
             updated = updated.copyWith(
                 vision: updated.vision.copyWith(iconUrl: url));
           } else if (entry.key.contains('vision/svg')) {
             updated = updated.copyWith(
                 vision: updated.vision.copyWith(svgUrl: url));
-          } else if (entry.key.contains('mission/icon')) {
+          }
+          // Mission
+          else if (entry.key.contains('mission/icon')) {
             updated = updated.copyWith(
                 mission: updated.mission.copyWith(iconUrl: url));
           } else if (entry.key.contains('mission/svg')) {
             updated = updated.copyWith(
                 mission: updated.mission.copyWith(svgUrl: url));
-          } else if (entry.key.contains('navLabel/icon')) {
-            updated = updated.copyWith(
-                navigationLabel:
-                updated.navigationLabel.copyWith(iconUrl: url));
-          } else if (entry.key.contains('values/')) {
+          }
+          // Values
+          else if (entry.key.contains('values/')) {
             final parts  = entry.key.split('/');
             final itemId = parts.length >= 3 ? parts[2] : null;
             if (itemId != null) {
@@ -93,10 +103,6 @@ class AboutCubit extends Cubit<AboutState> {
     }
   }
 }
-
-// ═══════════════════════════════════════════════════════════════════════════════
-// OUR STRATEGY CUBIT
-// ═══════════════════════════════════════════════════════════════════════════════
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // OUR STRATEGY CUBIT
@@ -148,7 +154,6 @@ class StrategyCubit extends Cubit<StrategyState> {
               bytes: bytes, storagePath: path);
           print('  - Uploaded to: $url');
 
-          // Update the model with the new URL based on the path
           if (path.contains('navLabel/icon')) {
             updated = updated.copyWith(
                 navigationLabel:
@@ -164,8 +169,8 @@ class StrategyCubit extends Cubit<StrategyState> {
             print('  ✓ Updated strategicHouse AR URL');
           }
           else if (path.contains('vision/svg')) {
-            updated = updated.copyWith(
-                vision: updated.vision.copyWith(svgUrl: url));
+            // updated = updated.copyWith(
+            //     vision: updated.vision.copyWith(svgUrl: url));
             print('  ✓ Updated vision SVG URL');
           }
         }
@@ -209,7 +214,7 @@ class TermsCubit extends Cubit<TermsState> {
   Future<void> save({
     required TermsOfServiceModel model,
     Map<String, Uint8List>?      imageUploads,
-    Map<String, DocUpload>?      docUploads,  // PUBLIC type from about_us.dart
+    Map<String, DocUpload>?      docUploads,
   }) async {
     print('🟡 [TermsCubit] save()');
     try {

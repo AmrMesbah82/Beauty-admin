@@ -1,40 +1,19 @@
-/// ******************* FILE INFO *******************
-/// File Name: admin_sub_navbar.dart
-/// Purpose: Shared sub-navbar used across ALL admin CMS pages.
-///          Fix navigation in ONE place — no duplication.
-///
-/// Usage:
-///   // Pages that HAVE HomeCmsCubit in their BlocProvider tree
-///   // (home_main_page.dart, home_main_page_master.dart):
-///   AdminSubNavBar(
-///     activeIndex: 0,
-///     homeCubit: context.read<HomeCmsCubit>(),
-///   )
-///
-///   // Pages that do NOT have HomeCmsCubit
-///   // (about, contact, careers pages):
-///   AdminSubNavBar(activeIndex: 3)
-///   // → tapping "Home" from these pages goes to /admin/dashboard first,
-///   //   from which the "Home" tab works correctly.
-///
-/// Index map:
-///   0 = Main (Dashboard)
-///   1 = Home (Master CMS)
-///   2 = Overview (Services)
-///   3 = Client Services (Our Products)
-///   4 = About Us
-///   5 = Contact Us
-
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
-import 'package:get/get.dart';
 
+import '../controller/about_us/about_us_cubit.dart';
+import '../controller/contact_us/contacu_us_location_cubit.dart';
 import '../controller/home/home_cubit.dart';
+import '../dashboard/about_page/about_main_page_master.dart';
+import '../dashboard/contact_page/contact_us_main_page.dart';
 import '../dashboard/master_page/master_main_page.dart';
 import '../dashboard/overview/overview_main_page.dart';
 import '../dashboard/client_services/client_services_main_page.dart';
+import '../dashboard/owner_services/owner_services_main_page.dart';
+import '../dashboard/request/request_demo_main_page.dart';
+
 import '../theme/new_theme.dart';
 
 class AdminSubNavBar extends StatelessWidget {
@@ -52,42 +31,76 @@ class AdminSubNavBar extends StatelessWidget {
   static const Color _labelText = Color(0xFF333333);
 
   static const List<String> _labels = [
-    'Main', 'Home', 'Overview', 'Client Services', 'About Us', 'Contact Us',
+    'Main', 'Home', 'Overview', 'Client Services', 'Owner Services', 'About Us', 'Contact Us', 'Demo',
   ];
 
   void _onTap(BuildContext context, int i) {
     if (i == activeIndex) return;
 
-    if (i == 1) {
-      // Navigate to Master CMS page
-      Navigator.push(
-        context,
-        MaterialPageRoute(builder: (context) => const MasterMainPage()),
-      );
-    } else if (i == 2) {
-      // Navigate to Overview page
-      Navigator.push(
-        context,
-        MaterialPageRoute(builder: (context) => const OverviewMainPage()),
-      );
-    } else if (i == 3) {
-      // Navigate to Client Services page
-      Navigator.push(
-        context,
-        MaterialPageRoute(builder: (context) => const ClientServicesMainPage()),
-      );
-    } else {
-      switch (i) {
-        case 0:
-          context.go('/admin/dashboard');
-          break;
-        case 4:
-          context.go('/admin/about-cms');
-          break;
-        case 5:
-          context.go('/admin/contact-cms');
-          break;
-      }
+    switch (i) {
+      case 0:
+        Navigator.of(context).popUntil((route) => route.isFirst);
+        break;
+      case 1:
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const MasterMainPage()),
+        );
+        break;
+      case 2:
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const OverviewMainPage()),
+        );
+        break;
+      case 3:
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const ClientServicesMainPage()),
+        );
+        break;
+      case 4:
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const OwnerServicesMainPage()),
+        );
+        break;
+      case 5:
+        Navigator.push(
+          context,
+          PageRouteBuilder(
+            pageBuilder: (context, animation, secondaryAnimation) =>
+                BlocProvider(
+                  create: (_) => AboutCubit()..load(),
+                  child: const AboutMainPageMasterDashboard(),
+                ),
+            transitionsBuilder: (context, animation, secondaryAnimation, child) =>
+                FadeTransition(opacity: animation, child: child),
+            transitionDuration: const Duration(milliseconds: 200),
+          ),
+        );
+        break;
+      case 6:
+        Navigator.push(
+          context,
+          PageRouteBuilder(
+            pageBuilder: (context, animation, secondaryAnimation) =>
+                BlocProvider(
+                  create: (_) => ContactUsCmsCubit()..load(),
+                  child: const ContactUsMainPage(),
+                ),
+            transitionsBuilder: (context, animation, secondaryAnimation, child) =>
+                FadeTransition(opacity: animation, child: child),
+            transitionDuration: const Duration(milliseconds: 200),
+          ),
+        );
+        break;
+      case 7:
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const RequestDemoMainPage()),
+        );
+        break;
     }
   }
 

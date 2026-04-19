@@ -27,7 +27,7 @@ import '../../controller/home/home_cubit.dart';
 import '../../controller/home/home_state.dart';
 
 class _C {
-  static const Color primary   = Color(0xFF008037);
+  static const Color primary   = Color(0xFFD16F9A);
   static const Color sectionBg = Color(0xFFF5F5F5);
   static const Color cardBg    = Color(0xFFFFFFFF);
   static const Color border    = Color(0xFFE0E0E0);
@@ -138,15 +138,16 @@ class _HomePreviewPageState extends State<HomePreviewPage> {
                             SizedBox(height: 24.h),
 
                             // ── Back + Publish ──────────────────────────────
+                            // ── Back + Publish ──────────────────────────────────────────────
                             Row(
                               children: [
                                 Expanded(
                                   child: GestureDetector(
-                                    onTap: () => context.pop(),
+                                    onTap: () => Navigator.of(context).pop(), // Fixed: Use Navigator.pop
                                     child: Container(
                                       height: 44.h,
                                       decoration: BoxDecoration(
-                                        color: Color(0xFF797979),
+                                        color: const Color(0xFF797979),
                                         borderRadius: BorderRadius.circular(6.r),
                                       ),
                                       child: Center(

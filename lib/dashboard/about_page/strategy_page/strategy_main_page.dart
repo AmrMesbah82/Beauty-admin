@@ -23,7 +23,7 @@ import '../../../model/about_us/about_us.dart';
 import 'strategy_edit_page.dart';
 
 class _C {
-  static const Color primary   = Color(0xFF008037);
+  static const Color primary   = Color(0xFFD16F9A);
   static const Color sectionBg = Color(0xFFF5F5F5);
   static const Color cardBg    = Color(0xFFFFFFFF);
   static const Color labelText = Color(0xFF333333);

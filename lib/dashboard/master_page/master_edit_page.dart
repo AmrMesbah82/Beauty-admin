@@ -16,6 +16,7 @@ import 'dart:typed_data';
 import 'dart:html' as html;
 import 'dart:ui' as ui;
 
+import 'package:calendar_date_picker2/calendar_date_picker2.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -35,6 +36,7 @@ import 'package:beauty_admin/theme/new_theme.dart';
 import '../../../core/custom_dialog.dart';
 import '../../controller/master/master_cubit.dart';
 import '../../controller/master/master_state.dart';
+import '../../core/widget/date_pic.dart';
 import '../../model/master/master_model.dart';
 import 'master_preview_page.dart';
 
@@ -152,10 +154,10 @@ class _MasterEditPageState extends State<MasterEditPage> {
 
     // ── Header ─────────────────────────────────────────────────────────────
     final header = d.sectionByKey('header');
-    _headerTitleEn.text = d.title.en;
-    _headerTitleAr.text = d.title.ar;
-    _headerShortEn.text = d.shortDescription.en;
-    _headerShortAr.text = d.shortDescription.ar;
+    _headerTitleEn.text = header?.title.en ?? '';
+    _headerTitleAr.text = header?.title.ar ?? '';
+    _headerShortEn.text = header?.shortDescription.en ?? '';
+    _headerShortAr.text = header?.shortDescription.ar ?? '';
     _headerImage = (header?.imageUrl.isNotEmpty ?? false)
         ? _PickedImage(url: header!.imageUrl)
         : const _PickedImage();
@@ -254,34 +256,50 @@ class _MasterEditPageState extends State<MasterEditPage> {
   }
 
   // ─── Date picker ──────────────────────────────────────────────────────────
+// Replace the existing _pickDate method with this:
+
   Future<void> _pickDate() async {
-    final picked = await showDatePicker(
-      context: context,
-      initialDate: _publishDate ?? DateTime.now(),
-      firstDate: DateTime.now(),
-      lastDate: DateTime.now().add(const Duration(days: 365)),
-      builder: (context, child) {
-        return Theme(
-          data: Theme.of(context).copyWith(
-            colorScheme:
-            Theme.of(context).colorScheme.copyWith(primary: _C.primary),
-          ),
-          child: child!,
-        );
-      },
+    // Create an instance of your DatePicker class
+    final datePicker = DatePicker();
+
+    // Prepare the initial value (if any)
+    List<DateTime?>? initialValue;
+    if (_publishDate != null) {
+      initialValue = [_publishDate];
+    }
+
+    // Show your custom date picker
+    final result = await datePicker.showDatePicker(
+      context,
+      initialValue ?? [],
+      _publishDate ?? DateTime.now(),
+      CalendarDatePicker2Type.single, // Use 'single' since you're picking a single date
+      firstDate: DateTime.now(), // To prevent selecting past dates
     );
-    if (picked != null) setState(() => _publishDate = picked);
+
+    // Handle the result
+    if (result != null && result.isNotEmpty && result[0] != null) {
+      setState(() {
+        _publishDate = result[0];
+      });
+    }
   }
 
-  // ─── Save ─────────────────────────────────────────────────────────────────
   Future<void> _save(MasterCmsCubit cubit,
       {String publishStatus = 'published'}) async {
     setState(() => _submitted = true);
 
     try {
-      // Header / main fields
-      cubit.updateTitle(en: _headerTitleEn.text, ar: _headerTitleAr.text);
-      cubit.updateShortDescription(
+      // ── Header / main root-level fields ──
+      // cubit.updateTitle(en: _headerTitleEn.text, ar: _headerTitleAr.text);
+      // cubit.updateShortDescription(
+      //     en: _headerShortEn.text, ar: _headerShortAr.text);
+
+      // ── ALSO sync to header section-level fields ──
+      // (so public site can read from either root or section)
+      cubit.updateSectionTitle('header',
+          en: _headerTitleEn.text, ar: _headerTitleAr.text);
+      cubit.updateSectionShortDescription('header',
           en: _headerShortEn.text, ar: _headerShortAr.text);
 
       // Header section image + visibility
@@ -294,13 +312,13 @@ class _MasterEditPageState extends State<MasterEditPage> {
         cubit.toggleSectionVisibility('header');
       }
 
-      // About Us
+      // ── About Us ──
       cubit.updateSectionTitle('aboutUs',
           en: _aboutTitleEn.text, ar: _aboutTitleAr.text);
       cubit.updateSectionDescription('aboutUs',
           en: _aboutDescEn.text, ar: _aboutDescAr.text);
 
-      // Footer
+      // ── Footer ──
       cubit.updateSectionTitle('footer',
           en: _footerTitleEn.text, ar: _footerTitleAr.text);
       cubit.updateSectionDescription('footer',
@@ -314,11 +332,11 @@ class _MasterEditPageState extends State<MasterEditPage> {
         cubit.toggleSectionVisibility('footer');
       }
 
-      // App links
+      // ── App links ──
       cubit.updateAppStoreLink(_appStoreLink.text);
       cubit.updateGooglePlayLink(_googlePlayLink.text);
 
-      // Publish schedule
+      // ── Publish schedule ──
       cubit.updatePublishDate(_publishDate);
 
       await cubit.save(publishStatus: publishStatus);
@@ -426,7 +444,7 @@ class _MasterEditPageState extends State<MasterEditPage> {
                             title: 'Publish Schedule',
                             children: [_publishScheduleBody()],
                           ),
-                          SizedBox(height: 20.h),
+
 
                           // ── Action buttons ─────────────────────────
                           _actionButtons(cubit),
@@ -502,7 +520,7 @@ class _MasterEditPageState extends State<MasterEditPage> {
   // ─── Header Section body ──────────────────────────────────────────────────
   Widget _headerSectionBody() {
     return Padding(
-      padding: EdgeInsets.all(16.w),
+      padding: EdgeInsets.symmetric(vertical: 16.h),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -583,7 +601,7 @@ class _MasterEditPageState extends State<MasterEditPage> {
   // ─── About Us body ────────────────────────────────────────────────────────
   Widget _aboutUsSectionBody() {
     return Padding(
-      padding: EdgeInsets.all(16.w),
+      padding: EdgeInsets.symmetric(vertical: 16.h),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -598,6 +616,7 @@ class _MasterEditPageState extends State<MasterEditPage> {
             hint: 'Text Here',
             controller: _aboutDescEn,
             maxLines: 5,
+            maxLength: 10000,
             height: 120,
             submitted: _submitted,
             fillColor: Colors.white,
@@ -616,6 +635,7 @@ class _MasterEditPageState extends State<MasterEditPage> {
               controller: _aboutDescAr,
               maxLines: 5,
               height: 120,
+              maxLength: 10000,
               submitted: _submitted,
               fillColor: Colors.white,
               textDirection: ui.TextDirection.rtl,
@@ -631,7 +651,7 @@ class _MasterEditPageState extends State<MasterEditPage> {
   // ─── Footer Section body ──────────────────────────────────────────────────
   Widget _footerSectionBody() {
     return Padding(
-      padding: EdgeInsets.all(16.w),
+      padding: EdgeInsets.symmetric(vertical: 16.h),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -742,41 +762,54 @@ class _MasterEditPageState extends State<MasterEditPage> {
   // ─── Publish Schedule body ────────────────────────────────────────────────
   Widget _publishScheduleBody() {
     return Padding(
-      padding: EdgeInsets.all(16.w),
+      padding: EdgeInsets.symmetric(vertical: 15.h),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _sectionLabel('Publish Date'),
-          SizedBox(height: 6.h),
-          GestureDetector(
-            onTap: _pickDate,
-            child: Container(
-              height: 36.h,
-              padding: EdgeInsets.symmetric(horizontal: 8.w),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(4.r),
-                border: Border.all(color: Colors.transparent),
-              ),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      _publishDate != null
-                          ? DateFormat('dd/MM/yyyy').format(_publishDate!)
-                          : 'select date',
-                      style: StyleText.fontSize12Weight400.copyWith(
-                        color: _publishDate != null
-                            ? _C.labelText
-                            : _C.hintText,
+          Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _sectionLabel('Publish Date'),
+                    SizedBox(height: 6.h),
+                    GestureDetector(
+                      onTap: _pickDate,
+                      child: Container(
+                        height: 36.h,
+                        padding: EdgeInsets.symmetric(horizontal: 8.w),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(4.r),
+                          border: Border.all(color: Colors.transparent),
+                        ),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                _publishDate != null
+                                    ? DateFormat('dd/MM/yyyy').format(_publishDate!)
+                                    : 'select date',
+                                style: StyleText.fontSize12Weight400.copyWith(
+                                  color: _publishDate != null
+                                      ? _C.labelText
+                                      : _C.hintText,
+                                ),
+                              ),
+                            ),
+                            Icon(Icons.calendar_today_outlined,
+                                size: 16.sp, color: _C.hintText),
+                          ],
+                        ),
                       ),
                     ),
-                  ),
-                  Icon(Icons.calendar_today_outlined,
-                      size: 16.sp, color: _C.hintText),
-                ],
+                  ],
+                ),
               ),
-            ),
+              SizedBox(width: 16.w),
+              Expanded(child: Column())
+            ],
           ),
         ],
       ),
