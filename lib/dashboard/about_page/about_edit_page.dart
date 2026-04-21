@@ -1,7 +1,13 @@
 // ******************* FILE INFO *******************
 // File Name: about_edit_page.dart
 // Screen 2 — About Us CMS: Edit all sections
-// UPDATED: ALL image uploads are SVG-only
+// UPDATED:
+//   - ALL image uploads are SVG-only
+//   - Publish button disabled until ALL required fields pass validation
+//     (same pattern as overview_edit_page.dart)
+//   - _isFormValid getter for silent validation
+//   - _getMissingFields() for error dialog
+//   - No "Save For Later" logic (not needed for About Us)
 
 // ignore_for_file: avoid_web_libraries_in_flutter
 import 'dart:async';
@@ -24,6 +30,8 @@ import 'package:beauty_admin/theme/new_theme.dart';
 import 'package:beauty_admin/widgets/admin_sub_navbar.dart';
 
 import '../../model/about_us/about_us.dart';
+import '../../widgets/app_admin_navbar.dart';
+import '../main_page/home_main_page.dart';
 import 'about_preview_page.dart';
 
 const Color _kGreen = Color(0xFFD16F9A);
@@ -97,6 +105,159 @@ class _AboutEditPageMasterState extends State<AboutEditPageMaster> {
   // ── URL → bytes cache ──
   final Map<String, Future<Uint8List>> _urlBytesCache = {};
 
+  // ══════════════════════════════════════════════════════════════════════════
+  // VALIDATION HELPERS
+  // ══════════════════════════════════════════════════════════════════════════
+
+  /// EN field: non-empty AND no Arabic characters
+  bool _isValidEn(String text) {
+    if (text.trim().isEmpty) return false;
+    return !RegExp(r'[\u0600-\u06FF]').hasMatch(text);
+  }
+
+  /// AR field: non-empty AND no English letters
+  bool _isValidAr(String text) {
+    if (text.trim().isEmpty) return false;
+    return !RegExp(r'[a-zA-Z]').hasMatch(text);
+  }
+
+  // ══════════════════════════════════════════════════════════════════════════
+  // VALIDATION
+  // ══════════════════════════════════════════════════════════════════════════
+
+  /// Silent validation — used to gate the Publish button.
+  /// Checks BOTH emptiness AND language mixing (same rules as the text field widget).
+  bool get _isFormValid {
+    // Headings
+    if (!_isValidEn(_titleEnCtrl.text)) return false;
+    if (!_isValidAr(_titleArCtrl.text)) return false;
+    // Nav label
+    if (!_isValidEn(_navLabelTitleEnCtrl.text)) return false;
+    if (!_isValidAr(_navLabelTitleArCtrl.text)) return false;
+    // Vision
+    if (!_isValidEn(_visionSubEnCtrl.text)) return false;
+    if (!_isValidAr(_visionSubArCtrl.text)) return false;
+    if (!_isValidEn(_visionDescEnCtrl.text)) return false;
+    if (!_isValidAr(_visionDescArCtrl.text)) return false;
+    // Mission
+    if (!_isValidEn(_missionSubEnCtrl.text)) return false;
+    if (!_isValidAr(_missionSubArCtrl.text)) return false;
+    if (!_isValidEn(_missionDescEnCtrl.text)) return false;
+    if (!_isValidAr(_missionDescArCtrl.text)) return false;
+    // Values
+    for (final v in _valueItems) {
+      if (!_isValidEn(v.titleEnCtrl.text)) return false;
+      if (!_isValidAr(v.titleArCtrl.text)) return false;
+      if (!_isValidEn(v.shortDescEnCtrl.text)) return false;
+      if (!_isValidAr(v.shortDescArCtrl.text)) return false;
+    }
+    return true;
+  }
+
+  /// Returns a list of human-readable missing/invalid field names.
+  List<String> _getMissingFields() {
+    final missing = <String>[];
+
+    void checkEn(String text, String label) {
+      if (text.trim().isEmpty) {
+        missing.add('$label — required');
+      } else if (RegExp(r'[\u0600-\u06FF]').hasMatch(text)) {
+        missing.add('$label — English characters only');
+      }
+    }
+
+    void checkAr(String text, String label) {
+      if (text.trim().isEmpty) {
+        missing.add('$label — required');
+      } else if (RegExp(r'[a-zA-Z]').hasMatch(text)) {
+        missing.add('$label — Arabic characters only');
+      }
+    }
+
+    checkEn(_titleEnCtrl.text, 'Heading Title (EN)');
+    checkAr(_titleArCtrl.text, 'Heading Title (AR)');
+    checkEn(_navLabelTitleEnCtrl.text, 'Navigation Label Title (EN)');
+    checkAr(_navLabelTitleArCtrl.text, 'Navigation Label Title (AR)');
+    checkEn(_visionSubEnCtrl.text, 'Vision Sub Description (EN)');
+    checkAr(_visionSubArCtrl.text, 'Vision Sub Description (AR)');
+    checkEn(_visionDescEnCtrl.text, 'Vision Description (EN)');
+    checkAr(_visionDescArCtrl.text, 'Vision Description (AR)');
+    checkEn(_missionSubEnCtrl.text, 'Mission Sub Description (EN)');
+    checkAr(_missionSubArCtrl.text, 'Mission Sub Description (AR)');
+    checkEn(_missionDescEnCtrl.text, 'Mission Description (EN)');
+    checkAr(_missionDescArCtrl.text, 'Mission Description (AR)');
+
+    for (var i = 0; i < _valueItems.length; i++) {
+      final v = _valueItems[i];
+      checkEn(v.titleEnCtrl.text,       'Value ${i + 1} Title (EN)');
+      checkAr(v.titleArCtrl.text,       'Value ${i + 1} Title (AR)');
+      checkEn(v.shortDescEnCtrl.text,   'Value ${i + 1} Short Description (EN)');
+      checkAr(v.shortDescArCtrl.text,   'Value ${i + 1} Short Description (AR)');
+    }
+
+    return missing;
+  }
+
+  void _showValidationError() {
+    final missing = _getMissingFields();
+    if (missing.isEmpty) return;
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r)),
+        title: Row(
+          children: [
+            Icon(Icons.error_outline, color: _kRed, size: 24.sp),
+            SizedBox(width: 8.w),
+            Text(
+              'Validation Error',
+              style: StyleText.fontSize14Weight600.copyWith(color: Colors.black87),
+            ),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Please fill all required fields:',
+              style: StyleText.fontSize12Weight400.copyWith(color: Colors.black54),
+            ),
+            SizedBox(height: 12.h),
+            ...missing.map(
+                  (field) => Padding(
+                padding: EdgeInsets.only(left: 8.w, top: 4.h),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('• ', style: TextStyle(color: _kRed)),
+                    Expanded(
+                      child: Text(
+                        field,
+                        style: StyleText.fontSize12Weight400
+                            .copyWith(color: Colors.black87),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(
+              'OK',
+              style: StyleText.fontSize13Weight500.copyWith(color: _kGreenSolid),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   void initState() {
     super.initState();
@@ -105,34 +266,40 @@ class _AboutEditPageMasterState extends State<AboutEditPageMaster> {
   }
 
   void _setupChangeListeners() {
-    _titleEnCtrl.addListener(() => setState(() => _hasChanges = true));
-    _titleArCtrl.addListener(() => setState(() => _hasChanges = true));
-    _navLabelTitleEnCtrl.addListener(() => setState(() => _hasChanges = true));
-    _navLabelTitleArCtrl.addListener(() => setState(() => _hasChanges = true));
-    _visionSubEnCtrl.addListener(() => setState(() => _hasChanges = true));
-    _visionSubArCtrl.addListener(() => setState(() => _hasChanges = true));
-    _visionDescEnCtrl.addListener(() => setState(() => _hasChanges = true));
-    _visionDescArCtrl.addListener(() => setState(() => _hasChanges = true));
-    _missionSubEnCtrl.addListener(() => setState(() => _hasChanges = true));
-    _missionSubArCtrl.addListener(() => setState(() => _hasChanges = true));
-    _missionDescEnCtrl.addListener(() => setState(() => _hasChanges = true));
-    _missionDescArCtrl.addListener(() => setState(() => _hasChanges = true));
+    for (final ctrl in _allTextControllers) {
+      ctrl.addListener(_onFieldChanged);
+    }
   }
+
+  void _onFieldChanged() {
+    if (mounted) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) setState(() => _hasChanges = true);
+      });
+    }
+  }
+
+  List<TextEditingController> get _allTextControllers => [
+    _titleEnCtrl,
+    _titleArCtrl,
+    _navLabelTitleEnCtrl,
+    _navLabelTitleArCtrl,
+    _visionSubEnCtrl,
+    _visionSubArCtrl,
+    _visionDescEnCtrl,
+    _visionDescArCtrl,
+    _missionSubEnCtrl,
+    _missionSubArCtrl,
+    _missionDescEnCtrl,
+    _missionDescArCtrl,
+  ];
 
   @override
   void dispose() {
-    _titleEnCtrl.dispose();
-    _titleArCtrl.dispose();
-    _navLabelTitleEnCtrl.dispose();
-    _navLabelTitleArCtrl.dispose();
-    _visionSubEnCtrl.dispose();
-    _visionSubArCtrl.dispose();
-    _visionDescEnCtrl.dispose();
-    _visionDescArCtrl.dispose();
-    _missionSubEnCtrl.dispose();
-    _missionSubArCtrl.dispose();
-    _missionDescEnCtrl.dispose();
-    _missionDescArCtrl.dispose();
+    for (final ctrl in _allTextControllers) {
+      ctrl.removeListener(_onFieldChanged);
+      ctrl.dispose();
+    }
     for (final v in _valueItems) {
       v.titleEnCtrl.dispose();
       v.titleArCtrl.dispose();
@@ -143,7 +310,7 @@ class _AboutEditPageMasterState extends State<AboutEditPageMaster> {
   }
 
   // ══════════════════════════════════════════════════════════════════════════
-  // STRICT SVG-ONLY PICKER - Only allows SVG files (for ALL uploads)
+  // STRICT SVG-ONLY PICKER
   // ══════════════════════════════════════════════════════════════════════════
 
   Future<Uint8List?> _pickSvgFile() async {
@@ -161,10 +328,10 @@ class _AboutEditPageMasterState extends State<AboutEditPageMaster> {
       final fileName = file.name.toLowerCase();
       final fileType = file.type.toLowerCase();
 
-      bool isValidSvg = fileName.endsWith('.svg') || fileType == 'image/svg+xml';
+      final isValidSvg =
+          fileName.endsWith('.svg') || fileType == 'image/svg+xml';
 
       if (!isValidSvg) {
-        // _showErrorSnackBar('❌ SVG files only! "${file.name}" is not an SVG file.');
         completer.complete(null);
         return;
       }
@@ -182,7 +349,6 @@ class _AboutEditPageMasterState extends State<AboutEditPageMaster> {
           }
 
           if (bytes != null && !_isValidSvgContent(bytes)) {
-            // _showErrorSnackBar('❌ Invalid SVG file format. Please upload a valid SVG file.');
             completer.complete(null);
             return;
           }
@@ -190,10 +356,7 @@ class _AboutEditPageMasterState extends State<AboutEditPageMaster> {
           completer.complete(bytes);
         }
       });
-      reader.onError.listen((_) {
-        // _showErrorSnackBar('❌ Error reading SVG file.');
-        completer.complete(null);
-      });
+      reader.onError.listen((_) => completer.complete(null));
     });
 
     input.click();
@@ -203,7 +366,8 @@ class _AboutEditPageMasterState extends State<AboutEditPageMaster> {
   bool _isValidSvgContent(Uint8List bytes) {
     if (bytes.length < 10) return false;
     try {
-      final content = String.fromCharCodes(bytes.sublist(0, bytes.length.clamp(0, 200)));
+      final content = String.fromCharCodes(
+          bytes.sublist(0, bytes.length.clamp(0, 500)));
       final trimmed = content.trimLeft();
       return trimmed.startsWith('<svg') ||
           trimmed.startsWith('<?xml') && trimmed.contains('<svg');
@@ -211,8 +375,6 @@ class _AboutEditPageMasterState extends State<AboutEditPageMaster> {
       return false;
     }
   }
-
-  
 
   // ══════════════════════════════════════════════════════════════════════════
   // URL loaders
@@ -232,9 +394,7 @@ class _AboutEditPageMasterState extends State<AboutEditPageMaster> {
       );
       if (response.status == 200 && response.response != null) {
         final bytes = (response.response as ByteBuffer).asUint8List();
-        if (!_isValidSvgContent(bytes)) {
-          throw Exception('Invalid SVG content');
-        }
+        if (!_isValidSvgContent(bytes)) throw Exception('Invalid SVG content');
         return bytes;
       }
       throw Exception('HTTP ${response.status}');
@@ -269,6 +429,11 @@ class _AboutEditPageMasterState extends State<AboutEditPageMaster> {
 
     if (_seededModelHash == modelHash) return;
     _seededModelHash = modelHash;
+
+    // Remove listeners while seeding to avoid spurious _hasChanges flips
+    for (final ctrl in _allTextControllers) {
+      ctrl.removeListener(_onFieldChanged);
+    }
 
     _titleEnCtrl.text = m.title.en;
     _titleArCtrl.text = m.title.ar;
@@ -305,6 +470,11 @@ class _AboutEditPageMasterState extends State<AboutEditPageMaster> {
 
     _hasChanges = false;
     _seeded = true;
+
+    // Re-attach listeners
+    for (final ctrl in _allTextControllers) {
+      ctrl.addListener(_onFieldChanged);
+    }
   }
 
   // ── Build model from current state ────────────────────────────────────────
@@ -372,10 +542,8 @@ class _AboutEditPageMasterState extends State<AboutEditPageMaster> {
 
     if (_headingsSvgBytes != null)
       uploads['about_cms/headings/svg'] = _headingsSvgBytes!;
-
     if (_navLabelIconBytes != null)
       uploads['about_cms/navLabel/icon'] = _navLabelIconBytes!;
-
     if (_visionIconBytes != null)
       uploads['about_cms/vision/icon'] = _visionIconBytes!;
     if (_visionSvgBytes != null)
@@ -391,51 +559,10 @@ class _AboutEditPageMasterState extends State<AboutEditPageMaster> {
     return uploads;
   }
 
-  // ── Validate fields ──────────────────────────────────────────────────────
+  // ── Validate (with UI feedback) ──────────────────────────────────────────
   bool _validate() {
     setState(() => _submitted = true);
-
-    if (_titleEnCtrl.text.trim().isEmpty) return false;
-    if (_titleArCtrl.text.trim().isEmpty) return false;
-    if (_visionSubEnCtrl.text.trim().isEmpty) return false;
-    if (_visionSubArCtrl.text.trim().isEmpty) return false;
-    if (_visionDescEnCtrl.text.trim().isEmpty) return false;
-    if (_visionDescArCtrl.text.trim().isEmpty) return false;
-    if (_missionSubEnCtrl.text.trim().isEmpty) return false;
-    if (_missionSubArCtrl.text.trim().isEmpty) return false;
-    if (_missionDescEnCtrl.text.trim().isEmpty) return false;
-    if (_missionDescArCtrl.text.trim().isEmpty) return false;
-
-    for (final v in _valueItems) {
-      if (v.titleEnCtrl.text.trim().isEmpty) return false;
-      if (v.titleArCtrl.text.trim().isEmpty) return false;
-      if (v.shortDescEnCtrl.text.trim().isEmpty) return false;
-      if (v.shortDescArCtrl.text.trim().isEmpty) return false;
-    }
-
-    return true;
-  }
-
-  bool _validateSilent() {
-    if (_titleEnCtrl.text.trim().isEmpty) return false;
-    if (_titleArCtrl.text.trim().isEmpty) return false;
-    if (_visionSubEnCtrl.text.trim().isEmpty) return false;
-    if (_visionSubArCtrl.text.trim().isEmpty) return false;
-    if (_visionDescEnCtrl.text.trim().isEmpty) return false;
-    if (_visionDescArCtrl.text.trim().isEmpty) return false;
-    if (_missionSubEnCtrl.text.trim().isEmpty) return false;
-    if (_missionSubArCtrl.text.trim().isEmpty) return false;
-    if (_missionDescEnCtrl.text.trim().isEmpty) return false;
-    if (_missionDescArCtrl.text.trim().isEmpty) return false;
-
-    for (final v in _valueItems) {
-      if (v.titleEnCtrl.text.trim().isEmpty) return false;
-      if (v.titleArCtrl.text.trim().isEmpty) return false;
-      if (v.shortDescEnCtrl.text.trim().isEmpty) return false;
-      if (v.shortDescArCtrl.text.trim().isEmpty) return false;
-    }
-
-    return true;
+    return _isFormValid;
   }
 
   // ── Preview ────────────────────────────────────────────────────────────────
@@ -458,7 +585,7 @@ class _AboutEditPageMasterState extends State<AboutEditPageMaster> {
   // ── Save / Publish ─────────────────────────────────────────────────────────
   Future<void> _save(String status) async {
     setState(() => _submitted = true);
-    if (!_validate()) return;
+    if (!_isFormValid) return;
 
     setState(() => _isSaving = true);
     final model = _buildModel(status);
@@ -500,40 +627,33 @@ class _AboutEditPageMasterState extends State<AboutEditPageMaster> {
         if (state is AboutLoaded) _seedFromModel(state.data);
         if (state is AboutSaved) {
           setState(() => _isSaving = false);
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('About Us saved successfully!'),
-              backgroundColor: _kGreenSolid,
-            ),
-          );
-          if (mounted) {
-            Navigator.pop(context);
-          }
+          if (mounted) Navigator.pop(context);
         }
         if (state is AboutError) {
           setState(() => _isSaving = false);
-          // ScaffoldMessenger.of(context).showSnackBar(
-          //   SnackBar(
-          //     content: Text('Error: ${state.message}'),
-          //     backgroundColor: _kRed,
-          //   ),
-          // );
         }
       },
       builder: (context, state) {
         final isLoading = state is AboutLoading || state is AboutInitial;
-        final bool isFormValid = _validateSilent();
-        final bool canPublish = isFormValid && _hasChanges && !_isSaving;
+
+        // Gate: form must be valid AND there must be changes AND not currently saving
+        final bool canPublish = _isFormValid && _hasChanges && !_isSaving;
 
         return Scaffold(
           backgroundColor: const Color(0xFFF1F2ED),
           body: Stack(
             children: [
               SingleChildScrollView(
-                child: Container(
+                child: SizedBox(
                   width: double.infinity,
                   child: Column(
                     children: [
+                      AppAdminNavbar(
+                        activeLabel: 'Web Page',
+                        homePage: HomeMainPage(),
+                        webPage: HomeMainPage(),
+                        jobListingPage: HomeMainPage(),
+                      ),
                       SizedBox(height: 20.h),
                       AdminSubNavBar(activeIndex: 5),
                       SizedBox(
@@ -597,7 +717,7 @@ class _AboutEditPageMasterState extends State<AboutEditPageMaster> {
             iconUrl: _visionIconUrl,
             svgUrl: _visionSvgUrl,
             onPickIcon: () async {
-              final b = await _pickSvgFile(); // CHANGED: SVG only
+              final b = await _pickSvgFile();
               if (b != null) {
                 setState(() => _visionIconBytes = b);
                 _hasChanges = true;
@@ -628,7 +748,7 @@ class _AboutEditPageMasterState extends State<AboutEditPageMaster> {
             iconUrl: _missionIconUrl,
             svgUrl: _missionSvgUrl,
             onPickIcon: () async {
-              final b = await _pickSvgFile(); // CHANGED: SVG only
+              final b = await _pickSvgFile();
               if (b != null) {
                 setState(() => _missionIconBytes = b);
                 _hasChanges = true;
@@ -696,7 +816,9 @@ class _AboutEditPageMasterState extends State<AboutEditPageMaster> {
                   ),
                 ),
                 Icon(
-                  isOpen ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down,
+                  isOpen
+                      ? Icons.keyboard_arrow_up
+                      : Icons.keyboard_arrow_down,
                   color: Colors.white,
                   size: 22.sp,
                 ),
@@ -762,11 +884,11 @@ class _AboutEditPageMasterState extends State<AboutEditPageMaster> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         _imageUploadCircle(
-          label: 'Image', // CHANGED: label
+          label: 'Image',
           bytes: _navLabelIconBytes,
           url: _navLabelIconUrl,
           onTap: () async {
-            final b = await _pickSvgFile(); // CHANGED: SVG only
+            final b = await _pickSvgFile();
             if (b != null) {
               setState(() => _navLabelIconBytes = b);
               _hasChanges = true;
@@ -806,7 +928,7 @@ class _AboutEditPageMasterState extends State<AboutEditPageMaster> {
         Row(
           children: [
             _imageUploadCircle(
-              label: 'Image', // CHANGED: label
+              label: 'Image',
               bytes: iconBytes,
               url: iconUrl,
               onTap: onPickIcon,
@@ -829,7 +951,7 @@ class _AboutEditPageMasterState extends State<AboutEditPageMaster> {
           fillColor: Colors.white,
           height: 100,
           maxLines: 4,
-          maxLength: 200,
+          maxLength: 500,
           showCharCount: true,
           submitted: _submitted,
           textDirection: TextDirection.ltr,
@@ -845,7 +967,7 @@ class _AboutEditPageMasterState extends State<AboutEditPageMaster> {
           controller: subArCtrl,
           height: 100,
           maxLines: 4,
-          maxLength: 200,
+          maxLength: 500,
           showCharCount: true,
           submitted: _submitted,
           textDirection: TextDirection.rtl,
@@ -861,7 +983,7 @@ class _AboutEditPageMasterState extends State<AboutEditPageMaster> {
           fillColor: Colors.white,
           height: 100,
           maxLines: 4,
-          maxLength: 800,
+          maxLength: 500,
           showCharCount: true,
           submitted: _submitted,
           textDirection: TextDirection.ltr,
@@ -877,7 +999,7 @@ class _AboutEditPageMasterState extends State<AboutEditPageMaster> {
           height: 100,
           fillColor: Colors.white,
           maxLines: 4,
-          maxLength: 800,
+          maxLength: 500,
           showCharCount: true,
           submitted: _submitted,
           textDirection: TextDirection.rtl,
@@ -933,7 +1055,7 @@ class _AboutEditPageMasterState extends State<AboutEditPageMaster> {
   }
 
   Widget _valueItemWidget(_ValueItem v, {required bool isMain}) {
-    final String itemLabel = isMain ? 'Main Image' : 'Image'; // CHANGED: label
+    final String itemLabel = isMain ? 'Main Image' : 'Image';
 
     return Container(
       margin: EdgeInsets.only(bottom: 20.h),
@@ -953,7 +1075,7 @@ class _AboutEditPageMasterState extends State<AboutEditPageMaster> {
                 bytes: v.iconBytes,
                 url: v.iconUrl,
                 onTap: () async {
-                  final b = await _pickSvgFile(); // CHANGED: SVG only
+                  final b = await _pickSvgFile();
                   if (b != null) {
                     setState(() => v.iconBytes = b);
                     _hasChanges = true;
@@ -1003,7 +1125,7 @@ class _AboutEditPageMasterState extends State<AboutEditPageMaster> {
             height: 100,
             fillColor: Colors.white,
             maxLines: 4,
-            maxLength: 200,
+            maxLength: 500,
             showCharCount: true,
             submitted: _submitted,
             textDirection: TextDirection.ltr,
@@ -1019,7 +1141,7 @@ class _AboutEditPageMasterState extends State<AboutEditPageMaster> {
             fillColor: Colors.white,
             height: 100,
             maxLines: 4,
-            maxLength: 200,
+            maxLength: 500,
             showCharCount: true,
             submitted: _submitted,
             textDirection: TextDirection.rtl,
@@ -1037,6 +1159,7 @@ class _AboutEditPageMasterState extends State<AboutEditPageMaster> {
       children: [
         Row(
           children: [
+            // ── Preview ──────────────────────────────────────────────────
             Expanded(
               child: _btn(
                 label: 'Preview',
@@ -1045,37 +1168,39 @@ class _AboutEditPageMasterState extends State<AboutEditPageMaster> {
               ),
             ),
             SizedBox(width: 16.w),
+
+            // ── Publish ───────────────────────────────────────────────────
             Expanded(
-              child: _btn(
-                label: 'Publish',
-                color: canPublish ? _kGreenSolid : _kGreenSolid.withOpacity(0.5),
-                onTap: canPublish
-                    ? () {
-                  if (!_validate()) {
-                    // ScaffoldMessenger.of(context).showSnackBar(
-                    //   SnackBar(
-                    //     content: Text(
-                    //       'Please fill in all required fields before publishing.',
-                    //       style: StyleText.fontSize14Weight400
-                    //           .copyWith(color: Colors.white),
-                    //     ),
-                    //     backgroundColor: Colors.red,
-                    //     behavior: SnackBarBehavior.floating,
-                    //   ),
-                    // );
-                    return;
-                  }
-                  showPublishConfirmDialog(
-                    context: context,
-                    onConfirm: () => _save('published'),
-                  );
-                }
-                    : null,
+              child: AbsorbPointer(
+                absorbing: !canPublish,
+                child: Opacity(
+                  opacity: canPublish ? 1.0 : 0.5,
+                  child: _btn(
+                    label: 'Publish',
+                    color: _kGreenSolid,
+                    onTap: () {
+                      if (!canPublish) {
+                        setState(() => _submitted = true);
+                        _showValidationError();
+                        return;
+                      }
+                      showPublishConfirmDialog(
+                        title: 'EDITING ABOUT US DETAILS',
+                        subtitle:
+                        'Do you want to save the changes made to this ABOUT US?',
+                        context: context,
+                        onConfirm: () => _save('published'),
+                      );
+                    },
+                  ),
+                ),
               ),
             ),
           ],
         ),
         SizedBox(height: 12.h),
+
+        // ── Discard ───────────────────────────────────────────────────────
         Row(
           children: [
             Expanded(
@@ -1086,7 +1211,7 @@ class _AboutEditPageMasterState extends State<AboutEditPageMaster> {
               ),
             ),
             SizedBox(width: 15.sp),
-            Expanded(child: Container())
+            Expanded(child: Container()),
           ],
         ),
       ],
@@ -1158,7 +1283,7 @@ class _AboutEditPageMasterState extends State<AboutEditPageMaster> {
               Container(
                 width: 64.w,
                 height: 64.h,
-                decoration: BoxDecoration(
+                decoration: const BoxDecoration(
                   shape: BoxShape.circle,
                   color: Colors.white,
                 ),
@@ -1202,11 +1327,11 @@ class _AboutEditPageMasterState extends State<AboutEditPageMaster> {
   }
 
   Widget _buildImageWidget(Uint8List? bytes, String url) {
-    bool _isSvgBytes(Uint8List b) {
+    bool isSvgBytes(Uint8List b) {
       if (b.length < 10) return false;
       try {
         final header = String.fromCharCodes(
-          b.sublist(0, b.length.clamp(0, 200)),
+          b.sublist(0, b.length.clamp(0, 500)),
         ).trimLeft();
         return header.startsWith('<svg') ||
             (header.startsWith('<?xml') && header.contains('<svg'));
@@ -1215,7 +1340,7 @@ class _AboutEditPageMasterState extends State<AboutEditPageMaster> {
       }
     }
 
-    Widget _renderBytes(Uint8List b) {
+    Widget renderBytes(Uint8List b) {
       return Padding(
         padding: EdgeInsets.all(16.r),
         child: SvgPicture.memory(b, fit: BoxFit.contain),
@@ -1228,9 +1353,7 @@ class _AboutEditPageMasterState extends State<AboutEditPageMaster> {
       child: CircularProgressIndicator(strokeWidth: 2, color: _kGreenSolid),
     );
 
-    if (bytes != null) {
-      return _renderBytes(bytes);
-    }
+    if (bytes != null) return renderBytes(bytes);
 
     if (url.isNotEmpty) {
       return FutureBuilder<Uint8List>(
@@ -1239,23 +1362,13 @@ class _AboutEditPageMasterState extends State<AboutEditPageMaster> {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return Center(child: spinner);
           }
-          if (snapshot.hasData) {
-            return _renderBytes(snapshot.data!);
-          }
-          return Icon(
-            Icons.broken_image,
-            color: Colors.red[300],
-            size: 28.sp,
-          );
+          if (snapshot.hasData) return renderBytes(snapshot.data!);
+          return Icon(Icons.broken_image, color: Colors.red[300], size: 28.sp);
         },
       );
     }
 
-    return Icon(
-      Icons.image_outlined,
-      color: Colors.grey[500],
-      size: 28.sp,
-    );
+    return Icon(Icons.image_outlined, color: Colors.grey[500], size: 28.sp);
   }
 
   // ── Shared form helpers ────────────────────────────────────────────────────
@@ -1264,7 +1377,7 @@ class _AboutEditPageMasterState extends State<AboutEditPageMaster> {
     required TextEditingController arCtrl,
     required String enHint,
     required String arHint,
-    int maxLength = 200,
+    int maxLength = 500,
   }) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,

@@ -4,9 +4,10 @@
 //   • Firestore  → document: home_page (direct root-level document)
 //   • Storage    → bucket path: home_cms/...
 // Created by: Amr Mesbah
-// UPDATED: Fixed document path issue - using collection().doc() pattern
-// UPDATED: saveHomePage() now appends versioned history for scalar/object
-//          fields using Versioned.append() — full audit trail in Firestore ✅
+// UPDATED: All field names use Capital_Underscore naming convention ✅
+// UPDATED: ALL fields flattened — NO nested maps in Firestore ✅
+// UPDATED: EVERY single key goes through Versioned.append() ✅
+//          Nav_Buttons_0_Status: [true]  — versioned array, not plain bool ✅
 
 import 'dart:typed_data';
 
@@ -46,17 +47,9 @@ class HomeRepositoryImpl implements HomeRepository {
       }
       final data = _sanitize(snapshot.data()!);
       print('   sanitized keys = ${data.keys.toList()}');
-      print('   raw title = ${data['title']}');
-      print('   raw sections length = ${(data['sections'] as List?)?.length ?? 0}');
-      if ((data['sections'] as List?)?.isNotEmpty == true) {
-        final s0 = (data['sections'] as List)[0] as Map<String, dynamic>;
-        print('   raw sections[0].imageUrl = ${s0['imageUrl']}');
-        print('   raw sections[0].iconUrl  = ${s0['iconUrl']}');
-      }
       final model = HomePageModel.fromMap(data);
       print('🟢 [Repo] fetchHomePage() → parsed OK');
-      print('   model.title.en             = ${model.title.en}');
-      print('   model.sections[0].imageUrl = ${model.sections.isNotEmpty ? model.sections[0].imageUrl : "NO SECTIONS"}');
+      print('   model.title.en = ${model.title.en}');
       return model;
     } catch (e, st) {
       print('🔴 [Repo] fetchHomePage() ERROR: $e');
@@ -81,29 +74,23 @@ class HomeRepositoryImpl implements HomeRepository {
       }
       final data = _sanitize(snapshot.data()!);
       print('   sanitized keys = ${data.keys.toList()}');
-      print('   raw title = ${data['title']}');
-      print('   raw sections length = ${(data['sections'] as List?)?.length ?? 0}');
-      if ((data['sections'] as List?)?.isNotEmpty == true) {
-        final s0 = (data['sections'] as List)[0] as Map<String, dynamic>;
-        print('   raw sections[0].imageUrl = ${s0['imageUrl']}');
-        print('   raw sections[0].iconUrl  = ${s0['iconUrl']}');
-      }
-      print('   raw branding = ${data['branding']}');
       final model = HomePageModel.fromMap(data);
       print('🟢 [Repo] fetchHomePageFresh() → parsed OK');
-      print('   model.title.en               = ${model.title.en}');
-      print('   model.sections length        = ${model.sections.length}');
-      print('   model.sections[0].imageUrl   = ${model.sections.isNotEmpty ? model.sections[0].imageUrl : "NO SECTIONS"}');
-      print('   model.sections[0].iconUrl    = ${model.sections.isNotEmpty ? model.sections[0].iconUrl  : "NO SECTIONS"}');
-      print('   model.branding.logoUrl       = ${model.branding.logoUrl}');
-      print('   model.publishStatus          = ${model.publishStatus}');
-      print('   model.appDownloadLinks.iosUrl         = ${model.appDownloadLinks.iosUrl}');
-      print('   model.appDownloadLinks.androidUrl     = ${model.appDownloadLinks.androidUrl}');
-      print('   model.appDownloadLinks.labelEn        = ${model.appDownloadLinks.labelEn}');
-      print('   model.appDownloadLinks.labelAr        = ${model.appDownloadLinks.labelAr}');
-      print('   model.appDownloadLinks.iosIconUrl     = ${model.appDownloadLinks.iosIconUrl}');
-      print('   model.appDownloadLinks.androidIconUrl = ${model.appDownloadLinks.androidIconUrl}');
-      print('   model.appDownloadLinks.visibility     = ${model.appDownloadLinks.visibility}');
+      print('   model.title.en                         = ${model.title.en}');
+      print('   model.sections length                  = ${model.sections.length}');
+      print('   model.branding.logoUrl                 = ${model.branding.logoUrl}');
+      print('   model.publishStatus                    = ${model.publishStatus}');
+      print('   model.headerItems length               = ${model.headerItems.length}');
+      print('   model.footerColumns length             = ${model.footerColumns.length}');
+      print('   model.navButtons length                = ${model.navButtons.length}');
+      print('   model.socialLinks length               = ${model.socialLinks.length}');
+      print('   model.appDownloadLinks.iosUrl           = ${model.appDownloadLinks.iosUrl}');
+      print('   model.appDownloadLinks.androidUrl       = ${model.appDownloadLinks.androidUrl}');
+      print('   model.appDownloadLinks.labelEn          = ${model.appDownloadLinks.labelEn}');
+      print('   model.appDownloadLinks.labelAr          = ${model.appDownloadLinks.labelAr}');
+      print('   model.appDownloadLinks.iosIconUrl       = ${model.appDownloadLinks.iosIconUrl}');
+      print('   model.appDownloadLinks.androidIconUrl   = ${model.appDownloadLinks.androidIconUrl}');
+      print('   model.appDownloadLinks.visibility       = ${model.appDownloadLinks.visibility}');
       return model;
     } catch (e, st) {
       print('🔴 [Repo] fetchHomePageFresh() ERROR: $e');
@@ -116,106 +103,93 @@ class HomeRepositoryImpl implements HomeRepository {
 
   Map<String, dynamic> _sanitize(Map<String, dynamic> data) {
     final copy = Map<String, dynamic>.from(data);
-    copy.remove('lastUpdatedAt');
-    print('   [Repo] _sanitize() → removed lastUpdatedAt, '
+    copy.remove('Last_Updated_At');
+    print('   [Repo] _sanitize() → removed Last_Updated_At, '
         'remaining keys = ${copy.keys.toList()}');
     return copy;
   }
 
   // ── Save (versioned) ─────────────────────────────────────────────────────
   //
-  // Strategy:
-  //   1. Read current raw Firestore data (server, bypassing cache).
-  //   2. Build new plain map from model via toMap().
-  //   3. For every versioned field, call Versioned.append(existing, new)
-  //      so Firestore stores the full history list.
-  //   4. Non-versioned list fields (navButtons, sections, etc.) are written
-  //      as plain lists — they are already ordered collections.
+  // EVERY single key in the Firestore document goes through
+  // Versioned.append(). No exceptions — list fields, counts, scalars,
+  // branding, app download links — ALL versioned arrays.
   //
-  // Fields versioned (stored as list of snapshots):
-  //   title | shortDescription | branding | appDownloadLinks |
-  //   publishStatus | gender | scheduledPublishDate
+  // Example Firestore result:
+  //   Nav_Buttons_0_Status:   [true]
+  //   Nav_Buttons_0_Name_En:  ['Home']
+  //   Nav_Buttons_Count:      [6]
+  //   Title_En:               ['Bayanatz']
+  //   Header_Items_2_Title_Ar: ['عنوان 3']
+  //   Footer_Columns_0_Labels_1_Label_En: ['Owner Services']
   // ─────────────────────────────────────────────────────────────────────────
 
   @override
   Future<void> saveHomePage(HomePageModel model) async {
     print('🔵 [Repo] saveHomePage() called');
-    print('   model.title.en               = ${model.title.en}');
-    print('   model.sections length        = ${model.sections.length}');
-    if (model.sections.isNotEmpty) {
-      print('   model.sections[0].imageUrl = ${model.sections[0].imageUrl}');
-      print('   model.sections[0].iconUrl  = ${model.sections[0].iconUrl}');
-    }
-    print('   model.branding.logoUrl       = ${model.branding.logoUrl}');
-    print('   model.publishStatus          = ${model.publishStatus}');
-    print('   model.appDownloadLinks.iosUrl         = ${model.appDownloadLinks.iosUrl}');
-    print('   model.appDownloadLinks.androidUrl     = ${model.appDownloadLinks.androidUrl}');
-    print('   model.appDownloadLinks.labelEn        = ${model.appDownloadLinks.labelEn}');
-    print('   model.appDownloadLinks.labelAr        = ${model.appDownloadLinks.labelAr}');
-    print('   model.appDownloadLinks.iosIconUrl     = ${model.appDownloadLinks.iosIconUrl}');
-    print('   model.appDownloadLinks.androidIconUrl = ${model.appDownloadLinks.androidIconUrl}');
-    print('   model.appDownloadLinks.visibility     = ${model.appDownloadLinks.visibility}');
+    print('   model.title.en          = ${model.title.en}');
+    print('   model.sections length   = ${model.sections.length}');
+    print('   model.branding.logoUrl  = ${model.branding.logoUrl}');
+    print('   model.publishStatus     = ${model.publishStatus}');
 
     try {
       // ── Step 1: read existing raw Firestore data ────────────────────────
       print('🔵 [Repo] saveHomePage() → reading existing Firestore doc...');
       final existingSnap = await _docRef.get(
           const GetOptions(source: Source.server));
-      final existingData =
+      final ex =
           (existingSnap.exists ? existingSnap.data() : null) ?? {};
-      print('   existing keys = ${existingData.keys.toList()}');
+      print('   existing keys = ${ex.keys.toList()}');
 
-      // ── Step 2: plain map from model ────────────────────────────────────
+      // ── Step 2: plain map from model (flat primitives) ──────────────────
       final newMap = model.toMap();
 
-      // ── Step 3: build versioned map ─────────────────────────────────────
-      //   • Versioned fields → Versioned.append(existing, new)
-      //   • Plain list fields → taken directly from newMap (no wrapping)
-      //   • lastUpdatedAt → always server timestamp
-      final versionedMap = <String, dynamic>{
-        // ── plain list fields (already list-of-items) ──────────────────
-        'navButtons':    newMap['navButtons'],
-        'footerColumns': newMap['footerColumns'],
-        'socialLinks':   newMap['socialLinks'],
+      // ── Step 3: version EVERY key ───────────────────────────────────────
+      final versionedMap = <String, dynamic>{};
 
-        'branding': Versioned.append(
-          existingData['branding'],
-          newMap['branding'],
-        ),
-        'appDownloadLinks': Versioned.append(
-          existingData['appDownloadLinks'],
-          newMap['appDownloadLinks'],
-        ),
-        'publishStatus': Versioned.append(
-          existingData['publishStatus'],
-          newMap['publishStatus'],
-        ),
-        'gender': Versioned.append(
-          existingData['gender'],
-          newMap['gender'],
-        ),
-        'scheduledPublishDate': Versioned.append(
-          existingData['scheduledPublishDate'],
-          newMap['scheduledPublishDate'],
-        ),
+      for (final key in newMap.keys) {
+        // Skip Last_Updated_At — handled separately as server timestamp
+        if (key == 'Last_Updated_At') continue;
 
-        // ── server timestamp (never versioned) ─────────────────────────
-        'lastUpdatedAt': FieldValue.serverTimestamp(),
-      };
+        versionedMap[key] = Versioned.append(ex[key], newMap[key]);
+      }
+
+      // ── Clean stale indexed keys when lists shrink ──────────────────────
+      // e.g. had 6 nav buttons, now 4 → delete Nav_Buttons_4_*, Nav_Buttons_5_*
+      _cleanStaleKeys(ex, versionedMap, newMap);
+
+      // ── server timestamp (never versioned) ──────────────────────────────
+      versionedMap['Last_Updated_At'] = FieldValue.serverTimestamp();
 
       // ── Step 4: write to Firestore ──────────────────────────────────────
-      print('   branding history length         = ${(versionedMap['branding'] as List?)?.length ?? 0}');
-      print('   appDownloadLinks history length = ${(versionedMap['appDownloadLinks'] as List?)?.length ?? 0}');
-      print('   publishStatus history length    = ${(versionedMap['publishStatus'] as List?)?.length ?? 0}');
-      print('   gender history length           = ${(versionedMap['gender'] as List?)?.length ?? 0}');
-
-      await _docRef.set(versionedMap, SetOptions(merge: true));
-      print('🟢 [Repo] saveHomePage() → versioned Firestore .set() completed ✅');
+      await _docRef.set(versionedMap, SetOptions(merge: false));
+      print('🟢 [Repo] saveHomePage() → ALL keys versioned, '
+          'Firestore .set() completed ✅');
 
     } catch (e, st) {
       print('🔴 [Repo] saveHomePage() ERROR: $e');
       print('   StackTrace: $st');
       rethrow;
+    }
+  }
+
+  // ── Stale Key Cleanup ────────────────────────────────────────────────────
+  //
+  // Since we use merge:false, old keys not in versionedMap are auto-removed.
+  // This method explicitly handles any edge cases by marking stale indexed
+  // keys with FieldValue.delete() — safe even with merge:false.
+  // ─────────────────────────────────────────────────────────────────────────
+
+  void _cleanStaleKeys(
+      Map<String, dynamic> existing,
+      Map<String, dynamic> target,
+      Map<String, dynamic> newMap,
+      ) {
+    for (final key in existing.keys) {
+      if (key == 'Last_Updated_At') continue;
+      if (!newMap.containsKey(key)) {
+        target[key] = FieldValue.delete();
+      }
     }
   }
 

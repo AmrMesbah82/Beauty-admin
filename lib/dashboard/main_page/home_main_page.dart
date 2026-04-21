@@ -28,13 +28,13 @@ import 'home_edit_page.dart';
 import 'home_preview_page.dart';
 
 class _C {
-  static const Color primary   = Color(0xFFD16F9A);
+  static const Color primary = Color(0xFFD16F9A);
   static const Color sectionBg = Color(0xFFF5F5F5);
-  static const Color cardBg    = Color(0xFFFFFFFF);
-  static const Color border    = Color(0xFFE0E0E0);
+  static const Color cardBg = Color(0xFFFFFFFF);
+  static const Color border = Color(0xFFE0E0E0);
   static const Color labelText = Color(0xFF333333);
-  static const Color hintText  = Color(0xFFAAAAAA);
-  static const Color back      = Color(0xFFF1F2ED);
+  static const Color hintText = Color(0xFFAAAAAA);
+  static const Color back = Color(0xFFF1F2ED);
 }
 
 /// Strip leading slash for display
@@ -51,16 +51,16 @@ class HomeMainPage extends StatefulWidget {
 
 class _HomeMainPageState extends State<HomeMainPage> {
   final Map<String, bool> _open = {
-    'theme':   true,
-    'header':  true,
-    'footer':  true,
+    'theme': true,
+    'header': true,
+    'footer': true,
     'appLink': true,
-    'links':   true,
+    'links': true,
   };
 
-  void _goToEdit() => Navigator.of(context).push(
-    MaterialPageRoute(builder: (_) => const HomeEditPage()),
-  );
+  void _goToEdit() => Navigator.of(
+    context,
+  ).push(MaterialPageRoute(builder: (_) => const HomeEditPage()));
 
   @override
   Widget build(BuildContext context) {
@@ -75,7 +75,7 @@ class _HomeMainPageState extends State<HomeMainPage> {
 
         HomePageModel? data;
         if (state is HomeCmsLoaded) data = state.data;
-        if (state is HomeCmsSaved)  data = state.data;
+        if (state is HomeCmsSaved) data = state.data;
 
         return Scaffold(
           backgroundColor: _C.back,
@@ -87,15 +87,17 @@ class _HomeMainPageState extends State<HomeMainPage> {
                   children: [
                     AppAdminNavbar(
                       activeLabel: 'Web Page',
-                      homePage:       HomeMainPage(),
-                      webPage:        HomeMainPage(),
+                      homePage: HomeMainPage(),
+                      webPage: HomeMainPage(),
                       jobListingPage: HomeMainPage(),
                     ),
                     SizedBox(height: 20.h),
                     AdminSubNavBar(activeIndex: 0),
                     Padding(
                       padding: EdgeInsets.symmetric(
-                          horizontal: 0.w, vertical: 20.h),
+                        horizontal: 0.w,
+                        vertical: 20.h,
+                      ),
                       child: SizedBox(
                         width: 1000.w,
                         child: Column(
@@ -106,8 +108,7 @@ class _HomeMainPageState extends State<HomeMainPage> {
                               children: [
                                 Text(
                                   'Main',
-                                  style: StyleText.fontSize45Weight600
-                                      .copyWith(
+                                  style: StyleText.fontSize45Weight600.copyWith(
                                     color: _C.primary,
                                     fontWeight: FontWeight.w700,
                                   ),
@@ -116,16 +117,17 @@ class _HomeMainPageState extends State<HomeMainPage> {
                                 GestureDetector(
                                   onTap: () => Navigator.of(context).push(
                                     MaterialPageRoute(
-                                        builder: (_) =>
-                                        const HomePreviewPage()),
+                                      builder: (_) => const HomePreviewPage(),
+                                    ),
                                   ),
                                   child: Container(
                                     padding: EdgeInsets.symmetric(
-                                        horizontal: 20.w, vertical: 10.h),
+                                      horizontal: 20.w,
+                                      vertical: 10.h,
+                                    ),
                                     decoration: BoxDecoration(
                                       color: _C.primary,
-                                      borderRadius:
-                                      BorderRadius.circular(6.r),
+                                      borderRadius: BorderRadius.circular(6.r),
                                     ),
                                     child: Text(
                                       'Preview Screen',
@@ -143,11 +145,12 @@ class _HomeMainPageState extends State<HomeMainPage> {
                               children: [
                                 Container(
                                   padding: EdgeInsets.symmetric(
-                                      horizontal: 14.w, vertical: 8.h),
+                                    horizontal: 14.w,
+                                    vertical: 8.h,
+                                  ),
                                   decoration: BoxDecoration(
                                     color: _C.cardBg,
-                                    borderRadius:
-                                    BorderRadius.circular(4.r),
+                                    borderRadius: BorderRadius.circular(4.r),
                                   ),
                                   child: Text(
                                     'Last Updated On 12 Jul 2026',
@@ -169,16 +172,20 @@ class _HomeMainPageState extends State<HomeMainPage> {
                                       child: Row(
                                         mainAxisSize: MainAxisSize.min,
                                         children: [
-                                          Text('Edit Details',
-                                              style: StyleText.fontSize14Weight500
-                                                  .copyWith(color: Colors.black)),
+                                          Text(
+                                            'Edit Details',
+                                            style: StyleText.fontSize14Weight500
+                                                .copyWith(color: Colors.black),
+                                          ),
                                           SizedBox(width: 6.w),
                                           CustomSvg(
-                                              assetPath: "assets/control/edit_icon_pick.svg",
-                                              width: 20.w,
-                                              height: 20.h,
-                                              fit: BoxFit.scaleDown,
-                                              color: _C.primary),
+                                            assetPath:
+                                            "assets/control/edit_icon_pick.svg",
+                                            width: 20.w,
+                                            height: 20.h,
+                                            fit: BoxFit.scaleDown,
+                                            color: _C.primary,
+                                          ),
                                         ],
                                       ),
                                     ),
@@ -199,38 +206,32 @@ class _HomeMainPageState extends State<HomeMainPage> {
                               _accordion(
                                 key: 'header',
                                 title: 'Header',
-                                children: [
-                                  _readOnlyHeaderSection(data)
-                                ],
+                                children: [_readOnlyHeaderSection(data)],
                               ),
                               SizedBox(height: 10.h),
                               _accordion(
                                 key: 'footer',
                                 title: 'Footer',
-                                children: [
-                                  _readOnlyFooterSection(data)
-                                ],
+                                children: [_readOnlyFooterSection(data)],
                               ),
                               SizedBox(height: 10.h),
                               _accordion(
                                 key: 'appLink',
                                 title: 'App Link',
-                                children: [
-                                  _readOnlyAppLinkSection(data)
-                                ],
+                                children: [_readOnlyAppLinkSection(data)],
                               ),
                               SizedBox(height: 10.h),
                               _accordion(
                                 key: 'links',
                                 title: 'Links',
-                                children: [
-                                  _readOnlyLinksSection(data)
-                                ],
+                                children: [_readOnlyLinksSection(data)],
                               ),
                             ] else ...[
                               const Center(
-                                  child: CircularProgressIndicator(
-                                      color: _C.primary)),
+                                child: CircularProgressIndicator(
+                                  color: _C.primary,
+                                ),
+                              ),
                             ],
                             SizedBox(height: 40.h),
                           ],
@@ -265,22 +266,20 @@ class _HomeMainPageState extends State<HomeMainPage> {
             onTap: () => setState(() => _open[key] = !isOpen),
             child: Container(
               width: double.infinity,
-              padding: EdgeInsets.symmetric(
-                  horizontal: 16.w, vertical: 14.h),
+              padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
               decoration: BoxDecoration(
                 color: _C.primary,
-                borderRadius: isOpen
-                    ? BorderRadius.only(
-                    topLeft: Radius.circular(6.r),
-                    topRight: Radius.circular(6.r))
-                    : BorderRadius.circular(6.r),
+                borderRadius: BorderRadius.circular(6.r),
               ),
               child: Row(
                 children: [
                   Expanded(
-                    child: Text(title,
-                        style: StyleText.fontSize14Weight600
-                            .copyWith(color: Colors.white)),
+                    child: Text(
+                      title,
+                      style: StyleText.fontSize14Weight600.copyWith(
+                        color: Colors.white,
+                      ),
+                    ),
                   ),
                   Icon(
                     isOpen
@@ -296,13 +295,9 @@ class _HomeMainPageState extends State<HomeMainPage> {
           if (isOpen)
             Container(
               width: double.infinity,
-              padding: EdgeInsets.all(16.w),
+              padding: EdgeInsets.symmetric(vertical: 16.h),
               decoration: BoxDecoration(
-                color: _C.cardBg,
-                borderRadius: BorderRadius.only(
-                  bottomLeft: Radius.circular(6.r),
-                  bottomRight: Radius.circular(6.r),
-                ),
+                  borderRadius: BorderRadius.circular(6.r)
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -329,86 +324,92 @@ class _HomeMainPageState extends State<HomeMainPage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Logo',
-            style: StyleText.fontSize12Weight500
-                .copyWith(color: _C.labelText)),
+        Text(
+          'Logo',
+          style: StyleText.fontSize12Weight500.copyWith(color: _C.labelText),
+        ),
         SizedBox(height: 8.h),
         Container(
           width: 70.w,
           height: 70.h,
-          decoration: const BoxDecoration(
-              color: Color(0xFFD9D9D9), shape: BoxShape.circle),
+          decoration:  BoxDecoration(
+            color: Colors.grey[100],
+            shape: BoxShape.circle,
+          ),
           child: data.branding.logoUrl.isNotEmpty
               ? Center(
             child: ClipOval(
-              child: Padding(
-                padding: EdgeInsets.all(10.w),
-                child: _isLikelySvg(data.branding.logoUrl)
-                    ? SvgPicture.network(
-                  data.branding.logoUrl,
-                  width: 30.w,
-                  height: 30.h,
-                  fit: BoxFit.contain,
-                  placeholderBuilder: (_) =>
-                  const CircularProgressIndicator(
-                      strokeWidth: 2),
-                )
-                    : Image.network(
-                  data.branding.logoUrl,
-                  width: 30.w,
-                  height: 30.h,
-                  fit: BoxFit.contain,
-                  errorBuilder: (_, __, ___) => const Icon(
-                      Icons.image_outlined,
-                      color: Colors.grey),
-                ),
+              child: SvgPicture.network(
+                data.branding.logoUrl,
+                width: 30.w,
+                height: 30.h,
+                fit: BoxFit.contain,
+                placeholderBuilder: (_) =>
+                const CircularProgressIndicator(strokeWidth: 2),
               ),
             ),
           )
               : const Icon(Icons.image_outlined, color: Colors.grey),
         ),
         SizedBox(height: 16.h),
-        Row(children: [
-          Expanded(
+        Row(
+          children: [
+            Expanded(
               child: _colorReadField(
-                  'Primary Color', data.branding.primaryColor)),
-          SizedBox(width: 16.w),
-          Expanded(
-              child: _colorReadField(
-                  'Secondary', data.branding.secondaryColor)),
-        ]),
+                'Primary Color',
+                data.branding.primaryColor,
+              ),
+            ),
+            SizedBox(width: 16.w),
+            Expanded(
+              child: _colorReadField('Secondary', data.branding.secondaryColor),
+            ),
+          ],
+        ),
         SizedBox(height: 12.h),
-        Row(children: [
-          Expanded(
+        Row(
+          children: [
+            Expanded(
               child: _colorReadField(
-                  'Background',
-                  data.branding.backgroundColor.isNotEmpty
-                      ? data.branding.backgroundColor
-                      : '#D9D9D9')),
-          SizedBox(width: 16.w),
-          Expanded(
+                'Background',
+                data.branding.backgroundColor.isNotEmpty
+                    ? data.branding.backgroundColor
+                    : '#D9D9D9',
+              ),
+            ),
+            SizedBox(width: 16.w),
+            Expanded(
               child: _colorReadField(
-                  'Header and Footer',
-                  data.branding.headerFooterColor.isNotEmpty
-                      ? data.branding.headerFooterColor
-                      : '#D9D9D9')),
-        ]),
+                'Header and Footer',
+                data.branding.headerFooterColor.isNotEmpty
+                    ? data.branding.headerFooterColor
+                    : '#D9D9D9',
+              ),
+            ),
+          ],
+        ),
         SizedBox(height: 12.h),
-        Row(children: [
-          Expanded(
+        Row(
+          children: [
+            Expanded(
               child: _readField(
-                  'English Font',
-                  data.branding.englishFont.isEmpty
-                      ? 'Select Font'
-                      : data.branding.englishFont)),
-          SizedBox(width: 16.w),
-          Expanded(
+                'English Font',
+                data.branding.englishFont.isEmpty
+                    ? 'Select Font'
+                    : data.branding.englishFont,
+              ),
+            ),
+            SizedBox(width: 16.w),
+            Expanded(
               child: _readField(
-                  'Arabic Font',
-                  data.branding.arabicFont.isEmpty
-                      ? 'Select Font'
-                      : data.branding.arabicFont)),
-        ]),
+                'Arabic Font',
+                data.branding.arabicFont.isEmpty
+                    ? 'Select Font'
+                    : data.branding.arabicFont,
+              ),
+            ),
+          ],
+        ),
       ],
     );
   }
@@ -421,7 +422,7 @@ class _HomeMainPageState extends State<HomeMainPage> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         ...data.navButtons.asMap().entries.map((entry) {
-          final i   = entry.key;
+          final i = entry.key;
           final btn = entry.value;
           return Padding(
             padding: EdgeInsets.only(bottom: 10.h),
@@ -434,9 +435,12 @@ class _HomeMainPageState extends State<HomeMainPage> {
                 ],
 
                 // ── Icon ──────────────────────────────────────────────
-                Text('Icon',
-                    style: StyleText.fontSize12Weight500
-                        .copyWith(color: _C.labelText)),
+                Text(
+                  'Icon',
+                  style: StyleText.fontSize12Weight500.copyWith(
+                    color: _C.labelText,
+                  ),
+                ),
                 SizedBox(height: 6.h),
                 _readOnlyIconCircle(btn.iconUrl),
                 SizedBox(height: 10.h),
@@ -445,21 +449,17 @@ class _HomeMainPageState extends State<HomeMainPage> {
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Icon(Icons.menu_rounded,
-                        size: 18.sp, color: _C.hintText),
+                    Icon(Icons.menu_rounded, size: 18.sp, color: _C.hintText),
                     SizedBox(width: 8.w),
                     Expanded(
                       child: _readFieldWithStatus(
-                          'Title',
-                          btn.name.en.isEmpty
-                              ? 'Text Here'
-                              : btn.name.en,
-                          btn.status),
+                        'Title',
+                        btn.name.en.isEmpty ? 'Text Here' : btn.name.en,
+                        btn.status,
+                      ),
                     ),
                     SizedBox(width: 8.w),
-                    Expanded(
-                      child: _readFieldRtl('العنوان', btn.name.ar),
-                    ),
+                    Expanded(child: _readFieldRtl('العنوان', btn.name.ar)),
                   ],
                 ),
               ],
@@ -477,7 +477,7 @@ class _HomeMainPageState extends State<HomeMainPage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: data.footerColumns.asMap().entries.map((entry) {
-        final i   = entry.key;
+        final i = entry.key;
         final col = entry.value;
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -488,60 +488,69 @@ class _HomeMainPageState extends State<HomeMainPage> {
             ],
             Text(
               '${i + 1}${_ord(i + 1)} Column',
-              style: StyleText.fontSize13Weight600
-                  .copyWith(color: _C.labelText),
+              style: StyleText.fontSize13Weight600.copyWith(
+                color: _C.labelText,
+              ),
             ),
             SizedBox(height: 8.h),
-            Row(children: [
-              Expanded(
+            Row(
+              children: [
+                Expanded(
                   child: _readField(
-                      'Group Title',
-                      col.title.en.isEmpty
-                          ? 'Read Us'
-                          : col.title.en)),
-              SizedBox(width: 16.w),
-              Expanded(
-                  child:
-                  _readFieldRtl('عنوان المجموعة', col.title.ar)),
-            ]),
+                    'Group Title',
+                    col.title.en.isEmpty ? 'Read Us' : col.title.en,
+                  ),
+                ),
+                SizedBox(width: 16.w),
+                Expanded(child: _readFieldRtl('عنوان المجموعة', col.title.ar)),
+              ],
+            ),
             SizedBox(height: 8.h),
-            Row(children: [
-              Expanded(
-                  child: _readField(
-                      'Navigation', _displayRoute(col.route))),
-              SizedBox(width: 10.w),
-              const Expanded(child: SizedBox()),
-            ]),
+            Row(
+              children: [
+                Expanded(
+                  child: _readField('Navigation', _displayRoute(col.route)),
+                ),
+                SizedBox(width: 10.w),
+                const Expanded(child: SizedBox()),
+              ],
+            ),
             SizedBox(height: 8.h),
-            ...col.labels.map((lbl) => Padding(
-              padding: EdgeInsets.only(bottom: 6.h),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(children: [
-                    Expanded(
-                        child: _readField(
+            ...col.labels.map(
+                  (lbl) => Padding(
+                padding: EdgeInsets.only(bottom: 6.h),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _readField(
                             'Navigate To',
-                            _displayRoute(lbl.route))),
-                    SizedBox(width: 8.w),
-                    const Expanded(child: SizedBox()),
-                  ]),
-                  SizedBox(height: 6.h),
-                  Row(children: [
-                    Expanded(
-                        child: _readField(
+                            _displayRoute(lbl.route),
+                          ),
+                        ),
+                        SizedBox(width: 8.w),
+                        const Expanded(child: SizedBox()),
+                      ],
+                    ),
+                    SizedBox(height: 6.h),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _readField(
                             'Label',
-                            lbl.label.en.isEmpty
-                                ? 'Text Here'
-                                : lbl.label.en)),
-                    SizedBox(width: 8.w),
-                    Expanded(
-                        child: _readFieldRtl(
-                            'التسمية', lbl.label.ar)),
-                  ]),
-                ],
+                            lbl.label.en.isEmpty ? 'Text Here' : lbl.label.en,
+                          ),
+                        ),
+                        SizedBox(width: 8.w),
+                        Expanded(child: _readFieldRtl('التسمية', lbl.label.ar)),
+                      ],
+                    ),
+                  ],
+                ),
               ),
-            )),
+            ),
             SizedBox(height: 8.h),
           ],
         );
@@ -564,18 +573,11 @@ class _HomeMainPageState extends State<HomeMainPage> {
             Expanded(
               child: _readField(
                 'Navigation Label',
-                appLinks.labelEn.isEmpty
-                    ? 'Text Here'
-                    : appLinks.labelEn,
+                appLinks.labelEn.isEmpty ? 'Text Here' : appLinks.labelEn,
               ),
             ),
             SizedBox(width: 16.w),
-            Expanded(
-              child: _readFieldRtl(
-                'تسمية التنقل',
-                appLinks.labelAr,
-              ),
-            ),
+            Expanded(child: _readFieldRtl('تسمية التنقل', appLinks.labelAr)),
           ],
         ),
         SizedBox(height: 16.h),
@@ -589,9 +591,12 @@ class _HomeMainPageState extends State<HomeMainPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Icon',
-                      style: StyleText.fontSize12Weight500
-                          .copyWith(color: _C.labelText)),
+                  Text(
+                    'Icon',
+                    style: StyleText.fontSize12Weight500.copyWith(
+                      color: _C.labelText,
+                    ),
+                  ),
                   SizedBox(height: 6.h),
                   _readOnlyIconCircle(appLinks.iosIconUrl),
                   SizedBox(height: 10.h),
@@ -610,9 +615,12 @@ class _HomeMainPageState extends State<HomeMainPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Icon',
-                      style: StyleText.fontSize12Weight500
-                          .copyWith(color: _C.labelText)),
+                  Text(
+                    'Icon',
+                    style: StyleText.fontSize12Weight500.copyWith(
+                      color: _C.labelText,
+                    ),
+                  ),
                   SizedBox(height: 6.h),
                   _readOnlyIconCircle(appLinks.androidIconUrl),
                   SizedBox(height: 10.h),
@@ -638,20 +646,19 @@ class _HomeMainPageState extends State<HomeMainPage> {
     final rows = (data.socialLinks.length / 2).ceil();
     return Column(
       children: List.generate(rows, (rowIndex) {
-        final left  = rowIndex * 2;
+        final left = rowIndex * 2;
         final right = left + 1;
         return Padding(
           padding: EdgeInsets.only(bottom: 14.h),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Expanded(
-                  child: _readLinkItem(data.socialLinks[left], left)),
+              Expanded(child: _readLinkItem(data.socialLinks[left], left)),
               SizedBox(width: 16.w),
               right < data.socialLinks.length
                   ? Expanded(
-                  child: _readLinkItem(
-                      data.socialLinks[right], right))
+                child: _readLinkItem(data.socialLinks[right], right),
+              )
                   : const Expanded(child: SizedBox()),
             ],
           ),
@@ -667,15 +674,21 @@ class _HomeMainPageState extends State<HomeMainPage> {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text('Icon',
-                style: StyleText.fontSize12Weight500
-                    .copyWith(color: _C.labelText)),
+            Text(
+              'Icon',
+              style: StyleText.fontSize12Weight500.copyWith(
+                color: _C.labelText,
+              ),
+            ),
             Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Text('Visibility',
-                    style: StyleText.fontSize12Weight500
-                        .copyWith(color: _C.labelText)),
+                Text(
+                  'Visibility',
+                  style: StyleText.fontSize12Weight500.copyWith(
+                    color: _C.labelText,
+                  ),
+                ),
                 SizedBox(width: 6.w),
                 Container(
                   width: 32.w,
@@ -695,8 +708,9 @@ class _HomeMainPageState extends State<HomeMainPage> {
                       height: 14.h,
                       margin: EdgeInsets.symmetric(horizontal: 2.w),
                       decoration: const BoxDecoration(
-                          color: Colors.white,
-                          shape: BoxShape.circle),
+                        color: Colors.white,
+                        shape: BoxShape.circle,
+                      ),
                     ),
                   ),
                 ),
@@ -707,8 +721,7 @@ class _HomeMainPageState extends State<HomeMainPage> {
         SizedBox(height: 6.h),
         _readOnlyIconCircle(link.iconUrl),
         SizedBox(height: 6.h),
-        _readField('Insert Link',
-            link.url.isEmpty ? 'Insert Links' : link.url),
+        _readField('Insert Link', link.url.isEmpty ? 'Insert Links' : link.url),
       ],
     );
   }
@@ -724,7 +737,9 @@ class _HomeMainPageState extends State<HomeMainPage> {
         width: 60.w,
         height: 60.h,
         decoration: const BoxDecoration(
-            color: Colors.white, shape: BoxShape.circle),
+          color: Colors.white,
+          shape: BoxShape.circle,
+        ),
         child: Center(
           child: ClipOval(
             child: Padding(
@@ -746,7 +761,9 @@ class _HomeMainPageState extends State<HomeMainPage> {
       width: 60.w,
       height: 60.h,
       decoration: const BoxDecoration(
-          color: Color(0xFFD9D9D9), shape: BoxShape.circle),
+        color: Color(0xFFD9D9D9),
+        shape: BoxShape.circle,
+      ),
       child: const Icon(Icons.add, color: Colors.grey, size: 20),
     );
   }
@@ -755,22 +772,25 @@ class _HomeMainPageState extends State<HomeMainPage> {
   Widget _readField(String label, String value) => Column(
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
-      Text(label,
-          style: StyleText.fontSize12Weight500
-              .copyWith(color: _C.labelText)),
+      Text(
+        label,
+        style: StyleText.fontSize12Weight500.copyWith(color: _C.labelText),
+      ),
       SizedBox(height: 4.h),
       Container(
         width: double.infinity,
         height: 36.h,
         padding: EdgeInsets.symmetric(horizontal: 10.w),
         decoration: BoxDecoration(
-            color: _C.sectionBg,
-            borderRadius: BorderRadius.circular(4.r)),
+          color: Colors.white,                          // ← changed
+          borderRadius: BorderRadius.circular(4.r),
+        ),
         alignment: Alignment.centerLeft,
-        child: Text(value,
-            style: StyleText.fontSize12Weight400
-                .copyWith(color: _C.hintText),
-            overflow: TextOverflow.ellipsis),
+        child: Text(
+          value,
+          style: StyleText.fontSize12Weight400.copyWith(color: _C.hintText),
+          overflow: TextOverflow.ellipsis,
+        ),
       ),
     ],
   );
@@ -781,22 +801,23 @@ class _HomeMainPageState extends State<HomeMainPage> {
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label,
-            style: StyleText.fontSize12Weight500
-                .copyWith(color: _C.labelText)),
+        Text(
+          label,
+          style: StyleText.fontSize12Weight500.copyWith(color: _C.labelText),
+        ),
         SizedBox(height: 4.h),
         Container(
           width: double.infinity,
           height: 36.h,
           padding: EdgeInsets.symmetric(horizontal: 10.w),
           decoration: BoxDecoration(
-              color: _C.sectionBg,
-              borderRadius: BorderRadius.circular(4.r)),
+            color: Colors.white,                        // ← changed
+            borderRadius: BorderRadius.circular(4.r),
+          ),
           alignment: Alignment.centerRight,
           child: Text(
             value.isEmpty ? 'أدخل النص هنا' : value,
-            style: StyleText.fontSize12Weight400
-                .copyWith(color: _C.hintText),
+            style: StyleText.fontSize12Weight400.copyWith(color: _C.hintText),
             overflow: TextOverflow.ellipsis,
             textDirection: TextDirection.rtl,
           ),
@@ -806,46 +827,52 @@ class _HomeMainPageState extends State<HomeMainPage> {
   );
 
   /// Read-only field with status toggle indicator
-  Widget _readFieldWithStatus(
-      String label, String value, bool status) =>
+  Widget _readFieldWithStatus(String label, String value, bool status) =>
       Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(label,
-                  style: StyleText.fontSize12Weight500
-                      .copyWith(color: _C.labelText)),
-              Row(mainAxisSize: MainAxisSize.min, children: [
-                Text('Status: ',
-                    style: StyleText.fontSize11Weight400
-                        .copyWith(color: _C.labelText)),
-                Container(
-                  width: 32.w,
-                  height: 18.h,
-                  decoration: BoxDecoration(
-                    color: status
-                        ? _C.primary
-                        : Colors.grey.withOpacity(0.3),
-                    borderRadius: BorderRadius.circular(10.r),
-                  ),
-                  child: Align(
-                    alignment: status
-                        ? Alignment.centerRight
-                        : Alignment.centerLeft,
-                    child: Container(
-                      width: 14.w,
-                      height: 14.h,
-                      margin:
-                      EdgeInsets.symmetric(horizontal: 2.w),
-                      decoration: const BoxDecoration(
-                          color: Colors.white,
-                          shape: BoxShape.circle),
+              Text(
+                label,
+                style: StyleText.fontSize12Weight500.copyWith(
+                  color: _C.labelText,
+                ),
+              ),
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    'Status: ',
+                    style: StyleText.fontSize11Weight400.copyWith(
+                      color: _C.labelText,
                     ),
                   ),
-                ),
-              ]),
+                  Container(
+                    width: 32.w,
+                    height: 18.h,
+                    decoration: BoxDecoration(
+                      color: status ? _C.primary : Colors.grey.withOpacity(0.3),
+                      borderRadius: BorderRadius.circular(10.r),
+                    ),
+                    child: Align(
+                      alignment: status
+                          ? Alignment.centerRight
+                          : Alignment.centerLeft,
+                      child: Container(
+                        width: 14.w,
+                        height: 14.h,
+                        margin: EdgeInsets.symmetric(horizontal: 2.w),
+                        decoration: const BoxDecoration(
+                          color: Colors.white,
+                          shape: BoxShape.circle,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ],
           ),
           SizedBox(height: 4.h),
@@ -854,13 +881,13 @@ class _HomeMainPageState extends State<HomeMainPage> {
             height: 36.h,
             padding: EdgeInsets.symmetric(horizontal: 10.w),
             decoration: BoxDecoration(
-                color: _C.sectionBg,
-                borderRadius: BorderRadius.circular(4.r)),
+              color: Colors.white,                      // ← changed
+              borderRadius: BorderRadius.circular(4.r),
+            ),
             alignment: Alignment.centerLeft,
             child: Text(
               value.isEmpty ? 'Text Here' : value,
-              style: StyleText.fontSize12Weight400
-                  .copyWith(color: _C.hintText),
+              style: StyleText.fontSize12Weight400.copyWith(color: _C.hintText),
               overflow: TextOverflow.ellipsis,
             ),
           ),
@@ -881,28 +908,34 @@ class _HomeMainPageState extends State<HomeMainPage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label,
-            style: StyleText.fontSize12Weight500
-                .copyWith(color: _C.labelText)),
+        Text(
+          label,
+          style: StyleText.fontSize12Weight500.copyWith(color: _C.labelText),
+        ),
         SizedBox(height: 4.h),
         Container(
           height: 36.h,
           padding: EdgeInsets.symmetric(horizontal: 10.w),
           decoration: BoxDecoration(
-              color: _C.sectionBg,
-              borderRadius: BorderRadius.circular(4.r)),
-          child: Row(children: [
-            Container(
-              width: 14.w,
-              height: 14.h,
-              decoration:
-              BoxDecoration(color: color, shape: BoxShape.circle),
-            ),
-            SizedBox(width: 8.w),
-            Text(hex.isEmpty ? '#D9D9D9' : hex,
-                style: StyleText.fontSize12Weight400
-                    .copyWith(color: _C.hintText)),
-          ]),
+            color: Colors.white,                        // ← changed
+            borderRadius: BorderRadius.circular(4.r),
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 14.w,
+                height: 14.h,
+                decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+              ),
+              SizedBox(width: 8.w),
+              Text(
+                hex.isEmpty ? '#D9D9D9' : hex,
+                style: StyleText.fontSize12Weight400.copyWith(
+                  color: _C.hintText,
+                ),
+              ),
+            ],
+          ),
         ),
       ],
     );

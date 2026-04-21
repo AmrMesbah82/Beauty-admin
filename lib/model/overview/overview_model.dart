@@ -1,17 +1,14 @@
 /// ******************* FILE INFO *******************
 /// File Name: overview_model.dart
 /// Description: Data models for the Overview CMS module.
-///              Sections: Headings (Title + Description),
-///              Services (Title + repeating items with Image + Name),
-///              Gallery (repeating image slots),
-///              Client Comments (Title + repeating: Image, First/Last Name, Feedback),
-///              Download Applications (Title + Apple/Android links),
-///              Publish Schedule (date).
 /// Created by: Amr Mesbah
-/// Last Update: 18/04/2026
-/// UPDATED: ALL fields are now versioned — every field in Firestore is stored
-///          as a list for full history tracking. fromMap() uses Versioned.read()
-///          for every field. toMap() writes plain values (repo handles versioning).
+/// Last Update: 21/04/2026
+/// UPDATED: All field names use Capital_Underscore naming convention ✅
+/// UPDATED: ALL fields flattened — NO nested maps in Firestore ✅
+/// UPDATED: Services_Items, Gallery_Images, Client_Comments_Comments
+///          all flattened into indexed root-level keys ✅
+/// UPDATED: EVERY single field is versioned (array in Firestore,
+///          .last = active value). fromMap uses Versioned.read() on ALL. ✅
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 
@@ -21,13 +18,6 @@ class BiText {
   final String ar;
 
   const BiText({this.en = '', this.ar = ''});
-
-  factory BiText.fromMap(Map<String, dynamic>? map) => BiText(
-    en: map?['en'] ?? '',
-    ar: map?['ar'] ?? '',
-  );
-
-  Map<String, dynamic> toMap() => {'en': en, 'ar': ar};
 
   BiText copyWith({String? en, String? ar}) =>
       BiText(en: en ?? this.en, ar: ar ?? this.ar);
@@ -42,15 +32,6 @@ class Versioned {
     if (raw is List && raw.isNotEmpty) return parser(raw.last);
     if (raw != null) return parser(raw);
     return parser(null);
-  }
-
-  static List<T> readList<T>(dynamic raw, T Function(dynamic) parser) {
-    if (raw is List && raw.isNotEmpty) {
-      final last = raw.last;
-      if (last is List) return last.map((e) => parser(e)).toList();
-      return raw.map((e) => parser(e)).toList();
-    }
-    return [];
   }
 
   static List<dynamic> append(dynamic existing, dynamic newValue) {
@@ -85,7 +66,7 @@ class Versioned {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// HEADINGS
+// HEADINGS — flattened into OverviewPageModel
 // ═══════════════════════════════════════════════════════════════════════════════
 class OverviewHeadingsModel {
   final BiText title;
@@ -96,19 +77,6 @@ class OverviewHeadingsModel {
     this.description = const BiText(),
   });
 
-  factory OverviewHeadingsModel.fromMap(Map<String, dynamic>? map) {
-    if (map == null) return const OverviewHeadingsModel();
-    return OverviewHeadingsModel(
-      title: BiText.fromMap(map['title']),
-      description: BiText.fromMap(map['description']),
-    );
-  }
-
-  Map<String, dynamic> toMap() => {
-    'title': title.toMap(),
-    'description': description.toMap(),
-  };
-
   OverviewHeadingsModel copyWith({BiText? title, BiText? description}) =>
       OverviewHeadingsModel(
         title: title ?? this.title,
@@ -117,7 +85,7 @@ class OverviewHeadingsModel {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// SERVICES
+// SERVICE ITEM
 // ═══════════════════════════════════════════════════════════════════════════════
 class OverviewServiceItemModel {
   final String id;
@@ -131,21 +99,6 @@ class OverviewServiceItemModel {
     this.imageUrl = '',
     this.order = 0,
   });
-
-  factory OverviewServiceItemModel.fromMap(Map<String, dynamic> map) =>
-      OverviewServiceItemModel(
-        id: map['id'] ?? '',
-        name: BiText.fromMap(map['name']),
-        imageUrl: map['imageUrl'] ?? '',
-        order: map['order'] ?? 0,
-      );
-
-  Map<String, dynamic> toMap() => {
-    'id': id,
-    'name': name.toMap(),
-    'imageUrl': imageUrl,
-    'order': order,
-  };
 
   OverviewServiceItemModel copyWith({
     String? id,
@@ -161,6 +114,9 @@ class OverviewServiceItemModel {
       );
 }
 
+// ═══════════════════════════════════════════════════════════════════════════════
+// SERVICES SECTION — flattened into OverviewPageModel
+// ═══════════════════════════════════════════════════════════════════════════════
 class OverviewServicesSectionModel {
   final BiText title;
   final List<OverviewServiceItemModel> items;
@@ -169,24 +125,6 @@ class OverviewServicesSectionModel {
     this.title = const BiText(),
     this.items = const [],
   });
-
-  factory OverviewServicesSectionModel.fromMap(Map<String, dynamic>? map) {
-    if (map == null) return const OverviewServicesSectionModel();
-    final rawItems = map['items'] as List<dynamic>? ?? [];
-    return OverviewServicesSectionModel(
-      title: BiText.fromMap(map['title']),
-      items: rawItems
-          .map((e) =>
-          OverviewServiceItemModel.fromMap(e as Map<String, dynamic>))
-          .toList()
-        ..sort((a, b) => a.order.compareTo(b.order)),
-    );
-  }
-
-  Map<String, dynamic> toMap() => {
-    'title': title.toMap(),
-    'items': items.map((e) => e.toMap()).toList(),
-  };
 
   OverviewServicesSectionModel copyWith({
     BiText? title,
@@ -199,7 +137,7 @@ class OverviewServicesSectionModel {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// GALLERY
+// GALLERY IMAGE
 // ═══════════════════════════════════════════════════════════════════════════════
 class OverviewGalleryImageModel {
   final String id;
@@ -211,19 +149,6 @@ class OverviewGalleryImageModel {
     this.imageUrl = '',
     this.order = 0,
   });
-
-  factory OverviewGalleryImageModel.fromMap(Map<String, dynamic> map) =>
-      OverviewGalleryImageModel(
-        id: map['id'] ?? '',
-        imageUrl: map['imageUrl'] ?? '',
-        order: map['order'] ?? 0,
-      );
-
-  Map<String, dynamic> toMap() => {
-    'id': id,
-    'imageUrl': imageUrl,
-    'order': order,
-  };
 
   OverviewGalleryImageModel copyWith({
     String? id,
@@ -237,26 +162,13 @@ class OverviewGalleryImageModel {
       );
 }
 
+// ═══════════════════════════════════════════════════════════════════════════════
+// GALLERY SECTION — flattened into OverviewPageModel
+// ═══════════════════════════════════════════════════════════════════════════════
 class OverviewGallerySectionModel {
   final List<OverviewGalleryImageModel> images;
 
   const OverviewGallerySectionModel({this.images = const []});
-
-  factory OverviewGallerySectionModel.fromMap(Map<String, dynamic>? map) {
-    if (map == null) return const OverviewGallerySectionModel();
-    final rawImages = map['images'] as List<dynamic>? ?? [];
-    return OverviewGallerySectionModel(
-      images: rawImages
-          .map((e) =>
-          OverviewGalleryImageModel.fromMap(e as Map<String, dynamic>))
-          .toList()
-        ..sort((a, b) => a.order.compareTo(b.order)),
-    );
-  }
-
-  Map<String, dynamic> toMap() => {
-    'images': images.map((e) => e.toMap()).toList(),
-  };
 
   OverviewGallerySectionModel copyWith({
     List<OverviewGalleryImageModel>? images,
@@ -265,7 +177,7 @@ class OverviewGallerySectionModel {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// CLIENT COMMENTS
+// CLIENT COMMENT
 // ═══════════════════════════════════════════════════════════════════════════════
 class OverviewClientCommentModel {
   final String id;
@@ -283,25 +195,6 @@ class OverviewClientCommentModel {
     this.feedback = const BiText(),
     this.order = 0,
   });
-
-  factory OverviewClientCommentModel.fromMap(Map<String, dynamic> map) =>
-      OverviewClientCommentModel(
-        id: map['id'] ?? '',
-        imageUrl: map['imageUrl'] ?? '',
-        firstName: BiText.fromMap(map['firstName']),
-        lastName: BiText.fromMap(map['lastName']),
-        feedback: BiText.fromMap(map['feedback']),
-        order: map['order'] ?? 0,
-      );
-
-  Map<String, dynamic> toMap() => {
-    'id': id,
-    'imageUrl': imageUrl,
-    'firstName': firstName.toMap(),
-    'lastName': lastName.toMap(),
-    'feedback': feedback.toMap(),
-    'order': order,
-  };
 
   OverviewClientCommentModel copyWith({
     String? id,
@@ -321,6 +214,9 @@ class OverviewClientCommentModel {
       );
 }
 
+// ═══════════════════════════════════════════════════════════════════════════════
+// CLIENT COMMENTS SECTION — flattened into OverviewPageModel
+// ═══════════════════════════════════════════════════════════════════════════════
 class OverviewClientCommentsSectionModel {
   final BiText title;
   final List<OverviewClientCommentModel> comments;
@@ -329,25 +225,6 @@ class OverviewClientCommentsSectionModel {
     this.title = const BiText(),
     this.comments = const [],
   });
-
-  factory OverviewClientCommentsSectionModel.fromMap(
-      Map<String, dynamic>? map) {
-    if (map == null) return const OverviewClientCommentsSectionModel();
-    final rawComments = map['comments'] as List<dynamic>? ?? [];
-    return OverviewClientCommentsSectionModel(
-      title: BiText.fromMap(map['title']),
-      comments: rawComments
-          .map((e) =>
-          OverviewClientCommentModel.fromMap(e as Map<String, dynamic>))
-          .toList()
-        ..sort((a, b) => a.order.compareTo(b.order)),
-    );
-  }
-
-  Map<String, dynamic> toMap() => {
-    'title': title.toMap(),
-    'comments': comments.map((e) => e.toMap()).toList(),
-  };
 
   OverviewClientCommentsSectionModel copyWith({
     BiText? title,
@@ -360,7 +237,7 @@ class OverviewClientCommentsSectionModel {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// DOWNLOAD APPLICATIONS
+// DOWNLOAD SECTION — flattened into OverviewPageModel
 // ═══════════════════════════════════════════════════════════════════════════════
 class OverviewDownloadSectionModel {
   final BiText title;
@@ -372,21 +249,6 @@ class OverviewDownloadSectionModel {
     this.appStoreLink = '',
     this.googlePlayLink = '',
   });
-
-  factory OverviewDownloadSectionModel.fromMap(Map<String, dynamic>? map) {
-    if (map == null) return const OverviewDownloadSectionModel();
-    return OverviewDownloadSectionModel(
-      title: BiText.fromMap(map['title']),
-      appStoreLink: map['appStoreLink'] ?? '',
-      googlePlayLink: map['googlePlayLink'] ?? '',
-    );
-  }
-
-  Map<String, dynamic> toMap() => {
-    'title': title.toMap(),
-    'appStoreLink': appStoreLink,
-    'googlePlayLink': googlePlayLink,
-  };
 
   OverviewDownloadSectionModel copyWith({
     BiText? title,
@@ -401,29 +263,12 @@ class OverviewDownloadSectionModel {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// PUBLISH SCHEDULE
+// PUBLISH SCHEDULE — flattened into OverviewPageModel
 // ═══════════════════════════════════════════════════════════════════════════════
 class OverviewPublishScheduleModel {
   final DateTime? publishDate;
 
   const OverviewPublishScheduleModel({this.publishDate});
-
-  factory OverviewPublishScheduleModel.fromMap(Map<String, dynamic>? map) {
-    DateTime? date;
-    if (map?['publishDate'] != null) {
-      if (map!['publishDate'] is Timestamp) {
-        date = (map['publishDate'] as Timestamp).toDate();
-      } else if (map['publishDate'] is String) {
-        date = DateTime.tryParse(map['publishDate']);
-      }
-    }
-    return OverviewPublishScheduleModel(publishDate: date);
-  }
-
-  Map<String, dynamic> toMap() => {
-    'publishDate':
-    publishDate != null ? Timestamp.fromDate(publishDate!) : null,
-  };
 
   OverviewPublishScheduleModel copyWith({DateTime? publishDate}) =>
       OverviewPublishScheduleModel(
@@ -431,7 +276,7 @@ class OverviewPublishScheduleModel {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// ROOT MODEL — ALL fields versioned
+// ROOT MODEL — ALL fields flattened & versioned
 // ═══════════════════════════════════════════════════════════════════════════════
 class OverviewPageModel {
   final String id;
@@ -458,87 +303,292 @@ class OverviewPageModel {
     this.lastUpdated,
   });
 
-  // ── fromMap — ALL fields use Versioned.read() ────────────────────────────
-  factory OverviewPageModel.fromMap(Map<String, dynamic> map,
-      {String? docId}) {
-    return OverviewPageModel(
-      id: docId ?? Versioned.read<String>(
-        map['id'],
-            (v) => v?.toString() ?? '',
-      ),
+  // ═══════════════════════════════════════════════════════════════════════════
+  // toMap — ALL fields flattened, Capital_Underscore naming
+  // Outputs plain primitives. Repo wraps EVERY key in Versioned.append().
+  // ═══════════════════════════════════════════════════════════════════════════
 
-      status: Versioned.read<String>(
-        map['status'],
-            (v) => v?.toString() ?? 'draft',
-      ),
+  Map<String, dynamic> toMap() {
+    final map = <String, dynamic>{};
 
-      gender: Versioned.read<String>(
-        map['gender'],
-            (v) => v?.toString() ?? 'female',
-      ),
+    // ── Scalars ──────────────────────────────────────────────────────
+    map['Id']     = id;
+    map['Status'] = status;
+    map['Gender'] = gender;
 
-      headings: Versioned.read<OverviewHeadingsModel>(
-        map['headings'],
-            (v) => OverviewHeadingsModel.fromMap(
-            v is Map ? Map<String, dynamic>.from(v) : null),
-      ),
+    // ── Headings (flattened) ─────────────────────────────────────────
+    map['Headings_Title_En']       = headings.title.en;
+    map['Headings_Title_Ar']       = headings.title.ar;
+    map['Headings_Description_En'] = headings.description.en;
+    map['Headings_Description_Ar'] = headings.description.ar;
 
-      services: Versioned.read<OverviewServicesSectionModel>(
-        map['services'],
-            (v) => OverviewServicesSectionModel.fromMap(
-            v is Map ? Map<String, dynamic>.from(v) : null),
-      ),
+    // ── Services title (flattened) ───────────────────────────────────
+    map['Services_Title_En'] = services.title.en;
+    map['Services_Title_Ar'] = services.title.ar;
 
-      gallery: Versioned.read<OverviewGallerySectionModel>(
-        map['gallery'],
-            (v) => OverviewGallerySectionModel.fromMap(
-            v is Map ? Map<String, dynamic>.from(v) : null),
-      ),
+    // ── Services_Items (flattened) ───────────────────────────────────
+    map['Services_Items_Count'] = services.items.length;
+    for (int i = 0; i < services.items.length; i++) {
+      final item = services.items[i];
+      map['Services_Items_${i}_Id']        = item.id;
+      map['Services_Items_${i}_Name_En']   = item.name.en;
+      map['Services_Items_${i}_Name_Ar']   = item.name.ar;
+      map['Services_Items_${i}_Image_Url'] = item.imageUrl;
+      map['Services_Items_${i}_Order']     = item.order;
+    }
 
-      clientComments: Versioned.read<OverviewClientCommentsSectionModel>(
-        map['clientComments'],
-            (v) => OverviewClientCommentsSectionModel.fromMap(
-            v is Map ? Map<String, dynamic>.from(v) : null),
-      ),
+    // ── Gallery_Images (flattened) ───────────────────────────────────
+    map['Gallery_Images_Count'] = gallery.images.length;
+    for (int i = 0; i < gallery.images.length; i++) {
+      final img = gallery.images[i];
+      map['Gallery_Images_${i}_Id']        = img.id;
+      map['Gallery_Images_${i}_Image_Url'] = img.imageUrl;
+      map['Gallery_Images_${i}_Order']     = img.order;
+    }
 
-      download: Versioned.read<OverviewDownloadSectionModel>(
-        map['download'],
-            (v) => OverviewDownloadSectionModel.fromMap(
-            v is Map ? Map<String, dynamic>.from(v) : null),
-      ),
+    // ── Client Comments title (flattened) ────────────────────────────
+    map['Client_Comments_Title_En'] = clientComments.title.en;
+    map['Client_Comments_Title_Ar'] = clientComments.title.ar;
 
-      publishSchedule: Versioned.read<OverviewPublishScheduleModel>(
-        map['publishSchedule'],
-            (v) => OverviewPublishScheduleModel.fromMap(
-            v is Map ? Map<String, dynamic>.from(v) : null),
-      ),
+    // ── Client_Comments_Comments (flattened) ─────────────────────────
+    map['Client_Comments_Comments_Count'] = clientComments.comments.length;
+    for (int i = 0; i < clientComments.comments.length; i++) {
+      final c = clientComments.comments[i];
+      map['Client_Comments_Comments_${i}_Id']            = c.id;
+      map['Client_Comments_Comments_${i}_Image_Url']     = c.imageUrl;
+      map['Client_Comments_Comments_${i}_First_Name_En'] = c.firstName.en;
+      map['Client_Comments_Comments_${i}_First_Name_Ar'] = c.firstName.ar;
+      map['Client_Comments_Comments_${i}_Last_Name_En']  = c.lastName.en;
+      map['Client_Comments_Comments_${i}_Last_Name_Ar']  = c.lastName.ar;
+      map['Client_Comments_Comments_${i}_Feedback_En']   = c.feedback.en;
+      map['Client_Comments_Comments_${i}_Feedback_Ar']   = c.feedback.ar;
+      map['Client_Comments_Comments_${i}_Order']         = c.order;
+    }
 
-      lastUpdated: Versioned.read<DateTime?>(
-        map['lastUpdated'],
-            (v) {
-          if (v == null) return null;
-          if (v is Timestamp) return v.toDate();
-          if (v is String) return DateTime.tryParse(v);
-          return null;
-        },
-      ),
-    );
+    // ── Download (flattened) ─────────────────────────────────────────
+    map['Download_Title_En']         = download.title.en;
+    map['Download_Title_Ar']         = download.title.ar;
+    map['Download_App_Store_Link']   = download.appStoreLink;
+    map['Download_Google_Play_Link'] = download.googlePlayLink;
+
+    // ── Publish Schedule (flattened) ─────────────────────────────────
+    map['Publish_Schedule_Publish_Date'] = publishSchedule.publishDate != null
+        ? Timestamp.fromDate(publishSchedule.publishDate!)
+        : null;
+
+    // ── Last Updated ─────────────────────────────────────────────────
+    map['Last_Updated'] = lastUpdated != null
+        ? Timestamp.fromDate(lastUpdated!)
+        : null;
+
+    return map;
   }
 
-  // ── toMap — plain values (versioning handled in repo layer) ──────────────
-  Map<String, dynamic> toMap() => {
-    'id': id,
-    'status': status,
-    'gender': gender,
-    'headings': headings.toMap(),
-    'services': services.toMap(),
-    'gallery': gallery.toMap(),
-    'clientComments': clientComments.toMap(),
-    'download': download.toMap(),
-    'publishSchedule': publishSchedule.toMap(),
-    'lastUpdated':
-    lastUpdated != null ? Timestamp.fromDate(lastUpdated!) : null,
-  };
+  // ═══════════════════════════════════════════════════════════════════════════
+  // fromMap — EVERY field uses Versioned.read()
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  factory OverviewPageModel.fromMap(Map<String, dynamic> map,
+      {String? docId}) {
+
+    // ── Services Items (flattened, each field versioned) ─────────────
+    final siCount = Versioned.read<int>(
+      map['Services_Items_Count'], (v) => (v as int?) ?? 0,
+    );
+    final serviceItems = <OverviewServiceItemModel>[];
+    for (int i = 0; i < siCount; i++) {
+      serviceItems.add(OverviewServiceItemModel(
+        id: Versioned.read<String>(
+          map['Services_Items_${i}_Id'], (v) => v?.toString() ?? '',
+        ),
+        name: BiText(
+          en: Versioned.read<String>(
+            map['Services_Items_${i}_Name_En'], (v) => v?.toString() ?? '',
+          ),
+          ar: Versioned.read<String>(
+            map['Services_Items_${i}_Name_Ar'], (v) => v?.toString() ?? '',
+          ),
+        ),
+        imageUrl: Versioned.read<String>(
+          map['Services_Items_${i}_Image_Url'], (v) => v?.toString() ?? '',
+        ),
+        order: Versioned.read<int>(
+          map['Services_Items_${i}_Order'], (v) => (v as int?) ?? i,
+        ),
+      ));
+    }
+    serviceItems.sort((a, b) => a.order.compareTo(b.order));
+
+    // ── Gallery Images (flattened, each field versioned) ─────────────
+    final giCount = Versioned.read<int>(
+      map['Gallery_Images_Count'], (v) => (v as int?) ?? 0,
+    );
+    final galleryImages = <OverviewGalleryImageModel>[];
+    for (int i = 0; i < giCount; i++) {
+      galleryImages.add(OverviewGalleryImageModel(
+        id: Versioned.read<String>(
+          map['Gallery_Images_${i}_Id'], (v) => v?.toString() ?? '',
+        ),
+        imageUrl: Versioned.read<String>(
+          map['Gallery_Images_${i}_Image_Url'], (v) => v?.toString() ?? '',
+        ),
+        order: Versioned.read<int>(
+          map['Gallery_Images_${i}_Order'], (v) => (v as int?) ?? i,
+        ),
+      ));
+    }
+    galleryImages.sort((a, b) => a.order.compareTo(b.order));
+
+    // ── Client Comments (flattened, each field versioned) ────────────
+    final ccCount = Versioned.read<int>(
+      map['Client_Comments_Comments_Count'], (v) => (v as int?) ?? 0,
+    );
+    final comments = <OverviewClientCommentModel>[];
+    for (int i = 0; i < ccCount; i++) {
+      comments.add(OverviewClientCommentModel(
+        id: Versioned.read<String>(
+          map['Client_Comments_Comments_${i}_Id'], (v) => v?.toString() ?? '',
+        ),
+        imageUrl: Versioned.read<String>(
+          map['Client_Comments_Comments_${i}_Image_Url'], (v) => v?.toString() ?? '',
+        ),
+        firstName: BiText(
+          en: Versioned.read<String>(
+            map['Client_Comments_Comments_${i}_First_Name_En'], (v) => v?.toString() ?? '',
+          ),
+          ar: Versioned.read<String>(
+            map['Client_Comments_Comments_${i}_First_Name_Ar'], (v) => v?.toString() ?? '',
+          ),
+        ),
+        lastName: BiText(
+          en: Versioned.read<String>(
+            map['Client_Comments_Comments_${i}_Last_Name_En'], (v) => v?.toString() ?? '',
+          ),
+          ar: Versioned.read<String>(
+            map['Client_Comments_Comments_${i}_Last_Name_Ar'], (v) => v?.toString() ?? '',
+          ),
+        ),
+        feedback: BiText(
+          en: Versioned.read<String>(
+            map['Client_Comments_Comments_${i}_Feedback_En'], (v) => v?.toString() ?? '',
+          ),
+          ar: Versioned.read<String>(
+            map['Client_Comments_Comments_${i}_Feedback_Ar'], (v) => v?.toString() ?? '',
+          ),
+        ),
+        order: Versioned.read<int>(
+          map['Client_Comments_Comments_${i}_Order'], (v) => (v as int?) ?? i,
+        ),
+      ));
+    }
+    comments.sort((a, b) => a.order.compareTo(b.order));
+
+    // ── Last Updated (not versioned) ────────────────────────────────
+    DateTime? lastUpdated;
+    if (map['Last_Updated'] != null) {
+      if (map['Last_Updated'] is Timestamp) {
+        lastUpdated = (map['Last_Updated'] as Timestamp).toDate();
+      } else if (map['Last_Updated'] is String) {
+        lastUpdated = DateTime.tryParse(map['Last_Updated']);
+      }
+    }
+
+    return OverviewPageModel(
+      id: docId ?? Versioned.read<String>(
+        map['Id'], (v) => v?.toString() ?? '',
+      ),
+
+      // ── Scalars ────────────────────────────────────────────────────
+      status: Versioned.read<String>(
+        map['Status'], (v) => v?.toString() ?? 'draft',
+      ),
+      gender: Versioned.read<String>(
+        map['Gender'], (v) => v?.toString() ?? 'female',
+      ),
+
+      // ── Headings ───────────────────────────────────────────────────
+      headings: OverviewHeadingsModel(
+        title: BiText(
+          en: Versioned.read<String>(
+            map['Headings_Title_En'], (v) => v?.toString() ?? '',
+          ),
+          ar: Versioned.read<String>(
+            map['Headings_Title_Ar'], (v) => v?.toString() ?? '',
+          ),
+        ),
+        description: BiText(
+          en: Versioned.read<String>(
+            map['Headings_Description_En'], (v) => v?.toString() ?? '',
+          ),
+          ar: Versioned.read<String>(
+            map['Headings_Description_Ar'], (v) => v?.toString() ?? '',
+          ),
+        ),
+      ),
+
+      // ── Services ───────────────────────────────────────────────────
+      services: OverviewServicesSectionModel(
+        title: BiText(
+          en: Versioned.read<String>(
+            map['Services_Title_En'], (v) => v?.toString() ?? '',
+          ),
+          ar: Versioned.read<String>(
+            map['Services_Title_Ar'], (v) => v?.toString() ?? '',
+          ),
+        ),
+        items: serviceItems,
+      ),
+
+      // ── Gallery ────────────────────────────────────────────────────
+      gallery: OverviewGallerySectionModel(images: galleryImages),
+
+      // ── Client Comments ────────────────────────────────────────────
+      clientComments: OverviewClientCommentsSectionModel(
+        title: BiText(
+          en: Versioned.read<String>(
+            map['Client_Comments_Title_En'], (v) => v?.toString() ?? '',
+          ),
+          ar: Versioned.read<String>(
+            map['Client_Comments_Title_Ar'], (v) => v?.toString() ?? '',
+          ),
+        ),
+        comments: comments,
+      ),
+
+      // ── Download ───────────────────────────────────────────────────
+      download: OverviewDownloadSectionModel(
+        title: BiText(
+          en: Versioned.read<String>(
+            map['Download_Title_En'], (v) => v?.toString() ?? '',
+          ),
+          ar: Versioned.read<String>(
+            map['Download_Title_Ar'], (v) => v?.toString() ?? '',
+          ),
+        ),
+        appStoreLink: Versioned.read<String>(
+          map['Download_App_Store_Link'], (v) => v?.toString() ?? '',
+        ),
+        googlePlayLink: Versioned.read<String>(
+          map['Download_Google_Play_Link'], (v) => v?.toString() ?? '',
+        ),
+      ),
+
+      // ── Publish Schedule ───────────────────────────────────────────
+      publishSchedule: OverviewPublishScheduleModel(
+        publishDate: Versioned.read<DateTime?>(
+          map['Publish_Schedule_Publish_Date'],
+              (v) {
+            if (v == null) return null;
+            if (v is Timestamp) return v.toDate();
+            if (v is String) return DateTime.tryParse(v);
+            return null;
+          },
+        ),
+      ),
+
+      lastUpdated: lastUpdated,
+    );
+  }
 
   OverviewPageModel copyWith({
     String? id,

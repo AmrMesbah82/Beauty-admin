@@ -1,11 +1,15 @@
 /// ******************* FILE INFO *******************
 /// File Name: overview_cubit.dart
 /// Description: Cubit for the Overview CMS module.
-///              Manages: Headings, Services (add/remove/update/upload),
-///              Gallery (add/remove/upload), Client Comments (add/remove/update/upload),
-///              Download Applications, Publish Schedule.
+///              Dual-document architecture:
+///              - load() checks for draft first, falls back to published
+///              - save(publishStatus: 'published') → writes published doc, deletes draft
+///              - save(publishStatus: 'draft')     → writes draft doc only
+///              - save(publishStatus: 'scheduled')  → writes draft doc with schedule date
+///              - discardDraft() → deletes draft doc
 /// Created by: Amr Mesbah
-/// Last Update: 09/04/2026
+/// Last Update: 19/04/2026
+/// UPDATED: Dual-document draft system ✅
 
 import 'dart:typed_data';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -25,15 +29,34 @@ class OverviewCmsCubit extends Cubit<OverviewCmsState> {
   String _activeGender = 'female';
   String get activeGender => _activeGender;
 
-  // ── Load ───────────────────────────────────────────────────────────────────
+  /// Whether the currently loaded data came from a draft document.
+  bool _isFromDraft = false;
+  bool get isFromDraft => _isFromDraft;
+
+  // ══════════════════════════════════════════════════════════════════════════
+  //  LOAD — draft-first strategy
+  // ══════════════════════════════════════════════════════════════════════════
   Future<void> load({String gender = 'female'}) async {
     print('🟡 [OverviewCmsCubit] load: gender=$gender');
     _activeGender = gender;
     emit(OverviewCmsLoading());
     try {
-      _current = await _repo.fetchOverviewPage(gender: gender);
+      // 1️⃣ Check if a draft exists
+      final draft = await _repo.fetchDraft(gender: gender);
+      if (draft != null) {
+        print('🟢 [OverviewCmsCubit] load: ✅ draft found — loading draft');
+        _current     = draft;
+        _isFromDraft = true;
+        emit(OverviewCmsLoaded(_current, isFromDraft: true));
+        return;
+      }
+
+      // 2️⃣ No draft — load published
+      print('🟡 [OverviewCmsCubit] load: no draft — loading published');
+      _current     = await _repo.fetchOverviewPage(gender: gender);
+      _isFromDraft = false;
       print('🟢 [OverviewCmsCubit] load: ✅');
-      emit(OverviewCmsLoaded(_current));
+      emit(OverviewCmsLoaded(_current, isFromDraft: false));
     } catch (e) {
       print('🔴 [OverviewCmsCubit] load: ERROR $e');
       emit(OverviewCmsError(e.toString()));
@@ -45,9 +68,11 @@ class OverviewCmsCubit extends Cubit<OverviewCmsState> {
     await load(gender: gender);
   }
 
-  // ═══════════════════════════════════════════════════════════════════════════
-  // HEADINGS
-  // ═══════════════════════════════════════════════════════════════════════════
+  // ══════════════════════════════════════════════════════════════════════════
+  //  FIELD UPDATE METHODS (unchanged API)
+  // ══════════════════════════════════════════════════════════════════════════
+
+  // ── HEADINGS ──────────────────────────────────────────────────────────────
   void updateHeadingsTitle({required String en, required String ar}) {
     _current = _current.copyWith(
       headings: _current.headings.copyWith(title: BiText(en: en, ar: ar)),
@@ -61,20 +86,17 @@ class OverviewCmsCubit extends Cubit<OverviewCmsState> {
     );
   }
 
-  // ═══════════════════════════════════════════════════════════════════════════
-  // SERVICES
-  // ═══════════════════════════════════════════════════════════════════════════
+  // ── SERVICES ──────────────────────────────────────────────────────────────
   void updateServicesTitle({required String en, required String ar}) {
     _current = _current.copyWith(
       services: _current.services.copyWith(title: BiText(en: en, ar: ar)),
     );
   }
 
-// SERVICES
   void addServiceItem() {
     final items = List<OverviewServiceItemModel>.from(_current.services.items);
     items.add(OverviewServiceItemModel(
-      id: 'svc_${DateTime.now().millisecondsSinceEpoch}_${items.length}',  // ← unique
+      id: 'svc_${DateTime.now().millisecondsSinceEpoch}_${items.length}',
       order: items.length,
     ));
     _current = _current.copyWith(services: _current.services.copyWith(items: items));
@@ -96,7 +118,6 @@ class OverviewCmsCubit extends Cubit<OverviewCmsState> {
         _current.copyWith(services: _current.services.copyWith(items: items));
   }
 
-  /// Patches an existing URL back onto a service item (no upload needed).
   void updateServiceItemImageUrl(String id, String url) {
     final items = _current.services.items.map((e) {
       if (e.id == id) return e.copyWith(imageUrl: url);
@@ -120,10 +141,11 @@ class OverviewCmsCubit extends Cubit<OverviewCmsState> {
         _current.copyWith(services: _current.services.copyWith(items: items));
   }
 
+  // ── GALLERY ───────────────────────────────────────────────────────────────
   void addGallerySlot() {
     final images = List<OverviewGalleryImageModel>.from(_current.gallery.images);
     images.add(OverviewGalleryImageModel(
-      id: 'gal_${DateTime.now().millisecondsSinceEpoch}_${images.length}',  // ← unique
+      id: 'gal_${DateTime.now().millisecondsSinceEpoch}_${images.length}',
       order: images.length,
     ));
     _current = _current.copyWith(gallery: _current.gallery.copyWith(images: images));
@@ -136,7 +158,6 @@ class OverviewCmsCubit extends Cubit<OverviewCmsState> {
         gallery: _current.gallery.copyWith(images: images));
   }
 
-  /// Patches an existing URL back onto a gallery slot (no upload needed).
   void updateGalleryImageUrl(String id, String url) {
     final images = _current.gallery.images.map((e) {
       if (e.id == id) return e.copyWith(imageUrl: url);
@@ -160,9 +181,7 @@ class OverviewCmsCubit extends Cubit<OverviewCmsState> {
         gallery: _current.gallery.copyWith(images: images));
   }
 
-  // ═══════════════════════════════════════════════════════════════════════════
-  // CLIENT COMMENTS
-  // ═══════════════════════════════════════════════════════════════════════════
+  // ── CLIENT COMMENTS ───────────────────────────────────────────────────────
   void updateClientCommentsTitle({required String en, required String ar}) {
     _current = _current.copyWith(
       clientComments:
@@ -173,7 +192,7 @@ class OverviewCmsCubit extends Cubit<OverviewCmsState> {
   void addClientComment() {
     final comments = List<OverviewClientCommentModel>.from(_current.clientComments.comments);
     comments.add(OverviewClientCommentModel(
-      id: 'cmt_${DateTime.now().millisecondsSinceEpoch}_${comments.length}',  // ← unique
+      id: 'cmt_${DateTime.now().millisecondsSinceEpoch}_${comments.length}',
       order: comments.length,
     ));
     _current = _current.copyWith(
@@ -222,7 +241,6 @@ class OverviewCmsCubit extends Cubit<OverviewCmsState> {
         _current.clientComments.copyWith(comments: comments));
   }
 
-  /// Patches an existing URL back onto a comment item (no upload needed).
   void updateClientCommentImageUrl(String id, String url) {
     final comments = _current.clientComments.comments.map((e) {
       if (e.id == id) return e.copyWith(imageUrl: url);
@@ -248,9 +266,7 @@ class OverviewCmsCubit extends Cubit<OverviewCmsState> {
         _current.clientComments.copyWith(comments: comments));
   }
 
-  // ═══════════════════════════════════════════════════════════════════════════
-  // DOWNLOAD APPLICATIONS
-  // ═══════════════════════════════════════════════════════════════════════════
+  // ── DOWNLOAD APPLICATIONS ─────────────────────────────────────────────────
   void updateDownloadTitle({required String en, required String ar}) {
     _current = _current.copyWith(
       download: _current.download.copyWith(title: BiText(en: en, ar: ar)),
@@ -267,9 +283,7 @@ class OverviewCmsCubit extends Cubit<OverviewCmsState> {
         download: _current.download.copyWith(googlePlayLink: link));
   }
 
-  // ═══════════════════════════════════════════════════════════════════════════
-  // PUBLISH SCHEDULE
-  // ═══════════════════════════════════════════════════════════════════════════
+  // ── PUBLISH SCHEDULE ──────────────────────────────────────────────────────
   void updatePublishDate(DateTime? date) {
     _current = _current.copyWith(
       publishSchedule:
@@ -277,9 +291,9 @@ class OverviewCmsCubit extends Cubit<OverviewCmsState> {
     );
   }
 
-  // ═══════════════════════════════════════════════════════════════════════════
-  // SAVE
-  // ═══════════════════════════════════════════════════════════════════════════
+  // ══════════════════════════════════════════════════════════════════════════
+  //  SAVE — routes to published or draft based on publishStatus
+  // ══════════════════════════════════════════════════════════════════════════
   Future<void> save({String publishStatus = 'published'}) async {
     print('🟡 [OverviewCmsCubit] save: status=$publishStatus');
     try {
@@ -287,11 +301,60 @@ class OverviewCmsCubit extends Cubit<OverviewCmsState> {
         status: publishStatus,
         lastUpdated: DateTime.now(),
       );
-      await _repo.saveOverviewPage(_current);
-      print('🟢 [OverviewCmsCubit] save: ✅ DONE');
-      emit(OverviewCmsSaved(_current));
+
+      switch (publishStatus) {
+      // ── PUBLISH: save to published doc, delete draft ────────────────
+        case 'published':
+          print('🟡 [OverviewCmsCubit] save → publishing to live doc');
+          await _repo.saveOverviewPage(_current);
+          await _repo.deleteDraft(gender: _activeGender);
+          _isFromDraft = false;
+          print('🟢 [OverviewCmsCubit] save: ✅ published + draft cleaned');
+          emit(OverviewCmsSaved(_current));
+          break;
+
+      // ── DRAFT: save to draft doc only, do NOT touch published ───────
+        case 'draft':
+          print('🟡 [OverviewCmsCubit] save → saving draft only');
+          await _repo.saveDraft(_current);
+          _isFromDraft = true;
+          print('🟢 [OverviewCmsCubit] save: ✅ draft saved');
+          emit(OverviewCmsDraftSaved(_current));
+          break;
+
+      // ── SCHEDULED: save to draft doc with schedule date ─────────────
+        case 'scheduled':
+          print('🟡 [OverviewCmsCubit] save → saving scheduled draft');
+          await _repo.saveDraft(_current);
+          _isFromDraft = true;
+          print('🟢 [OverviewCmsCubit] save: ✅ scheduled draft saved');
+          emit(OverviewCmsDraftSaved(_current));
+          break;
+
+        default:
+          print('🔴 [OverviewCmsCubit] save: unknown status=$publishStatus');
+          await _repo.saveDraft(_current);
+          _isFromDraft = true;
+          emit(OverviewCmsDraftSaved(_current));
+      }
     } catch (e) {
       print('🔴 [OverviewCmsCubit] save: ERROR $e');
+      emit(OverviewCmsError(e.toString()));
+    }
+  }
+
+  // ══════════════════════════════════════════════════════════════════════════
+  //  DISCARD DRAFT — deletes the draft doc (published stays untouched)
+  // ══════════════════════════════════════════════════════════════════════════
+  Future<void> discardDraft() async {
+    print('🟡 [OverviewCmsCubit] discardDraft: gender=$_activeGender');
+    try {
+      await _repo.deleteDraft(gender: _activeGender);
+      _isFromDraft = false;
+      print('🟢 [OverviewCmsCubit] discardDraft: ✅ DONE');
+      emit(OverviewCmsDraftDeleted());
+    } catch (e) {
+      print('🔴 [OverviewCmsCubit] discardDraft: ERROR $e');
       emit(OverviewCmsError(e.toString()));
     }
   }

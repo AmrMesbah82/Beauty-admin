@@ -2,8 +2,9 @@
 // File Name: about_repo_impl.dart
 // Created by: Amr Mesbah
 // Last Update: 18/04/2026
-// UPDATED: All save methods now version ALL fields using Versioned.append()
-//          — full audit trail in Firestore for AboutPage, OurStrategy, Terms ✅
+// UPDATED: All field names use Capital_Underscore naming convention ✅
+// UPDATED: All nested maps flattened — no nested maps in Firestore ✅
+// UPDATED: All save methods version each flattened field individually ✅
 
 import 'dart:typed_data';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -13,9 +14,9 @@ import '../../model/about_us/about_us.dart';
 import 'about_repo.dart';
 
 class AboutRepoImpl implements AboutRepo {
-  static const String _aboutDoc    = 'about_page';
-  static const String _strategyDoc = 'our_strategy';
-  static const String _termsDoc    = 'terms_of_service';
+  static const String _aboutDoc    = 'aboutPage';
+  static const String _strategyDoc = 'ourStrategy';
+  static const String _termsDoc    = 'termsOfService';
 
   final FirebaseFirestore _db      = FirebaseFirestore.instance;
   final FirebaseStorage   _storage = FirebaseStorage.instance;
@@ -32,72 +33,92 @@ class AboutRepoImpl implements AboutRepo {
       if (!snap.exists || snap.data() == null) {
         return AboutPageModel.empty();
       }
-      final raw = snap.data()!;
-      final model = AboutPageModel.fromMap(raw);
-      return model;
+      return AboutPageModel.fromMap(snap.data()!);
     } catch (e) {
       _log('🔴 [AboutRepo] fetchAboutPage ERROR: $e');
       rethrow;
     }
   }
 
-  // ── Save About Page (ALL fields versioned) ─────────────────────────────────
+  // ── Save About Page (ALL fields versioned individually) ────────────────────
   @override
   Future<void> saveAboutPage(AboutPageModel model) async {
     try {
       print('🟡 [AboutRepo] saveAboutPage → reading existing doc...');
       final existingSnap = await _docRef(_aboutDoc)
           .get(const GetOptions(source: Source.server));
-      final existingData =
-          (existingSnap.exists ? existingSnap.data() : null) ?? {};
-      print('   existing keys = ${existingData.keys.toList()}');
+      final ex = (existingSnap.exists ? existingSnap.data() : null) ?? {};
 
       final newMap = model.toMap();
 
       final versionedMap = <String, dynamic>{
-        'publishStatus': Versioned.append(
-          existingData['publishStatus'],
-          newMap['publishStatus'],
+        // ── plain fields (not versioned) ───────────────────────────────
+        'Values':         newMap['Values'],
+        'Last_Updated_At': FieldValue.serverTimestamp(),
+
+        // ── versioned scalar fields ────────────────────────────────────
+        'Publish_Status': Versioned.append(
+          ex['Publish_Status'], newMap['Publish_Status'],
         ),
-        'title': Versioned.append(
-          existingData['title'],
-          newMap['title'],
+        'Svg_Url': Versioned.append(
+          ex['Svg_Url'], newMap['Svg_Url'],
         ),
-        'svgUrl': Versioned.append(
-          existingData['svgUrl'],
-          newMap['svgUrl'],
+
+        // ── Title (flattened, versioned) ───────────────────────────────
+        'Title_En': Versioned.append(ex['Title_En'], newMap['Title_En']),
+        'Title_Ar': Versioned.append(ex['Title_Ar'], newMap['Title_Ar']),
+
+        // ── Navigation Label (flattened, versioned) ────────────────────
+        'Navigation_Label_Icon_Url': Versioned.append(
+          ex['Navigation_Label_Icon_Url'], newMap['Navigation_Label_Icon_Url'],
         ),
-        'navigationLabel': Versioned.append(
-          existingData['navigationLabel'],
-          newMap['navigationLabel'],
+        'Navigation_Label_Title_En': Versioned.append(
+          ex['Navigation_Label_Title_En'], newMap['Navigation_Label_Title_En'],
         ),
-        'vision': Versioned.append(
-          existingData['vision'],
-          newMap['vision'],
+        'Navigation_Label_Title_Ar': Versioned.append(
+          ex['Navigation_Label_Title_Ar'], newMap['Navigation_Label_Title_Ar'],
         ),
-        'mission': Versioned.append(
-          existingData['mission'],
-          newMap['mission'],
+
+        // ── Vision (flattened, versioned) ──────────────────────────────
+        'Vision_Icon_Url': Versioned.append(
+          ex['Vision_Icon_Url'], newMap['Vision_Icon_Url'],
         ),
-        'values': Versioned.append(
-          existingData['values'],
-          newMap['values'],
+        'Vision_Svg_Url': Versioned.append(
+          ex['Vision_Svg_Url'], newMap['Vision_Svg_Url'],
         ),
-        'lastUpdatedAt': Versioned.append(
-          existingData['lastUpdatedAt'],
-          newMap['lastUpdatedAt'],
+        'Vision_Sub_Description_En': Versioned.append(
+          ex['Vision_Sub_Description_En'], newMap['Vision_Sub_Description_En'],
+        ),
+        'Vision_Sub_Description_Ar': Versioned.append(
+          ex['Vision_Sub_Description_Ar'], newMap['Vision_Sub_Description_Ar'],
+        ),
+        'Vision_Description_En': Versioned.append(
+          ex['Vision_Description_En'], newMap['Vision_Description_En'],
+        ),
+        'Vision_Description_Ar': Versioned.append(
+          ex['Vision_Description_Ar'], newMap['Vision_Description_Ar'],
+        ),
+
+        // ── Mission (flattened, versioned) ─────────────────────────────
+        'Mission_Icon_Url': Versioned.append(
+          ex['Mission_Icon_Url'], newMap['Mission_Icon_Url'],
+        ),
+        'Mission_Svg_Url': Versioned.append(
+          ex['Mission_Svg_Url'], newMap['Mission_Svg_Url'],
+        ),
+        'Mission_Sub_Description_En': Versioned.append(
+          ex['Mission_Sub_Description_En'], newMap['Mission_Sub_Description_En'],
+        ),
+        'Mission_Sub_Description_Ar': Versioned.append(
+          ex['Mission_Sub_Description_Ar'], newMap['Mission_Sub_Description_Ar'],
+        ),
+        'Mission_Description_En': Versioned.append(
+          ex['Mission_Description_En'], newMap['Mission_Description_En'],
+        ),
+        'Mission_Description_Ar': Versioned.append(
+          ex['Mission_Description_Ar'], newMap['Mission_Description_Ar'],
         ),
       };
-
-      print('🟡 [AboutRepo] saveAboutPage → writing versioned map...');
-      print('   publishStatus history length = ${(versionedMap['publishStatus'] as List).length}');
-      print('   title history length         = ${(versionedMap['title'] as List).length}');
-      print('   svgUrl history length        = ${(versionedMap['svgUrl'] as List).length}');
-      print('   navigationLabel history len  = ${(versionedMap['navigationLabel'] as List).length}');
-      print('   vision history length        = ${(versionedMap['vision'] as List).length}');
-      print('   mission history length       = ${(versionedMap['mission'] as List).length}');
-      print('   values history length        = ${(versionedMap['values'] as List).length}');
-      print('   lastUpdatedAt history length = ${(versionedMap['lastUpdatedAt'] as List).length}');
 
       await _docRef(_aboutDoc).set(versionedMap, SetOptions(merge: true));
       _log('🟢 [AboutRepo] saveAboutPage: ✅ ALL fields versioned DONE');
@@ -116,61 +137,61 @@ class AboutRepoImpl implements AboutRepo {
       if (!snap.exists || snap.data() == null) {
         return OurStrategyModel.empty();
       }
-      final raw = snap.data()!;
-      final model = OurStrategyModel.fromMap(raw);
-      return model;
+      return OurStrategyModel.fromMap(snap.data()!);
     } catch (e) {
       _log('🔴 [AboutRepo] fetchStrategy ERROR: $e');
       rethrow;
     }
   }
 
-  // ── Save Strategy (ALL fields versioned) ───────────────────────────────────
+  // ── Save Strategy (ALL fields versioned individually) ──────────────────────
   @override
   Future<void> saveStrategy(OurStrategyModel model) async {
     try {
       print('🟡 [AboutRepo] saveStrategy → reading existing doc...');
       final existingSnap = await _docRef(_strategyDoc)
           .get(const GetOptions(source: Source.server));
-      final existingData =
-          (existingSnap.exists ? existingSnap.data() : null) ?? {};
-      print('   existing keys = ${existingData.keys.toList()}');
+      final ex = (existingSnap.exists ? existingSnap.data() : null) ?? {};
 
       final newMap = model.toMap();
 
       final versionedMap = <String, dynamic>{
-        'publishStatus': Versioned.append(
-          existingData['publishStatus'],
-          newMap['publishStatus'],
+        // ── Last Updated (not versioned) ──────────────────────────────
+        'Last_Updated_At': FieldValue.serverTimestamp(),
+
+        // ── versioned scalar fields ────────────────────────────────────
+        'Publish_Status': Versioned.append(
+          ex['Publish_Status'], newMap['Publish_Status'],
         ),
-        'navigationLabel': Versioned.append(
-          existingData['navigationLabel'],
-          newMap['navigationLabel'],
+        'Strategic_House_En_Url': Versioned.append(
+          ex['Strategic_House_En_Url'], newMap['Strategic_House_En_Url'],
         ),
-        'vision': Versioned.append(
-          existingData['vision'],
-          newMap['vision'],
+        'Strategic_House_Ar_Url': Versioned.append(
+          ex['Strategic_House_Ar_Url'], newMap['Strategic_House_Ar_Url'],
         ),
-        'strategicHouseEnUrl': Versioned.append(
-          existingData['strategicHouseEnUrl'],
-          newMap['strategicHouseEnUrl'],
+
+        // ── Navigation Label (flattened, versioned) ────────────────────
+        'Navigation_Label_Icon_Url': Versioned.append(
+          ex['Navigation_Label_Icon_Url'], newMap['Navigation_Label_Icon_Url'],
         ),
-        'strategicHouseArUrl': Versioned.append(
-          existingData['strategicHouseArUrl'],
-          newMap['strategicHouseArUrl'],
+        'Navigation_Label_Title_En': Versioned.append(
+          ex['Navigation_Label_Title_En'], newMap['Navigation_Label_Title_En'],
         ),
-        'lastUpdatedAt': Versioned.append(
-          existingData['lastUpdatedAt'],
-          FieldValue.serverTimestamp(),
+        'Navigation_Label_Title_Ar': Versioned.append(
+          ex['Navigation_Label_Title_Ar'], newMap['Navigation_Label_Title_Ar'],
+        ),
+
+        // ── Vision (flattened, versioned) ──────────────────────────────
+        'Vision_Svg_Url': Versioned.append(
+          ex['Vision_Svg_Url'], newMap['Vision_Svg_Url'],
+        ),
+        'Vision_Description_En': Versioned.append(
+          ex['Vision_Description_En'], newMap['Vision_Description_En'],
+        ),
+        'Vision_Description_Ar': Versioned.append(
+          ex['Vision_Description_Ar'], newMap['Vision_Description_Ar'],
         ),
       };
-
-      print('🟡 [AboutRepo] saveStrategy → writing versioned map...');
-      print('   publishStatus history length     = ${(versionedMap['publishStatus'] as List).length}');
-      print('   navigationLabel history length   = ${(versionedMap['navigationLabel'] as List).length}');
-      print('   vision history length            = ${(versionedMap['vision'] as List).length}');
-      print('   strategicHouseEnUrl history len  = ${(versionedMap['strategicHouseEnUrl'] as List).length}');
-      print('   strategicHouseArUrl history len  = ${(versionedMap['strategicHouseArUrl'] as List).length}');
 
       await _docRef(_strategyDoc).set(versionedMap, SetOptions(merge: true));
       _log('🟢 [AboutRepo] saveStrategy: ✅ ALL fields versioned DONE');
@@ -189,56 +210,86 @@ class AboutRepoImpl implements AboutRepo {
       if (!snap.exists || snap.data() == null) {
         return TermsOfServiceModel.empty();
       }
-      final raw = snap.data()!;
-      final model = TermsOfServiceModel.fromMap(raw);
-      return model;
+      return TermsOfServiceModel.fromMap(snap.data()!);
     } catch (e) {
       _log('🔴 [AboutRepo] fetchTerms ERROR: $e');
       rethrow;
     }
   }
 
-  // ── Save Terms (ALL fields versioned) ──────────────────────────────────────
+  // ── Save Terms (ALL fields versioned individually) ─────────────────────────
   @override
   Future<void> saveTerms(TermsOfServiceModel model) async {
     try {
       print('🟡 [AboutRepo] saveTerms → reading existing doc...');
       final existingSnap = await _docRef(_termsDoc)
           .get(const GetOptions(source: Source.server));
-      final existingData =
-          (existingSnap.exists ? existingSnap.data() : null) ?? {};
-      print('   existing keys = ${existingData.keys.toList()}');
+      final ex = (existingSnap.exists ? existingSnap.data() : null) ?? {};
 
       final newMap = model.toMap();
 
       final versionedMap = <String, dynamic>{
-        'publishStatus': Versioned.append(
-          existingData['publishStatus'],
-          newMap['publishStatus'],
-        ),
-        'navigationLabel': Versioned.append(
-          existingData['navigationLabel'],
-          newMap['navigationLabel'],
-        ),
-        'termsAndConditions': Versioned.append(
-          existingData['termsAndConditions'],
-          newMap['termsAndConditions'],
-        ),
-        'privacyPolicy': Versioned.append(
-          existingData['privacyPolicy'],
-          newMap['privacyPolicy'],
-        ),
-        'lastUpdatedAt': Versioned.append(
-          existingData['lastUpdatedAt'],
-          FieldValue.serverTimestamp(),
-        ),
-      };
+        // ── Last Updated (not versioned) ──────────────────────────────
+        'Last_Updated_At': FieldValue.serverTimestamp(),
 
-      print('🟡 [AboutRepo] saveTerms → writing versioned map...');
-      print('   publishStatus history length      = ${(versionedMap['publishStatus'] as List).length}');
-      print('   navigationLabel history length    = ${(versionedMap['navigationLabel'] as List).length}');
-      print('   termsAndConditions history length = ${(versionedMap['termsAndConditions'] as List).length}');
-      print('   privacyPolicy history length      = ${(versionedMap['privacyPolicy'] as List).length}');
+        // ── versioned scalar fields ────────────────────────────────────
+        'Publish_Status': Versioned.append(
+          ex['Publish_Status'], newMap['Publish_Status'],
+        ),
+
+        // ── Navigation Label (flattened, versioned) ────────────────────
+        'Navigation_Label_Icon_Url': Versioned.append(
+          ex['Navigation_Label_Icon_Url'], newMap['Navigation_Label_Icon_Url'],
+        ),
+        'Navigation_Label_Title_En': Versioned.append(
+          ex['Navigation_Label_Title_En'], newMap['Navigation_Label_Title_En'],
+        ),
+        'Navigation_Label_Title_Ar': Versioned.append(
+          ex['Navigation_Label_Title_Ar'], newMap['Navigation_Label_Title_Ar'],
+        ),
+
+        // ── Terms And Conditions (flattened, versioned) ────────────────
+        'Terms_And_Conditions_Svg_Url': Versioned.append(
+          ex['Terms_And_Conditions_Svg_Url'], newMap['Terms_And_Conditions_Svg_Url'],
+        ),
+        'Terms_And_Conditions_Description_En': Versioned.append(
+          ex['Terms_And_Conditions_Description_En'], newMap['Terms_And_Conditions_Description_En'],
+        ),
+        'Terms_And_Conditions_Description_Ar': Versioned.append(
+          ex['Terms_And_Conditions_Description_Ar'], newMap['Terms_And_Conditions_Description_Ar'],
+        ),
+        'Terms_And_Conditions_Attach_En_Url': Versioned.append(
+          ex['Terms_And_Conditions_Attach_En_Url'], newMap['Terms_And_Conditions_Attach_En_Url'],
+        ),
+        'Terms_And_Conditions_Attach_Ar_Url': Versioned.append(
+          ex['Terms_And_Conditions_Attach_Ar_Url'], newMap['Terms_And_Conditions_Attach_Ar_Url'],
+        ),
+        if (newMap.containsKey('Terms_And_Conditions_Last_Update'))
+          'Terms_And_Conditions_Last_Update': Versioned.append(
+            ex['Terms_And_Conditions_Last_Update'], newMap['Terms_And_Conditions_Last_Update'],
+          ),
+
+        // ── Privacy Policy (flattened, versioned) ──────────────────────
+        'Privacy_Policy_Svg_Url': Versioned.append(
+          ex['Privacy_Policy_Svg_Url'], newMap['Privacy_Policy_Svg_Url'],
+        ),
+        'Privacy_Policy_Description_En': Versioned.append(
+          ex['Privacy_Policy_Description_En'], newMap['Privacy_Policy_Description_En'],
+        ),
+        'Privacy_Policy_Description_Ar': Versioned.append(
+          ex['Privacy_Policy_Description_Ar'], newMap['Privacy_Policy_Description_Ar'],
+        ),
+        'Privacy_Policy_Attach_En_Url': Versioned.append(
+          ex['Privacy_Policy_Attach_En_Url'], newMap['Privacy_Policy_Attach_En_Url'],
+        ),
+        'Privacy_Policy_Attach_Ar_Url': Versioned.append(
+          ex['Privacy_Policy_Attach_Ar_Url'], newMap['Privacy_Policy_Attach_Ar_Url'],
+        ),
+        if (newMap.containsKey('Privacy_Policy_Last_Update'))
+          'Privacy_Policy_Last_Update': Versioned.append(
+            ex['Privacy_Policy_Last_Update'], newMap['Privacy_Policy_Last_Update'],
+          ),
+      };
 
       await _docRef(_termsDoc).set(versionedMap, SetOptions(merge: true));
       _log('🟢 [AboutRepo] saveTerms: ✅ ALL fields versioned DONE');

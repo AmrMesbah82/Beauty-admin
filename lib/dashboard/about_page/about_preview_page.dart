@@ -21,6 +21,7 @@ import 'package:beauty_admin/theme/appcolors.dart';
 import 'package:beauty_admin/theme/new_theme.dart';
 import 'package:beauty_admin/widgets/admin_sub_navbar.dart';
 
+import '../../core/custom_dialog.dart';
 import '../../model/about_us/about_us.dart';
 
 // ── Shared constants (mirrors about_page.dart) ────────────────────────────────
@@ -170,14 +171,18 @@ class _AboutPreviewPageLastState extends State<AboutPreviewPageLast>
     super.dispose();
   }
 
-  void _onSave() async {
-    final confirmed = await _showConfirmDialog(context);
-    if (confirmed == true && mounted) {
-      context.read<AboutCubit>().save(
-        model: widget.model,
-        imageUploads: widget.imageUploads.isEmpty ? null : widget.imageUploads,
-      );
-    }
+  void _onSave() {
+    showPublishConfirmDialog(
+      context: context,
+      title: 'EDITING ABOUT US DETAILS',
+      subtitle: 'Do you want to save the changes made to this About Us?',
+      onConfirm: () async {
+        await context.read<AboutCubit>().save(
+          model: widget.model,
+          imageUploads: widget.imageUploads.isEmpty ? null : widget.imageUploads,
+        );
+      },
+    );
   }
 
   void _onBack() => Navigator.pop(context);

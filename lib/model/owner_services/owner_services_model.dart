@@ -1,15 +1,12 @@
 /// ******************* FILE INFO *******************
 /// File Name: owner_services_model.dart
 /// Description: Data models for the Owner Services CMS module.
-///              Sections: Header (SVG + Title + Description),
-///              Download Applications (Title + Apple/Android links),
-///              Mockups (repeating: SVG + Alignment + Title + Description),
-///              Publish Schedule (date).
 /// Created by: Amr Mesbah
-/// Last Update: 18/04/2026
-/// UPDATED: ALL fields are now versioned — every field in Firestore is stored
-///          as a list for full history tracking. fromMap() uses Versioned.read()
-///          for every field. toMap() writes plain values (repo handles versioning).
+/// Last Update: 21/04/2026
+/// UPDATED: All field names use Capital_Underscore naming convention ✅
+/// UPDATED: ALL fields flattened — NO nested maps in Firestore ✅
+/// UPDATED: Mockups_Items flattened into indexed root-level keys ✅
+/// UPDATED: EVERY single field is versioned. fromMap uses Versioned.read() on ALL. ✅
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 
@@ -17,16 +14,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 class BiText {
   final String en;
   final String ar;
-
   const BiText({this.en = '', this.ar = ''});
-
-  factory BiText.fromMap(Map<String, dynamic>? map) => BiText(
-    en: map?['en'] ?? '',
-    ar: map?['ar'] ?? '',
-  );
-
-  Map<String, dynamic> toMap() => {'en': en, 'ar': ar};
-
   BiText copyWith({String? en, String? ar}) =>
       BiText(en: en ?? this.en, ar: ar ?? this.ar);
 }
@@ -34,21 +22,11 @@ class BiText {
 // ─────────────────────────────────────────────────────────────────────────────
 // Versioned Field Helper
 // ─────────────────────────────────────────────────────────────────────────────
-
 class Versioned {
   static T read<T>(dynamic raw, T Function(dynamic) parser) {
     if (raw is List && raw.isNotEmpty) return parser(raw.last);
     if (raw != null) return parser(raw);
     return parser(null);
-  }
-
-  static List<T> readList<T>(dynamic raw, T Function(dynamic) parser) {
-    if (raw is List && raw.isNotEmpty) {
-      final last = raw.last;
-      if (last is List) return last.map((e) => parser(e)).toList();
-      return raw.map((e) => parser(e)).toList();
-    }
-    return [];
   }
 
   static List<dynamic> append(dynamic existing, dynamic newValue) {
@@ -83,7 +61,7 @@ class Versioned {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// HEADER
+// HEADER — flattened into root
 // ═══════════════════════════════════════════════════════════════════════════════
 class OwnerServicesHeaderModel {
   final String imageUrl;
@@ -95,21 +73,6 @@ class OwnerServicesHeaderModel {
     this.title = const BiText(),
     this.description = const BiText(),
   });
-
-  factory OwnerServicesHeaderModel.fromMap(Map<String, dynamic>? map) {
-    if (map == null) return const OwnerServicesHeaderModel();
-    return OwnerServicesHeaderModel(
-      imageUrl: map['imageUrl'] ?? '',
-      title: BiText.fromMap(map['title']),
-      description: BiText.fromMap(map['description']),
-    );
-  }
-
-  Map<String, dynamic> toMap() => {
-    'imageUrl': imageUrl,
-    'title': title.toMap(),
-    'description': description.toMap(),
-  };
 
   OwnerServicesHeaderModel copyWith({
     String? imageUrl,
@@ -124,7 +87,7 @@ class OwnerServicesHeaderModel {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// DOWNLOAD APPLICATIONS
+// DOWNLOAD — flattened into root
 // ═══════════════════════════════════════════════════════════════════════════════
 class OwnerServicesDownloadModel {
   final BiText title;
@@ -136,21 +99,6 @@ class OwnerServicesDownloadModel {
     this.appStoreLink = '',
     this.googlePlayLink = '',
   });
-
-  factory OwnerServicesDownloadModel.fromMap(Map<String, dynamic>? map) {
-    if (map == null) return const OwnerServicesDownloadModel();
-    return OwnerServicesDownloadModel(
-      title: BiText.fromMap(map['title']),
-      appStoreLink: map['appStoreLink'] ?? '',
-      googlePlayLink: map['googlePlayLink'] ?? '',
-    );
-  }
-
-  Map<String, dynamic> toMap() => {
-    'title': title.toMap(),
-    'appStoreLink': appStoreLink,
-    'googlePlayLink': googlePlayLink,
-  };
 
   OwnerServicesDownloadModel copyWith({
     BiText? title,
@@ -184,25 +132,6 @@ class OwnerServicesMockupItemModel {
     this.order = 0,
   });
 
-  factory OwnerServicesMockupItemModel.fromMap(Map<String, dynamic> map) =>
-      OwnerServicesMockupItemModel(
-        id: map['id'] ?? '',
-        imageUrl: map['imageUrl'] ?? '',
-        alignment: map['alignment'] ?? 'left',
-        title: BiText.fromMap(map['title']),
-        description: BiText.fromMap(map['description']),
-        order: map['order'] ?? 0,
-      );
-
-  Map<String, dynamic> toMap() => {
-    'id': id,
-    'imageUrl': imageUrl,
-    'alignment': alignment,
-    'title': title.toMap(),
-    'description': description.toMap(),
-    'order': order,
-  };
-
   OwnerServicesMockupItemModel copyWith({
     String? id,
     String? imageUrl,
@@ -221,27 +150,13 @@ class OwnerServicesMockupItemModel {
       );
 }
 
+// ═══════════════════════════════════════════════════════════════════════════════
+// MOCKUPS SECTION — flattened into root
+// ═══════════════════════════════════════════════════════════════════════════════
 class OwnerServicesMockupsSectionModel {
   final List<OwnerServicesMockupItemModel> items;
 
   const OwnerServicesMockupsSectionModel({this.items = const []});
-
-  factory OwnerServicesMockupsSectionModel.fromMap(
-      Map<String, dynamic>? map) {
-    if (map == null) return const OwnerServicesMockupsSectionModel();
-    final rawItems = map['items'] as List<dynamic>? ?? [];
-    return OwnerServicesMockupsSectionModel(
-      items: rawItems
-          .map((e) =>
-          OwnerServicesMockupItemModel.fromMap(e as Map<String, dynamic>))
-          .toList()
-        ..sort((a, b) => a.order.compareTo(b.order)),
-    );
-  }
-
-  Map<String, dynamic> toMap() => {
-    'items': items.map((e) => e.toMap()).toList(),
-  };
 
   OwnerServicesMockupsSectionModel copyWith({
     List<OwnerServicesMockupItemModel>? items,
@@ -250,30 +165,12 @@ class OwnerServicesMockupsSectionModel {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// PUBLISH SCHEDULE
+// PUBLISH SCHEDULE — flattened into root
 // ═══════════════════════════════════════════════════════════════════════════════
 class OwnerServicesPublishScheduleModel {
   final DateTime? publishDate;
 
   const OwnerServicesPublishScheduleModel({this.publishDate});
-
-  factory OwnerServicesPublishScheduleModel.fromMap(
-      Map<String, dynamic>? map) {
-    DateTime? date;
-    if (map?['publishDate'] != null) {
-      if (map!['publishDate'] is Timestamp) {
-        date = (map['publishDate'] as Timestamp).toDate();
-      } else if (map['publishDate'] is String) {
-        date = DateTime.tryParse(map['publishDate']);
-      }
-    }
-    return OwnerServicesPublishScheduleModel(publishDate: date);
-  }
-
-  Map<String, dynamic> toMap() => {
-    'publishDate':
-    publishDate != null ? Timestamp.fromDate(publishDate!) : null,
-  };
 
   OwnerServicesPublishScheduleModel copyWith({DateTime? publishDate}) =>
       OwnerServicesPublishScheduleModel(
@@ -281,7 +178,7 @@ class OwnerServicesPublishScheduleModel {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// ROOT MODEL — ALL fields versioned
+// ROOT MODEL — ALL fields flattened & versioned
 // ═══════════════════════════════════════════════════════════════════════════════
 class OwnerServicesPageModel {
   final String id;
@@ -304,73 +201,178 @@ class OwnerServicesPageModel {
     this.lastUpdated,
   });
 
-  // ── fromMap — ALL fields use Versioned.read() ────────────────────────────
-  factory OwnerServicesPageModel.fromMap(Map<String, dynamic> map,
-      {String? docId}) {
-    return OwnerServicesPageModel(
-      id: docId ?? Versioned.read<String>(
-        map['id'],
-            (v) => v?.toString() ?? '',
-      ),
+  // ═══════════════════════════════════════════════════════════════════════════
+  // toMap — ALL fields flattened, Capital_Underscore naming
+  // ═══════════════════════════════════════════════════════════════════════════
+  Map<String, dynamic> toMap() {
+    final map = <String, dynamic>{};
 
-      status: Versioned.read<String>(
-        map['status'],
-            (v) => v?.toString() ?? 'draft',
-      ),
+    map['Id']     = id;
+    map['Status'] = status;
+    map['Gender'] = gender;
 
-      gender: Versioned.read<String>(
-        map['gender'],
-            (v) => v?.toString() ?? 'female',
-      ),
+    // ── Header (flattened) ───────────────────────────────────────────
+    map['Header_Image_Url']      = header.imageUrl;
+    map['Header_Title_En']       = header.title.en;
+    map['Header_Title_Ar']       = header.title.ar;
+    map['Header_Description_En'] = header.description.en;
+    map['Header_Description_Ar'] = header.description.ar;
 
-      header: Versioned.read<OwnerServicesHeaderModel>(
-        map['header'],
-            (v) => OwnerServicesHeaderModel.fromMap(
-            v is Map ? Map<String, dynamic>.from(v) : null),
-      ),
+    // ── Download (flattened) ─────────────────────────────────────────
+    map['Download_Title_En']         = download.title.en;
+    map['Download_Title_Ar']         = download.title.ar;
+    map['Download_App_Store_Link']   = download.appStoreLink;
+    map['Download_Google_Play_Link'] = download.googlePlayLink;
 
-      download: Versioned.read<OwnerServicesDownloadModel>(
-        map['download'],
-            (v) => OwnerServicesDownloadModel.fromMap(
-            v is Map ? Map<String, dynamic>.from(v) : null),
-      ),
+    // ── Mockups_Items (flattened) ────────────────────────────────────
+    map['Mockups_Items_Count'] = mockups.items.length;
+    for (int i = 0; i < mockups.items.length; i++) {
+      final m = mockups.items[i];
+      map['Mockups_Items_${i}_Id']             = m.id;
+      map['Mockups_Items_${i}_Image_Url']      = m.imageUrl;
+      map['Mockups_Items_${i}_Alignment']      = m.alignment;
+      map['Mockups_Items_${i}_Title_En']       = m.title.en;
+      map['Mockups_Items_${i}_Title_Ar']       = m.title.ar;
+      map['Mockups_Items_${i}_Description_En'] = m.description.en;
+      map['Mockups_Items_${i}_Description_Ar'] = m.description.ar;
+      map['Mockups_Items_${i}_Order']          = m.order;
+    }
 
-      mockups: Versioned.read<OwnerServicesMockupsSectionModel>(
-        map['mockups'],
-            (v) => OwnerServicesMockupsSectionModel.fromMap(
-            v is Map ? Map<String, dynamic>.from(v) : null),
-      ),
+    // ── Publish Schedule (flattened) ─────────────────────────────────
+    map['Publish_Schedule_Publish_Date'] = publishSchedule.publishDate != null
+        ? Timestamp.fromDate(publishSchedule.publishDate!)
+        : null;
 
-      publishSchedule: Versioned.read<OwnerServicesPublishScheduleModel>(
-        map['publishSchedule'],
-            (v) => OwnerServicesPublishScheduleModel.fromMap(
-            v is Map ? Map<String, dynamic>.from(v) : null),
-      ),
+    // ── Last Updated ─────────────────────────────────────────────────
+    map['Last_Updated'] = lastUpdated != null
+        ? Timestamp.fromDate(lastUpdated!)
+        : null;
 
-      lastUpdated: Versioned.read<DateTime?>(
-        map['lastUpdated'],
-            (v) {
-          if (v == null) return null;
-          if (v is Timestamp) return v.toDate();
-          if (v is String) return DateTime.tryParse(v);
-          return null;
-        },
-      ),
-    );
+    return map;
   }
 
-  // ── toMap — plain values (versioning handled in repo layer) ──────────────
-  Map<String, dynamic> toMap() => {
-    'id': id,
-    'status': status,
-    'gender': gender,
-    'header': header.toMap(),
-    'download': download.toMap(),
-    'mockups': mockups.toMap(),
-    'publishSchedule': publishSchedule.toMap(),
-    'lastUpdated':
-    lastUpdated != null ? Timestamp.fromDate(lastUpdated!) : null,
-  };
+  // ═══════════════════════════════════════════════════════════════════════════
+  // fromMap — EVERY field uses Versioned.read()
+  // ═══════════════════════════════════════════════════════════════════════════
+  factory OwnerServicesPageModel.fromMap(Map<String, dynamic> map,
+      {String? docId}) {
+
+    // ── Mockup Items (flattened, each field versioned) ───────────────
+    final mCount = Versioned.read<int>(
+      map['Mockups_Items_Count'], (v) => (v as int?) ?? 0,
+    );
+    final mockupItems = <OwnerServicesMockupItemModel>[];
+    for (int i = 0; i < mCount; i++) {
+      mockupItems.add(OwnerServicesMockupItemModel(
+        id: Versioned.read<String>(
+          map['Mockups_Items_${i}_Id'], (v) => v?.toString() ?? '',
+        ),
+        imageUrl: Versioned.read<String>(
+          map['Mockups_Items_${i}_Image_Url'], (v) => v?.toString() ?? '',
+        ),
+        alignment: Versioned.read<String>(
+          map['Mockups_Items_${i}_Alignment'], (v) => v?.toString() ?? 'left',
+        ),
+        title: BiText(
+          en: Versioned.read<String>(
+            map['Mockups_Items_${i}_Title_En'], (v) => v?.toString() ?? '',
+          ),
+          ar: Versioned.read<String>(
+            map['Mockups_Items_${i}_Title_Ar'], (v) => v?.toString() ?? '',
+          ),
+        ),
+        description: BiText(
+          en: Versioned.read<String>(
+            map['Mockups_Items_${i}_Description_En'], (v) => v?.toString() ?? '',
+          ),
+          ar: Versioned.read<String>(
+            map['Mockups_Items_${i}_Description_Ar'], (v) => v?.toString() ?? '',
+          ),
+        ),
+        order: Versioned.read<int>(
+          map['Mockups_Items_${i}_Order'], (v) => (v as int?) ?? i,
+        ),
+      ));
+    }
+    mockupItems.sort((a, b) => a.order.compareTo(b.order));
+
+    // ── Last Updated (not versioned) ────────────────────────────────
+    DateTime? lastUpdated;
+    if (map['Last_Updated'] != null) {
+      if (map['Last_Updated'] is Timestamp) {
+        lastUpdated = (map['Last_Updated'] as Timestamp).toDate();
+      } else if (map['Last_Updated'] is String) {
+        lastUpdated = DateTime.tryParse(map['Last_Updated']);
+      }
+    }
+
+    return OwnerServicesPageModel(
+      id: docId ?? Versioned.read<String>(
+        map['Id'], (v) => v?.toString() ?? '',
+      ),
+      status: Versioned.read<String>(
+        map['Status'], (v) => v?.toString() ?? 'draft',
+      ),
+      gender: Versioned.read<String>(
+        map['Gender'], (v) => v?.toString() ?? 'female',
+      ),
+
+      header: OwnerServicesHeaderModel(
+        imageUrl: Versioned.read<String>(
+          map['Header_Image_Url'], (v) => v?.toString() ?? '',
+        ),
+        title: BiText(
+          en: Versioned.read<String>(
+            map['Header_Title_En'], (v) => v?.toString() ?? '',
+          ),
+          ar: Versioned.read<String>(
+            map['Header_Title_Ar'], (v) => v?.toString() ?? '',
+          ),
+        ),
+        description: BiText(
+          en: Versioned.read<String>(
+            map['Header_Description_En'], (v) => v?.toString() ?? '',
+          ),
+          ar: Versioned.read<String>(
+            map['Header_Description_Ar'], (v) => v?.toString() ?? '',
+          ),
+        ),
+      ),
+
+      download: OwnerServicesDownloadModel(
+        title: BiText(
+          en: Versioned.read<String>(
+            map['Download_Title_En'], (v) => v?.toString() ?? '',
+          ),
+          ar: Versioned.read<String>(
+            map['Download_Title_Ar'], (v) => v?.toString() ?? '',
+          ),
+        ),
+        appStoreLink: Versioned.read<String>(
+          map['Download_App_Store_Link'], (v) => v?.toString() ?? '',
+        ),
+        googlePlayLink: Versioned.read<String>(
+          map['Download_Google_Play_Link'], (v) => v?.toString() ?? '',
+        ),
+      ),
+
+      mockups: OwnerServicesMockupsSectionModel(items: mockupItems),
+
+      publishSchedule: OwnerServicesPublishScheduleModel(
+        publishDate: Versioned.read<DateTime?>(
+          map['Publish_Schedule_Publish_Date'],
+              (v) {
+            if (v == null) return null;
+            if (v is Timestamp) return v.toDate();
+            if (v is String) return DateTime.tryParse(v);
+            return null;
+          },
+        ),
+      ),
+
+      lastUpdated: lastUpdated,
+    );
+  }
 
   OwnerServicesPageModel copyWith({
     String? id,

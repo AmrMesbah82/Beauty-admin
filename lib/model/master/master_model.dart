@@ -2,11 +2,12 @@
 /// File Name: master_model.dart
 /// Description: Data models for the Master CMS module.
 /// Created by: Amr Mesbah
-/// Last Update: 07/04/2026
-/// UPDATED: Versioned helper added — all scalar/object fields are now read
-///          from a versioned list in Firestore (last item = active value) ✅
-/// UPDATED: Versioned.append() now has duplicate guard — only appends when
-///          value actually changed, preventing duplicate history entries ✅
+/// Last Update: 21/04/2026
+/// UPDATED: All field names use Capital_Underscore naming convention ✅
+/// UPDATED: ALL fields flattened — NO nested maps in Firestore ✅
+/// UPDATED: Sections flattened into indexed root-level keys ✅
+/// UPDATED: EVERY single field is versioned (array in Firestore,
+///          .last = active value). fromMap uses Versioned.read() on ALL. ✅
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 
@@ -17,65 +18,36 @@ class BiText {
 
   const BiText({this.en = '', this.ar = ''});
 
-  factory BiText.fromMap(Map<String, dynamic>? map) => BiText(
-    en: map?['en'] ?? '',
-    ar: map?['ar'] ?? '',
-  );
-
-  Map<String, dynamic> toMap() => {'en': en, 'ar': ar};
-
   BiText copyWith({String? en, String? ar}) =>
       BiText(en: en ?? this.en, ar: ar ?? this.ar);
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Versioned Field Helper
-// Wraps any Firestore field in a list for full history tracking.
-//
-//  • Versioned.read()   → always returns the LAST item (active value)
-//  • Versioned.append() → called in the repo; merges new value into the list
-//                         ONLY appends if the value actually changed
-//
-// The UI and cubit never see the list — they work with plain values as before.
 // ─────────────────────────────────────────────────────────────────────────────
 
 class Versioned {
-  /// Reads the LAST item from a versioned list.
-  /// Falls back gracefully if the field is still a legacy plain value.
   static T read<T>(dynamic raw, T Function(dynamic) parser) {
     if (raw is List && raw.isNotEmpty) {
       return parser(raw.last);
     }
-    // legacy plain value (before versioning was introduced)
     if (raw != null) return parser(raw);
     return parser(null);
   }
 
-  /// Appends [newValue] to [existing] ONLY if the value has actually changed.
-  ///
-  /// • If [existing] is null/empty  → creates a new list with [newValue].
-  /// • If [existing] is a legacy plain value → migrates it into a list first.
-  /// • If the last item equals [newValue] (by deep string comparison) →
-  ///   returns the existing list unchanged (no duplicate entry).
   static List<dynamic> append(dynamic existing, dynamic newValue) {
     final history = <dynamic>[];
 
     if (existing is List) {
       history.addAll(existing);
     } else if (existing != null) {
-      // migrate legacy plain value into the list automatically
       history.add(existing);
     }
 
-    // ── Duplicate guard ───────────────────────────────────────────────────
-    // Only append if the new value is actually different from the last entry.
-    // This prevents duplicate entries when save() is called multiple times
-    // with the same data (e.g. re-saves, retries, or publish-status triggers).
     if (history.isNotEmpty) {
       final lastEncoded = _encode(history.last);
       final newEncoded  = _encode(newValue);
       if (lastEncoded == newEncoded) {
-        // value unchanged — return existing history without appending
         return history;
       }
     }
@@ -84,9 +56,6 @@ class Versioned {
     return history;
   }
 
-  /// Normalises any value to a stable comparable string so that maps, lists,
-  /// and primitives can all be compared with == regardless of runtime type.
-  /// Maps are key-sorted so insertion-order differences don't cause false mismatches.
   static String _encode(dynamic value) {
     if (value == null) return 'null';
     if (value is Map) {
@@ -129,34 +98,6 @@ class MasterSectionModel {
     this.order            = 0,
   });
 
-  factory MasterSectionModel.fromMap(Map<String, dynamic> map,
-      {String? docId}) =>
-      MasterSectionModel(
-        id:               docId ?? map['id'] ?? '',
-        sectionKey:       map['sectionKey']   ?? '',
-        title:            BiText.fromMap(map['title']),
-        shortDescription: BiText.fromMap(map['shortDescription']),
-        description:      BiText.fromMap(map['description']),
-        imageUrl:         map['imageUrl']     ?? '',
-        iconUrl:          map['iconUrl']      ?? '',
-        textBoxColor:     map['textBoxColor'] ?? '#008037',
-        visibility:       map['visibility']   ?? true,
-        order:            map['order']        ?? 0,
-      );
-
-  Map<String, dynamic> toMap() => {
-    'id':               id,
-    'sectionKey':       sectionKey,
-    'title':            title.toMap(),
-    'shortDescription': shortDescription.toMap(),
-    'description':      description.toMap(),
-    'imageUrl':         imageUrl,
-    'iconUrl':          iconUrl,
-    'textBoxColor':     textBoxColor,
-    'visibility':       visibility,
-    'order':            order,
-  };
-
   MasterSectionModel copyWith({
     String? id,
     String? sectionKey,
@@ -193,17 +134,6 @@ class MasterAppLinkModel {
     this.googlePlayLink = '',
   });
 
-  factory MasterAppLinkModel.fromMap(Map<String, dynamic>? map) =>
-      MasterAppLinkModel(
-        appStoreLink:   map?['appStoreLink']   ?? '',
-        googlePlayLink: map?['googlePlayLink'] ?? '',
-      );
-
-  Map<String, dynamic> toMap() => {
-    'appStoreLink':   appStoreLink,
-    'googlePlayLink': googlePlayLink,
-  };
-
   MasterAppLinkModel copyWith({
     String? appStoreLink,
     String? googlePlayLink,
@@ -220,36 +150,12 @@ class MasterPublishScheduleModel {
 
   const MasterPublishScheduleModel({this.publishDate});
 
-  factory MasterPublishScheduleModel.fromMap(Map<String, dynamic>? map) {
-    DateTime? date;
-    if (map?['publishDate'] != null) {
-      if (map!['publishDate'] is Timestamp) {
-        date = (map['publishDate'] as Timestamp).toDate();
-      } else if (map['publishDate'] is String) {
-        date = DateTime.tryParse(map['publishDate']);
-      }
-    }
-    return MasterPublishScheduleModel(publishDate: date);
-  }
-
-  Map<String, dynamic> toMap() => {
-    'publishDate':
-    publishDate != null ? Timestamp.fromDate(publishDate!) : null,
-  };
-
   MasterPublishScheduleModel copyWith({DateTime? publishDate}) =>
       MasterPublishScheduleModel(
           publishDate: publishDate ?? this.publishDate);
 }
 
 // ── Master Page Model (root document) ────────────────────────────────────────
-//
-// fromMap() uses Versioned.read() for scalar/object fields:
-//   title | shortDescription | status | gender | appLinks |
-//   publishSchedule | imageUrl
-//
-// sections (already a list of items) is NOT wrapped — it stays as-is.
-// ─────────────────────────────────────────────────────────────────────────────
 class MasterPageModel {
   final String                     id;
   final BiText                     title;
@@ -277,92 +183,207 @@ class MasterPageModel {
 
   /// Default sections for a new master page
   static List<MasterSectionModel> defaultSections() => [
-    const MasterSectionModel(id: 'header', sectionKey: 'header', order: 0),
+    const MasterSectionModel(id: 'header',  sectionKey: 'header',  order: 0),
     const MasterSectionModel(id: 'aboutUs', sectionKey: 'aboutUs', order: 1),
     const MasterSectionModel(id: 'footer',  sectionKey: 'footer',  order: 2),
   ];
 
-  // ── fromMap — uses Versioned.read() for scalar/object fields ─────────────
+  // ═══════════════════════════════════════════════════════════════════════════
+  // toMap — ALL fields flattened, Capital_Underscore naming
+  // Outputs plain primitives. Repo wraps EVERY key in Versioned.append().
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  Map<String, dynamic> toMap() {
+    final map = <String, dynamic>{};
+
+    // ── Id ───────────────────────────────────────────────────────────
+    map['Id'] = id;
+
+    // ── Title ────────────────────────────────────────────────────────
+    map['Title_En'] = title.en;
+    map['Title_Ar'] = title.ar;
+
+    // ── Short Description ────────────────────────────────────────────
+    map['Short_Description_En'] = shortDescription.en;
+    map['Short_Description_Ar'] = shortDescription.ar;
+
+    // ── Scalars ──────────────────────────────────────────────────────
+    map['Status']    = status;
+    map['Gender']    = gender;
+    map['Image_Url'] = imageUrl;
+
+    // ── Sections (flattened) ─────────────────────────────────────────
+    map['Sections_Count'] = sections.length;
+    for (int i = 0; i < sections.length; i++) {
+      final s = sections[i];
+      map['Sections_${i}_Id']                   = s.id;
+      map['Sections_${i}_Section_Key']          = s.sectionKey;
+      map['Sections_${i}_Title_En']             = s.title.en;
+      map['Sections_${i}_Title_Ar']             = s.title.ar;
+      map['Sections_${i}_Short_Description_En'] = s.shortDescription.en;
+      map['Sections_${i}_Short_Description_Ar'] = s.shortDescription.ar;
+      map['Sections_${i}_Description_En']       = s.description.en;
+      map['Sections_${i}_Description_Ar']       = s.description.ar;
+      map['Sections_${i}_Image_Url']            = s.imageUrl;
+      map['Sections_${i}_Icon_Url']             = s.iconUrl;
+      map['Sections_${i}_Text_Box_Color']       = s.textBoxColor;
+      map['Sections_${i}_Visibility']           = s.visibility;
+      map['Sections_${i}_Order']                = s.order;
+    }
+
+    // ── App Links (flattened) ────────────────────────────────────────
+    map['App_Links_App_Store_Link']   = appLinks.appStoreLink;
+    map['App_Links_Google_Play_Link'] = appLinks.googlePlayLink;
+
+    // ── Publish Schedule (flattened) ─────────────────────────────────
+    map['Publish_Schedule_Publish_Date'] = publishSchedule.publishDate != null
+        ? Timestamp.fromDate(publishSchedule.publishDate!)
+        : null;
+
+    // ── Last Updated ─────────────────────────────────────────────────
+    map['Last_Updated'] = lastUpdated != null
+        ? Timestamp.fromDate(lastUpdated!)
+        : null;
+
+    return map;
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // fromMap — EVERY field uses Versioned.read()
+  //
+  // In Firestore each key is an array: [v0, v1, v2, ...]
+  // Versioned.read() picks .last as active value.
+  // ═══════════════════════════════════════════════════════════════════════════
+
   factory MasterPageModel.fromMap(Map<String, dynamic> map, {String? docId}) {
+    // ── Sections (flattened, each field versioned) ────────────────────
+    final sCount = Versioned.read<int>(
+      map['Sections_Count'], (v) => (v as int?) ?? 0,
+    );
+    final sections = <MasterSectionModel>[];
+    for (int i = 0; i < sCount; i++) {
+      sections.add(MasterSectionModel(
+        id: Versioned.read<String>(
+          map['Sections_${i}_Id'], (v) => v?.toString() ?? '',
+        ),
+        sectionKey: Versioned.read<String>(
+          map['Sections_${i}_Section_Key'], (v) => v?.toString() ?? '',
+        ),
+        title: BiText(
+          en: Versioned.read<String>(
+            map['Sections_${i}_Title_En'], (v) => v?.toString() ?? '',
+          ),
+          ar: Versioned.read<String>(
+            map['Sections_${i}_Title_Ar'], (v) => v?.toString() ?? '',
+          ),
+        ),
+        shortDescription: BiText(
+          en: Versioned.read<String>(
+            map['Sections_${i}_Short_Description_En'], (v) => v?.toString() ?? '',
+          ),
+          ar: Versioned.read<String>(
+            map['Sections_${i}_Short_Description_Ar'], (v) => v?.toString() ?? '',
+          ),
+        ),
+        description: BiText(
+          en: Versioned.read<String>(
+            map['Sections_${i}_Description_En'], (v) => v?.toString() ?? '',
+          ),
+          ar: Versioned.read<String>(
+            map['Sections_${i}_Description_Ar'], (v) => v?.toString() ?? '',
+          ),
+        ),
+        imageUrl: Versioned.read<String>(
+          map['Sections_${i}_Image_Url'], (v) => v?.toString() ?? '',
+        ),
+        iconUrl: Versioned.read<String>(
+          map['Sections_${i}_Icon_Url'], (v) => v?.toString() ?? '',
+        ),
+        textBoxColor: Versioned.read<String>(
+          map['Sections_${i}_Text_Box_Color'], (v) => v?.toString() ?? '#008037',
+        ),
+        visibility: Versioned.read<bool>(
+          map['Sections_${i}_Visibility'], (v) => v as bool? ?? true,
+        ),
+        order: Versioned.read<int>(
+          map['Sections_${i}_Order'], (v) => (v as int?) ?? i,
+        ),
+      ));
+    }
+    sections.sort((a, b) => a.order.compareTo(b.order));
 
-    // sections — plain list, not versioned at root level
-    final rawSections = map['sections'] as List<dynamic>? ?? [];
-    final sections = rawSections
-        .map((e) => MasterSectionModel.fromMap(e as Map<String, dynamic>))
-        .toList()
-      ..sort((a, b) => a.order.compareTo(b.order));
-
-    // lastUpdated — server timestamp, not versioned
+    // ── Last Updated (server timestamp, not versioned) ───────────────
     DateTime? lastUpdated;
-    if (map['lastUpdated'] != null) {
-      if (map['lastUpdated'] is Timestamp) {
-        lastUpdated = (map['lastUpdated'] as Timestamp).toDate();
+    if (map['Last_Updated'] != null) {
+      if (map['Last_Updated'] is Timestamp) {
+        lastUpdated = (map['Last_Updated'] as Timestamp).toDate();
       }
     }
 
     return MasterPageModel(
-      id: docId ?? map['id'] ?? '',
-
-      // ── versioned scalar / object fields ─────────────────────────────
-      title: Versioned.read<BiText>(
-        map['title'],
-            (v) => BiText.fromMap(
-            v is Map ? Map<String, dynamic>.from(v) : null),
+      id: docId ?? Versioned.read<String>(
+        map['Id'], (v) => v?.toString() ?? '',
       ),
 
-      shortDescription: Versioned.read<BiText>(
-        map['shortDescription'],
-            (v) => BiText.fromMap(
-            v is Map ? Map<String, dynamic>.from(v) : null),
+      // ── Title ──────────────────────────────────────────────────────
+      title: BiText(
+        en: Versioned.read<String>(
+          map['Title_En'], (v) => v?.toString() ?? '',
+        ),
+        ar: Versioned.read<String>(
+          map['Title_Ar'], (v) => v?.toString() ?? '',
+        ),
       ),
 
+      // ── Short Description ──────────────────────────────────────────
+      shortDescription: BiText(
+        en: Versioned.read<String>(
+          map['Short_Description_En'], (v) => v?.toString() ?? '',
+        ),
+        ar: Versioned.read<String>(
+          map['Short_Description_Ar'], (v) => v?.toString() ?? '',
+        ),
+      ),
+
+      // ── Scalars ────────────────────────────────────────────────────
       status: Versioned.read<String>(
-        map['status'],
-            (v) => v?.toString() ?? 'draft',
+        map['Status'], (v) => v?.toString() ?? 'draft',
       ),
-
       gender: Versioned.read<String>(
-        map['gender'],
-            (v) => v?.toString() ?? 'female',
+        map['Gender'], (v) => v?.toString() ?? 'female',
       ),
-
-      appLinks: Versioned.read<MasterAppLinkModel>(
-        map['appLinks'],
-            (v) => MasterAppLinkModel.fromMap(
-            v is Map ? Map<String, dynamic>.from(v) : null),
-      ),
-
-      publishSchedule: Versioned.read<MasterPublishScheduleModel>(
-        map['publishSchedule'],
-            (v) => MasterPublishScheduleModel.fromMap(
-            v is Map ? Map<String, dynamic>.from(v) : null),
-      ),
-
       imageUrl: Versioned.read<String>(
-        map['imageUrl'],
-            (v) => v?.toString() ?? '',
+        map['Image_Url'], (v) => v?.toString() ?? '',
       ),
 
-      // ── plain fields ──────────────────────────────────────────────────
+      // ── App Links ──────────────────────────────────────────────────
+      appLinks: MasterAppLinkModel(
+        appStoreLink: Versioned.read<String>(
+          map['App_Links_App_Store_Link'], (v) => v?.toString() ?? '',
+        ),
+        googlePlayLink: Versioned.read<String>(
+          map['App_Links_Google_Play_Link'], (v) => v?.toString() ?? '',
+        ),
+      ),
+
+      // ── Publish Schedule ───────────────────────────────────────────
+      publishSchedule: MasterPublishScheduleModel(
+        publishDate: Versioned.read<DateTime?>(
+          map['Publish_Schedule_Publish_Date'],
+              (v) {
+            if (v == null) return null;
+            if (v is Timestamp) return v.toDate();
+            if (v is String) return DateTime.tryParse(v);
+            return null;
+          },
+        ),
+      ),
+
+      // ── Lists & plain ──────────────────────────────────────────────
       sections:    sections.isEmpty ? defaultSections() : sections,
       lastUpdated: lastUpdated,
     );
   }
-
-  // ── toMap — plain values (versioning handled in repo layer) ──────────────
-  Map<String, dynamic> toMap() => {
-    'id':               id,
-    'title':            title.toMap(),
-    'shortDescription': shortDescription.toMap(),
-    'status':           status,
-    'gender':           gender,
-    'sections':         sections.map((s) => s.toMap()).toList(),
-    'appLinks':         appLinks.toMap(),
-    'publishSchedule':  publishSchedule.toMap(),
-    'lastUpdated':
-    lastUpdated != null ? Timestamp.fromDate(lastUpdated!) : null,
-    'imageUrl':         imageUrl,
-  };
 
   MasterPageModel copyWith({
     String?                     id,

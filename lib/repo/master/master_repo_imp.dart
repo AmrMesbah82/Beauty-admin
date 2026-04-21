@@ -1,10 +1,20 @@
 /// ******************* FILE INFO *******************
 /// File Name: master_repo_imp.dart
 /// Description: Firebase implementation of MasterRepo.
+///              Dual-document architecture:
+///              - Published → `masterPages/{gender}`
+///              - Draft     → `masterPages/{gender}_draft`
+///
+///              "Save For Later" writes to the _draft doc only.
+///              "Publish" writes to the published doc and deletes the draft.
+///              "Schedule" writes to the _draft doc with Status = 'scheduled'.
 /// Created by: Amr Mesbah
-/// Last Update: 07/04/2026
-/// UPDATED: saveMasterPage() now appends versioned history for scalar/object
-///          fields using Versioned.append() — full audit trail in Firestore ✅
+/// Last Update: 21/04/2026
+/// UPDATED: Dual-document draft system ✅
+/// UPDATED: All field names use Capital_Underscore naming convention ✅
+/// UPDATED: ALL fields flattened — NO nested maps in Firestore ✅
+/// UPDATED: Sections flattened into indexed root-level keys ✅
+/// UPDATED: EVERY single key goes through Versioned.append() ✅
 
 import 'dart:typed_data';
 
@@ -27,22 +37,65 @@ class MasterRepoImp implements MasterRepo {
   // ── Collection / doc references ───────────────────────────────────────────
   static const String _collection = 'masterPages';
 
-  DocumentReference _docRef(String gender) =>
+  DocumentReference _publishedRef(String gender) =>
       _firestore.collection(_collection).doc(gender);
 
-  // ── Fetch ──────────────────────────────────────────────────────────────────
+  DocumentReference _draftRef(String gender) =>
+      _firestore.collection(_collection).doc('${gender}_draft');
+
+  // ═════════════════════════════════════════════════════════════════════════
+  //  GENERIC VERSIONED SAVE
+  // ═════════════════════════════════════════════════════════════════════════
+
+  /// Builds a versioned map from [model] against [existing] Firestore data.
+  /// EVERY key except Last_Updated goes through Versioned.append().
+  /// Stale indexed keys (when lists shrink) are marked with FieldValue.delete().
+  Map<String, dynamic> _buildVersionedMap(
+      MasterPageModel model,
+      Map<String, dynamic> existing,
+      ) {
+    final newMap       = model.copyWith(lastUpdated: DateTime.now()).toMap();
+    final versionedMap = <String, dynamic>{};
+
+    // ── Version every key ─────────────────────────────────────────────────
+    for (final key in newMap.keys) {
+      if (key == 'Last_Updated') continue;
+      versionedMap[key] = Versioned.append(existing[key], newMap[key]);
+    }
+
+    // ── Clean stale indexed keys when lists shrink ────────────────────────
+    for (final key in existing.keys) {
+      if (key == 'Last_Updated') continue;
+      if (!newMap.containsKey(key)) {
+        versionedMap[key] = FieldValue.delete();
+      }
+    }
+
+    // ── Server timestamp (never versioned) ────────────────────────────────
+    versionedMap['Last_Updated'] = FieldValue.serverTimestamp();
+
+    return versionedMap;
+  }
+
+  // ═════════════════════════════════════════════════════════════════════════
+  //  PUBLISHED DOCUMENT
+  // ═════════════════════════════════════════════════════════════════════════
+
+  // ── Fetch published ────────────────────────────────────────────────────────
   @override
   Future<MasterPageModel> fetchMasterPage({required String gender}) async {
     print('🟡 [MasterRepoImp] fetchMasterPage: gender=$gender');
     try {
-      final snap = await _docRef(gender).get();
+      final snap = await _publishedRef(gender).get();
       if (snap.exists && snap.data() != null) {
         final data = snap.data() as Map<String, dynamic>;
         print('🟢 [MasterRepoImp] fetchMasterPage: doc found');
-        print('   title active value     = ${MasterPageModel.fromMap(data, docId: snap.id).title.en}');
-        print('   status active value    = ${MasterPageModel.fromMap(data, docId: snap.id).status}');
-        print('   imageUrl active value  = ${MasterPageModel.fromMap(data, docId: snap.id).imageUrl}');
-        return MasterPageModel.fromMap(data, docId: snap.id);
+        final model = MasterPageModel.fromMap(data, docId: snap.id);
+        print('   title active value     = ${model.title.en}');
+        print('   status active value    = ${model.status}');
+        print('   imageUrl active value  = ${model.imageUrl}');
+        print('   sections length        = ${model.sections.length}');
+        return model;
       }
 
       // First time — create default doc
@@ -52,7 +105,9 @@ class MasterRepoImp implements MasterRepo {
         gender:   gender,
         sections: MasterPageModel.defaultSections(),
       );
-      await _docRef(gender).set(defaultModel.toMap());
+      // Write default as versioned
+      final versionedDefault = _buildVersionedMap(defaultModel, {});
+      await _publishedRef(gender).set(versionedDefault);
       return defaultModel;
     } catch (e, st) {
       print('🔴 [MasterRepoImp] fetchMasterPage: ERROR $e\n$st');
@@ -60,19 +115,7 @@ class MasterRepoImp implements MasterRepo {
     }
   }
 
-  // ── Save (versioned) ───────────────────────────────────────────────────────
-  //
-  // Strategy:
-  //   1. Read current raw Firestore data (server, bypassing cache).
-  //   2. Build new plain map from model via toMap().
-  //   3. For every versioned field, call Versioned.append(existing, new)
-  //      so Firestore stores the full history list.
-  //   4. Non-versioned list fields (sections) are written as plain lists.
-  //
-  // Fields versioned (stored as list of snapshots):
-  //   title | shortDescription | status | gender | appLinks |
-  //   publishSchedule | imageUrl
-  // ──────────────────────────────────────────────────────────────────────────
+  // ── Save published (versioned) ─────────────────────────────────────────────
   @override
   Future<void> saveMasterPage(MasterPageModel model) async {
     final docGender = model.gender.isEmpty ? 'female' : model.gender;
@@ -80,79 +123,123 @@ class MasterRepoImp implements MasterRepo {
         'status=${model.status} gender=$docGender');
 
     try {
-      // ── Step 1: read existing raw Firestore data ────────────────────────
+      // ── Read existing ───────────────────────────────────────────────────
       print('🟡 [MasterRepoImp] saveMasterPage → reading existing doc...');
-      final existingSnap = await _docRef(docGender)
+      final existingSnap = await _publishedRef(docGender)
           .get(const GetOptions(source: Source.server));
-      final existingData =
+      final ex =
           (existingSnap.exists ? existingSnap.data() : null)
           as Map<String, dynamic>? ??
               {};
-      print('   existing keys = ${existingData.keys.toList()}');
+      print('   existing keys = ${ex.keys.toList()}');
 
-      // ── Step 2: plain map from model ────────────────────────────────────
-      final updatedModel = model.copyWith(lastUpdated: DateTime.now());
-      final newMap       = updatedModel.toMap();
+      // ── Build & write versioned map ─────────────────────────────────────
+      final versionedMap = _buildVersionedMap(model, ex);
 
-      // ── Step 3: build versioned map ─────────────────────────────────────
-      //   • Versioned fields  → Versioned.append(existing, new)
-      //   • sections          → plain list (not versioned at root)
-      //   • lastUpdated       → always latest DateTime (not versioned)
-      final versionedMap = <String, dynamic>{
-        // ── plain fields ───────────────────────────────────────────────
-        'id':          newMap['id'],
-        'sections':    newMap['sections'],
-        'lastUpdated': newMap['lastUpdated'],
-
-        // ── versioned scalar / object fields ───────────────────────────
-        // 'title': Versioned.append(
-        //   existingData['title'],
-        //   newMap['title'],
-        // ),
-        // 'shortDescription': Versioned.append(
-        //   existingData['shortDescription'],
-        //   newMap['shortDescription'],
-        // ),
-        'status': Versioned.append(
-          existingData['status'],
-          newMap['status'],
-        ),
-        'gender': Versioned.append(
-          existingData['gender'],
-          newMap['gender'],
-        ),
-        'appLinks': Versioned.append(
-          existingData['appLinks'],
-          newMap['appLinks'],
-        ),
-        'publishSchedule': Versioned.append(
-          existingData['publishSchedule'],
-          newMap['publishSchedule'],
-        ),
-        'imageUrl': Versioned.append(
-          existingData['imageUrl'],
-          newMap['imageUrl'],
-        ),
-      };
-
-      // ── Step 4: write to Firestore ──────────────────────────────────────
-      print('🟡 [MasterRepoImp] saveMasterPage → writing versioned map...');
-      // print('   title history length           = ${(versionedMap['title'] as List).length}');
-      // print('   shortDescription history length= ${(versionedMap['shortDescription'] as List).length}');
-      print('   status history length          = ${(versionedMap['status'] as List).length}');
-      print('   gender history length          = ${(versionedMap['gender'] as List).length}');
-      print('   appLinks history length        = ${(versionedMap['appLinks'] as List).length}');
-      print('   publishSchedule history length = ${(versionedMap['publishSchedule'] as List).length}');
-      print('   imageUrl history length        = ${(versionedMap['imageUrl'] as List).length}');
-
-      await _docRef(docGender).set(versionedMap, SetOptions(merge: true));
-      print('🟢 [MasterRepoImp] saveMasterPage: ✅ versioned DONE');
+      await _publishedRef(docGender).set(versionedMap, SetOptions(merge: false));
+      print('🟢 [MasterRepoImp] saveMasterPage: ✅ ALL keys versioned DONE');
 
     } catch (e, st) {
       print('🔴 [MasterRepoImp] saveMasterPage: ERROR $e\n$st');
       rethrow;
     }
   }
+
+  // ═════════════════════════════════════════════════════════════════════════
+  //  DRAFT DOCUMENT
+  // ═════════════════════════════════════════════════════════════════════════
+
+  // ── Fetch draft ────────────────────────────────────────────────────────────
+  @override
+  Future<MasterPageModel?> fetchDraft({required String gender}) async {
+    print('🟡 [MasterRepoImp] fetchDraft: gender=$gender');
+    try {
+      final snap = await _draftRef(gender).get();
+      if (snap.exists && snap.data() != null) {
+        final data = snap.data() as Map<String, dynamic>;
+        print('🟢 [MasterRepoImp] fetchDraft: draft found');
+        return MasterPageModel.fromMap(data, docId: gender);
+      }
+      print('🟡 [MasterRepoImp] fetchDraft: no draft exists');
+      return null;
+    } catch (e, st) {
+      print('🔴 [MasterRepoImp] fetchDraft: ERROR $e\n$st');
+      rethrow;
+    }
+  }
+
+  // ── Save draft (versioned, same logic as published but to _draft doc) ──────
+  @override
+  Future<void> saveDraft(MasterPageModel model) async {
+    final docGender = model.gender.isEmpty ? 'female' : model.gender;
+    print('🟡 [MasterRepoImp] saveDraft: gender=$docGender '
+        'status=${model.status}');
+
+    try {
+      // ── Read existing draft data ────────────────────────────────────────
+      final existingSnap = await _draftRef(docGender).get();
+      final ex =
+          (existingSnap.exists ? existingSnap.data() : null)
+          as Map<String, dynamic>? ??
+              {};
+
+      // ── Build & write versioned map ─────────────────────────────────────
+      final versionedMap = _buildVersionedMap(model, ex);
+
+      await _draftRef(docGender).set(versionedMap, SetOptions(merge: false));
+      print('🟢 [MasterRepoImp] saveDraft: ✅ ALL keys versioned DONE');
+    } catch (e, st) {
+      print('🔴 [MasterRepoImp] saveDraft: ERROR $e\n$st');
+      rethrow;
+    }
+  }
+
+  // ── Delete draft ───────────────────────────────────────────────────────────
+  @override
+  Future<void> deleteDraft({required String gender}) async {
+    print('🟡 [MasterRepoImp] deleteDraft: gender=$gender');
+    try {
+      final ref = _draftRef(gender);
+      final snap = await ref.get();
+      if (snap.exists) {
+        await ref.delete();
+        print('🟢 [MasterRepoImp] deleteDraft: ✅ deleted');
+      } else {
+        print('🟡 [MasterRepoImp] deleteDraft: no draft to delete');
+      }
+    } catch (e, st) {
+      print('🔴 [MasterRepoImp] deleteDraft: ERROR $e\n$st');
+      rethrow;
+    }
+  }
+
+  // ── Promote draft → published ──────────────────────────────────────────────
+  @override
+  Future<void> promoteDraft({required String gender}) async {
+    print('🟡 [MasterRepoImp] promoteDraft: gender=$gender');
+    try {
+      final draft = await fetchDraft(gender: gender);
+      if (draft == null) {
+        print('🟡 [MasterRepoImp] promoteDraft: no draft to promote');
+        return;
+      }
+
+      // Save draft content as published
+      final publishedModel = draft.copyWith(status: 'published');
+      await saveMasterPage(publishedModel);
+
+      // Delete the draft
+      await deleteDraft(gender: gender);
+      print('🟢 [MasterRepoImp] promoteDraft: ✅ DONE');
+    } catch (e, st) {
+      print('🔴 [MasterRepoImp] promoteDraft: ERROR $e\n$st');
+      rethrow;
+    }
+  }
+
+  // ═════════════════════════════════════════════════════════════════════════
+  //  ASSETS
+  // ═════════════════════════════════════════════════════════════════════════
 
   // ── Upload image ───────────────────────────────────────────────────────────
   @override

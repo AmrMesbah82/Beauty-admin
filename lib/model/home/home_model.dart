@@ -3,12 +3,10 @@
 // Description: Pure data model for the Home CMS.
 //              No packages — only dart:core types.
 // Created by: Amr Mesbah
-// UPDATED: AppDownloadLinksModel now has labelEn, labelAr, iosIconUrl,
-//          androidIconUrl fields for the "App Link" section ✅
-// UPDATED: Versioned helper added — all scalar/object fields are now read
-//          from a versioned list in Firestore (last item = active value) ✅
-// UPDATED: Versioned.append() now has duplicate guard — only appends when
-//          value actually changed, preventing duplicate history entries ✅
+// UPDATED: All field names use Capital_Underscore naming convention ✅
+// UPDATED: ALL fields flattened — NO nested maps in Firestore ✅
+// UPDATED: EVERY single field is versioned (array in Firestore,
+//          .last = active value). fromMap uses Versioned.read() on ALL. ✅
 
 /// Bilingual text wrapper
 class BiText {
@@ -20,63 +18,36 @@ class BiText {
   BiText copyWith({String? en, String? ar}) =>
       BiText(en: en ?? this.en, ar: ar ?? this.ar);
 
-  Map<String, dynamic> toMap() => {'en': en, 'ar': ar};
-
-  factory BiText.fromMap(Map<String, dynamic> map) =>
-      BiText(en: map['en'] ?? '', ar: map['ar'] ?? '');
-
   @override
   String toString() => 'BiText(en: $en, ar: $ar)';
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Versioned Field Helper
-// Wraps any Firestore field in a list for full history tracking.
-//
-//  • Versioned.read()   → always returns the LAST item (active value)
-//  • Versioned.append() → called in the repo; merges new value into the list
-//                         ONLY appends if the value actually changed
-//
-// The UI and cubit never see the list — they work with plain values as before.
 // ─────────────────────────────────────────────────────────────────────────────
 
 class Versioned {
-  /// Reads the LAST item from a versioned list.
-  /// Falls back gracefully if the field is still a legacy plain value.
   static T read<T>(dynamic raw, T Function(dynamic) parser) {
     if (raw is List && raw.isNotEmpty) {
       return parser(raw.last);
     }
-    // legacy plain value (before versioning was introduced)
     if (raw != null) return parser(raw);
     return parser(null);
   }
 
-  /// Appends [newValue] to [existing] ONLY if the value has actually changed.
-  ///
-  /// • If [existing] is null/empty  → creates a new list with [newValue].
-  /// • If [existing] is a legacy plain value → migrates it into a list first.
-  /// • If the last item equals [newValue] (by deep string comparison) →
-  ///   returns the existing list unchanged (no duplicate entry).
   static List<dynamic> append(dynamic existing, dynamic newValue) {
     final history = <dynamic>[];
 
     if (existing is List) {
       history.addAll(existing);
     } else if (existing != null) {
-      // migrate legacy plain value into the list automatically
       history.add(existing);
     }
 
-    // ── Duplicate guard ───────────────────────────────────────────────────
-    // Only append if the new value is actually different from the last entry.
-    // This prevents duplicate entries when save() is called multiple times
-    // with the same data (e.g. re-saves, retries, or publish-status triggers).
     if (history.isNotEmpty) {
       final lastEncoded = _encode(history.last);
       final newEncoded  = _encode(newValue);
       if (lastEncoded == newEncoded) {
-        // value unchanged — return existing history without appending
         return history;
       }
     }
@@ -85,9 +56,6 @@ class Versioned {
     return history;
   }
 
-  /// Normalises any value to a stable comparable string so that maps, lists,
-  /// and primitives can all be compared with == regardless of runtime type.
-  /// Maps are key-sorted so insertion-order differences don't cause false mismatches.
   static String _encode(dynamic value) {
     if (value == null) return 'null';
     if (value is Map) {
@@ -105,7 +73,7 @@ class Versioned {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Nav Button — WITH STATUS FIELD AND ICON URL ✅
+// Nav Button
 // ─────────────────────────────────────────────────────────────────────────────
 
 class NavButtonModel {
@@ -137,22 +105,6 @@ class NavButtonModel {
         iconUrl: iconUrl ?? this.iconUrl,
         status:  status  ?? this.status,
       );
-
-  Map<String, dynamic> toMap() => {
-    'id':      id,
-    'name':    name.toMap(),
-    'route':   route,
-    'iconUrl': iconUrl,
-    'status':  status,
-  };
-
-  factory NavButtonModel.fromMap(Map<String, dynamic> map) => NavButtonModel(
-    id:      map['id']      ?? '',
-    name:    BiText.fromMap(map['name'] ?? {}),
-    route:   map['route']   ?? '',
-    iconUrl: map['iconUrl'] ?? '',
-    status:  map['status']  ?? true,
-  );
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -188,23 +140,6 @@ class SectionCardModel {
         description:  description  ?? this.description,
         visibility:   visibility   ?? this.visibility,
       );
-
-  Map<String, dynamic> toMap() => {
-    'imageUrl':     imageUrl,
-    'iconUrl':      iconUrl,
-    'textBoxColor': textBoxColor,
-    'description':  description.toMap(),
-    'visibility':   visibility,
-  };
-
-  factory SectionCardModel.fromMap(Map<String, dynamic> map) =>
-      SectionCardModel(
-        imageUrl:     map['imageUrl']     ?? '',
-        iconUrl:      map['iconUrl']      ?? '',
-        textBoxColor: map['textBoxColor'] ?? '#008037',
-        description:  BiText.fromMap(map['description'] ?? {}),
-        visibility:   map['visibility']   ?? true,
-      );
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -228,19 +163,6 @@ class HeaderItemModel {
         title:  title  ?? this.title,
         status: status ?? this.status,
       );
-
-  Map<String, dynamic> toMap() => {
-    'id':     id,
-    'title':  title.toMap(),
-    'status': status,
-  };
-
-  factory HeaderItemModel.fromMap(Map<String, dynamic> map) =>
-      HeaderItemModel(
-        id:     map['id']     ?? '',
-        title:  BiText.fromMap(map['title'] ?? {}),
-        status: map['status'] ?? true,
-      );
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -263,19 +185,6 @@ class FooterLabelModel {
         id:    id    ?? this.id,
         label: label ?? this.label,
         route: route ?? this.route,
-      );
-
-  Map<String, dynamic> toMap() => {
-    'id':    id,
-    'label': label.toMap(),
-    'route': route,
-  };
-
-  factory FooterLabelModel.fromMap(Map<String, dynamic> map) =>
-      FooterLabelModel(
-        id:    map['id']    ?? '',
-        label: BiText.fromMap(map['label'] ?? {}),
-        route: map['route'] ?? '',
       );
 }
 
@@ -308,28 +217,10 @@ class FooterColumnModel {
         route:  route  ?? this.route,
         labels: labels ?? this.labels,
       );
-
-  Map<String, dynamic> toMap() => {
-    'id':     id,
-    'title':  title.toMap(),
-    'route':  route,
-    'labels': labels.map((l) => l.toMap()).toList(),
-  };
-
-  factory FooterColumnModel.fromMap(Map<String, dynamic> map) =>
-      FooterColumnModel(
-        id:     map['id']    ?? '',
-        title:  BiText.fromMap(map['title'] ?? {}),
-        route:  map['route'] ?? '',
-        labels: (map['labels'] as List<dynamic>? ?? [])
-            .map((l) =>
-            FooterLabelModel.fromMap(l as Map<String, dynamic>))
-            .toList(),
-      );
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Social Link — WITH VISIBILITY FIELD ✅
+// Social Link
 // ─────────────────────────────────────────────────────────────────────────────
 
 class SocialLinkModel {
@@ -357,25 +248,10 @@ class SocialLinkModel {
         url:        url        ?? this.url,
         visibility: visibility ?? this.visibility,
       );
-
-  Map<String, dynamic> toMap() => {
-    'id':         id,
-    'iconUrl':    iconUrl,
-    'url':        url,
-    'visibility': visibility,
-  };
-
-  factory SocialLinkModel.fromMap(Map<String, dynamic> map) =>
-      SocialLinkModel(
-        id:         map['id']         ?? '',
-        iconUrl:    map['iconUrl']    ?? '',
-        url:        map['url']        ?? '',
-        visibility: map['visibility'] ?? true,
-      );
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// App Download Links ✅ UPDATED — now has labelEn, labelAr, icon URLs
+// App Download Links — flattened into HomePageModel
 // ─────────────────────────────────────────────────────────────────────────────
 
 class AppDownloadLinksModel {
@@ -415,31 +291,10 @@ class AppDownloadLinksModel {
         androidIconUrl: androidIconUrl ?? this.androidIconUrl,
         visibility:     visibility     ?? this.visibility,
       );
-
-  Map<String, dynamic> toMap() => {
-    'iosUrl':         iosUrl,
-    'androidUrl':     androidUrl,
-    'labelEn':        labelEn,
-    'labelAr':        labelAr,
-    'iosIconUrl':     iosIconUrl,
-    'androidIconUrl': androidIconUrl,
-    'visibility':     visibility,
-  };
-
-  factory AppDownloadLinksModel.fromMap(Map<String, dynamic> map) =>
-      AppDownloadLinksModel(
-        iosUrl:         map['iosUrl']         ?? '',
-        androidUrl:     map['androidUrl']     ?? '',
-        labelEn:        map['labelEn']        ?? '',
-        labelAr:        map['labelAr']        ?? '',
-        iosIconUrl:     map['iosIconUrl']     ?? '',
-        androidIconUrl: map['androidIconUrl'] ?? '',
-        visibility:     map['visibility']     ?? true,
-      );
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Branding
+// Branding — flattened into HomePageModel
 // ─────────────────────────────────────────────────────────────────────────────
 
 class BrandingModel {
@@ -479,26 +334,6 @@ class BrandingModel {
         englishFont:       englishFont       ?? this.englishFont,
         arabicFont:        arabicFont        ?? this.arabicFont,
       );
-
-  Map<String, dynamic> toMap() => {
-    'logoUrl':           logoUrl,
-    'primaryColor':      primaryColor,
-    'secondaryColor':    secondaryColor,
-    'backgroundColor':   backgroundColor,
-    'headerFooterColor': headerFooterColor,
-    'englishFont':       englishFont,
-    'arabicFont':        arabicFont,
-  };
-
-  factory BrandingModel.fromMap(Map<String, dynamic> map) => BrandingModel(
-    logoUrl:           map['logoUrl']           ?? '',
-    primaryColor:      map['primaryColor']      ?? '#008037',
-    secondaryColor:    map['secondaryColor']    ?? '#D9D9D9',
-    backgroundColor:   map['backgroundColor']   ?? '#D9D9D9',
-    headerFooterColor: map['headerFooterColor'] ?? '#D9D9D9',
-    englishFont:       map['englishFont']       ?? 'Cairo',
-    arabicFont:        map['arabicFont']        ?? 'Cairo',
-  );
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -570,102 +405,365 @@ class HomePageModel {
             : (scheduledPublishDate ?? this.scheduledPublishDate),
       );
 
-  // ── toMap — plain values (versioning is handled in the repo layer) ────────
-  Map<String, dynamic> toMap() => {
-    'title':               title.toMap(),
-    'shortDescription':    shortDescription.toMap(),
-    'navButtons':          navButtons.map((e)    => e.toMap()).toList(),
-    'sections':            sections.map((e)      => e.toMap()).toList(),
-    'headerItems':         headerItems.map((e)   => e.toMap()).toList(),
-    'footerColumns':       footerColumns.map((e) => e.toMap()).toList(),
-    'socialLinks':         socialLinks.map((e)   => e.toMap()).toList(),
-    'branding':            branding.toMap(),
-    'appDownloadLinks':    appDownloadLinks.toMap(),
-    'publishStatus':       publishStatus,
-    'lastUpdatedAt':       lastUpdatedAt?.toIso8601String(),
-    'scheduledPublishDate': scheduledPublishDate?.toIso8601String(),
-    'gender':              gender,
-  };
+  // ═══════════════════════════════════════════════════════════════════════════
+  // toMap — ALL fields flattened, Capital_Underscore naming
+  // Outputs plain primitives. Repo wraps EVERY key in Versioned.append().
+  // ═══════════════════════════════════════════════════════════════════════════
 
-  // ── fromMap — uses Versioned.read() for scalar/object fields ─────────────
+  Map<String, dynamic> toMap() {
+    final map = <String, dynamic>{};
+
+    // ── Title ────────────────────────────────────────────────────────
+    map['Title_En'] = title.en;
+    map['Title_Ar'] = title.ar;
+
+    // ── Short Description ────────────────────────────────────────────
+    map['Short_Description_En'] = shortDescription.en;
+    map['Short_Description_Ar'] = shortDescription.ar;
+
+    // ── Nav_Buttons ──────────────────────────────────────────────────
+    map['Nav_Buttons_Count'] = navButtons.length;
+    for (int i = 0; i < navButtons.length; i++) {
+      final nb = navButtons[i];
+      map['Nav_Buttons_${i}_Id']       = nb.id;
+      map['Nav_Buttons_${i}_Name_En']  = nb.name.en;
+      map['Nav_Buttons_${i}_Name_Ar']  = nb.name.ar;
+      map['Nav_Buttons_${i}_Route']    = nb.route;
+      map['Nav_Buttons_${i}_Icon_Url'] = nb.iconUrl;
+      map['Nav_Buttons_${i}_Status']   = nb.status;
+    }
+
+    // ── Sections ─────────────────────────────────────────────────────
+    map['Sections_Count'] = sections.length;
+    for (int i = 0; i < sections.length; i++) {
+      final s = sections[i];
+      map['Sections_${i}_Image_Url']      = s.imageUrl;
+      map['Sections_${i}_Icon_Url']       = s.iconUrl;
+      map['Sections_${i}_Text_Box_Color'] = s.textBoxColor;
+      map['Sections_${i}_Description_En'] = s.description.en;
+      map['Sections_${i}_Description_Ar'] = s.description.ar;
+      map['Sections_${i}_Visibility']     = s.visibility;
+    }
+
+    // ── Header_Items ─────────────────────────────────────────────────
+    map['Header_Items_Count'] = headerItems.length;
+    for (int i = 0; i < headerItems.length; i++) {
+      final hi = headerItems[i];
+      map['Header_Items_${i}_Id']       = hi.id;
+      map['Header_Items_${i}_Title_En'] = hi.title.en;
+      map['Header_Items_${i}_Title_Ar'] = hi.title.ar;
+      map['Header_Items_${i}_Status']   = hi.status;
+    }
+
+    // ── Footer_Columns ───────────────────────────────────────────────
+    map['Footer_Columns_Count'] = footerColumns.length;
+    for (int i = 0; i < footerColumns.length; i++) {
+      final fc = footerColumns[i];
+      map['Footer_Columns_${i}_Id']       = fc.id;
+      map['Footer_Columns_${i}_Title_En'] = fc.title.en;
+      map['Footer_Columns_${i}_Title_Ar'] = fc.title.ar;
+      map['Footer_Columns_${i}_Route']    = fc.route;
+
+      map['Footer_Columns_${i}_Labels_Count'] = fc.labels.length;
+      for (int j = 0; j < fc.labels.length; j++) {
+        final fl = fc.labels[j];
+        map['Footer_Columns_${i}_Labels_${j}_Id']       = fl.id;
+        map['Footer_Columns_${i}_Labels_${j}_Label_En'] = fl.label.en;
+        map['Footer_Columns_${i}_Labels_${j}_Label_Ar'] = fl.label.ar;
+        map['Footer_Columns_${i}_Labels_${j}_Route']    = fl.route;
+      }
+    }
+
+    // ── Social_Links ─────────────────────────────────────────────────
+    map['Social_Links_Count'] = socialLinks.length;
+    for (int i = 0; i < socialLinks.length; i++) {
+      final sl = socialLinks[i];
+      map['Social_Links_${i}_Id']         = sl.id;
+      map['Social_Links_${i}_Icon_Url']   = sl.iconUrl;
+      map['Social_Links_${i}_Url']        = sl.url;
+      map['Social_Links_${i}_Visibility'] = sl.visibility;
+    }
+
+    // ── Branding ─────────────────────────────────────────────────────
+    map['Branding_Logo_Url']            = branding.logoUrl;
+    map['Branding_Primary_Color']       = branding.primaryColor;
+    map['Branding_Secondary_Color']     = branding.secondaryColor;
+    map['Branding_Background_Color']    = branding.backgroundColor;
+    map['Branding_Header_Footer_Color'] = branding.headerFooterColor;
+    map['Branding_English_Font']        = branding.englishFont;
+    map['Branding_Arabic_Font']         = branding.arabicFont;
+
+    // ── App Download Links ───────────────────────────────────────────
+    map['App_Download_Links_Ios_Url']          = appDownloadLinks.iosUrl;
+    map['App_Download_Links_Android_Url']      = appDownloadLinks.androidUrl;
+    map['App_Download_Links_Label_En']         = appDownloadLinks.labelEn;
+    map['App_Download_Links_Label_Ar']         = appDownloadLinks.labelAr;
+    map['App_Download_Links_Ios_Icon_Url']     = appDownloadLinks.iosIconUrl;
+    map['App_Download_Links_Android_Icon_Url'] = appDownloadLinks.androidIconUrl;
+    map['App_Download_Links_Visibility']       = appDownloadLinks.visibility;
+
+    // ── Scalars ──────────────────────────────────────────────────────
+    map['Publish_Status']         = publishStatus;
+    map['Last_Updated_At']        = lastUpdatedAt?.toIso8601String();
+    map['Scheduled_Publish_Date'] = scheduledPublishDate?.toIso8601String();
+    map['Gender']                 = gender;
+
+    return map;
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // fromMap — EVERY field uses Versioned.read()
   //
-  //  • title, shortDescription, branding, appDownloadLinks, publishStatus,
-  //    gender, scheduledPublishDate  →  versioned (stored as list in Firestore)
-  //
-  //  • navButtons, sections, headerItems, footerColumns, socialLinks
-  //    →  NOT versioned at the root level (they are already lists and each
-  //       item can carry its own history if needed in the future)
-  // ─────────────────────────────────────────────────────────────────────────
-  factory HomePageModel.fromMap(Map<String, dynamic> map) => HomePageModel(
+  // In Firestore each key is an array: [v0, v1, v2, ...]
+  // Versioned.read() picks .last as active value.
+  // ═══════════════════════════════════════════════════════════════════════════
 
-    // ── versioned scalar / object fields ─────────────────────────────
-    title: Versioned.read<BiText>(
-      map['title'],
-          (v) => BiText.fromMap(
-          v is Map ? Map<String, dynamic>.from(v) : {}),
-    ),
+  factory HomePageModel.fromMap(Map<String, dynamic> map) {
+    // ── Nav_Buttons ──────────────────────────────────────────────────
+    final nbCount = Versioned.read<int>(
+      map['Nav_Buttons_Count'], (v) => (v as int?) ?? 0,
+    );
+    final navButtons = <NavButtonModel>[];
+    for (int i = 0; i < nbCount; i++) {
+      navButtons.add(NavButtonModel(
+        id: Versioned.read<String>(
+          map['Nav_Buttons_${i}_Id'], (v) => v?.toString() ?? '',
+        ),
+        name: BiText(
+          en: Versioned.read<String>(
+            map['Nav_Buttons_${i}_Name_En'], (v) => v?.toString() ?? '',
+          ),
+          ar: Versioned.read<String>(
+            map['Nav_Buttons_${i}_Name_Ar'], (v) => v?.toString() ?? '',
+          ),
+        ),
+        route: Versioned.read<String>(
+          map['Nav_Buttons_${i}_Route'], (v) => v?.toString() ?? '',
+        ),
+        iconUrl: Versioned.read<String>(
+          map['Nav_Buttons_${i}_Icon_Url'], (v) => v?.toString() ?? '',
+        ),
+        status: Versioned.read<bool>(
+          map['Nav_Buttons_${i}_Status'], (v) => v as bool? ?? true,
+        ),
+      ));
+    }
 
-    shortDescription: Versioned.read<BiText>(
-      map['shortDescription'],
-          (v) => BiText.fromMap(
-          v is Map ? Map<String, dynamic>.from(v) : {}),
-    ),
+    // ── Sections ─────────────────────────────────────────────────────
+    final sCount = Versioned.read<int>(
+      map['Sections_Count'], (v) => (v as int?) ?? 0,
+    );
+    final sections = <SectionCardModel>[];
+    for (int i = 0; i < sCount; i++) {
+      sections.add(SectionCardModel(
+        imageUrl: Versioned.read<String>(
+          map['Sections_${i}_Image_Url'], (v) => v?.toString() ?? '',
+        ),
+        iconUrl: Versioned.read<String>(
+          map['Sections_${i}_Icon_Url'], (v) => v?.toString() ?? '',
+        ),
+        textBoxColor: Versioned.read<String>(
+          map['Sections_${i}_Text_Box_Color'], (v) => v?.toString() ?? '#008037',
+        ),
+        description: BiText(
+          en: Versioned.read<String>(
+            map['Sections_${i}_Description_En'], (v) => v?.toString() ?? '',
+          ),
+          ar: Versioned.read<String>(
+            map['Sections_${i}_Description_Ar'], (v) => v?.toString() ?? '',
+          ),
+        ),
+        visibility: Versioned.read<bool>(
+          map['Sections_${i}_Visibility'], (v) => v as bool? ?? true,
+        ),
+      ));
+    }
 
-    branding: Versioned.read<BrandingModel>(
-      map['branding'],
-          (v) => BrandingModel.fromMap(
-          v is Map ? Map<String, dynamic>.from(v) : {}),
-    ),
+    // ── Header_Items ─────────────────────────────────────────────────
+    final hiCount = Versioned.read<int>(
+      map['Header_Items_Count'], (v) => (v as int?) ?? 0,
+    );
+    final headerItems = <HeaderItemModel>[];
+    for (int i = 0; i < hiCount; i++) {
+      headerItems.add(HeaderItemModel(
+        id: Versioned.read<String>(
+          map['Header_Items_${i}_Id'], (v) => v?.toString() ?? '',
+        ),
+        title: BiText(
+          en: Versioned.read<String>(
+            map['Header_Items_${i}_Title_En'], (v) => v?.toString() ?? '',
+          ),
+          ar: Versioned.read<String>(
+            map['Header_Items_${i}_Title_Ar'], (v) => v?.toString() ?? '',
+          ),
+        ),
+        status: Versioned.read<bool>(
+          map['Header_Items_${i}_Status'], (v) => v as bool? ?? true,
+        ),
+      ));
+    }
 
-    appDownloadLinks: Versioned.read<AppDownloadLinksModel>(
-      map['appDownloadLinks'],
-          (v) => AppDownloadLinksModel.fromMap(
-          v is Map ? Map<String, dynamic>.from(v) : {}),
-    ),
+    // ── Footer_Columns ───────────────────────────────────────────────
+    final fcCount = Versioned.read<int>(
+      map['Footer_Columns_Count'], (v) => (v as int?) ?? 0,
+    );
+    final footerColumns = <FooterColumnModel>[];
+    for (int i = 0; i < fcCount; i++) {
+      final flCount = Versioned.read<int>(
+        map['Footer_Columns_${i}_Labels_Count'], (v) => (v as int?) ?? 0,
+      );
+      final labels = <FooterLabelModel>[];
+      for (int j = 0; j < flCount; j++) {
+        labels.add(FooterLabelModel(
+          id: Versioned.read<String>(
+            map['Footer_Columns_${i}_Labels_${j}_Id'], (v) => v?.toString() ?? '',
+          ),
+          label: BiText(
+            en: Versioned.read<String>(
+              map['Footer_Columns_${i}_Labels_${j}_Label_En'], (v) => v?.toString() ?? '',
+            ),
+            ar: Versioned.read<String>(
+              map['Footer_Columns_${i}_Labels_${j}_Label_Ar'], (v) => v?.toString() ?? '',
+            ),
+          ),
+          route: Versioned.read<String>(
+            map['Footer_Columns_${i}_Labels_${j}_Route'], (v) => v?.toString() ?? '',
+          ),
+        ));
+      }
 
-    publishStatus: Versioned.read<String>(
-      map['publishStatus'],
-          (v) => v?.toString() ?? 'draft',
-    ),
+      footerColumns.add(FooterColumnModel(
+        id: Versioned.read<String>(
+          map['Footer_Columns_${i}_Id'], (v) => v?.toString() ?? '',
+        ),
+        title: BiText(
+          en: Versioned.read<String>(
+            map['Footer_Columns_${i}_Title_En'], (v) => v?.toString() ?? '',
+          ),
+          ar: Versioned.read<String>(
+            map['Footer_Columns_${i}_Title_Ar'], (v) => v?.toString() ?? '',
+          ),
+        ),
+        route: Versioned.read<String>(
+          map['Footer_Columns_${i}_Route'], (v) => v?.toString() ?? '',
+        ),
+        labels: labels,
+      ));
+    }
 
-    gender: Versioned.read<String>(
-      map['gender'],
-          (v) => v?.toString() ?? 'female',
-    ),
+    // ── Social_Links ─────────────────────────────────────────────────
+    final slCount = Versioned.read<int>(
+      map['Social_Links_Count'], (v) => (v as int?) ?? 0,
+    );
+    final socialLinks = <SocialLinkModel>[];
+    for (int i = 0; i < slCount; i++) {
+      socialLinks.add(SocialLinkModel(
+        id: Versioned.read<String>(
+          map['Social_Links_${i}_Id'], (v) => v?.toString() ?? '',
+        ),
+        iconUrl: Versioned.read<String>(
+          map['Social_Links_${i}_Icon_Url'], (v) => v?.toString() ?? '',
+        ),
+        url: Versioned.read<String>(
+          map['Social_Links_${i}_Url'], (v) => v?.toString() ?? '',
+        ),
+        visibility: Versioned.read<bool>(
+          map['Social_Links_${i}_Visibility'], (v) => v as bool? ?? true,
+        ),
+      ));
+    }
 
-    scheduledPublishDate: Versioned.read<DateTime?>(
-      map['scheduledPublishDate'],
-          (v) => _parseDateTime(v),
-    ),
+    return HomePageModel(
+      // ── Title ──────────────────────────────────────────────────────
+      title: BiText(
+        en: Versioned.read<String>(
+          map['Title_En'], (v) => v?.toString() ?? '',
+        ),
+        ar: Versioned.read<String>(
+          map['Title_Ar'], (v) => v?.toString() ?? '',
+        ),
+      ),
 
-    lastUpdatedAt: _parseDateTime(map['lastUpdatedAt']),
+      // ── Short Description ──────────────────────────────────────────
+      shortDescription: BiText(
+        en: Versioned.read<String>(
+          map['Short_Description_En'], (v) => v?.toString() ?? '',
+        ),
+        ar: Versioned.read<String>(
+          map['Short_Description_Ar'], (v) => v?.toString() ?? '',
+        ),
+      ),
 
-    // ── plain list fields (not wrapped in versioned list) ─────────────
-    navButtons: (map['navButtons'] as List<dynamic>? ?? [])
-        .map((e) =>
-        NavButtonModel.fromMap(e as Map<String, dynamic>))
-        .toList(),
+      // ── Branding ───────────────────────────────────────────────────
+      branding: BrandingModel(
+        logoUrl: Versioned.read<String>(
+          map['Branding_Logo_Url'], (v) => v?.toString() ?? '',
+        ),
+        primaryColor: Versioned.read<String>(
+          map['Branding_Primary_Color'], (v) => v?.toString() ?? '#008037',
+        ),
+        secondaryColor: Versioned.read<String>(
+          map['Branding_Secondary_Color'], (v) => v?.toString() ?? '#D9D9D9',
+        ),
+        backgroundColor: Versioned.read<String>(
+          map['Branding_Background_Color'], (v) => v?.toString() ?? '#D9D9D9',
+        ),
+        headerFooterColor: Versioned.read<String>(
+          map['Branding_Header_Footer_Color'], (v) => v?.toString() ?? '#D9D9D9',
+        ),
+        englishFont: Versioned.read<String>(
+          map['Branding_English_Font'], (v) => v?.toString() ?? 'Cairo',
+        ),
+        arabicFont: Versioned.read<String>(
+          map['Branding_Arabic_Font'], (v) => v?.toString() ?? 'Cairo',
+        ),
+      ),
 
-    sections: (map['sections'] as List<dynamic>? ?? [])
-        .map((e) =>
-        SectionCardModel.fromMap(e as Map<String, dynamic>))
-        .toList(),
+      // ── App Download Links ─────────────────────────────────────────
+      appDownloadLinks: AppDownloadLinksModel(
+        iosUrl: Versioned.read<String>(
+          map['App_Download_Links_Ios_Url'], (v) => v?.toString() ?? '',
+        ),
+        androidUrl: Versioned.read<String>(
+          map['App_Download_Links_Android_Url'], (v) => v?.toString() ?? '',
+        ),
+        labelEn: Versioned.read<String>(
+          map['App_Download_Links_Label_En'], (v) => v?.toString() ?? '',
+        ),
+        labelAr: Versioned.read<String>(
+          map['App_Download_Links_Label_Ar'], (v) => v?.toString() ?? '',
+        ),
+        iosIconUrl: Versioned.read<String>(
+          map['App_Download_Links_Ios_Icon_Url'], (v) => v?.toString() ?? '',
+        ),
+        androidIconUrl: Versioned.read<String>(
+          map['App_Download_Links_Android_Icon_Url'], (v) => v?.toString() ?? '',
+        ),
+        visibility: Versioned.read<bool>(
+          map['App_Download_Links_Visibility'], (v) => v as bool? ?? true,
+        ),
+      ),
 
-    headerItems: (map['headerItems'] as List<dynamic>? ?? [])
-        .map((e) =>
-        HeaderItemModel.fromMap(e as Map<String, dynamic>))
-        .toList(),
+      // ── Scalars ────────────────────────────────────────────────────
+      publishStatus: Versioned.read<String>(
+        map['Publish_Status'], (v) => v?.toString() ?? 'draft',
+      ),
+      gender: Versioned.read<String>(
+        map['Gender'], (v) => v?.toString() ?? 'female',
+      ),
+      scheduledPublishDate: Versioned.read<DateTime?>(
+        map['Scheduled_Publish_Date'], (v) => _parseDateTime(v),
+      ),
+      lastUpdatedAt: _parseDateTime(map['Last_Updated_At']),
 
-    footerColumns: (map['footerColumns'] as List<dynamic>? ?? [])
-        .map((e) =>
-        FooterColumnModel.fromMap(e as Map<String, dynamic>))
-        .toList(),
-
-    socialLinks: (map['socialLinks'] as List<dynamic>? ?? [])
-        .map((e) =>
-        SocialLinkModel.fromMap(e as Map<String, dynamic>))
-        .toList(),
-  );
+      // ── Lists (parsed above) ───────────────────────────────────────
+      navButtons:    navButtons,
+      sections:      sections,
+      headerItems:   headerItems,
+      footerColumns: footerColumns,
+      socialLinks:   socialLinks,
+    );
+  }
 
   static DateTime? _parseDateTime(dynamic value) {
     if (value == null) return null;

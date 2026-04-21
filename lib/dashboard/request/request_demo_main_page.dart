@@ -17,6 +17,8 @@ import '../../controller/request/request_demo_state.dart';
 import '../../core/custom_segmant_tab.dart';
 
 import '../../model/request/request_demo_model.dart';
+import '../../widgets/app_admin_navbar.dart';
+import '../main_page/home_main_page.dart';
 import 'request_demo_edit_page.dart';
 import 'request_demo_preview_page.dart';
 
@@ -108,11 +110,17 @@ class _RequestDemoMainPageState extends State<RequestDemoMainPage> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
+                        AppAdminNavbar(
+                          activeLabel: 'Web Page',
+                          homePage: HomeMainPage(),
+                          webPage: HomeMainPage(),
+                          jobListingPage: HomeMainPage(),
+                        ),
                         SizedBox(width: 20.w),
                         const AdminSubNavBar(activeIndex: 7),
+                        SizedBox(width: 20.w),
                         Padding(
                           padding: EdgeInsets.symmetric(
-                            horizontal: 20.w,
                             vertical: 20.h,
                           ),
                           child: Column(

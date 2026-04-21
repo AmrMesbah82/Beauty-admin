@@ -12,6 +12,7 @@
 //        footer works even when rendered outside the GoRouter widget tree. ✅
 // UPDATED: Page names to match existing pages (AboutPage, ContactPage,
 //          OurProductsPage, TermsOfServicePage, OverviewPage)
+// UPDATED: Removed tablet layout - now only mobile and desktop
 // Description: AppFooter driven by HomePageModel via HomeCmsCubit.
 // Created by: Amr Mesbah
 
@@ -78,16 +79,16 @@ void _navigateTo(BuildContext context, String route) {
   if (route.isEmpty) return;
   final page = _pageForRoute(route);
   if (page == null) return;
-  Navigator.of(context, rootNavigator: true).push(
-    MaterialPageRoute(builder: (_) => page),
-  );
+  Navigator.of(
+    context,
+    rootNavigator: true,
+  ).push(MaterialPageRoute(builder: (_) => page));
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
 
 class _BP {
   static const double mobile = 768;
-  static const double tablet = 1024;
 }
 
 const Color _kFallbackPrimary = Color(0xFF008037);
@@ -148,8 +149,14 @@ class AppFooter extends StatelessWidget {
           _ => HomePageModel.defaultModel,
         };
 
-        final Color primary = _hexColor(model.branding.primaryColor, _kFallbackPrimary);
-        final Color footerBg = _hexColor(model.branding.headerFooterColor, _kFallbackFooterBg);
+        final Color primary = _hexColor(
+          model.branding.primaryColor,
+          _kFallbackPrimary,
+        );
+        final Color footerBg = _hexColor(
+          model.branding.headerFooterColor,
+          _kFallbackFooterBg,
+        );
         final List<FooterColumnModel> columns = _syncedFooterColumns(model);
 
         return BlocBuilder<LanguageCubit, LanguageState>(
@@ -158,20 +165,21 @@ class AppFooter extends StatelessWidget {
             final double screenWidth = MediaQuery.of(context).size.width;
 
             Widget footer;
-            if (screenWidth >= _BP.tablet) {
+            if (screenWidth >= _BP.mobile) {
               footer = _FooterDesktop(
-                model: model, columns: columns,
-                primary: primary, footerBg: footerBg, isRtl: isRtl,
-              );
-            } else if (screenWidth >= _BP.mobile) {
-              footer = _FooterTablet(
-                model: model, columns: columns,
-                primary: primary, footerBg: footerBg, isRtl: isRtl,
+                model: model,
+                columns: columns,
+                primary: primary,
+                footerBg: footerBg,
+                isRtl: isRtl,
               );
             } else {
               footer = _FooterMobile(
-                model: model, columns: columns,
-                primary: primary, footerBg: footerBg, isRtl: isRtl,
+                model: model,
+                columns: columns,
+                primary: primary,
+                footerBg: footerBg,
+                isRtl: isRtl,
               );
             }
 
@@ -227,19 +235,25 @@ class _FooterDesktop extends StatelessWidget {
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _LogoBox(logoUrl: model.branding.logoUrl, primary: primary, size: 50.sp),
+                _LogoBox(
+                  logoUrl: model.branding.logoUrl,
+                  primary: primary,
+                  size: 50.sp,
+                ),
                 SizedBox(width: 32.w),
                 Expanded(
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: columns
-                        .map((col) => _FooterColumnWidget(
-                      column: col,
-                      titleColor: AppColors.text,
-                      primary: primary,
-                      isRtl: isRtl,
-                    ))
+                        .map(
+                          (col) => _FooterColumnWidget(
+                        column: col,
+                        titleColor: AppColors.text,
+                        primary: primary,
+                        isRtl: isRtl,
+                      ),
+                    )
                         .toList(),
                   ),
                 ),
@@ -282,104 +296,6 @@ class _FooterDesktop extends StatelessWidget {
   }
 }
 
-// ─── TABLET ───────────────────────────────────────────────────────────────────
-
-class _FooterTablet extends StatelessWidget {
-  final HomePageModel model;
-  final List<FooterColumnModel> columns;
-  final Color primary;
-  final Color footerBg;
-  final bool isRtl;
-
-  const _FooterTablet({
-    required this.model,
-    required this.columns,
-    required this.primary,
-    required this.footerBg,
-    required this.isRtl,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final int mid = (columns.length / 2).ceil();
-    final row1 = columns.sublist(0, mid);
-    final row2 = columns.sublist(mid);
-
-    return Padding(
-      padding: EdgeInsets.symmetric(horizontal: 16.w),
-      child: Container(
-        padding: EdgeInsets.all(20.sp),
-        decoration: BoxDecoration(
-          color: footerBg,
-          borderRadius: BorderRadiusDirectional.only(
-            topStart: Radius.circular(18.r),
-            topEnd: Radius.circular(18.r),
-          ),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _LogoBox(logoUrl: model.branding.logoUrl, primary: primary, size: 32),
-            SizedBox(height: 18.h),
-            Wrap(
-              spacing: 16.w, runSpacing: 16.h,
-              children: row1
-                  .map((col) => _FooterColumnWidget(
-                column: col, titleColor: AppColors.text,
-                primary: primary, isRtl: isRtl,
-              ))
-                  .toList(),
-            ),
-            if (row2.isNotEmpty) ...[
-              SizedBox(height: 16.h),
-              Wrap(
-                spacing: 16.w, runSpacing: 16.h,
-                children: row2
-                    .map((col) => _FooterColumnWidget(
-                  column: col, titleColor: AppColors.text,
-                  primary: primary, isRtl: isRtl,
-                ))
-                    .toList(),
-              ),
-            ],
-            SizedBox(height: 20.h),
-            Divider(color: primary, thickness: 1),
-            SizedBox(height: 12.h),
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                if (model.appDownloadLinks.visibility)
-                  _DownloadAppRow(
-                    appDownloadLinks: model.appDownloadLinks,
-                    primary: primary,
-                    isRtl: isRtl,
-                  ),
-                const Spacer(),
-                Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: _socialIcons(model.socialLinks, primary, gap: 8),
-                ),
-                const Spacer(),
-                Flexible(
-                  child: Text(
-                    _staticCopyright(isRtl),
-                    textAlign: TextAlign.end,
-                    style: GoogleFonts.cairo(
-                      fontSize: 10.sp,
-                      fontWeight: FontWeight.w400,
-                      color: AppColors.secondaryText,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
 // ─── MOBILE ───────────────────────────────────────────────────────────────────
 
 class _FooterMobile extends StatelessWidget {
@@ -399,10 +315,12 @@ class _FooterMobile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final String? firstLabel = (columns.isNotEmpty && columns.first.labels.isNotEmpty)
+    final String? firstLabel =
+    (columns.isNotEmpty && columns.first.labels.isNotEmpty)
         ? _bi(columns.first.labels.first.label, isRtl)
         : null;
-    final String? firstRoute = (columns.isNotEmpty &&
+    final String? firstRoute =
+    (columns.isNotEmpty &&
         columns.first.labels.isNotEmpty &&
         columns.first.labels.first.route.isNotEmpty)
         ? columns.first.labels.first.route
@@ -417,11 +335,15 @@ class _FooterMobile extends StatelessWidget {
           // ── Social icons row with dividers ───────────────────────────
           Row(
             children: [
-              Expanded(child: Divider(color: primary.withOpacity(0.5), thickness: 1)),
+              Expanded(
+                child: Divider(color: primary.withOpacity(0.5), thickness: 1),
+              ),
               SizedBox(width: 10.w),
               ..._socialIconsRaw(model.socialLinks, primary),
               SizedBox(width: 10.w),
-              Expanded(child: Divider(color: primary.withOpacity(0.5), thickness: 1)),
+              Expanded(
+                child: Divider(color: primary.withOpacity(0.5), thickness: 1),
+              ),
             ],
           ),
           SizedBox(height: 12.h),
@@ -479,7 +401,11 @@ class _DownloadAppRow extends StatelessWidget {
     final uri = Uri.tryParse(url);
     if (uri == null || !uri.hasAuthority) return;
     if (!await canLaunchUrl(uri)) return;
-    await launchUrl(uri, mode: LaunchMode.externalApplication, webOnlyWindowName: '_blank');
+    await launchUrl(
+      uri,
+      mode: LaunchMode.externalApplication,
+      webOnlyWindowName: '_blank',
+    );
   }
 
   @override
@@ -516,7 +442,17 @@ class _DownloadAppRow extends StatelessWidget {
                 borderRadius: BorderRadius.circular(6.r),
               ),
               child: Center(
-                child: SvgPicture.asset(
+                child: appDownloadLinks.iosIconUrl.isNotEmpty
+                    ? SvgPicture.network(
+                  appDownloadLinks.iosIconUrl,
+                  width: iconSize,
+                  height: iconSize,
+                  fit: BoxFit.contain,
+                  colorFilter: ColorFilter.mode(primary, BlendMode.srcIn),
+                  placeholderBuilder: (_) =>
+                      SizedBox(width: iconSize, height: iconSize),
+                )
+                    : SvgPicture.asset(
                   'assets/footer/ios_logo.svg',
                   width: iconSize,
                   height: iconSize,
@@ -546,7 +482,16 @@ class _DownloadAppRow extends StatelessWidget {
                 borderRadius: BorderRadius.circular(6.r),
               ),
               child: Center(
-                child: SvgPicture.asset(
+                child: appDownloadLinks.androidIconUrl.isNotEmpty
+                    ? SvgPicture.network(
+                  appDownloadLinks.androidIconUrl,
+                  width: iconSize,
+                  height: iconSize,
+                  fit: BoxFit.contain,
+                  colorFilter: ColorFilter.mode(primary, BlendMode.srcIn),
+                  placeholderBuilder: (_) => SizedBox(width: iconSize, height: iconSize),
+                )
+                    : SvgPicture.asset(
                   'assets/footer/android_logo.svg',
                   width: iconSize,
                   height: iconSize,
@@ -605,7 +550,9 @@ class _FooterColumnWidgetState extends State<_FooterColumnWidget> {
               duration: const Duration(milliseconds: 180),
               style: GoogleFonts.cairo(
                 fontSize: 13.sp,
-                fontWeight: _hovered ? FontWeight.w900 : AppFontWeights.semiBold,
+                fontWeight: _hovered
+                    ? FontWeight.w900
+                    : AppFontWeights.semiBold,
                 color: _hovered ? widget.primary : widget.titleColor,
               ),
               child: Text(title),
@@ -614,11 +561,13 @@ class _FooterColumnWidgetState extends State<_FooterColumnWidget> {
         ),
         SizedBox(height: 6.h),
         // ── Labels ────────────────────────────────────────────────────
-        ...widget.column.labels.map((lbl) => _FooterLink(
-          label: _bi(lbl.label, widget.isRtl),
-          route: lbl.route.isNotEmpty ? lbl.route : widget.column.route,
-          primary: widget.primary,
-        )),
+        ...widget.column.labels.map(
+              (lbl) => _FooterLink(
+            label: _bi(lbl.label, widget.isRtl),
+            route: lbl.route.isNotEmpty ? lbl.route : widget.column.route,
+            primary: widget.primary,
+          ),
+        ),
       ],
     );
   }
@@ -631,11 +580,7 @@ class _FooterLink extends StatefulWidget {
   final String? route;
   final Color primary;
 
-  const _FooterLink({
-    required this.label,
-    required this.primary,
-    this.route,
-  });
+  const _FooterLink({required this.label, required this.primary, this.route});
 
   @override
   State<_FooterLink> createState() => _FooterLinkState();
@@ -701,7 +646,8 @@ class _LogoBox extends StatelessWidget {
         width: size.w,
         height: size.h,
         fit: BoxFit.contain,
-        placeholderBuilder: (_) => SizedBox(width: size.w, height: size.h),
+        placeholderBuilder: (_) =>
+            SizedBox(width: size.w, height: size.h),
       )
           : Image.asset('assets/images/logo.jpg', fit: BoxFit.contain),
     );
@@ -718,10 +664,12 @@ List<Widget> _socialIcons(
     }) {
   return links
       .where((l) => l.visibility && (l.iconUrl.isNotEmpty || l.url.isNotEmpty))
-      .map((l) => Padding(
-    padding: EdgeInsetsDirectional.only(end: gap.w),
-    child: _SocialIconWidget(link: l, borderColor: borderColor, size: 32),
-  ))
+      .map(
+        (l) => Padding(
+      padding: EdgeInsetsDirectional.only(end: gap.w),
+      child: _SocialIconWidget(link: l, borderColor: borderColor, size: 32),
+    ),
+  )
       .toList();
 }
 
@@ -729,10 +677,17 @@ List<Widget> _socialIcons(
 List<Widget> _socialIconsRaw(List<SocialLinkModel> links, Color borderColor) {
   return links
       .where((l) => l.visibility && (l.iconUrl.isNotEmpty || l.url.isNotEmpty))
-      .expand((l) => [
-    _SocialIconWidget(link: l, borderColor: borderColor, size: 32, raw: true),
-    SizedBox(width: 8.w),
-  ])
+      .expand(
+        (l) => [
+      _SocialIconWidget(
+        link: l,
+        borderColor: borderColor,
+        size: 32,
+        raw: true,
+      ),
+      SizedBox(width: 8.w),
+    ],
+  )
       .toList();
 }
 
@@ -805,9 +760,7 @@ class HomePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Scaffold(
-      body: Center(child: Text('Home Page')),
-    );
+    return const Scaffold(body: Center(child: Text('Home Page')));
   }
 }
 
@@ -818,8 +771,6 @@ class CareersPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Scaffold(
-      body: Center(child: Text('Careers Page')),
-    );
+    return const Scaffold(body: Center(child: Text('Careers Page')));
   }
 }

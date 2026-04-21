@@ -20,6 +20,8 @@ import 'package:beauty_admin/widgets/admin_sub_navbar.dart';
 
 import '../../../core/custom_svg.dart' show CustomSvg;
 import '../../model/contact_us/contact_model_location.dart';
+import '../../widgets/app_admin_navbar.dart';
+import '../main_page/home_main_page.dart';
 import 'contact_us_cms_edit_page.dart';
 import 'contact_us_cms_preview_page.dart';
 
@@ -84,6 +86,13 @@ class _ContactUsMainPageState extends State<ContactUsMainPage> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
+
+                  AppAdminNavbar(
+                    activeLabel: 'Web Page',
+                    homePage: HomeMainPage(),
+                    webPage: HomeMainPage(),
+                    jobListingPage: HomeMainPage(),
+                  ),
                   SizedBox(height: 20.h),
                   AdminSubNavBar(activeIndex: 6),
                   SizedBox(height: 20.h),

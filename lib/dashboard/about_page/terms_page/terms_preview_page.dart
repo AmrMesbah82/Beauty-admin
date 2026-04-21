@@ -1,9 +1,14 @@
 // ******************* FILE INFO *******************
 // File Name: terms_preview_page.dart
 // Screen 3 of 3 — Terms of Service CMS: Preview (Desktop/Tablet/Mobile + ENG/AR)
+// FIXED:
+//   1. Mobile preview now constrained to ~390 px wide (phone frame)
+//   2. Tablet preview now constrained to ~768 px wide (tablet frame)
+//   3. Download PDF links (ENG + ARB) rendered in all three preview layouts
 
 import 'dart:typed_data';
 
+import 'package:beauty_admin/core/custom_svg.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -16,7 +21,11 @@ import 'package:beauty_admin/theme/new_theme.dart';
 import 'package:beauty_admin/widgets/admin_sub_navbar.dart';
 import 'package:beauty_admin/widgets/app_navbar.dart';
 
+import '../../../core/custom_dialog.dart';
+import '../../../core/custom_segmant_tab.dart';
 import '../../../model/about_us/about_us.dart';
+import '../../../widgets/app_admin_navbar.dart';
+import '../../main_page/home_main_page.dart';
 
 class _C {
   static const Color primary   = Color(0xFFD16F9A);
@@ -25,6 +34,10 @@ class _C {
   static const Color grey      = Color(0xFF9E9E9E);
   static const Color hintText  = Color(0xFF797979);
 }
+
+/// Simulated device widths for the preview frames
+const double _kMobileWidth = 390.0;
+const double _kTabletWidth = 768.0;
 
 enum _PreviewMode { desktop, tablet, mobile }
 enum _PreviewLang { eng, ar }
@@ -61,15 +74,21 @@ class _TermsPreviewPageState extends State<TermsPreviewPage> {
 
   // ── Save ──────────────────────────────────────────────────────────────────
   void _onSave() async {
-    final ok = await _confirm(context);
-    if (ok == true && mounted) {
-      context.read<TermsCubit>().save(
-        model:        widget.model,
-        imageUploads: widget.imageUploads.isEmpty ? null : widget.imageUploads,
-        docUploads:   widget.docUploads.isEmpty   ? null : widget.docUploads,
-      );
-    }
+    showPublishConfirmDialog(
+      context: context,
+      title: 'EDITING TERMS OF SERVICE DETAILS',
+      subtitle: 'Do you want to save the changes made to Terms of Service?',
+      onConfirm: () async {
+        await context.read<TermsCubit>().save(
+          model:        widget.model,
+          imageUploads: widget.imageUploads.isEmpty ? null : widget.imageUploads,
+          docUploads:   widget.docUploads.isEmpty   ? null : widget.docUploads,
+        );
+      },
+    );
   }
+
+  final List<String> _languageTabs = ['ENG', 'AR'];
 
   // ── BUILD ─────────────────────────────────────────────────────────────────
   @override
@@ -90,16 +109,23 @@ class _TermsPreviewPageState extends State<TermsPreviewPage> {
           }
         },
         child: SingleChildScrollView(
-          child: Container(
+          child: SizedBox(
             width: double.infinity,
             child: Column(
               children: [
-                Container(
+                SizedBox(
                   width: 1000.w,
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
-                      AdminSubNavBar(activeIndex: 3),
+                      AppAdminNavbar(
+                        activeLabel: 'Web Page',
+                        homePage: HomeMainPage(),
+                        webPage: HomeMainPage(),
+                        jobListingPage: HomeMainPage(),
+                      ),
+                      SizedBox(height: 20.h),
+                      AdminSubNavBar(activeIndex: 5),
                       SizedBox(
                         width: 1000.w,
                         child: Column(
@@ -138,33 +164,54 @@ class _TermsPreviewPageState extends State<TermsPreviewPage> {
                                 );
                               }),
                               const Spacer(),
-                              _langBtn('ENG', _PreviewLang.eng, isLeft: true),
-                              _langBtn('AR',  _PreviewLang.ar,  isLeft: false),
+                              CustomSegmentedTabs(
+                                tabs: _languageTabs,
+                                selectedIndex: _lang == _PreviewLang.eng ? 0 : 1,
+                                onTabSelected: (index) =>
+                                    setState(() => _lang = index == 0
+                                        ? _PreviewLang.eng
+                                        : _PreviewLang.ar),
+                                selectedColor: _C.primary,
+                                unselectedColor: Colors.white,
+                                selectedTextColor: Colors.white,
+                                unselectedTextColor: _C.hintText,
+                                equalWidth: false,
+                                containerPadding: EdgeInsets.symmetric(
+                                    horizontal: 8.sp, vertical: 4.sp),
+                              ),
                             ]),
                             SizedBox(height: 16.h),
 
                             // ── Terms and Conditions accordion ─────────────────────
                             _previewAccordion(
-                              title: _isRtl ? 'الشروط والأحكام' : 'Terms and Conditions',
+                              title: _isRtl
+                                  ? 'الشروط والأحكام'
+                                  : 'Terms and Conditions',
                               isOpen: _termsOpen,
                               onToggle: () =>
                                   setState(() => _termsOpen = !_termsOpen),
                               child: _sectionPreview(
                                 section:  widget.model.termsAndConditions,
                                 svgBytes: _termsSvgBytes,
+                                labelEn:  'Download PDF of Terms and Conditions (ENG)',
+                                labelAr:  'Download PDF of Terms and Conditions (ARB)',
                               ),
                             ),
                             SizedBox(height: 12.h),
 
                             // ── Privacy Policy accordion ───────────────────────────
                             _previewAccordion(
-                              title: _isRtl ? 'سياسة الخصوصية' : 'Privacy Policy',
+                              title: _isRtl
+                                  ? 'سياسة الخصوصية'
+                                  : 'Privacy Policy',
                               isOpen: _privacyOpen,
                               onToggle: () =>
                                   setState(() => _privacyOpen = !_privacyOpen),
                               child: _sectionPreview(
                                 section:  widget.model.privacyPolicy,
                                 svgBytes: _privacySvgBytes,
+                                labelEn:  'Download PDF of Privacy Policy (ENG)',
+                                labelAr:  'Download PDF of Privacy Policy (ARB)',
                               ),
                             ),
                             SizedBox(height: 24.h),
@@ -178,7 +225,8 @@ class _TermsPreviewPageState extends State<TermsPreviewPage> {
                                     style: ElevatedButton.styleFrom(
                                         backgroundColor: _C.grey,
                                         shape: RoundedRectangleBorder(
-                                            borderRadius: BorderRadius.circular(8.r))),
+                                            borderRadius:
+                                            BorderRadius.circular(8.r))),
                                     child: Text('Back',
                                         style: StyleText.fontSize14Weight600
                                             .copyWith(color: Colors.white)),
@@ -191,8 +239,9 @@ class _TermsPreviewPageState extends State<TermsPreviewPage> {
                                     style: ElevatedButton.styleFrom(
                                         backgroundColor: _C.primary,
                                         shape: RoundedRectangleBorder(
-                                            borderRadius: BorderRadius.circular(8.r))),
-                                    child: Text('Save',
+                                            borderRadius:
+                                            BorderRadius.circular(8.r))),
+                                    child: Text('Published',
                                         style: StyleText.fontSize14Weight600
                                             .copyWith(color: Colors.white)),
                                   ))),
@@ -212,30 +261,6 @@ class _TermsPreviewPageState extends State<TermsPreviewPage> {
     );
   }
 
-  // ── Language toggle button ────────────────────────────────────────────────
-  Widget _langBtn(String label, _PreviewLang lang, {required bool isLeft}) {
-    final active = _lang == lang;
-    return GestureDetector(
-      onTap: () => setState(() => _lang = lang),
-      child: Container(
-        padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 6.h),
-        decoration: BoxDecoration(
-          color: active ? _C.primary : _C.cardBg,
-          borderRadius: BorderRadius.only(
-            topLeft:     Radius.circular(isLeft ? 6.r : 0),
-            bottomLeft:  Radius.circular(isLeft ? 6.r : 0),
-            topRight:    Radius.circular(isLeft ? 0 : 6.r),
-            bottomRight: Radius.circular(isLeft ? 0 : 6.r),
-          ),
-          border: Border.all(color: _C.primary),
-        ),
-        child: Text(label,
-            style: StyleText.fontSize12Weight600
-                .copyWith(color: active ? Colors.white : _C.primary)),
-      ),
-    );
-  }
-
   // ── Accordion wrapper ─────────────────────────────────────────────────────
   Widget _previewAccordion({
     required String       title,
@@ -245,7 +270,7 @@ class _TermsPreviewPageState extends State<TermsPreviewPage> {
   }) {
     return Container(
       decoration: BoxDecoration(
-          color: _C.cardBg, borderRadius: BorderRadius.circular(6.r)),
+           borderRadius: BorderRadius.circular(6.r)),
       child: Column(children: [
         GestureDetector(
           onTap: onToggle,
@@ -254,11 +279,7 @@ class _TermsPreviewPageState extends State<TermsPreviewPage> {
             padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
             decoration: BoxDecoration(
               color: _C.primary,
-              borderRadius: isOpen
-                  ? BorderRadius.only(
-                  topLeft:  Radius.circular(6.r),
-                  topRight: Radius.circular(6.r))
-                  : BorderRadius.circular(6.r),
+              borderRadius: BorderRadius.circular(6.r),
             ),
             child: Row(children: [
               Expanded(child: Text(title,
@@ -278,24 +299,109 @@ class _TermsPreviewPageState extends State<TermsPreviewPage> {
     );
   }
 
-  // ── Section preview — passes both bytes AND url to sub-widgets ────────────
+  // ── Section preview — wraps mobile/tablet in a constrained device frame ───
   Widget _sectionPreview({
     required TermsSection section,
-    required Uint8List?   svgBytes,   // in-memory from file picker
+    required Uint8List?   svgBytes,
+    required String       labelEn,
+    required String       labelAr,
   }) {
     final desc   = _isRtl ? section.description.ar : section.description.en;
     final svgUrl = section.svgUrl;
 
-    return Directionality(
+    // The actual preview content widget
+    Widget content = Directionality(
       textDirection: _isRtl ? TextDirection.rtl : TextDirection.ltr,
       child: switch (_mode) {
         _PreviewMode.desktop => _TermsDesktopPreview(
-            desc: desc, svgUrl: svgUrl, svgBytes: svgBytes),
+            desc: desc, svgUrl: svgUrl, svgBytes: svgBytes,
+            attachEnUrl: section.attachEnUrl,
+            attachArUrl: section.attachArUrl,
+            labelEn: labelEn, labelAr: labelAr,
+            primaryColor: _C.primary),
         _PreviewMode.tablet  => _TermsTabletPreview(
-            desc: desc, svgUrl: svgUrl, svgBytes: svgBytes),
+            desc: desc, svgUrl: svgUrl, svgBytes: svgBytes,
+            attachEnUrl: section.attachEnUrl,
+            attachArUrl: section.attachArUrl,
+            labelEn: labelEn, labelAr: labelAr,
+            primaryColor: _C.primary),
         _PreviewMode.mobile  => _TermsMobilePreview(
-            desc: desc, svgUrl: svgUrl, svgBytes: svgBytes),
+            desc: desc, svgUrl: svgUrl, svgBytes: svgBytes,
+            attachEnUrl: section.attachEnUrl,
+            attachArUrl: section.attachArUrl,
+            labelEn: labelEn, labelAr: labelAr,
+            primaryColor: _C.primary),
       },
+    );
+
+    // For tablet/mobile wrap in a constrained frame so the preview respects
+    // the simulated device width instead of stretching to full desktop width.
+    if (_mode == _PreviewMode.mobile) {
+      return Center(
+        child: _DeviceFrame(
+          width: _kMobileWidth,
+          label: '',
+          child: content,
+        ),
+      );
+    }
+    if (_mode == _PreviewMode.tablet) {
+      return Center(
+        child: _DeviceFrame(
+          width: _kTabletWidth,
+          label: '',
+          child: content,
+        ),
+      );
+    }
+
+    return content; // desktop: full width
+  }
+}
+
+// ── Device frame — gives mobile/tablet a visible boundary in the preview ─────
+class _DeviceFrame extends StatelessWidget {
+  final double width;
+  final String label;
+  final Widget child;
+  const _DeviceFrame({
+    required this.width,
+    required this.label,
+    required this.child,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        // Small label at top
+        Padding(
+          padding: const EdgeInsets.only(bottom: 6),
+          child: Text(label,
+              style: TextStyle(
+                  fontSize: 11.sp,
+                  color: _C.hintText,
+                  fontWeight: FontWeight.w500)),
+        ),
+        Container(
+          width: width,
+          decoration: BoxDecoration(
+
+            borderRadius: BorderRadius.circular(12.r),
+            // border: Border.all(color: const Color(0xFFDDDDDD), width: 1.5),
+            // boxShadow: [
+            //   BoxShadow(
+            //       color: Colors.black.withOpacity(0.07),
+            //       blurRadius: 12,
+            //       offset: const Offset(0, 4))
+            // ],
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(12.r),
+            child: child,
+          ),
+        ),
+      ],
     );
   }
 }
@@ -308,12 +414,10 @@ Widget _svgWidget({
   required double     height,
 }) {
   if (bytes != null && bytes.isNotEmpty) {
-    // Render from in-memory bytes (newly picked file, not yet uploaded)
     return SvgPicture.memory(bytes,
         width: width, height: height, fit: BoxFit.contain);
   }
   if (url.isNotEmpty) {
-    // Render from Firebase Storage URL (existing saved file)
     return SvgPicture.network(
       url,
       width: width, height: height, fit: BoxFit.contain,
@@ -331,91 +435,226 @@ Widget _svgWidget({
   );
 }
 
+// ── Shared download link row ──────────────────────────────────────────────────
+Widget _downloadRow({
+  required String attachEnUrl,
+  required String attachArUrl,
+  required String labelEn,
+  required String labelAr,
+  required Color  primaryColor,
+  bool isColumn = false,   // stacked layout for narrow views
+}) {
+  Widget btn(String label, String url) {
+    if (url.isEmpty) return const SizedBox.shrink();
+    return GestureDetector(
+      onTap: () {
+        // In admin preview we just show a snackbar; real navigation is on user side
+      },
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          CustomSvg(assetPath: "assets/images/export.svg",color: primaryColor,),
+          const SizedBox(width: 4),
+          Flexible(
+            child: Text(label,
+                style: TextStyle(
+                    fontSize: 11.sp,
+                    fontWeight: FontWeight.w500,
+                    color: primaryColor,
+                    decoration: TextDecoration.underline,
+                    decorationColor: primaryColor)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  if (isColumn) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        btn(labelEn, attachEnUrl),
+        if (attachArUrl.isNotEmpty) SizedBox(height: 6.h),
+        btn(labelAr, attachArUrl),
+      ],
+    );
+  }
+
+  return Row(
+    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+    children: [
+      btn(labelEn, attachEnUrl),
+      btn(labelAr, attachArUrl),
+    ],
+  );
+}
+
 // ─── Desktop ──────────────────────────────────────────────────────────────────
 class _TermsDesktopPreview extends StatelessWidget {
-  final String desc, svgUrl;
+  final String    desc, svgUrl;
   final Uint8List? svgBytes;
-  const _TermsDesktopPreview(
-      {required this.desc, required this.svgUrl, this.svgBytes});
+  final String    attachEnUrl, attachArUrl, labelEn, labelAr;
+  final Color     primaryColor;
+
+  const _TermsDesktopPreview({
+    required this.desc,
+    required this.svgUrl,
+    this.svgBytes,
+    required this.attachEnUrl,
+    required this.attachArUrl,
+    required this.labelEn,
+    required this.labelAr,
+    required this.primaryColor,
+  });
 
   @override
   Widget build(BuildContext context) {
     final hasSvg = svgBytes != null || svgUrl.isNotEmpty;
-    return Container(
-      padding: EdgeInsets.all(20.r),
-      decoration: BoxDecoration(
-          color: Colors.white, borderRadius: BorderRadius.circular(12.r)),
-      child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Expanded(
-          child: Text(
-              desc.isEmpty ? 'Description text here…' : desc,
-              style: StyleText.fontSize14Weight400
-                  .copyWith(fontSize: 13.sp, height: 1.75)),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          padding: EdgeInsets.all(20.r),
+          decoration: BoxDecoration(
+
+              borderRadius: BorderRadius.circular(12.r)),
+          child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Expanded(
+              child: Text(
+                  desc.isEmpty ? 'Description text here…' : desc,
+                  style: StyleText.fontSize14Weight400
+                      .copyWith(fontSize: 13.sp, height: 1.75)),
+            ),
+            if (hasSvg) ...[
+              SizedBox(width: 24.w),
+              _svgWidget(bytes: svgBytes, url: svgUrl,
+                  width: 200.w, height: 200.h),
+            ],
+          ]),
         ),
-        if (hasSvg) ...[
-          SizedBox(width: 24.w),
-          _svgWidget(bytes: svgBytes, url: svgUrl,
-              width: 200.w, height: 200.h),
-        ],
-      ]),
+        SizedBox(height: 12.h),
+        _downloadRow(
+          attachEnUrl:  attachEnUrl,
+          attachArUrl:  attachArUrl,
+          labelEn:      labelEn,
+          labelAr:      labelAr,
+          primaryColor: primaryColor,
+        ),
+      ],
     );
   }
 }
 
 // ─── Tablet ───────────────────────────────────────────────────────────────────
 class _TermsTabletPreview extends StatelessWidget {
-  final String desc, svgUrl;
+  final String    desc, svgUrl;
   final Uint8List? svgBytes;
-  const _TermsTabletPreview(
-      {required this.desc, required this.svgUrl, this.svgBytes});
+  final String    attachEnUrl, attachArUrl, labelEn, labelAr;
+  final Color     primaryColor;
+
+  const _TermsTabletPreview({
+    required this.desc,
+    required this.svgUrl,
+    this.svgBytes,
+    required this.attachEnUrl,
+    required this.attachArUrl,
+    required this.labelEn,
+    required this.labelAr,
+    required this.primaryColor,
+  });
 
   @override
   Widget build(BuildContext context) {
     final hasSvg = svgBytes != null || svgUrl.isNotEmpty;
-    return Container(
+    return Padding(
       padding: EdgeInsets.all(16.r),
-      decoration: BoxDecoration(
-          color: Colors.white, borderRadius: BorderRadius.circular(12.r)),
-      child: Column(children: [
-        if (hasSvg) ...[
-          Center(child: _svgWidget(bytes: svgBytes, url: svgUrl,
-              width: 160.w, height: 160.h)),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (hasSvg) ...[
+            Center(child: _svgWidget(bytes: svgBytes, url: svgUrl,
+                width: 160.w, height: 160.h)),
+            SizedBox(height: 12.h),
+          ],
+          Container(
+            width: double.infinity,
+            padding: EdgeInsets.all(14.r),
+            decoration: BoxDecoration(
+
+                borderRadius: BorderRadius.circular(12.r)),
+            child: Text(
+                desc.isEmpty ? 'Description text here…' : desc,
+                style: StyleText.fontSize14Weight400
+                    .copyWith(fontSize: 12.sp, height: 1.75)),
+          ),
           SizedBox(height: 12.h),
+          _downloadRow(
+            attachEnUrl:  attachEnUrl,
+            attachArUrl:  attachArUrl,
+            labelEn:      labelEn,
+            labelAr:      labelAr,
+            primaryColor: primaryColor,
+            isColumn:     true,   // stacked for narrow frame
+          ),
         ],
-        Text(
-            desc.isEmpty ? 'Description text here…' : desc,
-            style: StyleText.fontSize14Weight400
-                .copyWith(fontSize: 12.sp, height: 1.75)),
-      ]),
+      ),
     );
   }
 }
 
 // ─── Mobile ───────────────────────────────────────────────────────────────────
 class _TermsMobilePreview extends StatelessWidget {
-  final String desc, svgUrl;
+  final String    desc, svgUrl;
   final Uint8List? svgBytes;
-  const _TermsMobilePreview(
-      {required this.desc, required this.svgUrl, this.svgBytes});
+  final String    attachEnUrl, attachArUrl, labelEn, labelAr;
+  final Color     primaryColor;
+
+  const _TermsMobilePreview({
+    required this.desc,
+    required this.svgUrl,
+    this.svgBytes,
+    required this.attachEnUrl,
+    required this.attachArUrl,
+    required this.labelEn,
+    required this.labelAr,
+    required this.primaryColor,
+  });
 
   @override
   Widget build(BuildContext context) {
     final hasSvg = svgBytes != null || svgUrl.isNotEmpty;
-    return Container(
+    return Padding(
       padding: EdgeInsets.all(14.r),
-      decoration: BoxDecoration(
-          color: Colors.white, borderRadius: BorderRadius.circular(12.r)),
-      child: Column(children: [
-        if (hasSvg) ...[
-          Center(child: _svgWidget(bytes: svgBytes, url: svgUrl,
-              width: 120.w, height: 120.h)),
-          SizedBox(height: 10.h),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (hasSvg) ...[
+            Center(child: _svgWidget(bytes: svgBytes, url: svgUrl,
+                width: 120.w, height: 120.h)),
+            SizedBox(height: 10.h),
+          ],
+          Container(
+            width: double.infinity,
+            padding: EdgeInsets.all(12.r),
+            decoration: BoxDecoration(
+
+                borderRadius: BorderRadius.circular(12.r)),
+            child: Text(
+                desc.isEmpty ? 'Description text here…' : desc,
+                style: StyleText.fontSize14Weight400
+                    .copyWith(fontSize: 11.sp, height: 1.7)),
+          ),
+          SizedBox(height: 12.h),
+          _downloadRow(
+            attachEnUrl:  attachEnUrl,
+            attachArUrl:  attachArUrl,
+            labelEn:      labelEn,
+            labelAr:      labelAr,
+            primaryColor: primaryColor,
+            isColumn:     true,   // stacked for narrow frame
+          ),
         ],
-        Text(
-            desc.isEmpty ? 'Description text here…' : desc,
-            style: StyleText.fontSize14Weight400
-                .copyWith(fontSize: 11.sp, height: 1.7)),
-      ]),
+      ),
     );
   }
 }

@@ -2,11 +2,11 @@
 // File Name: contact_us_cms_repo_impl.dart
 // Created by: Amr Mesbah
 // Last Update: 18/04/2026
-// UPDATED: save() now versions ALL fields using Versioned.append()
-//          — full audit trail in Firestore ✅
-// FIX: socialIcons versioned via _versionListField() which stores history as
-//      a Map { "v0": [...], "v1": [...] } instead of a nested List,
-//      avoiding Firestore's "nested arrays not supported" error.
+// UPDATED: All field names use Capital_Underscore naming convention ✅
+// UPDATED: All nested maps flattened — no nested maps in Firestore ✅
+// UPDATED: save() versions each flattened field individually ✅
+// FIX: Social_Icons versioned via _versionListField() Map format ✅
+
 import 'dart:convert';
 import 'dart:typed_data';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -30,20 +30,17 @@ class ContactUsCmsRepoImpl implements ContactUsCmsRepo {
   Future<ContactUsCmsModel> load() async {
     try {
       final doc = await _docRef.get();
-
       if (!doc.exists || doc.data() == null) {
         return _defaultModel();
       }
-
-      final model = ContactUsCmsModel.fromJson(doc.data()!);
-      return model;
+      return ContactUsCmsModel.fromJson(doc.data()!);
     } catch (e) {
       print('❌ ContactUsCmsRepo.load error: $e');
       rethrow;
     }
   }
 
-  // ── Save (ALL fields versioned) ────────────────────────────────────────────
+  // ── Save (ALL fields versioned individually) ───────────────────────────────
   @override
   Future<void> save({
     required ContactUsCmsModel model,
@@ -61,59 +58,65 @@ class ContactUsCmsRepoImpl implements ContactUsCmsRepo {
       print('🟡 [ContactCmsRepo] save → reading existing doc...');
       final existingSnap = await _docRef
           .get(const GetOptions(source: Source.server));
-      final existingData =
-          (existingSnap.exists ? existingSnap.data() : null) ?? {};
-      print('   existing keys = ${existingData.keys.toList()}');
+      final ex = (existingSnap.exists ? existingSnap.data() : null) ?? {};
 
       // ── Step 2: plain map from model ────────────────────────────────────
       final newMap = updatedModel.toJson();
 
-      // ── Step 3: build versioned map — ALL fields ────────────────────────
-      //
-      // NOTE: socialIcons cannot use Versioned.append() because socialIcons
-      // is itself a List, and appending it into another List creates a nested
-      // array which Firestore does not support.
-      // Instead, _versionListField() stores history as a Map:
-      //   { "v0": [...icons...], "v1": [...icons...], ... }
-      // Firestore allows Maps that contain Arrays, just not Arrays of Arrays.
+      // ── Step 3: build versioned map ─────────────────────────────────────
       final versionedMap = <String, dynamic>{
-        'publishStatus': Versioned.append(
-          existingData['publishStatus'],
-          newMap['publishStatus'],
-        ),
-        'headings': Versioned.append(
-          existingData['headings'],
-          newMap['headings'],
-        ),
-        'clientDescription': Versioned.append(
-          existingData['clientDescription'],
-          newMap['clientDescription'],
-        ),
-        'ownerDescription': Versioned.append(
-          existingData['ownerDescription'],
-          newMap['ownerDescription'],
+        // ── plain list fields (not versioned) ──────────────────────────
+        'Client_Description_Reasons': newMap['Client_Description_Reasons'],
+        'Owner_Description_Reasons':  newMap['Owner_Description_Reasons'],
+        'Last_Updated_At':            FieldValue.serverTimestamp(),
+
+        // ── versioned scalar fields ────────────────────────────────────
+        'Publish_Status': Versioned.append(
+          ex['Publish_Status'], newMap['Publish_Status'],
         ),
 
-        // ✅ FIX: socialIcons versioned as Map to avoid nested array error
-        'socialIcons': _versionListField(
-          existingData['socialIcons'],
-          newMap['socialIcons'] as List<dynamic>,
+        // ── Headings (flattened, versioned) ────────────────────────────
+        'Headings_Svg_Url': Versioned.append(
+          ex['Headings_Svg_Url'], newMap['Headings_Svg_Url'],
+        ),
+        'Headings_Title_En': Versioned.append(
+          ex['Headings_Title_En'], newMap['Headings_Title_En'],
+        ),
+        'Headings_Title_Ar': Versioned.append(
+          ex['Headings_Title_Ar'], newMap['Headings_Title_Ar'],
+        ),
+        'Headings_Short_Description_En': Versioned.append(
+          ex['Headings_Short_Description_En'], newMap['Headings_Short_Description_En'],
+        ),
+        'Headings_Short_Description_Ar': Versioned.append(
+          ex['Headings_Short_Description_Ar'], newMap['Headings_Short_Description_Ar'],
         ),
 
-        'lastUpdatedAt': Versioned.append(
-          existingData['lastUpdatedAt'],
-          DateTime.now().toUtc().toIso8601String(), // ✅ plain string, safe in arrays
+        // ── Client Description (flattened, versioned) ──────────────────
+        'Client_Description_En': Versioned.append(
+          ex['Client_Description_En'], newMap['Client_Description_En'],
+        ),
+        'Client_Description_Ar': Versioned.append(
+          ex['Client_Description_Ar'], newMap['Client_Description_Ar'],
+        ),
+
+        // ── Owner Description (flattened, versioned) ───────────────────
+        'Owner_Description_En': Versioned.append(
+          ex['Owner_Description_En'], newMap['Owner_Description_En'],
+        ),
+        'Owner_Description_Ar': Versioned.append(
+          ex['Owner_Description_Ar'], newMap['Owner_Description_Ar'],
+        ),
+
+        // ── Social Icons (versioned via Map) ───────────────────────────
+        'Social_Icons': _versionListField(
+          ex['Social_Icons'],
+          newMap['Social_Icons'] as List<dynamic>,
         ),
       };
 
       // ── Step 4: write to Firestore ──────────────────────────────────────
       print('🟡 [ContactCmsRepo] save → writing versioned map...');
-      print('   publishStatus history length     = ${(versionedMap['publishStatus'] as List).length}');
-      print('   headings history length          = ${(versionedMap['headings'] as List).length}');
-      print('   clientDescription history length = ${(versionedMap['clientDescription'] as List).length}');
-      print('   ownerDescription history length  = ${(versionedMap['ownerDescription'] as List).length}');
-      print('   socialIcons version count        = ${(versionedMap['socialIcons'] as Map).length}');
-
       await _docRef.set(versionedMap, SetOptions(merge: true));
       print('✅ ContactUsCmsRepo.save: ALL fields versioned DONE');
     } catch (e) {
@@ -123,14 +126,6 @@ class ContactUsCmsRepoImpl implements ContactUsCmsRepo {
   }
 
   // ── Version a List-typed field as a Map ───────────────────────────────────
-  //
-  // Stores history as { "v0": [...], "v1": [...], ... }
-  // Firestore supports Maps containing Arrays, but not Arrays containing Arrays.
-  //
-  // Handles existing data in three formats:
-  //   • Map  { "v0": [...] }   — already versioned-map (normal path post-fix)
-  //   • List [ {...}, {...} ]  — legacy plain list (pre-versioning)
-  //   • null / missing         — first save
   Map<String, dynamic> _versionListField(
       dynamic existing,
       List<dynamic> newValue,
@@ -138,19 +133,15 @@ class ContactUsCmsRepoImpl implements ContactUsCmsRepo {
     final history = <String, dynamic>{};
 
     if (existing is Map) {
-      // Already versioned-map — copy all existing versions
       existing.forEach((k, v) => history[k.toString()] = v);
     } else if (existing is List) {
-      // Legacy plain list — treat the whole list as v0
       history['v0'] = existing;
     }
-    // null / missing → history stays empty, first entry will be v0
 
-    // Skip write if the value is unchanged from the last version
     if (history.isNotEmpty) {
       final lastKey = 'v${history.length - 1}';
       if (jsonEncode(history[lastKey]) == jsonEncode(newValue)) {
-        print('   socialIcons unchanged — skipping version bump');
+        print('   Social_Icons unchanged — skipping version bump');
         return history;
       }
     }

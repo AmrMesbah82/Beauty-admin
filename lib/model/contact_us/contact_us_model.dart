@@ -1,16 +1,13 @@
 // ******************* FILE INFO *******************
 // File Name: contact_us_model.dart
 // Created by: Amr Mesbah
-// UPDATED: Added gender and country to toMap() so InquiryModel can read them.
-//          - gender = targetAudience value (Male/Female/Both from the dropdown)
-//          - country = salonCountry value (from the Country dropdown)
-//          Both Client and Owner forms use these same dropdowns.
+// UPDATED: All field names use Capital_Underscore naming convention ✅
 
 class ContactSubmission {
   final String id;
 
   // ── User type ──
-  final String userType; // 'client' | 'owner'
+  final String userType;
 
   // ── Personal info ──
   final String firstName;
@@ -18,26 +15,26 @@ class ContactSubmission {
   final String email;
   final String countryCode;
   final String phoneNumber;
-  final String preferredLanguage; // 'ar' | 'en' | 'other'
+  final String preferredLanguage;
 
   // ── Salon info (Owner only) ──
   final String salonNameEn;
   final String salonNameAr;
-  final String targetAudience; // 'Female' | 'Male' | 'Both'
+  final String targetAudience;
   final String salonCountry;
   final String salonCity;
-  final String noBranches;     // '1' | '2 To 4' | '5 To 10' | '+10'
+  final String noBranches;
   final String services;
-  final String atLocation;     // 'At Salon' | 'At Home' | 'Both'
+  final String atLocation;
 
   // ── Message info ──
   final String subject;
-  final String reason; // 'Suggestion' | 'Complaint' | 'Request' | 'Other'
+  final String reason;
   final String message;
 
   // ── Admin fields ──
   final String note;
-  final String status; // 'New' | 'Replied' | 'Closed'
+  final String status;
   final DateTime submissionDate;
 
   const ContactSubmission({
@@ -65,18 +62,18 @@ class ContactSubmission {
     required this.submissionDate,
   });
 
-  /// Helper to get full name (for display / backward compat)
+  /// Helper to get full name
   String get fullName => '$firstName $lastName'.trim();
 
   // ── Firestore ──────────────────────────────────────────────────────────────
 
   factory ContactSubmission.fromMap(String id, Map<String, dynamic> map) {
-    // ── Backward compatibility: handle old docs that have 'fullName' ──
-    String firstName = (map['firstName'] as String?) ?? '';
-    String lastName  = (map['lastName']  as String?) ?? '';
+    // ── Backward compatibility: handle old docs that have 'Full_Name' ──
+    String firstName = (map['First_Name'] as String?) ?? '';
+    String lastName  = (map['Last_Name']  as String?) ?? '';
 
     if (firstName.isEmpty && lastName.isEmpty) {
-      final legacy = (map['fullName'] as String?) ?? '';
+      final legacy = (map['Full_Name'] as String?) ?? '';
       if (legacy.isNotEmpty) {
         final parts = legacy.split(' ');
         firstName = parts.first;
@@ -85,70 +82,64 @@ class ContactSubmission {
     }
 
     // ── Backward compat: old entity fields → new salon fields ──
-    String salonNameEn = (map['salonNameEn'] as String?) ?? '';
+    String salonNameEn = (map['Salon_Name_En'] as String?) ?? '';
     if (salonNameEn.isEmpty) {
-      salonNameEn = (map['entityName'] as String?) ?? '';
+      salonNameEn = (map['Entity_Name'] as String?) ?? '';
     }
 
     return ContactSubmission(
       id:                id,
-      userType:          (map['userType']          as String?) ?? 'client',
+      userType:          (map['User_Type']          as String?) ?? 'client',
       firstName:         firstName,
       lastName:          lastName,
-      email:             (map['email']             as String?) ?? '',
-      countryCode:       (map['countryCode']       as String?) ?? '',
-      phoneNumber:       (map['phoneNumber']       as String?) ?? '',
-      preferredLanguage: (map['preferredLanguage'] as String?) ?? 'en',
+      email:             (map['Email']              as String?) ?? '',
+      countryCode:       (map['Country_Code']       as String?) ?? '',
+      phoneNumber:       (map['Phone_Number']       as String?) ?? '',
+      preferredLanguage: (map['Preferred_Language'] as String?) ?? 'en',
       salonNameEn:       salonNameEn,
-      salonNameAr:       (map['salonNameAr']       as String?) ?? '',
-      targetAudience:    (map['targetAudience']    as String?) ?? '',
-      salonCountry:      (map['salonCountry']      as String?) ??
-          (map['location'] as String?) ?? '',
-      salonCity:         (map['salonCity']         as String?) ?? '',
-      noBranches:        (map['noBranches']        as String?) ?? '',
-      services:          (map['services']          as String?) ?? '',
-      atLocation:        (map['atLocation']        as String?) ?? '',
-      subject:           (map['subject']           as String?) ?? '',
-      reason:            (map['reason']            as String?) ?? '',
-      message:           (map['message']           as String?) ?? '',
-      note:              (map['note']              as String?) ?? '',
-      status:            (map['status']            as String?) ?? 'New',
-      submissionDate:    map['submissionDate'] != null
-          ? DateTime.parse(map['submissionDate'] as String)
+      salonNameAr:       (map['Salon_Name_Ar']      as String?) ?? '',
+      targetAudience:    (map['Target_Audience']    as String?) ?? '',
+      salonCountry:      (map['Salon_Country']      as String?) ?? '',
+      salonCity:         (map['Salon_City']          as String?) ?? '',
+      noBranches:        (map['No_Branches']        as String?) ?? '',
+      services:          (map['Services']           as String?) ?? '',
+      atLocation:        (map['At_Location']        as String?) ?? '',
+      subject:           (map['Subject']            as String?) ?? '',
+      reason:            (map['Reason']             as String?) ?? '',
+      message:           (map['Message']            as String?) ?? '',
+      note:              (map['Note']               as String?) ?? '',
+      status:            (map['Status']             as String?) ?? 'New',
+      submissionDate:    map['Submission_Date'] != null
+          ? DateTime.parse(map['Submission_Date'] as String)
           : DateTime.now(),
     );
   }
 
   Map<String, dynamic> toMap() => {
-    'userType':          userType,
-    'firstName':         firstName,
-    'lastName':          lastName,
-    'fullName':          fullName, // ← keep for backward compat / easy queries
-    'email':             email,
-    'countryCode':       countryCode,
-    'phoneNumber':       phoneNumber,
-    'preferredLanguage': preferredLanguage,
-    'salonNameEn':       salonNameEn,
-    'salonNameAr':       salonNameAr,
-    'targetAudience':    targetAudience,
-    'salonCountry':      salonCountry,
-    'salonCity':         salonCity,
-    'noBranches':        noBranches,
-    'services':          services,
-    'atLocation':        atLocation,
-    'subject':           subject,
-    'reason':            reason,
-    'message':           message,
-    'note':              note,
-    'status':            status,
-    'submissionDate':    submissionDate.toIso8601String(),
-    // ── NEW: write gender & country as dedicated fields ──
-    // InquiryModel.fromMap() reads these for the admin table columns.
-    // For Client: targetAudience = Gender dropdown value (Male/Female/Both)
-    //             salonCountry   = Country dropdown value
-    // For Owner:  same fields from Salon Info section
-    'gender':            targetAudience,
-    'country':           salonCountry,
+    'User_Type':          userType,
+    'First_Name':         firstName,
+    'Last_Name':          lastName,
+    'Full_Name':          fullName,
+    'Email':              email,
+    'Country_Code':       countryCode,
+    'Phone_Number':       phoneNumber,
+    'Preferred_Language': preferredLanguage,
+    'Salon_Name_En':      salonNameEn,
+    'Salon_Name_Ar':      salonNameAr,
+    'Target_Audience':    targetAudience,
+    'Salon_Country':      salonCountry,
+    'Salon_City':         salonCity,
+    'No_Branches':        noBranches,
+    'Services':           services,
+    'At_Location':        atLocation,
+    'Subject':            subject,
+    'Reason':             reason,
+    'Message':            message,
+    'Note':               note,
+    'Status':             status,
+    'Submission_Date':    submissionDate.toIso8601String(),
+    'Gender':             targetAudience,
+    'Country':            salonCountry,
   };
 
   ContactSubmission copyWith({

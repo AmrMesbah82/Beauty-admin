@@ -25,7 +25,10 @@ import 'package:beauty_admin/widgets/admin_sub_navbar.dart';
 import '../../controller/master/master_cubit.dart';
 import '../../controller/master/master_state.dart';
 import '../../model/master/master_model.dart';
+import '../../widgets/app_admin_navbar.dart';
+import '../main_page/home_main_page.dart';
 import 'master_edit_page.dart';
+import 'master_preview_page.dart';
 
 /// Custom Segmented Tabs Widget
 class CustomSegmentedTabs extends StatelessWidget {
@@ -221,11 +224,18 @@ class _MasterMainPageState extends State<MasterMainPage> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
+                        AppAdminNavbar(
+                          activeLabel: 'Web Page',
+                          homePage:       HomeMainPage(),
+                          webPage:        HomeMainPage(),
+                          jobListingPage: HomeMainPage(),
+                        ),
                         SizedBox(width: 20.w),
                         AdminSubNavBar(activeIndex: 1),
+                        SizedBox(width: 20.w),
                         Padding(
                           padding: EdgeInsets.symmetric(
-                              horizontal: 20.w, vertical: 20.h),
+                             vertical: 20.h),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
@@ -243,8 +253,15 @@ class _MasterMainPageState extends State<MasterMainPage> {
                                     ),
                                   ),
                                   GestureDetector(
-                                    onTap: () => context
-                                        .pushNamed('master_preview'),
+                                    onTap: () {
+                                      print('[MasterMainPage] Preview Screen tapped');
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (context) => const MasterPreviewPage(),
+                                        ),
+                                      );
+                                    },
                                     child: Container(
                                       padding: EdgeInsets.symmetric(
                                           horizontal: 16.w, vertical: 8.h),

@@ -245,16 +245,17 @@ class _OverviewMainPageState extends State<OverviewMainPage> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         AppAdminNavbar(
-                          activeLabel: 'Web Pages',
+                          activeLabel: 'Web Page',
                           homePage: HomeMainPage(),
                           webPage: HomeMainPage(),
                           jobListingPage: HomeMainPage(),
                         ),
                         SizedBox(width: 20.w),
                         AdminSubNavBar(activeIndex: 2),
+                        SizedBox(width: 20.w),
                         Padding(
                           padding: EdgeInsets.symmetric(
-                              horizontal: 20.w, vertical: 20.h),
+                            vertical: 20.h),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [

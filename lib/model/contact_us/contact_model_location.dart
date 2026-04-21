@@ -2,12 +2,12 @@
 // File Name: contact_model_location.dart
 // Created by: Amr Mesbah
 // Last Update: 18/04/2026
-// UPDATED: ALL fields are now versioned — every field in Firestore is stored
-//          as a list for full history tracking. fromJson() uses Versioned.read()
-//          for every field. toJson() writes plain values (repo handles versioning).
-// FIX: socialIcons now read via _readVersionedListField() to support both
-//      legacy plain-list format and new versioned-map format { v0: [...], v1: [...] }
-//      This avoids the Firestore "nested arrays not supported" error.
+// UPDATED: All field names use Capital_Underscore naming convention ✅
+// UPDATED: All nested maps (ContactBilingualText, ContactHeadings,
+//          ContactDescriptionSection) flattened ✅
+// UPDATED: ALL fields versioned — fromJson() uses Versioned.read() ✅
+// FIX: socialIcons versioned via Map { v0: [...], v1: [...] } to avoid
+//      Firestore nested array error ✅
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 
@@ -20,15 +20,6 @@ class Versioned {
     if (raw is List && raw.isNotEmpty) return parser(raw.last);
     if (raw != null) return parser(raw);
     return parser(null);
-  }
-
-  static List<T> readList<T>(dynamic raw, T Function(dynamic) parser) {
-    if (raw is List && raw.isNotEmpty) {
-      final last = raw.last;
-      if (last is List) return last.map((e) => parser(e)).toList();
-      return raw.map((e) => parser(e)).toList();
-    }
-    return [];
   }
 
   static List<dynamic> append(dynamic existing, dynamic newValue) {
@@ -62,7 +53,7 @@ class Versioned {
   }
 }
 
-// ── Bilingual text ────────────────────────────────────────────────────────────
+// ── Bilingual text — no toMap/fromMap, parent flattens ────────────────────────
 
 class ContactBilingualText {
   final String en;
@@ -70,19 +61,11 @@ class ContactBilingualText {
 
   const ContactBilingualText({this.en = '', this.ar = ''});
 
-  factory ContactBilingualText.fromMap(Map<String, dynamic>? map) =>
-      ContactBilingualText(
-        en: (map?['en'] as String?) ?? '',
-        ar: (map?['ar'] as String?) ?? '',
-      );
-
-  Map<String, dynamic> toMap() => {'en': en, 'ar': ar};
-
   ContactBilingualText copyWith({String? en, String? ar}) =>
       ContactBilingualText(en: en ?? this.en, ar: ar ?? this.ar);
 }
 
-// ── Headings ──────────────────────────────────────────────────────────────────
+// ── Headings — flattened into root ────────────────────────────────────────────
 
 class ContactHeadings {
   final String svgUrl;
@@ -94,22 +77,6 @@ class ContactHeadings {
     this.title = const ContactBilingualText(),
     this.shortDescription = const ContactBilingualText(),
   });
-
-  factory ContactHeadings.fromMap(Map<String, dynamic>? map) {
-    if (map == null) return const ContactHeadings();
-    return ContactHeadings(
-      svgUrl: (map['svgUrl'] as String?) ?? '',
-      title: ContactBilingualText.fromMap(map['title'] as Map<String, dynamic>?),
-      shortDescription: ContactBilingualText.fromMap(
-          map['shortDescription'] as Map<String, dynamic>?),
-    );
-  }
-
-  Map<String, dynamic> toMap() => {
-    'svgUrl': svgUrl,
-    'title': title.toMap(),
-    'shortDescription': shortDescription.toMap(),
-  };
 
   ContactHeadings copyWith({
     String? svgUrl,
@@ -123,7 +90,7 @@ class ContactHeadings {
       );
 }
 
-// ── Reason Item ───────────────────────────────────────────────────────────────
+// ── Reason Item (inside list — has its own toMap/fromMap) ─────────────────────
 
 class ContactReasonItem {
   final String id;
@@ -138,15 +105,19 @@ class ContactReasonItem {
 
   factory ContactReasonItem.fromMap(Map<String, dynamic> map) =>
       ContactReasonItem(
-        id: (map['id'] as String?) ?? '',
-        label: ContactBilingualText.fromMap(map['label'] as Map<String, dynamic>?),
-        isRequired: (map['isRequired'] as bool?) ?? false,
+        id:         map['Id'] ?? '',
+        label:      ContactBilingualText(
+          en: map['Label_En'] ?? '',
+          ar: map['Label_Ar'] ?? '',
+        ),
+        isRequired: map['Is_Required'] ?? false,
       );
 
   Map<String, dynamic> toMap() => {
-    'id': id,
-    'label': label.toMap(),
-    'isRequired': isRequired,
+    'Id':          id,
+    'Label_En':    label.en,
+    'Label_Ar':    label.ar,
+    'Is_Required': isRequired,
   };
 
   ContactReasonItem copyWith({
@@ -161,7 +132,7 @@ class ContactReasonItem {
       );
 }
 
-// ── Description Section (Client / Owner) ─────────────────────────────────────
+// ── Description Section — flattened into root ────────────────────────────────
 
 class ContactDescriptionSection {
   final ContactBilingualText description;
@@ -171,23 +142,6 @@ class ContactDescriptionSection {
     this.description = const ContactBilingualText(),
     this.reasons = const [],
   });
-
-  factory ContactDescriptionSection.fromMap(Map<String, dynamic>? map) {
-    if (map == null) return const ContactDescriptionSection();
-    final rawReasons = map['reasons'] as List<dynamic>? ?? [];
-    return ContactDescriptionSection(
-      description: ContactBilingualText.fromMap(
-          map['description'] as Map<String, dynamic>?),
-      reasons: rawReasons
-          .map((e) => ContactReasonItem.fromMap(e as Map<String, dynamic>))
-          .toList(),
-    );
-  }
-
-  Map<String, dynamic> toMap() => {
-    'description': description.toMap(),
-    'reasons': reasons.map((r) => r.toMap()).toList(),
-  };
 
   ContactDescriptionSection copyWith({
     ContactBilingualText? description,
@@ -199,7 +153,7 @@ class ContactDescriptionSection {
       );
 }
 
-// ── Social Icon ───────────────────────────────────────────────────────────────
+// ── Social Icon (inside list — has its own toMap/fromMap) ─────────────────────
 
 class ContactSocialIcon {
   final String id;
@@ -214,15 +168,15 @@ class ContactSocialIcon {
 
   factory ContactSocialIcon.fromMap(Map<String, dynamic> map) =>
       ContactSocialIcon(
-        id: (map['id'] as String?) ?? '',
-        iconUrl: (map['iconUrl'] as String?) ?? '',
-        link: (map['link'] as String?) ?? '',
+        id:      map['Id'] ?? '',
+        iconUrl: map['Icon_Url'] ?? '',
+        link:    map['Link'] ?? '',
       );
 
   Map<String, dynamic> toMap() => {
-    'id': id,
-    'iconUrl': iconUrl,
-    'link': link,
+    'Id':       id,
+    'Icon_Url': iconUrl,
+    'Link':     link,
   };
 
   ContactSocialIcon copyWith({
@@ -241,16 +195,15 @@ class ContactSocialIcon {
 // socialIcons versioned-list reader
 //
 // Supports three storage formats:
-//   1. Versioned-map  { "v0": [...], "v1": [...] }  ← new format (post-fix)
-//   2. Plain list     [ {...}, {...} ]               ← legacy (pre-versioning)
-//   3. Versioned list [ [...], [...] ]               ← legacy (old append bug)
+//   1. Versioned-map  { "v0": [...], "v1": [...] }  ← new format
+//   2. Plain list     [ {...}, {...} ]               ← legacy
+//   3. Versioned list [ [...], [...] ]               ← legacy bug
 // ─────────────────────────────────────────────────────────────────────────────
 
 List<ContactSocialIcon> _readVersionedListField(dynamic raw) {
   List<dynamic> lastValue = [];
 
   if (raw is Map) {
-    // ── Format 1: versioned-map { v0: [...], v1: [...] } ──────────────────
     if (raw.isNotEmpty) {
       final sortedKeys = raw.keys.toList()
         ..sort((a, b) {
@@ -264,10 +217,8 @@ List<ContactSocialIcon> _readVersionedListField(dynamic raw) {
   } else if (raw is List && raw.isNotEmpty) {
     final first = raw.first;
     if (first is List) {
-      // ── Format 3: versioned list [ [...], [...] ] — last entry is latest ─
       lastValue = raw.last as List;
     } else {
-      // ── Format 2: plain list [ {id:...}, {id:...} ] ───────────────────────
       lastValue = raw;
     }
   }
@@ -279,7 +230,9 @@ List<ContactSocialIcon> _readVersionedListField(dynamic raw) {
       .toList();
 }
 
-// ── ROOT MODEL — ALL fields versioned ────────────────────────────────────────
+// ═══════════════════════════════════════════════════════════════════════════════
+// ROOT MODEL — ALL fields flattened & versioned
+// ═══════════════════════════════════════════════════════════════════════════════
 
 class ContactUsCmsModel {
   final String publishStatus;
@@ -298,55 +251,115 @@ class ContactUsCmsModel {
     this.lastUpdatedAt,
   });
 
-  // ── fromJson — ALL fields use Versioned.read() ───────────────────────────
+  // ── fromJson — ALL fields flattened, Capital_Underscore keys ─────────────
   factory ContactUsCmsModel.fromJson(Map<String, dynamic> map) {
+
+    // ── Client Reasons (plain list) ─────────────────────────────────────
+    final rawClientReasons = map['Client_Description_Reasons'] as List<dynamic>? ?? [];
+    final clientReasons = rawClientReasons
+        .map((e) => ContactReasonItem.fromMap(e as Map<String, dynamic>))
+        .toList();
+
+    // ── Owner Reasons (plain list) ──────────────────────────────────────
+    final rawOwnerReasons = map['Owner_Description_Reasons'] as List<dynamic>? ?? [];
+    final ownerReasons = rawOwnerReasons
+        .map((e) => ContactReasonItem.fromMap(e as Map<String, dynamic>))
+        .toList();
+
+    // ── Last Updated (not versioned) ────────────────────────────────────
+    DateTime? lastUpdatedAt;
+    if (map['Last_Updated_At'] != null) {
+      if (map['Last_Updated_At'] is Timestamp) {
+        lastUpdatedAt = (map['Last_Updated_At'] as Timestamp).toDate();
+      } else if (map['Last_Updated_At'] is String) {
+        lastUpdatedAt = DateTime.tryParse(map['Last_Updated_At']);
+      }
+    }
+
     return ContactUsCmsModel(
       publishStatus: Versioned.read<String>(
-        map['publishStatus'],
-            (v) => v?.toString() ?? 'draft',
+        map['Publish_Status'], (v) => v?.toString() ?? 'draft',
       ),
 
-      headings: Versioned.read<ContactHeadings>(
-        map['headings'],
-            (v) => ContactHeadings.fromMap(
-            v is Map ? Map<String, dynamic>.from(v) : null),
+      // ── Headings (flattened, versioned) ───────────────────────────────
+      headings: ContactHeadings(
+        svgUrl: Versioned.read<String>(
+          map['Headings_Svg_Url'], (v) => v?.toString() ?? '',
+        ),
+        title: ContactBilingualText(
+          en: Versioned.read<String>(
+            map['Headings_Title_En'], (v) => v?.toString() ?? '',
+          ),
+          ar: Versioned.read<String>(
+            map['Headings_Title_Ar'], (v) => v?.toString() ?? '',
+          ),
+        ),
+        shortDescription: ContactBilingualText(
+          en: Versioned.read<String>(
+            map['Headings_Short_Description_En'], (v) => v?.toString() ?? '',
+          ),
+          ar: Versioned.read<String>(
+            map['Headings_Short_Description_Ar'], (v) => v?.toString() ?? '',
+          ),
+        ),
       ),
 
-      clientDescription: Versioned.read<ContactDescriptionSection>(
-        map['clientDescription'],
-            (v) => ContactDescriptionSection.fromMap(
-            v is Map ? Map<String, dynamic>.from(v) : null),
+      // ── Client Description (flattened, versioned) ─────────────────────
+      clientDescription: ContactDescriptionSection(
+        description: ContactBilingualText(
+          en: Versioned.read<String>(
+            map['Client_Description_En'], (v) => v?.toString() ?? '',
+          ),
+          ar: Versioned.read<String>(
+            map['Client_Description_Ar'], (v) => v?.toString() ?? '',
+          ),
+        ),
+        reasons: clientReasons,
       ),
 
-      ownerDescription: Versioned.read<ContactDescriptionSection>(
-        map['ownerDescription'],
-            (v) => ContactDescriptionSection.fromMap(
-            v is Map ? Map<String, dynamic>.from(v) : null),
+      // ── Owner Description (flattened, versioned) ──────────────────────
+      ownerDescription: ContactDescriptionSection(
+        description: ContactBilingualText(
+          en: Versioned.read<String>(
+            map['Owner_Description_En'], (v) => v?.toString() ?? '',
+          ),
+          ar: Versioned.read<String>(
+            map['Owner_Description_Ar'], (v) => v?.toString() ?? '',
+          ),
+        ),
+        reasons: ownerReasons,
       ),
 
-      // ✅ FIX: use dedicated reader that handles versioned-map format
-      //         to avoid Firestore "nested arrays not supported" error
-      socialIcons: _readVersionedListField(map['socialIcons']),
+      // ── Social Icons (versioned via Map) ──────────────────────────────
+      socialIcons: _readVersionedListField(map['Social_Icons']),
 
-      lastUpdatedAt: Versioned.read<DateTime?>(
-        map['lastUpdatedAt'],
-            (v) {
-          if (v == null) return null;
-          if (v is Timestamp) return v.toDate();
-          if (v is String) return DateTime.tryParse(v);
-          return null;
-        },
-      ),
+      lastUpdatedAt: lastUpdatedAt,
     );
   }
 
-  // ── toJson — plain values (versioning handled in repo layer) ─────────────
+  // ── toJson — ALL fields flattened, Capital_Underscore naming ─────────────
   Map<String, dynamic> toJson() => {
-    'publishStatus': publishStatus,
-    'headings': headings.toMap(),
-    'clientDescription': clientDescription.toMap(),
-    'ownerDescription': ownerDescription.toMap(),
-    'socialIcons': socialIcons.map((s) => s.toMap()).toList(),
+    'Publish_Status': publishStatus,
+
+    // ── Headings (flattened) ─────────────────────────────────────────
+    'Headings_Svg_Url':              headings.svgUrl,
+    'Headings_Title_En':             headings.title.en,
+    'Headings_Title_Ar':             headings.title.ar,
+    'Headings_Short_Description_En': headings.shortDescription.en,
+    'Headings_Short_Description_Ar': headings.shortDescription.ar,
+
+    // ── Client Description (flattened) ───────────────────────────────
+    'Client_Description_En':      clientDescription.description.en,
+    'Client_Description_Ar':      clientDescription.description.ar,
+    'Client_Description_Reasons': clientDescription.reasons.map((r) => r.toMap()).toList(),
+
+    // ── Owner Description (flattened) ────────────────────────────────
+    'Owner_Description_En':      ownerDescription.description.en,
+    'Owner_Description_Ar':      ownerDescription.description.ar,
+    'Owner_Description_Reasons': ownerDescription.reasons.map((r) => r.toMap()).toList(),
+
+    // ── Social Icons (list) ──────────────────────────────────────────
+    'Social_Icons': socialIcons.map((s) => s.toMap()).toList(),
   };
 
   ContactUsCmsModel copyWith({

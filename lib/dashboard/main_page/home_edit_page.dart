@@ -27,6 +27,7 @@ import 'dart:async';
 import 'dart:typed_data';
 import 'dart:html' as html;
 
+import 'package:beauty_admin/core/widget/navigator.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
@@ -51,6 +52,9 @@ import '../../../core/custom_dialog.dart';
 import '../../controller/home/home_cubit.dart';
 import '../../controller/home/home_state.dart';
 import '../../model/home/home_model.dart';
+import '../../widgets/app_admin_navbar.dart';
+import 'home_main_page.dart';
+import 'home_preview_page.dart';
 
 class _C {
   static const Color primary   = Color(0xFFD16F9A);
@@ -1100,13 +1104,19 @@ class _HomeEditPageState extends State<HomeEditPage> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
+                          AppAdminNavbar(
+                            activeLabel: 'Web Page',
+                            homePage: HomeMainPage(),
+                            webPage: HomeMainPage(),
+                            jobListingPage: HomeMainPage(),
+                          ),
                           SizedBox(width: 20.w),
                           AdminSubNavBar(activeIndex: 0),
                           SizedBox(
                             width: 1050.w,
                             child: SingleChildScrollView(
                               padding: EdgeInsets.symmetric(
-                                  horizontal: 20.w, vertical: 20.h),
+                                   vertical: 20.h),
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
@@ -1187,7 +1197,32 @@ class _HomeEditPageState extends State<HomeEditPage> {
     children: [
       Expanded(
         child: GestureDetector(
-          onTap: () => context.pushNamed('home_preview'),
+          onTap: () async {
+            final cubit = context.read<HomeCmsCubit>();
+
+            // Sync app-link icons into cubit so AppFooter can render them in preview
+            if (_iosIconPicked.bytes != null) {
+              await cubit.uploadAppLinkIcon('ios', _iosIconPicked.bytes!);
+            }
+            if (_androidIconPicked.bytes != null) {
+              await cubit.uploadAppLinkIcon('android', _androidIconPicked.bytes!);
+            }
+
+            // Sync all other app-link fields
+            cubit.updateAppDownloadLinks(
+              iosUrl:     _iosUrlCtrl.text,
+              androidUrl: _androidUrlCtrl.text,
+              labelEn:    _appLabelEnCtrl.text,
+              labelAr:    _appLabelArCtrl.text,
+              visibility: _downloadAppVisibility,
+            );
+
+            if (!mounted) return;
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const HomePreviewPage()),
+            );
+          },
           child: Container(
             height: 44.h,
             decoration: BoxDecoration(

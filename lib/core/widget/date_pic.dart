@@ -41,13 +41,13 @@ class DatePicker {
                   decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(8.r),
                       color: isSelected == true
-                          ? AppColors.secondaryPrimary
+                          ? Color(0xFFD16F9A)
                           : AppColors.field,
                       border: Border.all(
                         color: date.day == DateTime.now().day &&
                             date.month == DateTime.now().month &&
                             date.year == DateTime.now().year
-                            ? AppColors.secondaryPrimary
+                            ? Color(0xFFD16F9A)
                             : Colors.transparent,
                       )),
                   child: Center(
@@ -55,8 +55,8 @@ class DatePicker {
                         date.day.toString(),
                         style: AppTextStyles.font14BlackCairoRegular.copyWith(
                           color: isSelected == true
-                              ? AppColors.textButton
-                              : AppColors.text,
+                              ? Colors.white
+                              : AppColors.secondaryText,
                         ),
                       ))),
             );
@@ -71,64 +71,58 @@ class DatePicker {
           customModePickerIcon: SvgPicture.asset(
             'assets/images/downArrow.svg',
             fit: BoxFit.fitHeight,
-            color: AppColors.secondaryPrimary,
+            color: Color(0xFFD16F9A),
             height: isTablet ? 16.sp : null,
           ),
 
-          okButton: Material(
-            color: Colors.transparent,
-            child: GestureDetector(
-              child: Padding(
-                padding: EdgeInsets.only(bottom: 0.sp),
-                child: Container(
-                  height: 38.sp,
-                  width: isTablet ? 150.sp : 120.sp,
-                  decoration: BoxDecoration(
-
-                    borderRadius: BorderRadius.circular(8.r),
-                    color: AppColors.secondaryPrimary,
-
-                  ),
-                  child: Center(
-                    child: Text(
-                      'Set Date'.tr,
-                      style: AppTextStyles.font14BlackCairoRegular
-                          .copyWith(color: AppColors.textButton),
-                    ),
+          okButton: GestureDetector(
+            child: Padding(
+              padding: EdgeInsets.only(bottom: 0.sp),
+              child: Container(
+                height: 38.sp,
+                width: isTablet ? 150.sp : 120.sp,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(8.r),
+                  color: Color(0xFFD16F9A),
+                ),
+                child: Center(
+                  child: Text(
+                    'Set Date'.tr,
+                    style: AppTextStyles.font14BlackCairoRegular
+                        .copyWith(color: AppColors.textButton),
                   ),
                 ),
               ),
             ),
           ),
 
-          cancelButton: Material(
-            color: Colors.transparent,
-            child: GestureDetector(
-              child: Padding(
-                padding: EdgeInsets.only(bottom: 0.sp),
-                child: Container(
-                  height: 38.sp,
-                  width: isTablet ? 150.sp : 120.sp,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(8.r),
-                    color: AppColors.secondaryButton,
-                  ),
-                  child: Center(
-                    child: Text(
-                      'Cancel'.tr,
-                      style: AppTextStyles.font14BlackCairoRegular.copyWith(),
-                    ),
+          cancelButton: GestureDetector(
+            child: Padding(
+              padding: EdgeInsets.only(bottom: 0.sp),
+              child: Container(
+                height: 38.sp,
+                width: isTablet ? 150.sp : 120.sp,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(8.r),
+                  color: AppColors.secondaryButton,
+                ),
+                child: Center(
+                  child: Text(
+                    'Cancel'.tr,
+                    style: AppTextStyles.font14BlackCairoRegular.copyWith(),
                   ),
                 ),
               ),
             ),
           ),
+
+
           lastMonthIcon: Transform.rotate(
             angle: Get.locale.toString().contains('en') ? 0 : 3.14,
             child: SvgPicture.asset(
               'assets/icons/back_icon.svg',
               // ignore: deprecated_member_use
-              color: AppColors.secondaryPrimary,
+              color: Color(0xFFD16F9A),
             ),
           ),
           nextMonthIcon: Transform.rotate(
@@ -136,17 +130,17 @@ class DatePicker {
             child: SvgPicture.asset(
               'assets/icons/back_icon.svg',
               // ignore: deprecated_member_use
-              color: AppColors.secondaryPrimary,
+              color: Color(0xFFD16F9A),
             ),
           ),
           weekdayLabelTextStyle: AppTextStyles.font16BlackRegularCairo
-              .copyWith(color: AppColors.secondaryPrimary),
+              .copyWith(color: Color(0xFFD16F9A)),
 
           controlsTextStyle: AppTextStyles.font14BlackCairoRegular
-              .copyWith(color: AppColors.secondaryPrimary),
+              .copyWith(color: Color(0xFFD16F9A)),
           selectedYearTextStyle: AppTextStyles.font14BlackCairoRegular
-              .copyWith(color: AppColors.secondaryPrimary),
-          selectedDayHighlightColor: AppColors.secondaryPrimary,
+              .copyWith(color: Color(0xFFD16F9A)),
+          selectedDayHighlightColor: Color(0xFFD16F9A),
           dayTextStyle: AppTextStyles.font14BlackCairoRegular
               .copyWith(color: AppColors.textButton),
           selectedDayTextStyle: AppTextStyles.font14BlackCairoRegular
@@ -158,7 +152,7 @@ class DatePicker {
               .copyWith(color: AppColors.text),
           buttonPadding:
           EdgeInsets.symmetric(horizontal: isTablet ? 35.sp : 14.sp),
-          selectedRangeHighlightColor: AppColors.primary,
+          selectedRangeHighlightColor: Color(0xFFD16F9A),
           calendarType: calendarType, //CalendarDatePicker2Type.range,
         ),
         dialogSize: isTablet ? Size(460.sp, 320.sp) : Size(320.w, 320.h),

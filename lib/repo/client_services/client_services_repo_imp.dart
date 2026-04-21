@@ -2,9 +2,10 @@
 /// File Name: client_services_repo_imp.dart
 /// Description: Firebase implementation of ClientServicesRepo.
 /// Created by: Amr Mesbah
-/// Last Update: 18/04/2026
-/// UPDATED: savePage() now versions ALL fields using Versioned.append()
-///          — full audit trail in Firestore ✅
+/// Last Update: 21/04/2026
+/// UPDATED: All field names use Capital_Underscore naming convention ✅
+/// UPDATED: ALL fields flattened — NO nested maps in Firestore ✅
+/// UPDATED: EVERY single key goes through Versioned.append() ✅
 
 import 'dart:typed_data';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -27,6 +28,33 @@ class ClientServicesRepoImp implements ClientServicesRepo {
   DocumentReference _docRef(String gender) =>
       _firestore.collection(_collection).doc(gender);
 
+  // ═════════════════════════════════════════════════════════════════════════
+  //  GENERIC VERSIONED SAVE
+  // ═════════════════════════════════════════════════════════════════════════
+
+  Map<String, dynamic> _buildVersionedMap(
+      ClientServicesPageModel model,
+      Map<String, dynamic> existing,
+      ) {
+    final newMap       = model.copyWith(lastUpdated: DateTime.now()).toMap();
+    final versionedMap = <String, dynamic>{};
+
+    for (final key in newMap.keys) {
+      if (key == 'Last_Updated') continue;
+      versionedMap[key] = Versioned.append(existing[key], newMap[key]);
+    }
+
+    for (final key in existing.keys) {
+      if (key == 'Last_Updated') continue;
+      if (!newMap.containsKey(key)) {
+        versionedMap[key] = FieldValue.delete();
+      }
+    }
+
+    versionedMap['Last_Updated'] = FieldValue.serverTimestamp();
+    return versionedMap;
+  }
+
   // ── Fetch ──────────────────────────────────────────────────────────────────
   @override
   Future<ClientServicesPageModel> fetchPage({required String gender}) async {
@@ -41,7 +69,8 @@ class ClientServicesRepoImp implements ClientServicesRepo {
       }
       print('🟡 [ClientServicesRepoImp] fetchPage: no doc — creating default');
       final def = ClientServicesPageModel(id: gender, gender: gender);
-      await _docRef(gender).set(def.toMap());
+      final versionedDefault = _buildVersionedMap(def, {});
+      await _docRef(gender).set(versionedDefault);
       return def;
     } catch (e, st) {
       print('🔴 [ClientServicesRepoImp] fetchPage: ERROR $e\n$st');
@@ -49,7 +78,7 @@ class ClientServicesRepoImp implements ClientServicesRepo {
     }
   }
 
-  // ── Save (ALL fields versioned) ────────────────────────────────────────────
+  // ── Save ───────────────────────────────────────────────────────────────────
   @override
   Future<void> savePage(ClientServicesPageModel model) async {
     final docGender = model.gender.isEmpty ? 'female' : model.gender;
@@ -57,65 +86,19 @@ class ClientServicesRepoImp implements ClientServicesRepo {
         'status=${model.status} gender=$docGender');
 
     try {
-      // ── Step 1: read existing raw Firestore data ────────────────────────
       print('🟡 [ClientServicesRepoImp] savePage → reading existing doc...');
       final existingSnap = await _docRef(docGender)
           .get(const GetOptions(source: Source.server));
-      final existingData =
+      final ex =
           (existingSnap.exists ? existingSnap.data() : null)
           as Map<String, dynamic>? ??
               {};
-      print('   existing keys = ${existingData.keys.toList()}');
+      print('   existing keys = ${ex.keys.toList()}');
 
-      // ── Step 2: plain map from model ────────────────────────────────────
-      final updatedModel = model.copyWith(lastUpdated: DateTime.now());
-      final newMap = updatedModel.toMap();
+      final versionedMap = _buildVersionedMap(model, ex);
 
-      // ── Step 3: build versioned map — ALL fields ────────────────────────
-      final versionedMap = <String, dynamic>{
-        'id': Versioned.append(
-          existingData['id'],
-          newMap['id'],
-        ),
-        'status': Versioned.append(
-          existingData['status'],
-          newMap['status'],
-        ),
-        'gender': Versioned.append(
-          existingData['gender'],
-          newMap['gender'],
-        ),
-        'header': Versioned.append(
-          existingData['header'],
-          newMap['header'],
-        ),
-        'download': Versioned.append(
-          existingData['download'],
-          newMap['download'],
-        ),
-        'mockups': Versioned.append(
-          existingData['mockups'],
-          newMap['mockups'],
-        ),
-        'lastUpdated': Versioned.append(
-          existingData['lastUpdated'],
-          newMap['lastUpdated'],
-        ),
-      };
-
-      // ── Step 4: write to Firestore ──────────────────────────────────────
-      print('🟡 [ClientServicesRepoImp] savePage → writing versioned map...');
-      print('   id history length          = ${(versionedMap['id'] as List).length}');
-      print('   status history length      = ${(versionedMap['status'] as List).length}');
-      print('   gender history length      = ${(versionedMap['gender'] as List).length}');
-      print('   header history length      = ${(versionedMap['header'] as List).length}');
-      print('   download history length    = ${(versionedMap['download'] as List).length}');
-      print('   mockups history length     = ${(versionedMap['mockups'] as List).length}');
-      print('   lastUpdated history length = ${(versionedMap['lastUpdated'] as List).length}');
-
-      await _docRef(docGender).set(versionedMap, SetOptions(merge: true));
-      print('🟢 [ClientServicesRepoImp] savePage: ✅ ALL fields versioned DONE');
-
+      await _docRef(docGender).set(versionedMap, SetOptions(merge: false));
+      print('🟢 [ClientServicesRepoImp] savePage: ✅ ALL keys versioned DONE');
     } catch (e, st) {
       print('🔴 [ClientServicesRepoImp] savePage: ERROR $e\n$st');
       rethrow;

@@ -19,6 +19,8 @@ import 'package:beauty_admin/widgets/admin_sub_navbar.dart';
 import 'package:beauty_admin/widgets/app_navbar.dart';
 
 import '../../../model/about_us/about_us.dart';
+import '../../../widgets/app_admin_navbar.dart';
+import '../../main_page/home_main_page.dart';
 
 class _C {
   static const Color primary  = Color(0xFFD16F9A);
@@ -100,8 +102,14 @@ class _StrategyPreviewPageState extends State<StrategyPreviewPage> {
                   width: 1000.w,
                   child: Column(
                     children: [
+                      AppAdminNavbar(
+                        activeLabel: 'Web Page',
+                        homePage: HomeMainPage(),
+                        webPage: HomeMainPage(),
+                        jobListingPage: HomeMainPage(),
+                      ),
                       SizedBox(height: 20.h),
-                      AdminSubNavBar(activeIndex: 3),
+                      AdminSubNavBar(activeIndex: 5),
                       SizedBox(
                         width: 1000.w,
                         child: Column(

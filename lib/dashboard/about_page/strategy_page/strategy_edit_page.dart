@@ -8,16 +8,23 @@
 // UPDATED: Added publish confirmation dialog with validation
 // UPDATED: Fixed text input causing SVG reload - optimized rebuilds
 // UPDATED: Removed white backgrounds, changed padding to symmetric
+// UPDATED: Dual-document draft system with validation-based publish button
+// UPDATED: Added showPublishConfirmDialog and navigation to StrategyMainView
+// Created by: Amr Mesbah
+// Last Update: 21/04/2026
 
 // ignore_for_file: avoid_web_libraries_in_flutter
 import 'dart:async';
 import 'dart:html' as html;
 import 'dart:typed_data';
+import 'dart:ui' as ui;
 
+import 'package:beauty_admin/dashboard/about_page/strategy_page/strategy_main_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:intl/intl.dart';
 
 import 'package:beauty_admin/controller/about_us/about_us_cubit.dart';
 import 'package:beauty_admin/controller/about_us/about_us_state.dart';
@@ -29,12 +36,16 @@ import 'package:beauty_admin/widgets/admin_sub_navbar.dart';
 import 'package:beauty_admin/widgets/app_navbar.dart';
 
 import '../../../model/about_us/about_us.dart';
+import '../../../widgets/app_admin_navbar.dart';
+import '../../main_page/home_main_page.dart';
 import 'strategy_preview_page.dart';
+import '../../../core/custom_dialog.dart';
 
 const Color _kGreen      = Color(0xFFD16F9A);
 const Color _kGreenSolid = Color(0xFFD16F9A);
 const Color _kRed        = Color(0xFFD32F2F);
 const Color _kBg         = Color(0xFFF2F2F2);
+const Color _kDraftBadge = Color(0xFFF59E0B);
 
 // ── Device preview tab enum ─────────────────────────────────────────────────
 enum DeviceTab { largeScreen, tablet, mobile }
@@ -74,6 +85,9 @@ class _StrategyEditPageState extends State<StrategyEditPage> {
   bool _seeded    = false;
   bool _isSaving  = false;
 
+  /// Whether the data currently loaded came from a draft document.
+  bool _isEditingDraft = false;
+
   // ── Validation errors ──
   String? _navIconError;
   String? _strategicHouseEnError;
@@ -91,17 +105,47 @@ class _StrategyEditPageState extends State<StrategyEditPage> {
   final _strategicHouseEnKey = GlobalKey();
   final _strategicHouseArKey = GlobalKey();
 
+  // ── Field change listener for reactive validation ──
+  List<TextEditingController> get _allControllers => [
+    _navTitleEnCtrl,
+    _navTitleArCtrl,
+  ];
+
+  void _onFieldChanged() {
+    if (mounted) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) setState(() {});
+      });
+    }
+  }
+
   @override
   void initState() {
     super.initState();
+    for (final ctrl in _allControllers) {
+      ctrl.addListener(_onFieldChanged);
+    }
     context.read<StrategyCubit>().load();
   }
 
   @override
   void dispose() {
-    _navTitleEnCtrl.dispose();
-    _navTitleArCtrl.dispose();
+    for (final ctrl in _allControllers) {
+      ctrl.removeListener(_onFieldChanged);
+      ctrl.dispose();
+    }
     super.dispose();
+  }
+
+  // ── Validation helpers ────────────────────────────────────────────────────
+  bool _isValidEnglish(String text) {
+    if (text.trim().isEmpty) return false;
+    return !RegExp(r'[\u0600-\u06FF]').hasMatch(text);
+  }
+
+  bool _isValidArabic(String text) {
+    if (text.trim().isEmpty) return false;
+    return !RegExp(r'[a-zA-Z]').hasMatch(text);
   }
 
   // ── SVG validation helpers ────────────────────────────────────────────────
@@ -139,13 +183,6 @@ class _StrategyEditPageState extends State<StrategyEditPage> {
 
       // Validate file extension
       if (!file.name.toLowerCase().endsWith('.svg')) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Only SVG files are allowed!'),
-            backgroundColor: _kRed,
-            duration: Duration(seconds: 3),
-          ),
-        );
         c.complete(null);
         return;
       }
@@ -165,13 +202,6 @@ class _StrategyEditPageState extends State<StrategyEditPage> {
         if (bytes != null) {
           // Validate that it's actually an SVG file by content
           if (!_isSvgBytes(bytes)) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Invalid SVG file! Please upload a valid SVG.'),
-                backgroundColor: _kRed,
-                duration: Duration(seconds: 3),
-              ),
-            );
             c.complete(null);
             return;
           }
@@ -185,12 +215,6 @@ class _StrategyEditPageState extends State<StrategyEditPage> {
 
       reader.onError.listen((e) {
         print('Error reading file: $e');
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error reading file: $e'),
-            backgroundColor: _kRed,
-          ),
-        );
         c.complete(null);
       });
     });
@@ -200,14 +224,21 @@ class _StrategyEditPageState extends State<StrategyEditPage> {
   }
 
   // ── Seed ─────────────────────────────────────────────────────────────────
-  void _seed(OurStrategyModel m) {
+  void _seed(OurStrategyModel m, {bool isFromDraft = false}) {
     if (_seeded) return;
     _seeded = true;
+    _isEditingDraft = isFromDraft;
 
     print('🔵 Seeding strategy data:');
     print('  - Nav icon URL: ${m.navigationLabel.iconUrl}');
     print('  - Strategic House EN URL: ${m.strategicHouseEnUrl}');
     print('  - Strategic House AR URL: ${m.strategicHouseArUrl}');
+    print('  - Is from draft: $isFromDraft');
+
+    // Remove listeners temporarily
+    for (final ctrl in _allControllers) {
+      ctrl.removeListener(_onFieldChanged);
+    }
 
     _navTitleEnCtrl.text = m.navigationLabel.title.en;
     _navTitleArCtrl.text = m.navigationLabel.title.ar;
@@ -219,6 +250,11 @@ class _StrategyEditPageState extends State<StrategyEditPage> {
 
     _strategicHouseArUrl = m.strategicHouseArUrl;
     _strategicHouseArIsSvg = _isSvgUrl(m.strategicHouseArUrl);
+
+    // Re-add listeners
+    for (final ctrl in _allControllers) {
+      ctrl.addListener(_onFieldChanged);
+    }
 
     setState(() {});
   }
@@ -260,10 +296,10 @@ class _StrategyEditPageState extends State<StrategyEditPage> {
     });
 
     // Validate text fields
-    if (_navTitleEnCtrl.text.trim().isEmpty) {
+    if (!_isValidEnglish(_navTitleEnCtrl.text)) {
       isValid = false;
     }
-    if (_navTitleArCtrl.text.trim().isEmpty) {
+    if (!_isValidArabic(_navTitleArCtrl.text)) {
       isValid = false;
     }
 
@@ -312,6 +348,129 @@ class _StrategyEditPageState extends State<StrategyEditPage> {
     return isValid;
   }
 
+  // ── Check if form is valid for publishing ────────────────────────────────
+  bool get _isFormValid {
+    // Check text fields
+    if (!_isValidEnglish(_navTitleEnCtrl.text)) return false;
+    if (!_isValidArabic(_navTitleArCtrl.text)) return false;
+
+    // Check navigation icon
+    final hasNavIcon = _navIconBytes != null || _navIconUrl.isNotEmpty;
+    if (!hasNavIcon) return false;
+    final navIconSvg = _navIconBytes != null ? _navIconIsSvg : _isSvgUrl(_navIconUrl);
+    if (!navIconSvg) return false;
+
+    // Check strategic house EN
+    final hasEnImage = _strategicHouseEnBytes != null || _strategicHouseEnUrl.isNotEmpty;
+    if (!hasEnImage) return false;
+    final enSvg = _strategicHouseEnBytes != null ? _strategicHouseEnIsSvg : _isSvgUrl(_strategicHouseEnUrl);
+    if (!enSvg) return false;
+
+    // Check strategic house AR
+    final hasArImage = _strategicHouseArBytes != null || _strategicHouseArUrl.isNotEmpty;
+    if (!hasArImage) return false;
+    final arSvg = _strategicHouseArBytes != null ? _strategicHouseArIsSvg : _isSvgUrl(_strategicHouseArUrl);
+    if (!arSvg) return false;
+
+    // Check for validation errors
+    if (_navIconError != null) return false;
+    if (_strategicHouseEnError != null) return false;
+    if (_strategicHouseArError != null) return false;
+
+    return true;
+  }
+
+  // ── Get missing fields for error dialog ──────────────────────────────────
+  List<String> _getMissingFields() {
+    final missing = <String>[];
+
+    if (_navTitleEnCtrl.text.trim().isEmpty) {
+      missing.add('Navigation Title (EN)');
+    } else if (RegExp(r'[\u0600-\u06FF]').hasMatch(_navTitleEnCtrl.text)) {
+      missing.add('Navigation Title (EN) - contains Arabic characters');
+    }
+    if (_navTitleArCtrl.text.trim().isEmpty) {
+      missing.add('Navigation Title (AR)');
+    } else if (RegExp(r'[a-zA-Z]').hasMatch(_navTitleArCtrl.text)) {
+      missing.add('Navigation Title (AR) - contains English characters');
+    }
+
+    final hasNavIcon = _navIconBytes != null || _navIconUrl.isNotEmpty;
+    if (!hasNavIcon) {
+      missing.add('Navigation Icon (SVG required)');
+    } else {
+      final isSvg = _navIconBytes != null ? _navIconIsSvg : _isSvgUrl(_navIconUrl);
+      if (!isSvg) {
+        missing.add('Navigation Icon must be SVG format');
+      }
+    }
+
+    final hasEnImage = _strategicHouseEnBytes != null || _strategicHouseEnUrl.isNotEmpty;
+    if (!hasEnImage) {
+      missing.add('Strategic House (ENG) image (SVG required)');
+    } else {
+      final isSvg = _strategicHouseEnBytes != null ? _strategicHouseEnIsSvg : _isSvgUrl(_strategicHouseEnUrl);
+      if (!isSvg) {
+        missing.add('Strategic House (ENG) must be SVG format');
+      }
+    }
+
+    final hasArImage = _strategicHouseArBytes != null || _strategicHouseArUrl.isNotEmpty;
+    if (!hasArImage) {
+      missing.add('Strategic House (ARB) image (SVG required)');
+    } else {
+      final isSvg = _strategicHouseArBytes != null ? _strategicHouseArIsSvg : _isSvgUrl(_strategicHouseArUrl);
+      if (!isSvg) {
+        missing.add('Strategic House (ARB) must be SVG format');
+      }
+    }
+
+    return missing;
+  }
+
+  // ── Show validation error dialog ──────────────────────────────────────────
+  void _showValidationError() {
+    final missing = _getMissingFields();
+    if (missing.isEmpty) return;
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Row(
+          children: [
+            Icon(Icons.error_outline, color: _kRed, size: 24.sp),
+            SizedBox(width: 8.w),
+            const Text('Validation Error'),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text('Please fill all required fields correctly:'),
+            const SizedBox(height: 12),
+            ...missing.map((field) => Padding(
+              padding: const EdgeInsets.only(left: 8, top: 4),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('• ', style: TextStyle(color: _kRed)),
+                  Expanded(child: Text(field)),
+                ],
+              ),
+            )),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('OK'),
+          ),
+        ],
+      ),
+    );
+  }
+
   // ── Preview ───────────────────────────────────────────────────────────────
   void _onPreview() {
     setState(() => _submitted = true);
@@ -334,21 +493,13 @@ class _StrategyEditPageState extends State<StrategyEditPage> {
 
   // ── Save ──────────────────────────────────────────────────────────────────
   Future<void> _save(String status) async {
-    setState(() => _submitted = true);
-
-    // Validate with stricter rules for publish
-    final forPublish = status == 'published';
-    if (!_validate(forPublish: forPublish)) {
-      if (forPublish) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Cannot publish: All fields must be filled and all images must be valid SVG files!'),
-            backgroundColor: _kRed,
-            duration: Duration(seconds: 4),
-          ),
-        );
+    // Only validate fully for 'published' — drafts can be partial
+    if (status == 'published') {
+      setState(() => _submitted = true);
+      if (!_validate(forPublish: true)) {
+        _showValidationError();
+        return;
       }
-      return;
     }
 
     setState(() => _isSaving = true);
@@ -357,6 +508,7 @@ class _StrategyEditPageState extends State<StrategyEditPage> {
     final uploads = _collectUploads();
 
     print('🔵 Saving strategy:');
+    print('  - Status: $status');
     print('  - Nav icon SVG: $_navIconIsSvg');
     print('  - Strategic House EN SVG: $_strategicHouseEnIsSvg');
     print('  - Strategic House AR SVG: $_strategicHouseArIsSvg');
@@ -414,9 +566,13 @@ class _StrategyEditPageState extends State<StrategyEditPage> {
   Widget build(BuildContext context) {
     return BlocConsumer<StrategyCubit, StrategyState>(
       listener: (context, state) {
+        print('[StrategyEditPage] 👂 listener: ${state.runtimeType}');
+
         if (state is StrategyLoaded) {
-          _seed(state.data);
+          _seed(state.data, );
         }
+
+        // ── Published successfully ────────────────────────────────────
         if (state is StrategySaved) {
           setState(() => _isSaving = false);
 
@@ -446,27 +602,85 @@ class _StrategyEditPageState extends State<StrategyEditPage> {
             _svgCache.remove(_strategicHouseArUrl);
           });
 
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Our Strategy saved!'),
-              backgroundColor: _kGreenSolid,
-            ),
-          );
-
-          Navigator.pop(context);
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (mounted) {
+              Navigator.of(context).pushAndRemoveUntil(
+                MaterialPageRoute(
+                  builder: (context) => BlocProvider.value(
+                    value: context.read<StrategyCubit>(),
+                    child: const StrategyMainView(),
+                  ),
+                ),
+                    (route) => false,
+              );
+            }
+          });
         }
+
+        // // ── Draft saved successfully ──────────────────────────────────
+        // if (state is StrategyDraftSaved) {
+        //   setState(() => _isSaving = false);
+        //
+        //   if (mounted) {
+        //     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        //       content: Text(
+        //         'Draft saved! Published version is still live.',
+        //         style: StyleText.fontSize14Weight400.copyWith(color: Colors.white),
+        //       ),
+        //       backgroundColor: _kDraftBadge,
+        //       behavior: SnackBarBehavior.floating,
+        //     ));
+        //   }
+        //
+        //   WidgetsBinding.instance.addPostFrameCallback((_) {
+        //     if (mounted) {
+        //       Navigator.of(context).pushAndRemoveUntil(
+        //         MaterialPageRoute(
+        //           builder: (context) => BlocProvider.value(
+        //             value: context.read<StrategyCubit>(),
+        //             child: const StrategyMainView(),
+        //           ),
+        //         ),
+        //             (route) => false,
+        //       );
+        //     }
+        //   });
+        // }
+
+        // // ── Draft deleted (discard) ───────────────────────────────────
+        // if (state is StrategyDraftDeleted) {
+        //   setState(() => _isSaving = false);
+        //
+        //   WidgetsBinding.instance.addPostFrameCallback((_) {
+        //     if (mounted) {
+        //       Navigator.of(context).pushAndRemoveUntil(
+        //         MaterialPageRoute(
+        //           builder: (context) => BlocProvider.value(
+        //             value: context.read<StrategyCubit>(),
+        //             child: const StrategyMainView(),
+        //           ),
+        //         ),
+        //             (route) => false,
+        //       );
+        //     }
+        //   });
+        // }
+
         if (state is StrategyError) {
           setState(() => _isSaving = false);
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Error: ${state.message}'),
-              backgroundColor: _kRed,
-            ),
-          );
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+              content: Text('Error: ${state.message}',
+                  style: StyleText.fontSize14Weight400.copyWith(color: Colors.white)),
+              backgroundColor: Colors.red,
+              behavior: SnackBarBehavior.floating,
+            ));
+          }
         }
       },
       builder: (context, state) {
         final loading = state is StrategyLoading || state is StrategyInitial;
+        final canPublish = _isFormValid;
 
         return Scaffold(
           backgroundColor: _kBg,
@@ -482,6 +696,12 @@ class _StrategyEditPageState extends State<StrategyEditPage> {
                         width: 1000.w,
                         child: Column(
                           children: [
+                            AppAdminNavbar(
+                              activeLabel: 'Web Page',
+                              homePage: HomeMainPage(),
+                              webPage: HomeMainPage(),
+                              jobListingPage: HomeMainPage(),
+                            ),
                             SizedBox(height: 20.h),
                             const AdminSubNavBar(activeIndex: 5),
                             SizedBox(height: 20.h),
@@ -489,7 +709,7 @@ class _StrategyEditPageState extends State<StrategyEditPage> {
                                 ? const Center(
                                 child: CircularProgressIndicator(
                                     color: _kGreenSolid))
-                                : _buildForm(),
+                                : _buildForm(canPublish),
                           ],
                         ),
                       ),
@@ -506,13 +726,44 @@ class _StrategyEditPageState extends State<StrategyEditPage> {
   }
 
   // ── Form ──────────────────────────────────────────────────────────────────
-  Widget _buildForm() {
+  Widget _buildForm(bool canPublish) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Editing Our Strategy',
-            style: StyleText.fontSize45Weight600.copyWith(
-                color: _kGreen, fontWeight: FontWeight.w700)),
+        // ── Title row with draft badge ─────────────────────────────────────
+        Row(
+          children: [
+            Text('Editing Our Strategy',
+                style: StyleText.fontSize45Weight600.copyWith(
+                    color: _kGreen, fontWeight: FontWeight.w700)),
+            if (_isEditingDraft) ...[
+              SizedBox(width: 12.w),
+              Container(
+                padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 4.h),
+                decoration: BoxDecoration(
+                  color: _kDraftBadge.withOpacity(0.15),
+                  borderRadius: BorderRadius.circular(4.r),
+                ),
+                child: Text(
+                  'EDITING DRAFT',
+                  style: StyleText.fontSize12Weight600.copyWith(
+                    color: _kDraftBadge,
+                  ),
+                ),
+              ),
+            ],
+          ],
+        ),
+        if (_isEditingDraft)
+          Padding(
+            padding: EdgeInsets.only(top: 4.h),
+            child: Text(
+              'You are editing a saved draft. The published version is still live.',
+              style: StyleText.fontSize12Weight400.copyWith(
+                color: Colors.grey[600],
+              ),
+            ),
+          ),
         SizedBox(height: 24.h),
 
         // ── Navigation Label ──────────────────────────────────────────────
@@ -663,7 +914,7 @@ class _StrategyEditPageState extends State<StrategyEditPage> {
         SizedBox(height: 32.h),
 
         // ── Action buttons ────────────────────────────────────────────────
-        _actionRow(),
+        _actionRow(canPublish),
         SizedBox(height: 12.h),
         _secondaryRow(),
         SizedBox(height: 48.h),
@@ -672,7 +923,7 @@ class _StrategyEditPageState extends State<StrategyEditPage> {
   }
 
   // ── Action Buttons Row ────────────────────────────────────────────────────
-  Widget _actionRow() {
+  Widget _actionRow(bool canPublish) {
     return Row(children: [
       Expanded(
         child: _btn(
@@ -683,28 +934,30 @@ class _StrategyEditPageState extends State<StrategyEditPage> {
       ),
       SizedBox(width: 16.w),
       Expanded(
-        child: _btn(
-          label: 'Publish',
-          color: _kGreenSolid,
-          onTap: () {
-            // Mark as submitted to show errors
-            setState(() => _submitted = true);
+        child: AbsorbPointer(
+          absorbing: !canPublish,
+          child: Opacity(
+            opacity: canPublish ? 1.0 : 0.6,
+            child: _btn(
+              label: 'Publish',
+              color: canPublish ? _kGreenSolid : _kGreenSolid.withOpacity(0.35),
+              onTap: () {
+                if (!canPublish) {
+                  setState(() => _submitted = true);
+                  _showValidationError();
+                  return;
+                }
 
-            // Validate before showing dialog
-            if (!_validate(forPublish: true)) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Please fill all required fields and ensure all images are valid SVG files'),
-                  backgroundColor: _kRed,
-                  duration: Duration(seconds: 3),
-                ),
-              );
-              return;
-            }
-
-            // Show publish confirmation dialog
-            _showPublishConfirmDialog();
-          },
+                // Show publish confirmation dialog
+                showPublishConfirmDialog(
+                  context: context,
+                  title: 'PUBLISHING STRATEGY',
+                  subtitle: 'Do you want to publish this strategy?',
+                  onConfirm: () async => _save('published'),
+                );
+              },
+            ),
+          ),
         ),
       ),
     ]);
@@ -713,225 +966,26 @@ class _StrategyEditPageState extends State<StrategyEditPage> {
   // ── Secondary Buttons Row ─────────────────────────────────────────────────
   Widget _secondaryRow() {
     return Row(children: [
+      // ── Discard button ────────────────────────────────────────────────
       Expanded(
         child: _btn(
           label: 'Discard',
           color: const Color(0xFF9E9E9E),
-          onTap: () => Navigator.pop(context),
-        ),
-      ),
-      SizedBox(width: 16.w),
-      Expanded(
-        child: _btn(
-          label: 'Save For Later',
-          color: const Color(0xFF9E9E9E),
           onTap: () {
-            // Mark as submitted to show errors
-            setState(() => _submitted = true);
-
-            // Validate before saving as draft
-            if (!_validate(forPublish: false)) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Please fill all required fields'),
-                  backgroundColor: _kRed,
-                  duration: Duration(seconds: 3),
-                ),
-              );
-              return;
+            if (Navigator.canPop(context)) {
+              Navigator.pop(context);
+            } else {
+              Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) => const StrategyMainView()));
             }
-
-            // Show save confirmation dialog
-            _showSaveConfirmDialog();
           },
         ),
       ),
+      SizedBox(width: 16.w),
+      Expanded(child: Column())
     ]);
-  }
-
-  // ── Publish Confirmation Dialog ───────────────────────────────────────────
-  void _showPublishConfirmDialog() {
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12.r),
-          ),
-          title: Column(
-            children: [
-              Container(
-                padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 12.h),
-                decoration: BoxDecoration(
-                  color: _kGreenSolid.withOpacity(0.1),
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(
-                  Icons.check_circle_outline,
-                  color: _kGreenSolid,
-                  size: 40.sp,
-                ),
-              ),
-              SizedBox(height: 12.h),
-              Text(
-                'Confirm Publishing',
-                style: TextStyle(
-                  fontFamily: 'Cairo',
-                  fontSize: 18.sp,
-                  fontWeight: FontWeight.w700,
-                  color: Colors.black87,
-                ),
-              ),
-            ],
-          ),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                'Are you sure you want to publish this strategy?',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontFamily: 'Cairo',
-                  fontSize: 14.sp,
-                  color: Colors.black54,
-                ),
-              ),
-              SizedBox(height: 8.h),
-              Text(
-                'This will make it visible to all users.',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontFamily: 'Cairo',
-                  fontSize: 12.sp,
-                  color: Colors.black38,
-                ),
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: Text(
-                'Cancel',
-                style: TextStyle(
-                  fontFamily: 'Cairo',
-                  fontSize: 14.sp,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.grey[600],
-                ),
-              ),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                Navigator.pop(context);
-                _save('published');
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: _kGreenSolid,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8.r),
-                ),
-              ),
-              child: Text(
-                'Publish',
-                style: TextStyle(
-                  fontFamily: 'Cairo',
-                  fontSize: 14.sp,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.white,
-                ),
-              ),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  // ── Save Confirmation Dialog ──────────────────────────────────────────────
-  void _showSaveConfirmDialog() {
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12.r),
-          ),
-          title: Column(
-            children: [
-              Container(
-                padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 12.h),
-                decoration: BoxDecoration(
-                  color: _kGreenSolid.withOpacity(0.1),
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(
-                  Icons.save_outlined,
-                  color: _kGreenSolid,
-                  size: 40.sp,
-                ),
-              ),
-              SizedBox(height: 12.h),
-              Text(
-                'Save as Draft',
-                style: TextStyle(
-                  fontFamily: 'Cairo',
-                  fontSize: 18.sp,
-                  fontWeight: FontWeight.w700,
-                  color: Colors.black87,
-                ),
-              ),
-            ],
-          ),
-          content: Text(
-            'Do you want to save this strategy as a draft?',
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontFamily: 'Cairo',
-              fontSize: 14.sp,
-              color: Colors.black54,
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: Text(
-                'Cancel',
-                style: TextStyle(
-                  fontFamily: 'Cairo',
-                  fontSize: 14.sp,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.grey[600],
-                ),
-              ),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                Navigator.pop(context);
-                _save('draft');
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: _kGreenSolid,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8.r),
-                ),
-              ),
-              child: Text(
-                'Save',
-                style: TextStyle(
-                  fontFamily: 'Cairo',
-                  fontSize: 14.sp,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.white,
-                ),
-              ),
-            ),
-          ],
-        );
-      },
-    );
   }
 
   // ── Shared helpers ────────────────────────────────────────────────────────
@@ -977,7 +1031,6 @@ class _StrategyEditPageState extends State<StrategyEditPage> {
         Container(
           width: double.infinity,
           decoration: BoxDecoration(
-            // Removed white background - now transparent
             borderRadius:
             BorderRadius.vertical(bottom: Radius.circular(12.r)),
           ),
@@ -1056,13 +1109,10 @@ class _StrategyEditPageState extends State<StrategyEditPage> {
             fillColor: Colors.white,
             maxLength: 200,
             submitted: _submitted,
-            textDirection: TextDirection.ltr,
+            textDirection: ui.TextDirection.ltr,
             textAlign: TextAlign.start,
             onChanged: (_) {
-              // Only update validation state, don't trigger full rebuild
-              if (_submitted) {
-                setState(() {});
-              }
+              // Validation handled by listener
             },
           ),
         ),
@@ -1076,13 +1126,10 @@ class _StrategyEditPageState extends State<StrategyEditPage> {
             maxLines: 1,
             maxLength: 200,
             submitted: _submitted,
-            textDirection: TextDirection.rtl,
+            textDirection: ui.TextDirection.rtl,
             textAlign: TextAlign.right,
             onChanged: (_) {
-              // Only update validation state, don't trigger full rebuild
-              if (_submitted) {
-                setState(() {});
-              }
+              // Validation handled by listener
             },
           ),
         ),
@@ -1291,21 +1338,6 @@ class _NavIconUploadWidget extends StatelessWidget {
                 ],
               ),
             ),
-            // if (hasImage && onRemove != null) ...[
-            //   SizedBox(width: 12.w),
-            //   GestureDetector(
-            //     onTap: onRemove,
-            //     child: Text(
-            //       'Remove',
-            //       style: TextStyle(
-            //         fontFamily: 'Cairo',
-            //         fontSize: 12.sp,
-            //         color: _kRed,
-            //         fontWeight: FontWeight.w600,
-            //       ),
-            //     ),
-            //   ),
-          //  ],
           ],
         ),
         if (errorText != null) ...[
@@ -1436,32 +1468,6 @@ class _StrategicHouseImageWidget extends StatelessWidget {
                     },
                   ),
                 ),
-                // Remove button
-                if (onRemove != null)
-                  Positioned(
-                    top: 8.h,
-                    right: 8.w,
-                    child: GestureDetector(
-                      onTap: onRemove,
-                      child: Container(
-                        padding: EdgeInsets.symmetric(
-                            horizontal: 12.w, vertical: 6.h),
-                        decoration: BoxDecoration(
-                          color: _kRed,
-                          borderRadius: BorderRadius.circular(6.r),
-                        ),
-                        child: Text(
-                          'Remove',
-                          style: TextStyle(
-                            fontFamily: 'Cairo',
-                            fontSize: 12.sp,
-                            fontWeight: FontWeight.w600,
-                            color: Colors.white,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
               ],
             )
                 : Column(

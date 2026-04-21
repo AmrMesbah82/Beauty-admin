@@ -8,6 +8,7 @@
 ///              Buttons: Back / Save (with confirm dialog).
 /// Created by: Amr Mesbah
 /// Last Update: 10/04/2026
+/// UPDATED: EN/AR toggle now uses CustomSegmentedTabs (matches client_services_preview_page)
 
 import 'dart:ui' as ui;
 import 'dart:html' as html;
@@ -19,14 +20,16 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get_core/src/get_main.dart';
 import 'package:get/get_navigation/src/extension_navigation.dart';
 
-
-
 import '../../../core/custom_dialog.dart';
 import '../../controller/owner_services/owner_services_cubit.dart';
 import '../../controller/owner_services/owner_services_state.dart';
+import '../../core/custom_segmant_tab.dart';
 import '../../core/widget/circle_progress.dart';
 import '../../model/owner_services/owner_services_model.dart';
 import '../../theme/new_theme.dart';
+import '../../widgets/admin_sub_navbar.dart';
+import '../../widgets/app_admin_navbar.dart';
+import '../main_page/home_main_page.dart';
 
 class _C {
   static const Color primary   = Color(0xFFD16F9A);
@@ -49,8 +52,10 @@ class OwnerServicesPreviewPage extends StatefulWidget {
 
 class _OwnerServicesPreviewPageState
     extends State<OwnerServicesPreviewPage> {
-  String _device = 'Desktop'; // Desktop / Tablet / Mobile
-  String _lang = 'en'; // en / ar
+  String _device   = 'Desktop'; // Desktop / Tablet / Mobile
+  int    _langIndex = 0;        // 0 = EN, 1 = AR
+
+  bool get _isAr => _langIndex == 1;
 
   // ── Accordion ─────────────────────────────────────────────────────────────
   final Map<String, bool> _open = {
@@ -68,14 +73,12 @@ class _OwnerServicesPreviewPageState
     }
   }
 
-  bool get _isAr => _lang == 'ar';
-
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<OwnerServicesCmsCubit, OwnerServicesCmsState>(
       builder: (context, state) {
         final cubit = context.read<OwnerServicesCmsCubit>();
-        final data = cubit.current;
+        final data  = cubit.current;
 
         return Scaffold(
           backgroundColor: _C.back,
@@ -90,18 +93,28 @@ class _OwnerServicesPreviewPageState
                     width: 1000.w,
                     child: Padding(
                       padding: EdgeInsets.symmetric(
-                          horizontal: 20.w, vertical: 20.h),
+                          vertical: 20.h),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
+
+                          AppAdminNavbar(
+                            activeLabel: 'Web Page',
+                            homePage: HomeMainPage(),
+                            webPage: HomeMainPage(),
+                            jobListingPage: HomeMainPage(),
+                          ),
+                          SizedBox(height: 20.h),
+                          AdminSubNavBar(activeIndex: 4),
+                          SizedBox(height: 20.h),
+
                           Text('Preview Owner Services Details',
-                              style: StyleText.fontSize45Weight600
-                                  .copyWith(
+                              style: StyleText.fontSize45Weight600.copyWith(
                                   color: _C.primary,
                                   fontWeight: FontWeight.w700)),
                           SizedBox(height: 12.h),
 
-                          // ── Device + Language toggles ──────────
+                          // ── Device tabs + EN/AR toggle ─────────────────────
                           Row(children: [
                             _deviceToggle(),
                             const Spacer(),
@@ -109,13 +122,13 @@ class _OwnerServicesPreviewPageState
                           ]),
                           SizedBox(height: 16.h),
 
-                          // ── View accordion ─────────────────────
+                          // ── View accordion ─────────────────────────────────
                           _accordionWrap('view', 'View', [
                             _previewContent(data),
                           ]),
                           SizedBox(height: 20.h),
 
-                          // ── Action buttons ─────────────────────
+                          // ── Action buttons ─────────────────────────────────
                           _actionRow(cubit),
                           SizedBox(height: 40.h),
                         ],
@@ -131,48 +144,42 @@ class _OwnerServicesPreviewPageState
     );
   }
 
-  // ── Device toggle ─────────────────────────────────────────────────────────
+  // ── Device toggle (underline style matching client_services) ──────────────
   Widget _deviceToggle() => Row(
-    children: ['Desktop', 'Tablet', 'Mobile']
-        .map((d) => Padding(
-      padding: EdgeInsets.only(right: 8.w),
-      child: GestureDetector(
+    children: ['Desktop', 'Tablet', 'Mobile'].map((d) {
+      final isActive = d == _device;
+      return GestureDetector(
         onTap: () => setState(() => _device = d),
-        child: Text(d,
+        child: Padding(
+          padding: EdgeInsets.only(right: 16.w),
+          child: Text(
+            d,
             style: StyleText.fontSize14Weight600.copyWith(
-                color: d == _device
-                    ? _C.primary
-                    : _C.hintText)),
-      ),
-    ))
-        .toList(),
+              color: isActive ? _C.primary : _C.hintText,
+              decoration: isActive
+                  ? TextDecoration.underline
+                  : TextDecoration.none,
+              decorationColor: _C.primary,
+            ),
+          ),
+        ),
+      );
+    }).toList(),
   );
 
-  // ── Language toggle ───────────────────────────────────────────────────────
-  Widget _langToggle() => Row(children: [
-    _langPill('EN', 'en'),
-    SizedBox(width: 6.w),
-    _langPill('ع', 'ar'),
-  ]);
-
-  Widget _langPill(String label, String code) => GestureDetector(
-    onTap: () => setState(() => _lang = code),
-    child: Container(
-      width: 32.w,
-      height: 24.h,
-      decoration: BoxDecoration(
-        color: _lang == code ? _C.primary : Colors.white,
-        borderRadius: BorderRadius.circular(4.r),
-        border: Border.all(
-            color: _lang == code ? _C.primary : _C.border),
-      ),
-      child: Center(
-          child: Text(label,
-              style: StyleText.fontSize10Weight400.copyWith(
-                  color: _lang == code
-                      ? Colors.white
-                      : _C.labelText))),
-    ),
+  // ── Language toggle — CustomSegmentedTabs (matches client_services) ────────
+  Widget _langToggle() => CustomSegmentedTabs(
+    tabs: const ['EN', 'AR'],
+    selectedIndex: _langIndex,
+    onTabSelected: (i) => setState(() => _langIndex = i),
+    selectedColor: _C.primary,
+    unselectedColor: Colors.white,
+    selectedTextColor: Colors.white,
+    unselectedTextColor: _C.labelText,
+    containerColor: Colors.white,
+    equalWidth: false,
+    containerPadding:
+    EdgeInsets.symmetric(horizontal: 8.sp, vertical: 4.sp),
   );
 
   // ── Accordion wrapper ─────────────────────────────────────────────────────
@@ -228,14 +235,11 @@ class _OwnerServicesPreviewPageState
           width: _previewWidth,
           decoration: BoxDecoration(
             color: _C.cardBg,
-            borderRadius: BorderRadius.only(
-              bottomLeft: Radius.circular(6.r),
-              bottomRight: Radius.circular(6.r),
-            ),
+            borderRadius: BorderRadius.circular(6.r),
           ),
           child: Padding(
             padding:
-            EdgeInsets.symmetric(horizontal: 20.w, vertical: 20.h),
+            EdgeInsets.symmetric(vertical: 20.h),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -389,7 +393,7 @@ class _OwnerServicesPreviewPageState
   // ── Preview Mockup Item ───────────────────────────────────────────────────
   Widget _previewMockupItem(OwnerServicesMockupItemModel item) {
     final title = _isAr ? item.title.ar : item.title.en;
-    final desc = _isAr ? item.description.ar : item.description.en;
+    final desc  = _isAr ? item.description.ar : item.description.en;
 
     final textWidget = Expanded(
       flex: 3,

@@ -2,9 +2,10 @@
 /// File Name: owner_services_repo_imp.dart
 /// Description: Firebase implementation of OwnerServicesRepo.
 /// Created by: Amr Mesbah
-/// Last Update: 18/04/2026
-/// UPDATED: saveOwnerServicesPage() now versions ALL fields using
-///          Versioned.append() — full audit trail in Firestore ✅
+/// Last Update: 21/04/2026
+/// UPDATED: All field names use Capital_Underscore naming convention ✅
+/// UPDATED: ALL fields flattened — NO nested maps in Firestore ✅
+/// UPDATED: EVERY single key goes through Versioned.append() ✅
 
 import 'dart:typed_data';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -27,6 +28,33 @@ class OwnerServicesRepoImp implements OwnerServicesRepo {
   DocumentReference _docRef(String gender) =>
       _firestore.collection(_collection).doc(gender);
 
+  // ═════════════════════════════════════════════════════════════════════════
+  //  GENERIC VERSIONED SAVE
+  // ═════════════════════════════════════════════════════════════════════════
+
+  Map<String, dynamic> _buildVersionedMap(
+      OwnerServicesPageModel model,
+      Map<String, dynamic> existing,
+      ) {
+    final newMap       = model.copyWith(lastUpdated: DateTime.now()).toMap();
+    final versionedMap = <String, dynamic>{};
+
+    for (final key in newMap.keys) {
+      if (key == 'Last_Updated') continue;
+      versionedMap[key] = Versioned.append(existing[key], newMap[key]);
+    }
+
+    for (final key in existing.keys) {
+      if (key == 'Last_Updated') continue;
+      if (!newMap.containsKey(key)) {
+        versionedMap[key] = FieldValue.delete();
+      }
+    }
+
+    versionedMap['Last_Updated'] = FieldValue.serverTimestamp();
+    return versionedMap;
+  }
+
   // ── Fetch ──────────────────────────────────────────────────────────────────
   @override
   Future<OwnerServicesPageModel> fetchOwnerServicesPage(
@@ -39,20 +67,18 @@ class OwnerServicesRepoImp implements OwnerServicesRepo {
         print('🟢 [OwnerServicesRepoImp] fetchOwnerServicesPage: doc found');
         return OwnerServicesPageModel.fromMap(data, docId: snap.id);
       }
-      print(
-          '🟡 [OwnerServicesRepoImp] fetchOwnerServicesPage: no doc — creating default');
-      final defaultModel =
-      OwnerServicesPageModel(id: gender, gender: gender);
-      await _docRef(gender).set(defaultModel.toMap());
+      print('🟡 [OwnerServicesRepoImp] fetchOwnerServicesPage: no doc — creating default');
+      final defaultModel = OwnerServicesPageModel(id: gender, gender: gender);
+      final versionedDefault = _buildVersionedMap(defaultModel, {});
+      await _docRef(gender).set(versionedDefault);
       return defaultModel;
     } catch (e, st) {
-      print(
-          '🔴 [OwnerServicesRepoImp] fetchOwnerServicesPage: ERROR $e\n$st');
+      print('🔴 [OwnerServicesRepoImp] fetchOwnerServicesPage: ERROR $e\n$st');
       rethrow;
     }
   }
 
-  // ── Save (ALL fields versioned) ────────────────────────────────────────────
+  // ── Save ───────────────────────────────────────────────────────────────────
   @override
   Future<void> saveOwnerServicesPage(OwnerServicesPageModel model) async {
     final docGender = model.gender.isEmpty ? 'female' : model.gender;
@@ -60,73 +86,21 @@ class OwnerServicesRepoImp implements OwnerServicesRepo {
         'status=${model.status} gender=$docGender');
 
     try {
-      // ── Step 1: read existing raw Firestore data ────────────────────────
       print('🟡 [OwnerServicesRepoImp] saveOwnerServicesPage → reading existing doc...');
       final existingSnap = await _docRef(docGender)
           .get(const GetOptions(source: Source.server));
-      final existingData =
+      final ex =
           (existingSnap.exists ? existingSnap.data() : null)
           as Map<String, dynamic>? ??
               {};
-      print('   existing keys = ${existingData.keys.toList()}');
+      print('   existing keys = ${ex.keys.toList()}');
 
-      // ── Step 2: plain map from model ────────────────────────────────────
-      final updatedModel = model.copyWith(lastUpdated: DateTime.now());
-      final newMap = updatedModel.toMap();
+      final versionedMap = _buildVersionedMap(model, ex);
 
-      // ── Step 3: build versioned map — ALL fields ────────────────────────
-      final versionedMap = <String, dynamic>{
-        'id': Versioned.append(
-          existingData['id'],
-          newMap['id'],
-        ),
-        'status': Versioned.append(
-          existingData['status'],
-          newMap['status'],
-        ),
-        'gender': Versioned.append(
-          existingData['gender'],
-          newMap['gender'],
-        ),
-        'header': Versioned.append(
-          existingData['header'],
-          newMap['header'],
-        ),
-        'download': Versioned.append(
-          existingData['download'],
-          newMap['download'],
-        ),
-        'mockups': Versioned.append(
-          existingData['mockups'],
-          newMap['mockups'],
-        ),
-        'publishSchedule': Versioned.append(
-          existingData['publishSchedule'],
-          newMap['publishSchedule'],
-        ),
-        'lastUpdated': Versioned.append(
-          existingData['lastUpdated'],
-          newMap['lastUpdated'],
-        ),
-      };
-
-      // ── Step 4: write to Firestore ──────────────────────────────────────
-      print('🟡 [OwnerServicesRepoImp] saveOwnerServicesPage → writing versioned map...');
-      print('   id history length              = ${(versionedMap['id'] as List).length}');
-      print('   status history length          = ${(versionedMap['status'] as List).length}');
-      print('   gender history length          = ${(versionedMap['gender'] as List).length}');
-      print('   header history length          = ${(versionedMap['header'] as List).length}');
-      print('   download history length        = ${(versionedMap['download'] as List).length}');
-      print('   mockups history length         = ${(versionedMap['mockups'] as List).length}');
-      print('   publishSchedule history length = ${(versionedMap['publishSchedule'] as List).length}');
-      print('   lastUpdated history length     = ${(versionedMap['lastUpdated'] as List).length}');
-
-      await _docRef(docGender).set(versionedMap, SetOptions(merge: true));
-      print('🟢 [OwnerServicesRepoImp] saveOwnerServicesPage: ✅ ALL fields versioned DONE');
-
+      await _docRef(docGender).set(versionedMap, SetOptions(merge: false));
+      print('🟢 [OwnerServicesRepoImp] saveOwnerServicesPage: ✅ ALL keys versioned DONE');
     } catch (e, st) {
-      print(
-          '🔴 [OwnerServicesRepoImp] saveOwnerServicesPage: ERROR $e\n$st');
+      print('🔴 [OwnerServicesRepoImp] saveOwnerServicesPage: ERROR $e\n$st');
       rethrow;
     }
   }
@@ -138,8 +112,7 @@ class OwnerServicesRepoImp implements OwnerServicesRepo {
     required Uint8List bytes,
     required String fileName,
   }) async {
-    print(
-        '🟡 [OwnerServicesRepoImp] uploadImage: path=$path fileName=$fileName');
+    print('🟡 [OwnerServicesRepoImp] uploadImage: path=$path fileName=$fileName');
     try {
       final ref = _storage.ref().child(path).child(fileName);
       final ext = fileName.toLowerCase();
