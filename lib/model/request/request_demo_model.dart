@@ -5,39 +5,65 @@
 ///              Demo Related Questions (repeating: Question EN/AR,
 ///              Type [text/dropdown], Required toggle, Values list for dropdown),
 ///              Confirm Message (SVG + Title + Description).
+///              ALL fields flattened — NO nested maps in Firestore ✅
+///              EVERY single field is versioned (array in Firestore,
+///              .last = active value). fromMap uses Versioned.read() on ALL. ✅
 /// Created by: Amr Mesbah
-/// Last Update: 08/04/2026
+/// Last Update: 23/04/2026
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 
+// ── Bilingual text helper ────────────────────────────────────────────────────
 class BiText {
   final String en;
   final String ar;
+
   const BiText({this.en = '', this.ar = ''});
-  factory BiText.fromMap(Map<String, dynamic>? m) =>
-      BiText(en: m?['en'] ?? '', ar: m?['ar'] ?? '');
-  Map<String, dynamic> toMap() => {'en': en, 'ar': ar};
+
   BiText copyWith({String? en, String? ar}) =>
       BiText(en: en ?? this.en, ar: ar ?? this.ar);
 }
 
-// ═══════════════════════════════════════════════════════════════════════════════
-// HEADER
-// ═══════════════════════════════════════════════════════════════════════════════
-class RequestDemoHeaderModel {
-  final String svgUrl;
-  final BiText title;
-  const RequestDemoHeaderModel({this.svgUrl = '', this.title = const BiText()});
+// ─────────────────────────────────────────────────────────────────────────────
+// Versioned Field Helper
+// ─────────────────────────────────────────────────────────────────────────────
 
-  factory RequestDemoHeaderModel.fromMap(Map<String, dynamic>? m) {
-    if (m == null) return const RequestDemoHeaderModel();
-    return RequestDemoHeaderModel(
-        svgUrl: m['svgUrl'] ?? '', title: BiText.fromMap(m['title']));
+class Versioned {
+  static T read<T>(dynamic raw, T Function(dynamic) parser) {
+    if (raw is List && raw.isNotEmpty) return parser(raw.last);
+    if (raw != null) return parser(raw);
+    return parser(null);
   }
-  Map<String, dynamic> toMap() => {'svgUrl': svgUrl, 'title': title.toMap()};
-  RequestDemoHeaderModel copyWith({String? svgUrl, BiText? title}) =>
-      RequestDemoHeaderModel(
-          svgUrl: svgUrl ?? this.svgUrl, title: title ?? this.title);
+
+  static List<dynamic> append(dynamic existing, dynamic newValue) {
+    final history = <dynamic>[];
+    if (existing is List) {
+      history.addAll(existing);
+    } else if (existing != null) {
+      history.add(existing);
+    }
+    if (history.isNotEmpty) {
+      final lastEncoded = _encode(history.last);
+      final newEncoded  = _encode(newValue);
+      if (lastEncoded == newEncoded) return history;
+    }
+    history.add(newValue);
+    return history;
+  }
+
+  static String _encode(dynamic value) {
+    if (value == null) return 'null';
+    if (value is Map) {
+      final sorted = Map.fromEntries(
+        (value.entries.toList()
+          ..sort((a, b) => a.key.toString().compareTo(b.key.toString())))
+            .map((e) => MapEntry(e.key.toString(), _encode(e.value))),
+      );
+      return sorted.toString();
+    }
+    if (value is List) return value.map(_encode).toList().toString();
+    return value.toString();
+  }
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -60,9 +86,6 @@ class QuestionValueModel {
   final BiText label;
   const QuestionValueModel({this.id = '', this.label = const BiText()});
 
-  factory QuestionValueModel.fromMap(Map<String, dynamic> m) =>
-      QuestionValueModel(id: m['id'] ?? '', label: BiText.fromMap(m['label']));
-  Map<String, dynamic> toMap() => {'id': id, 'label': label.toMap()};
   QuestionValueModel copyWith({String? id, BiText? label}) =>
       QuestionValueModel(id: id ?? this.id, label: label ?? this.label);
 }
@@ -87,29 +110,6 @@ class DemoQuestionModel {
     this.order = 0,
   });
 
-  factory DemoQuestionModel.fromMap(Map<String, dynamic> m) {
-    final rawVals = m['values'] as List<dynamic>? ?? [];
-    return DemoQuestionModel(
-      id: m['id'] ?? '',
-      question: BiText.fromMap(m['question']),
-      type: QuestionType.fromValue(m['type']),
-      required: m['required'] ?? false,
-      values: rawVals
-          .map((e) => QuestionValueModel.fromMap(e as Map<String, dynamic>))
-          .toList(),
-      order: m['order'] ?? 0,
-    );
-  }
-
-  Map<String, dynamic> toMap() => {
-    'id': id,
-    'question': question.toMap(),
-    'type': type.toValue(),
-    'required': required,
-    'values': values.map((v) => v.toMap()).toList(),
-    'order': order,
-  };
-
   DemoQuestionModel copyWith({
     String? id,
     BiText? question,
@@ -129,130 +129,240 @@ class DemoQuestionModel {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// DEMO QUESTIONS SECTION
-// ═══════════════════════════════════════════════════════════════════════════════
-class DemoQuestionsSectionModel {
-  final List<DemoQuestionModel> questions;
-  const DemoQuestionsSectionModel({this.questions = const []});
-
-  factory DemoQuestionsSectionModel.fromMap(Map<String, dynamic>? m) {
-    if (m == null) return const DemoQuestionsSectionModel();
-    final raw = m['questions'] as List<dynamic>? ?? [];
-    return DemoQuestionsSectionModel(
-      questions: raw
-          .map((e) => DemoQuestionModel.fromMap(e as Map<String, dynamic>))
-          .toList()
-        ..sort((a, b) => a.order.compareTo(b.order)),
-    );
-  }
-  Map<String, dynamic> toMap() =>
-      {'questions': questions.map((q) => q.toMap()).toList()};
-  DemoQuestionsSectionModel copyWith({List<DemoQuestionModel>? questions}) =>
-      DemoQuestionsSectionModel(questions: questions ?? this.questions);
-}
-
-// ═══════════════════════════════════════════════════════════════════════════════
-// CONFIRM MESSAGE
-// ═══════════════════════════════════════════════════════════════════════════════
-class RequestDemoConfirmModel {
-  final String svgUrl;
-  final BiText title;
-  final BiText description;
-
-  const RequestDemoConfirmModel({
-    this.svgUrl = '',
-    this.title = const BiText(),
-    this.description = const BiText(),
-  });
-
-  factory RequestDemoConfirmModel.fromMap(Map<String, dynamic>? m) {
-    if (m == null) return const RequestDemoConfirmModel();
-    return RequestDemoConfirmModel(
-      svgUrl: m['svgUrl'] ?? '',
-      title: BiText.fromMap(m['title']),
-      description: BiText.fromMap(m['description']),
-    );
-  }
-  Map<String, dynamic> toMap() => {
-    'svgUrl': svgUrl,
-    'title': title.toMap(),
-    'description': description.toMap(),
-  };
-  RequestDemoConfirmModel copyWith(
-      {String? svgUrl, BiText? title, BiText? description}) =>
-      RequestDemoConfirmModel(
-        svgUrl: svgUrl ?? this.svgUrl,
-        title: title ?? this.title,
-        description: description ?? this.description,
-      );
-}
-
-// ═══════════════════════════════════════════════════════════════════════════════
-// ROOT MODEL
+// ROOT MODEL — ALL fields flattened & versioned
 // ═══════════════════════════════════════════════════════════════════════════════
 class RequestDemoPageModel {
   final String id;
   final String status;
   final String gender;
-  final RequestDemoHeaderModel header;
-  final DemoQuestionsSectionModel demoQuestions;
-  final RequestDemoConfirmModel confirmMessage;
+
+  // Header
+  final String headerSvgUrl;
+  final BiText headerTitle;
+
+  // Demo Questions
+  final List<DemoQuestionModel> demoQuestions;
+
+  // Confirm Message
+  final String confirmSvgUrl;
+  final BiText confirmTitle;
+  final BiText confirmDescription;
+
   final DateTime? lastUpdated;
 
   const RequestDemoPageModel({
     this.id = '',
     this.status = 'draft',
     this.gender = 'female',
-    this.header = const RequestDemoHeaderModel(),
-    this.demoQuestions = const DemoQuestionsSectionModel(),
-    this.confirmMessage = const RequestDemoConfirmModel(),
+    this.headerSvgUrl = '',
+    this.headerTitle = const BiText(),
+    this.demoQuestions = const [],
+    this.confirmSvgUrl = '',
+    this.confirmTitle = const BiText(),
+    this.confirmDescription = const BiText(),
     this.lastUpdated,
   });
 
-  factory RequestDemoPageModel.fromMap(Map<String, dynamic> m,
-      {String? docId}) {
-    DateTime? lu;
-    if (m['lastUpdated'] is Timestamp) {
-      lu = (m['lastUpdated'] as Timestamp).toDate();
+  // ═══════════════════════════════════════════════════════════════════════════
+  // toMap — ALL fields flattened, Capital_Underscore naming
+  // Outputs plain primitives. Repo wraps EVERY key in Versioned.append().
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  Map<String, dynamic> toMap() {
+    final map = <String, dynamic>{};
+
+    // ── Scalars ──────────────────────────────────────────────────────
+    map['Id']     = id;
+    map['Status'] = status;
+    map['Gender'] = gender;
+
+    // ── Header (flattened) ───────────────────────────────────────────
+    map['Header_Svg_Url']   = headerSvgUrl;
+    map['Header_Title_En']  = headerTitle.en;
+    map['Header_Title_Ar']  = headerTitle.ar;
+
+    // ── Demo Questions (flattened) ───────────────────────────────────
+    map['Demo_Questions_Count'] = demoQuestions.length;
+    for (int i = 0; i < demoQuestions.length; i++) {
+      final q = demoQuestions[i];
+      map['Demo_Questions_${i}_Id']       = q.id;
+      map['Demo_Questions_${i}_Question_En'] = q.question.en;
+      map['Demo_Questions_${i}_Question_Ar'] = q.question.ar;
+      map['Demo_Questions_${i}_Type']     = q.type.toValue();
+      map['Demo_Questions_${i}_Required'] = q.required;
+      map['Demo_Questions_${i}_Order']    = q.order;
+
+      // Values for each question (flattened)
+      map['Demo_Questions_${i}_Values_Count'] = q.values.length;
+      for (int vi = 0; vi < q.values.length; vi++) {
+        final v = q.values[vi];
+        map['Demo_Questions_${i}_Values_${vi}_Id']      = v.id;
+        map['Demo_Questions_${i}_Values_${vi}_Label_En'] = v.label.en;
+        map['Demo_Questions_${i}_Values_${vi}_Label_Ar'] = v.label.ar;
+      }
     }
-    return RequestDemoPageModel(
-      id: docId ?? m['id'] ?? '',
-      status: m['status'] ?? 'draft',
-      gender: m['gender'] ?? 'female',
-      header: RequestDemoHeaderModel.fromMap(m['header']),
-      demoQuestions: DemoQuestionsSectionModel.fromMap(m['demoQuestions']),
-      confirmMessage: RequestDemoConfirmModel.fromMap(m['confirmMessage']),
-      lastUpdated: lu,
-    );
+
+    // ── Confirm Message (flattened) ──────────────────────────────────
+    map['Confirm_Message_Svg_Url']        = confirmSvgUrl;
+    map['Confirm_Message_Title_En']       = confirmTitle.en;
+    map['Confirm_Message_Title_Ar']       = confirmTitle.ar;
+    map['Confirm_Message_Description_En'] = confirmDescription.en;
+    map['Confirm_Message_Description_Ar'] = confirmDescription.ar;
+
+    // ── Last Updated ─────────────────────────────────────────────────
+    map['Last_Updated'] = lastUpdated != null
+        ? Timestamp.fromDate(lastUpdated!)
+        : null;
+
+    return map;
   }
 
-  Map<String, dynamic> toMap() => {
-    'id': id,
-    'status': status,
-    'gender': gender,
-    'header': header.toMap(),
-    'demoQuestions': demoQuestions.toMap(),
-    'confirmMessage': confirmMessage.toMap(),
-    'lastUpdated':
-    lastUpdated != null ? Timestamp.fromDate(lastUpdated!) : null,
-  };
+  // ═══════════════════════════════════════════════════════════════════════════
+  // fromMap — EVERY field uses Versioned.read()
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  factory RequestDemoPageModel.fromMap(Map<String, dynamic> map,
+      {String? docId}) {
+
+    // ── Demo Questions (flattened, each field versioned) ─────────────
+    final dqCount = Versioned.read<int>(
+      map['Demo_Questions_Count'], (v) => (v as int?) ?? 0,
+    );
+    final questions = <DemoQuestionModel>[];
+    for (int i = 0; i < dqCount; i++) {
+      // Values for this question
+      final vCount = Versioned.read<int>(
+        map['Demo_Questions_${i}_Values_Count'], (v) => (v as int?) ?? 0,
+      );
+      final values = <QuestionValueModel>[];
+      for (int vi = 0; vi < vCount; vi++) {
+        values.add(QuestionValueModel(
+          id: Versioned.read<String>(
+            map['Demo_Questions_${i}_Values_${vi}_Id'], (v) => v?.toString() ?? '',
+          ),
+          label: BiText(
+            en: Versioned.read<String>(
+              map['Demo_Questions_${i}_Values_${vi}_Label_En'], (v) => v?.toString() ?? '',
+            ),
+            ar: Versioned.read<String>(
+              map['Demo_Questions_${i}_Values_${vi}_Label_Ar'], (v) => v?.toString() ?? '',
+            ),
+          ),
+        ));
+      }
+
+      questions.add(DemoQuestionModel(
+        id: Versioned.read<String>(
+          map['Demo_Questions_${i}_Id'], (v) => v?.toString() ?? '',
+        ),
+        question: BiText(
+          en: Versioned.read<String>(
+            map['Demo_Questions_${i}_Question_En'], (v) => v?.toString() ?? '',
+          ),
+          ar: Versioned.read<String>(
+            map['Demo_Questions_${i}_Question_Ar'], (v) => v?.toString() ?? '',
+          ),
+        ),
+        type: QuestionType.fromValue(
+          Versioned.read<String>(
+            map['Demo_Questions_${i}_Type'], (v) => v!.toString(),
+          ),
+        ),
+        required: Versioned.read<bool>(
+          map['Demo_Questions_${i}_Required'], (v) => (v as bool?) ?? false,
+        ),
+        values: values,
+        order: Versioned.read<int>(
+          map['Demo_Questions_${i}_Order'], (v) => (v as int?) ?? i,
+        ),
+      ));
+    }
+    questions.sort((a, b) => a.order.compareTo(b.order));
+
+    // ── Last Updated (not versioned) ────────────────────────────────
+    DateTime? lastUpdated;
+    if (map['Last_Updated'] != null) {
+      if (map['Last_Updated'] is Timestamp) {
+        lastUpdated = (map['Last_Updated'] as Timestamp).toDate();
+      } else if (map['Last_Updated'] is String) {
+        lastUpdated = DateTime.tryParse(map['Last_Updated']);
+      }
+    }
+
+    return RequestDemoPageModel(
+      id: docId ?? Versioned.read<String>(
+        map['Id'], (v) => v?.toString() ?? '',
+      ),
+      status: Versioned.read<String>(
+        map['Status'], (v) => v?.toString() ?? 'draft',
+      ),
+      gender: Versioned.read<String>(
+        map['Gender'], (v) => v?.toString() ?? 'female',
+      ),
+
+      // ── Header ─────────────────────────────────────────────────────
+      headerSvgUrl: Versioned.read<String>(
+        map['Header_Svg_Url'], (v) => v?.toString() ?? '',
+      ),
+      headerTitle: BiText(
+        en: Versioned.read<String>(
+          map['Header_Title_En'], (v) => v?.toString() ?? '',
+        ),
+        ar: Versioned.read<String>(
+          map['Header_Title_Ar'], (v) => v?.toString() ?? '',
+        ),
+      ),
+
+      // ── Demo Questions ─────────────────────────────────────────────
+      demoQuestions: questions,
+
+      // ── Confirm Message ────────────────────────────────────────────
+      confirmSvgUrl: Versioned.read<String>(
+        map['Confirm_Message_Svg_Url'], (v) => v?.toString() ?? '',
+      ),
+      confirmTitle: BiText(
+        en: Versioned.read<String>(
+          map['Confirm_Message_Title_En'], (v) => v?.toString() ?? '',
+        ),
+        ar: Versioned.read<String>(
+          map['Confirm_Message_Title_Ar'], (v) => v?.toString() ?? '',
+        ),
+      ),
+      confirmDescription: BiText(
+        en: Versioned.read<String>(
+          map['Confirm_Message_Description_En'], (v) => v?.toString() ?? '',
+        ),
+        ar: Versioned.read<String>(
+          map['Confirm_Message_Description_Ar'], (v) => v?.toString() ?? '',
+        ),
+      ),
+
+      lastUpdated: lastUpdated,
+    );
+  }
 
   RequestDemoPageModel copyWith({
     String? id,
     String? status,
     String? gender,
-    RequestDemoHeaderModel? header,
-    DemoQuestionsSectionModel? demoQuestions,
-    RequestDemoConfirmModel? confirmMessage,
+    String? headerSvgUrl,
+    BiText? headerTitle,
+    List<DemoQuestionModel>? demoQuestions,
+    String? confirmSvgUrl,
+    BiText? confirmTitle,
+    BiText? confirmDescription,
     DateTime? lastUpdated,
   }) =>
       RequestDemoPageModel(
         id: id ?? this.id,
         status: status ?? this.status,
         gender: gender ?? this.gender,
-        header: header ?? this.header,
+        headerSvgUrl: headerSvgUrl ?? this.headerSvgUrl,
+        headerTitle: headerTitle ?? this.headerTitle,
         demoQuestions: demoQuestions ?? this.demoQuestions,
-        confirmMessage: confirmMessage ?? this.confirmMessage,
+        confirmSvgUrl: confirmSvgUrl ?? this.confirmSvgUrl,
+        confirmTitle: confirmTitle ?? this.confirmTitle,
+        confirmDescription: confirmDescription ?? this.confirmDescription,
         lastUpdated: lastUpdated ?? this.lastUpdated,
       );
 }

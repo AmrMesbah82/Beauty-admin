@@ -40,8 +40,7 @@ class _RequestDemoPreviewPageState extends State<RequestDemoPreviewPage> {
   int _device = 0;
   bool _headerOpen = true;
   final _devLabels = ['Desktop', 'Tablet', 'Mobile'];
-  bool _isEnglish = true; // Add this at the top of your state class
-
+  bool _isEnglish = true;
 
   @override
   Widget build(BuildContext context) {
@@ -80,8 +79,6 @@ class _RequestDemoPreviewPageState extends State<RequestDemoPreviewPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-
-
                   const AdminSubNavBar(activeIndex: 7),
 
                   SizedBox(
@@ -95,7 +92,7 @@ class _RequestDemoPreviewPageState extends State<RequestDemoPreviewPage> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Preview Contact Us Details',
+                            'Preview Request Demo Details',
                             style: StyleText.fontSize45Weight600.copyWith(
                               color: _C.primary,
                               fontWeight: FontWeight.w700,
@@ -103,7 +100,7 @@ class _RequestDemoPreviewPageState extends State<RequestDemoPreviewPage> {
                           ),
                           SizedBox(height: 12.h),
 
-                          // ── Device tabs + lang ───────────────────────────────
+                          // ── Device tabs + lang ───────────────────────────
                           Row(
                             children: [
                               ...List.generate(3, (i) {
@@ -148,25 +145,24 @@ class _RequestDemoPreviewPageState extends State<RequestDemoPreviewPage> {
                                   tabVerticalPadding: 6.h,
                                   containerPadding: EdgeInsets.all(4.sp),
                                   borderRadius: 6,
-
                                 ),
                               ),
                             ],
                           ),
                           SizedBox(height: 16.h),
 
-                          // ── Header accordion ─────────────────────────────────
+                          // ── Header accordion ─────────────────────────────
                           _headerAccordion(m!, pw),
                           SizedBox(height: 24.h),
 
-                          // ── Buttons ──────────────────────────────────────────
+                          // ── Buttons ──────────────────────────────────────
                           Row(
                             children: [
                               Expanded(
                                 child: _btn(
                                   'Discard',
                                   _C.hintText,
-                                  () => Navigator.pop(context),
+                                      () => Navigator.pop(context),
                                 ),
                               ),
                               SizedBox(width: 16.w),
@@ -174,7 +170,7 @@ class _RequestDemoPreviewPageState extends State<RequestDemoPreviewPage> {
                                 child: _btn(
                                   'Save',
                                   _C.primary,
-                                  () => showPublishConfirmDialog(
+                                      () => showPublishConfirmDialog(
                                     context: context,
                                     onConfirm: () async {
                                       await cubit.save(
@@ -213,32 +209,12 @@ class _RequestDemoPreviewPageState extends State<RequestDemoPreviewPage> {
       child: Center(
         child: Text(
           l,
-          style: StyleText.fontSize14Weight600.copyWith(color: Colors.white),
+          style:
+          StyleText.fontSize14Weight600.copyWith(color: Colors.white),
         ),
       ),
     ),
   );
-
-  Widget _langChip(String label, bool isEn) {
-    final a = _isEnglish == isEn;
-    return GestureDetector(
-      onTap: () => setState(() => _isEnglish = isEn),
-      child: Container(
-        padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
-        decoration: BoxDecoration(
-          color: a ? _C.primary : Colors.white,
-          borderRadius: BorderRadius.circular(4.r),
-          border: Border.all(color: a ? _C.primary : _C.border),
-        ),
-        child: Text(
-          label,
-          style: StyleText.fontSize12Weight500.copyWith(
-            color: a ? Colors.white : _C.labelText,
-          ),
-        ),
-      ),
-    );
-  }
 
   Widget _headerAccordion(RequestDemoPageModel m, double w) {
     return Center(
@@ -250,21 +226,22 @@ class _RequestDemoPreviewPageState extends State<RequestDemoPreviewPage> {
               onTap: () => setState(() => _headerOpen = !_headerOpen),
               child: Container(
                 width: double.infinity,
-                padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 10.h),
+                padding:
+                EdgeInsets.symmetric(horizontal: 16.w, vertical: 10.h),
                 decoration: BoxDecoration(
                   color: _C.primary,
                   borderRadius: _headerOpen
                       ? BorderRadius.only(
-                          topLeft: Radius.circular(6.r),
-                          topRight: Radius.circular(6.r),
-                        )
+                    topLeft: Radius.circular(6.r),
+                    topRight: Radius.circular(6.r),
+                  )
                       : BorderRadius.circular(6.r),
                 ),
                 child: Row(
                   children: [
                     Expanded(
                       child: Text(
-                        'Header',
+                        'Confirm Message Preview',
                         style: StyleText.fontSize12Weight500.copyWith(
                           color: Colors.white,
                         ),
@@ -303,18 +280,20 @@ class _RequestDemoPreviewPageState extends State<RequestDemoPreviewPage> {
 
   /// Renders the confirm message SVG centered with title and description below
   Widget _confirmPreview(RequestDemoPageModel m) {
-    final title = _isEnglish ? m.confirmMessage.title.en : m.confirmMessage.title.ar;
+    final title =
+    _isEnglish ? m.confirmTitle.en : m.confirmTitle.ar;
     final desc = _isEnglish
-        ? m.confirmMessage.description.en
-        : m.confirmMessage.description.ar;
+        ? m.confirmDescription.en
+        : m.confirmDescription.ar;
     final dir = _isEnglish ? ui.TextDirection.ltr : ui.TextDirection.rtl;
+    final svgUrl = m.confirmSvgUrl;
 
     return Column(
       children: [
         // ── SVG Image ────────────────────────────────────────────────
-        if (m.confirmMessage.svgUrl.isNotEmpty)
+        if (svgUrl.isNotEmpty)
           SvgPicture.network(
-            m.confirmMessage.svgUrl,
+            svgUrl,
             height: 200.h,
             fit: BoxFit.contain,
             placeholderBuilder: (_) => const CircleProgressMaster(),
@@ -333,7 +312,9 @@ class _RequestDemoPreviewPageState extends State<RequestDemoPreviewPage> {
 
         // ── Title ────────────────────────────────────────────────────
         Text(
-          title.isNotEmpty ? title : 'Waiting till Customer Services Call You',
+          title.isNotEmpty
+              ? title
+              : 'Waiting till Customer Services Call You',
           textDirection: dir,
           textAlign: TextAlign.center,
           style: StyleText.fontSize16Weight600.copyWith(color: _C.primary),

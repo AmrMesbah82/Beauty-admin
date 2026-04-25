@@ -8,6 +8,7 @@ import '../controller/home/home_cubit.dart';
 import '../controller/home/home_state.dart';
 import '../controller/inquire/inquiry_cubit.dart';
 import '../controller/inquire/inquiry_state.dart';
+import '../dashboard/demos/request_demo_main_page.dart';
 import '../dashboard/inquire/inquiry_main_page.dart';
 import '../theme/app_wight.dart';
 import '../theme/appcolors.dart';
@@ -18,14 +19,13 @@ class _BP {
   static const double tablet = 1024;
 }
 
-// Change fallback primary from green to pink
 Color _primaryFromState(HomeCmsState state) {
   final String hex = switch (state) {
     HomeCmsLoaded(:final data) => data.branding.primaryColor,
     HomeCmsSaved(:final data)  => data.branding.primaryColor,
     _                          => '',
   };
-  return _hexColor(hex, const Color(0xFFD16F9A)); // ← pink fallback
+  return _hexColor(hex, const Color(0xFFD16F9A));
 }
 
 Color _navbarBgFromState(HomeCmsState state) {
@@ -45,6 +45,36 @@ Color _hexColor(String hex, Color fallback) {
   return fallback;
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// FadeRoute — smooth fade transition between pages
+// ─────────────────────────────────────────────────────────────────────────────
+
+class FadeRoute extends PageRouteBuilder {
+  final Widget page;
+  final String routeName;
+  final Duration duration;
+
+  FadeRoute({
+    required this.page,
+    this.routeName = '',
+    this.duration = const Duration(milliseconds: 300),
+  }) : super(
+    settings: RouteSettings(name: routeName),
+    transitionDuration: duration,
+    reverseTransitionDuration: duration,
+    pageBuilder: (_, __, ___) => page,
+    transitionsBuilder: (_, animation, __, child) {
+      return FadeTransition(
+        opacity: CurvedAnimation(
+          parent: animation,
+          curve: Curves.easeInOut,
+        ),
+        child: child,
+      );
+    },
+  );
+}
+
 void _pushPage(BuildContext context, dynamic pageOrBuilder) {
   final Widget page;
   if (pageOrBuilder is Widget Function(BuildContext)) {
@@ -54,7 +84,7 @@ void _pushPage(BuildContext context, dynamic pageOrBuilder) {
   }
 
   Navigator.of(context).pushReplacement(
-    MaterialPageRoute(builder: (_) => page),
+    FadeRoute(page: page),
   );
 }
 
@@ -66,7 +96,7 @@ class _AdminNavItem {
   const _AdminNavItem({
     required this.label,
     this.page,
-    this.pageBuilder
+    this.pageBuilder,
   });
 }
 
@@ -88,11 +118,12 @@ class AppAdminNavbar extends StatelessWidget {
 
   List<_AdminNavItem> get _navItems => [
     _AdminNavItem(
+      label: 'Demos',
+      pageBuilder: (context) => const RequestDemoMainPage(),
+    ),
+    _AdminNavItem(
       label: 'Inquiries',
-      pageBuilder: (context) {
-        // Use your existing InquiryMainPage
-        return const InquiryMainPage();
-      },
+      pageBuilder: (context) => const InquiryMainPage(),
     ),
   ];
 
@@ -172,7 +203,7 @@ class _AdminNavbarDesktop extends StatelessWidget {
         child: Row(
           children: [
             _AdminLogo(
-              onTap: () => _pushPage(context, navItems.first.page ?? navItems.first.pageBuilder!),
+              onTap: () => _pushPage(context, navItems.first.pageBuilder!),
             ),
             SizedBox(width: 250.w),
             Row(
@@ -182,7 +213,7 @@ class _AdminNavbarDesktop extends StatelessWidget {
                   ...navItems.map((item) => _AdminNavLink(
                     label:       item.label,
                     page:        item.page,
-                    pageBuilder:  item.pageBuilder,
+                    pageBuilder: item.pageBuilder,
                     activeLabel: activeLabel,
                     primary:     primary,
                   )),
@@ -235,7 +266,7 @@ class _AdminNavbarTablet extends StatelessWidget {
         child: Row(
           children: [
             _AdminLogo(
-              onTap: () => _pushPage(context, navItems.first.page ?? navItems.first.pageBuilder!),
+              onTap: () => _pushPage(context, navItems.first.pageBuilder!),
             ),
             SizedBox(width: 16.w),
             if (!showOnlyWebPage)
@@ -247,7 +278,7 @@ class _AdminNavbarTablet extends StatelessWidget {
                         .map((item) => _AdminNavLink(
                       label:       item.label,
                       page:        item.page,
-                      pageBuilder:  item.pageBuilder,
+                      pageBuilder: item.pageBuilder,
                       activeLabel: activeLabel,
                       primary:     primary,
                       compact:     true,
@@ -307,7 +338,7 @@ class _AdminNavbarMobile extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             _AdminLogo(
-              onTap: () => _pushPage(context, navItems.first.page ?? navItems.first.pageBuilder!),
+              onTap: () => _pushPage(context, navItems.first.pageBuilder!),
             ),
             if (!showOnlyWebPage)
               GestureDetector(
@@ -341,6 +372,8 @@ class _AdminNavbarMobile extends StatelessWidget {
         opaque:             false,
         barrierDismissible: true,
         barrierColor:       Colors.transparent,
+        transitionDuration: const Duration(milliseconds: 300),
+        reverseTransitionDuration: const Duration(milliseconds: 300),
         pageBuilder: (ctx, anim, _) => _AdminMobileDrawer(
           activeLabel: activeLabel,
           navItems:    navItems,
@@ -348,8 +381,10 @@ class _AdminNavbarMobile extends StatelessWidget {
           navbarBg:    navbarBg,
           webPage:     webPage,
         ),
-        transitionsBuilder: (ctx, anim, _, child) =>
-            FadeTransition(opacity: anim, child: child),
+        transitionsBuilder: (ctx, anim, _, child) => FadeTransition(
+          opacity: CurvedAnimation(parent: anim, curve: Curves.easeInOut),
+          child: child,
+        ),
       ),
     );
   }
@@ -392,7 +427,7 @@ class _AdminMobileDrawer extends StatelessWidget {
                     rawSize: true,
                     onTap: () {
                       Navigator.of(context).pop();
-                      _pushPage(context, navItems.first.page ?? navItems.first.pageBuilder!);
+                      _pushPage(context, navItems.first.pageBuilder!);
                     },
                   ),
                   GestureDetector(
@@ -602,7 +637,9 @@ class _AdminNavLinkState extends State<_AdminNavLink> {
       onEnter: _isEnabled ? (_) => setState(() => _hovered = true)  : null,
       onExit:  _isEnabled ? (_) => setState(() => _hovered = false) : null,
       child: GestureDetector(
-        onTap: _isEnabled ? () => _pushPage(context, widget.page ?? widget.pageBuilder!) : null,
+        onTap: _isEnabled
+            ? () => _pushPage(context, widget.page ?? widget.pageBuilder!)
+            : null,
         child: Opacity(
           opacity: _isEnabled ? 1.0 : 0.45,
           child: AnimatedContainer(

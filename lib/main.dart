@@ -1,3 +1,4 @@
+import 'package:beauty_admin/repo/demos/request_demo_repo.dart';
 import 'package:beauty_admin/repo/home_repo/home_repository_impl.dart';
 import 'package:beauty_admin/repo/master/master_repo_imp.dart';
 import 'package:beauty_admin/repo/overview/overview_repo_imp.dart';
@@ -17,6 +18,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'controller/about_us/about_us_cubit.dart';
 import 'controller/contact_us/contacu_us_location_cubit.dart';
 import 'controller/contact_us/contatc_us_cubit.dart';
+import 'controller/demos/request_demo_cubit.dart';
 import 'controller/home/home_cubit.dart';
 import 'controller/home/lang_state.dart';
 import 'controller/master/master_cubit.dart';
@@ -137,7 +139,13 @@ class MyApp extends StatelessWidget {
                 repo: InquiryRepoImp(),
               ),
             ),
-            // Request Demo Cubit
+            // Request Demo Cubit (FIXED: corrected import path and repo)
+            BlocProvider<RequestDemoCubit>(
+              create: (_) => RequestDemoCubit(
+                repo: RequestDemoRepo(),
+              ),
+            ),
+            // Request Demo CMS Cubit (separate from above)
             BlocProvider<RequestDemoCmsCubit>(
               create: (_) => RequestDemoCmsCubit(
                 RequestDemoRepoImp(),
@@ -147,10 +155,48 @@ class MyApp extends StatelessWidget {
           child: MaterialApp(
             title: 'Beauty Admin',
             debugShowCheckedModeBanner: false,
-            home: HomeMainPage(),
+            // ── Fade animation for all route transitions app-wide ──────────
+            theme: ThemeData(
+              pageTransitionsTheme: const PageTransitionsTheme(
+                builders: {
+                  TargetPlatform.android: FadePageTransitionsBuilder(),
+                  TargetPlatform.iOS:     FadePageTransitionsBuilder(),
+                  TargetPlatform.windows: FadePageTransitionsBuilder(),
+                  TargetPlatform.macOS:   FadePageTransitionsBuilder(),
+                  TargetPlatform.linux:   FadePageTransitionsBuilder(),
+                  TargetPlatform.fuchsia: FadePageTransitionsBuilder(),
+                },
+              ),
+            ),
+            home: const HomeMainPage(),
           ),
         );
       },
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// FadePageTransitionsBuilder — 300ms easeInOut fade for all MaterialPageRoutes
+// ─────────────────────────────────────────────────────────────────────────────
+
+class FadePageTransitionsBuilder extends PageTransitionsBuilder {
+  const FadePageTransitionsBuilder();
+
+  @override
+  Widget buildTransitions<T>(
+      PageRoute<T> route,
+      BuildContext context,
+      Animation<double> animation,
+      Animation<double> secondaryAnimation,
+      Widget child,
+      ) {
+    return FadeTransition(
+      opacity: CurvedAnimation(
+        parent: animation,
+        curve: Curves.easeInOut,
+      ),
+      child: child,
     );
   }
 }

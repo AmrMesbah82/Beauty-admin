@@ -126,18 +126,18 @@ class _RequestDemoMainPageState extends State<RequestDemoMainPage> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              // ── Title + Preview ─────────────────────────────────
+                              // ── Title + Preview ─────────────────────────────
                               Row(
                                 mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
+                                MainAxisAlignment.spaceBetween,
                                 children: [
                                   Text(
                                     'Request Demo',
                                     style: StyleText.fontSize45Weight600
                                         .copyWith(
-                                          color: _C.primary,
-                                          fontWeight: FontWeight.w700,
-                                        ),
+                                      color: _C.primary,
+                                      fontWeight: FontWeight.w700,
+                                    ),
                                   ),
                                   GestureDetector(
                                     onTap: _navigateToPreview,
@@ -163,7 +163,7 @@ class _RequestDemoMainPageState extends State<RequestDemoMainPage> {
                               ),
                               SizedBox(height: 12.h),
 
-                              // ── Gender toggle + Last Updated + Edit ─────────────
+                              // ── Gender toggle + Last Updated + Edit ─────────
                               Row(
                                 children: [
                                   CustomSegmentedTabs(
@@ -196,84 +196,84 @@ class _RequestDemoMainPageState extends State<RequestDemoMainPage> {
                               ),
                               SizedBox(height: 20.h),
 
-                              // ── Header ─────────────────────────────────────────
+                              // ── Header ─────────────────────────────────────
                               _acc('header', 'Header', [
                                 _lbl('SVG'),
                                 SizedBox(height: 6.h),
-                                _svgCircle(m.header.svgUrl),
+                                _svgCircle(m.headerSvgUrl),
                                 SizedBox(height: 14.h),
                                 _biRow(
                                   'Title',
                                   'العنوان',
-                                  m.header.title.en,
-                                  m.header.title.ar,
+                                  m.headerTitle.en,
+                                  m.headerTitle.ar,
                                 ),
                               ]),
                               SizedBox(height: 10.h),
 
-                              // ── Questions ──────────────────────────────────────
+                              // ── Questions ──────────────────────────────────
                               _acc(
                                 'questions',
                                 'Demo Related Questions',
-                                m.demoQuestions.questions
+                                m.demoQuestions
                                     .expand(
                                       (q) => [
-                                        _biRow(
-                                          'Question',
-                                          'سؤال',
-                                          q.question.en,
-                                          q.question.ar,
-                                        ),
-                                        SizedBox(height: 8.h),
-                                        _roBox(
-                                          'Type Of Question',
-                                          q.type.toValue(),
-                                        ),
-                                        if (q.type ==
-                                            QuestionType.dropdown) ...[
-                                          SizedBox(height: 8.h),
-                                          _lbl('Values'),
-                                          SizedBox(height: 4.h),
-                                          ...q.values.map(
+                                    _biRow(
+                                      'Question',
+                                      'سؤال',
+                                      q.question.en,
+                                      q.question.ar,
+                                    ),
+                                    SizedBox(height: 8.h),
+                                    _roBox(
+                                      'Type Of Question',
+                                      q.type.toValue(),
+                                    ),
+                                    if (q.type ==
+                                        QuestionType.dropdown) ...[
+                                      SizedBox(height: 8.h),
+                                      _lbl('Values'),
+                                      SizedBox(height: 4.h),
+                                      ...q.values.map(
                                             (v) => Padding(
-                                              padding: EdgeInsets.only(
-                                                bottom: 6.h,
-                                              ),
-                                              child: _biRow(
-                                                '',
-                                                '',
-                                                v.label.en,
-                                                v.label.ar,
-                                              ),
-                                            ),
+                                          padding: EdgeInsets.only(
+                                            bottom: 6.h,
                                           ),
-                                        ],
-                                        SizedBox(height: 12.h),
-                                        Divider(color: _C.border),
-                                        SizedBox(height: 8.h),
-                                      ],
-                                    )
+                                          child: _biRow(
+                                            '',
+                                            '',
+                                            v.label.en,
+                                            v.label.ar,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                    SizedBox(height: 12.h),
+                                    Divider(color: _C.border),
+                                    SizedBox(height: 8.h),
+                                  ],
+                                )
                                     .toList(),
                               ),
                               SizedBox(height: 10.h),
 
-                              // ── Confirm Message ────────────────────────────────
+                              // ── Confirm Message ────────────────────────────
                               _acc('confirm', 'Confirm Message', [
                                 _lbl('SVG'),
                                 SizedBox(height: 6.h),
-                                _svgCircle(m.confirmMessage.svgUrl),
+                                _svgCircle(m.confirmSvgUrl),
                                 SizedBox(height: 14.h),
                                 _biRow(
                                   'Title',
                                   'العنوان',
-                                  m.confirmMessage.title.en,
-                                  m.confirmMessage.title.ar,
+                                  m.confirmTitle.en,
+                                  m.confirmTitle.ar,
                                 ),
                                 SizedBox(height: 10.h),
                                 _lbl('Description'),
                                 SizedBox(height: 6.h),
                                 _roField(
-                                  m.confirmMessage.description.en,
+                                  m.confirmDescription.en,
                                   maxLines: 4,
                                 ),
                                 SizedBox(height: 8.h),
@@ -287,7 +287,7 @@ class _RequestDemoMainPageState extends State<RequestDemoMainPage> {
                                 ),
                                 SizedBox(height: 6.h),
                                 _roField(
-                                  m.confirmMessage.description.ar,
+                                  m.confirmDescription.ar,
                                   maxLines: 4,
                                   dir: ui.TextDirection.rtl,
                                 ),
@@ -308,7 +308,7 @@ class _RequestDemoMainPageState extends State<RequestDemoMainPage> {
     );
   }
 
-  // ── Last Updated Row (matches Owner Services pattern) ──────────────────────
+  // ── Last Updated Row ──────────────────────────────────────────────────────
   Widget _lastUpdatedRow({
     required VoidCallback onEdit,
     DateTime? lastUpdated,
@@ -377,12 +377,7 @@ class _RequestDemoMainPageState extends State<RequestDemoMainPage> {
             padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
             decoration: BoxDecoration(
               color: _C.primary,
-              borderRadius: o
-                  ? BorderRadius.only(
-                      topLeft: Radius.circular(6.r),
-                      topRight: Radius.circular(6.r),
-                    )
-                  : BorderRadius.circular(6.r),
+              borderRadius: BorderRadius.circular(6.r),
             ),
             child: Row(
               children: [
@@ -399,7 +394,7 @@ class _RequestDemoMainPageState extends State<RequestDemoMainPage> {
                       ? Icons.keyboard_arrow_up_rounded
                       : Icons.keyboard_arrow_down_rounded,
                   color: Colors.white,
-                  size: 20.sp,
+                  size: 25.sp,
                 ),
               ],
             ),
@@ -408,9 +403,8 @@ class _RequestDemoMainPageState extends State<RequestDemoMainPage> {
         if (o)
           Container(
             width: double.infinity,
-            padding: EdgeInsets.all(16.w),
+            padding: EdgeInsets.symmetric(vertical: 16.h),
             decoration: BoxDecoration(
-              color: _C.cardBg,
               borderRadius: BorderRadius.only(
                 bottomLeft: Radius.circular(6.r),
                 bottomRight: Radius.circular(6.r),
@@ -481,27 +475,28 @@ class _RequestDemoMainPageState extends State<RequestDemoMainPage> {
   );
 
   Widget _roField(
-    String t, {
-    int maxLines = 1,
-    ui.TextDirection dir = ui.TextDirection.ltr,
-  }) => Container(
-    width: double.infinity,
-    padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 10.h),
-    constraints: maxLines > 1 ? BoxConstraints(minHeight: 80.h) : null,
-    decoration: BoxDecoration(
-      color: _C.sectionBg,
-      borderRadius: BorderRadius.circular(4.r),
-    ),
-    child: Text(
-      t.isEmpty ? 'Text Here' : t,
-      textDirection: dir,
-      style: StyleText.fontSize12Weight400.copyWith(
-        color: t.isEmpty ? _C.hintText : _C.labelText,
-      ),
-      maxLines: maxLines,
-      overflow: TextOverflow.ellipsis,
-    ),
-  );
+      String t, {
+        int maxLines = 1,
+        ui.TextDirection dir = ui.TextDirection.ltr,
+      }) =>
+      Container(
+        width: double.infinity,
+        padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 10.h),
+        constraints: maxLines > 1 ? BoxConstraints(minHeight: 80.h) : null,
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(4.r),
+        ),
+        child: Text(
+          t.isEmpty ? 'Text Here' : t,
+          textDirection: dir,
+          style: StyleText.fontSize12Weight400.copyWith(
+            color: t.isEmpty ? _C.hintText : _C.labelText,
+          ),
+          maxLines: maxLines,
+          overflow: TextOverflow.ellipsis,
+        ),
+      );
 
   Widget _svgCircle(String url) {
     if (url.isNotEmpty) {

@@ -124,22 +124,22 @@ class _RequestDemoEditPageState extends State<RequestDemoEditPage> {
 
   void _seed(RequestDemoPageModel d) {
     final h = Object.hashAll([
-      d.header.svgUrl,
-      d.demoQuestions.questions.length,
-      d.confirmMessage.svgUrl,
+      d.headerSvgUrl,
+      d.demoQuestions.length,
+      d.confirmSvgUrl,
     ]);
     if (_hash == h) return;
     _hash = h;
 
-    _hTitleEn.text = d.header.title.en;
-    _hTitleAr.text = d.header.title.ar;
-    _hSvg = d.header.svgUrl.isNotEmpty
-        ? _Img(url: d.header.svgUrl)
+    _hTitleEn.text = d.headerTitle.en;
+    _hTitleAr.text = d.headerTitle.ar;
+    _hSvg = d.headerSvgUrl.isNotEmpty
+        ? _Img(url: d.headerSvgUrl)
         : const _Img();
 
     for (final q in _qs) q.dispose();
     _qs.clear();
-    for (final q in d.demoQuestions.questions) {
+    for (final q in d.demoQuestions) {
       final local = _QLocal(id: q.id);
       local.qEn.text = q.question.en;
       local.qAr.text = q.question.ar;
@@ -154,12 +154,12 @@ class _RequestDemoEditPageState extends State<RequestDemoEditPage> {
       _qs.add(local);
     }
 
-    _cTitleEn.text = d.confirmMessage.title.en;
-    _cTitleAr.text = d.confirmMessage.title.ar;
-    _cDescEn.text = d.confirmMessage.description.en;
-    _cDescAr.text = d.confirmMessage.description.ar;
-    _cSvg = d.confirmMessage.svgUrl.isNotEmpty
-        ? _Img(url: d.confirmMessage.svgUrl)
+    _cTitleEn.text = d.confirmTitle.en;
+    _cTitleAr.text = d.confirmTitle.ar;
+    _cDescEn.text = d.confirmDescription.en;
+    _cDescAr.text = d.confirmDescription.ar;
+    _cSvg = d.confirmSvgUrl.isNotEmpty
+        ? _Img(url: d.confirmSvgUrl)
         : const _Img();
   }
 
@@ -168,7 +168,7 @@ class _RequestDemoEditPageState extends State<RequestDemoEditPage> {
     final c = Completer<_Img?>();
     bool d = false;
     final inp = html.FileUploadInputElement()
-      ..accept = '.svg,image/svg+xml'; // Only SVG files
+      ..accept = '.svg,image/svg+xml';
     inp.onChange.listen((_) {
       final f = inp.files;
       if (f == null || f.isEmpty) {
@@ -180,12 +180,10 @@ class _RequestDemoEditPageState extends State<RequestDemoEditPage> {
       }
 
       final file = f.first;
-      // Validate file type is SVG
       if (!file.name.toLowerCase().endsWith('.svg') &&
           file.type != 'image/svg+xml') {
         if (!d) {
           d = true;
-          // Show error dialog for invalid file type
           _showErrorDialog('Invalid File Type',
               'Please select an SVG file only.');
           c.complete(null);
@@ -221,7 +219,6 @@ class _RequestDemoEditPageState extends State<RequestDemoEditPage> {
     return c.future;
   }
 
-  /// Show error dialog
   void _showErrorDialog(String title, String message) {
     showDialog(
       context: context,
@@ -287,21 +284,17 @@ class _RequestDemoEditPageState extends State<RequestDemoEditPage> {
     );
   }
 
-  /// Validate all fields before publishing
   bool _validateAllFields() {
-    // Validate header
     if (_hTitleEn.text.trim().isEmpty) return false;
     if (_hTitleAr.text.trim().isEmpty) return false;
     if (_hSvg.isEmpty) return false;
 
-    // Validate questions
     if (_qs.isEmpty) return false;
 
     for (final q in _qs) {
       if (q.qEn.text.trim().isEmpty) return false;
       if (q.qAr.text.trim().isEmpty) return false;
 
-      // If dropdown type, validate values
       if (q.type == QuestionType.dropdown) {
         if (q.values.isEmpty) return false;
         for (final v in q.values) {
@@ -311,7 +304,6 @@ class _RequestDemoEditPageState extends State<RequestDemoEditPage> {
       }
     }
 
-    // Validate confirm message
     if (_cTitleEn.text.trim().isEmpty) return false;
     if (_cTitleAr.text.trim().isEmpty) return false;
     if (_cDescEn.text.trim().isEmpty) return false;
@@ -321,7 +313,6 @@ class _RequestDemoEditPageState extends State<RequestDemoEditPage> {
     return true;
   }
 
-  /// Show validation error dialog
   void _showValidationErrorDialog() {
     String errorMessage = 'Please fill all required fields:\n\n';
 
@@ -432,52 +423,58 @@ class _RequestDemoEditPageState extends State<RequestDemoEditPage> {
     );
   }
 
+  /// Build the model from local controllers and save
   Future<void> _save(
       RequestDemoCmsCubit cubit, {
         String status = 'published',
       }) async {
     try {
-      cubit.updateHeaderTitle(en: _hTitleEn.text, ar: _hTitleAr.text);
-      if (_hSvg.bytes != null) await cubit.uploadHeaderSvg(_hSvg.bytes!);
-
-      // Sync questions
-      while (cubit.current.demoQuestions.questions.length < _qs.length)
-        cubit.addQuestion();
-      while (cubit.current.demoQuestions.questions.length > _qs.length)
-        cubit.removeQuestion(cubit.current.demoQuestions.questions.last.id);
-
-      for (var i = 0; i < _qs.length; i++) {
-        final id = cubit.current.demoQuestions.questions[i].id;
-        cubit.updateQuestionText(id, en: _qs[i].qEn.text, ar: _qs[i].qAr.text);
-        cubit.updateQuestionType(id, _qs[i].type);
-        if (cubit.current.demoQuestions.questions[i].required !=
-            _qs[i].required)
-          cubit.toggleQuestionRequired(id);
-
-        // Sync values
-        final curVals = cubit.current.demoQuestions.questions[i].values;
-        while (curVals.length < _qs[i].values.length) cubit.addValue(id);
-        while (curVals.length > _qs[i].values.length)
-          cubit.removeValue(id, curVals.last.id);
-
-        for (var vi = 0; vi < _qs[i].values.length; vi++) {
-          final vid = cubit.current.demoQuestions.questions[i].values[vi].id;
-          cubit.updateValueLabel(
-            id,
-            vid,
-            en: _qs[i].values[vi].en.text,
-            ar: _qs[i].values[vi].ar.text,
-          );
-        }
+      // Upload SVGs if new files picked
+      String headerSvgUrl = cubit.current.headerSvgUrl;
+      if (_hSvg.bytes != null) {
+        headerSvgUrl = await cubit.uploadHeaderSvg(_hSvg.bytes!);
       }
 
-      cubit.updateConfirmTitle(en: _cTitleEn.text, ar: _cTitleAr.text);
-      cubit.updateConfirmDescription(en: _cDescEn.text, ar: _cDescAr.text);
-      if (_cSvg.bytes != null) await cubit.uploadConfirmSvg(_cSvg.bytes!);
+      String confirmSvgUrl = cubit.current.confirmSvgUrl;
+      if (_cSvg.bytes != null) {
+        confirmSvgUrl = await cubit.uploadConfirmSvg(_cSvg.bytes!);
+      }
 
-      await cubit.save(publishStatus: status);
+      // Build questions list
+      final questions = <DemoQuestionModel>[];
+      for (var i = 0; i < _qs.length; i++) {
+        final q = _qs[i];
+        final values = <QuestionValueModel>[];
+        for (var vi = 0; vi < q.values.length; vi++) {
+          final v = q.values[vi];
+          values.add(QuestionValueModel(
+            id: v.id,
+            label: BiText(en: v.en.text, ar: v.ar.text),
+          ));
+        }
+        questions.add(DemoQuestionModel(
+          id: q.id,
+          question: BiText(en: q.qEn.text, ar: q.qAr.text),
+          type: q.type,
+          required: q.required,
+          values: values,
+          order: i,
+        ));
+      }
 
-      // Show success dialog instead of snackbar
+      // Build updated model
+      final updated = cubit.current.copyWith(
+        headerSvgUrl: headerSvgUrl,
+        headerTitle: BiText(en: _hTitleEn.text, ar: _hTitleAr.text),
+        demoQuestions: questions,
+        confirmSvgUrl: confirmSvgUrl,
+        confirmTitle: BiText(en: _cTitleEn.text, ar: _cTitleAr.text),
+        confirmDescription: BiText(en: _cDescEn.text, ar: _cDescAr.text),
+        status: status,
+      );
+
+      await cubit.saveModel(updated);
+
       if (mounted) {
         showDialog(
           context: context,
@@ -548,7 +545,6 @@ class _RequestDemoEditPageState extends State<RequestDemoEditPage> {
         );
       }
     } catch (e) {
-      // Show error dialog instead of snackbar
       if (mounted) {
         showDialog(
           context: context,
@@ -638,7 +634,6 @@ class _RequestDemoEditPageState extends State<RequestDemoEditPage> {
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   const AdminSubNavBar(activeIndex: 7),
-
                   SizedBox(
                     width: 1000.w,
                     child: SingleChildScrollView(
@@ -657,7 +652,6 @@ class _RequestDemoEditPageState extends State<RequestDemoEditPage> {
                             ),
                           ),
                           SizedBox(height: 16.h),
-
                           _acc('header', 'Header', [_headerBody()]),
                           SizedBox(height: 10.h),
                           _acc('questions', 'Demo Related Questions', [
@@ -666,7 +660,6 @@ class _RequestDemoEditPageState extends State<RequestDemoEditPage> {
                           SizedBox(height: 10.h),
                           _acc('confirm', 'Confirm Message', [_confirmBody()]),
                           SizedBox(height: 20.h),
-
                           Row(
                             children: [
                               Expanded(
@@ -688,18 +681,16 @@ class _RequestDemoEditPageState extends State<RequestDemoEditPage> {
                                   'Publish',
                                   _C.primary,
                                       () {
-                                    // Validate before showing dialog
                                     if (!_validateAllFields()) {
                                       setState(() => _sub = true);
                                       _showValidationErrorDialog();
                                       return;
                                     }
-
-                                    // Show publish confirmation dialog
                                     showPublishConfirmDialog(
                                       context: context,
                                       title: 'EDITING REQUEST DEMO DETAILS',
-                                      subtitle: 'Do you want to save the changes made to this Request Demo?',
+                                      subtitle:
+                                      'Do you want to save the changes made to this Request Demo?',
                                       onConfirm: () => _save(cubit),
                                     );
                                   },
@@ -746,7 +737,8 @@ class _RequestDemoEditPageState extends State<RequestDemoEditPage> {
       child: Center(
         child: Text(
           l,
-          style: StyleText.fontSize14Weight600.copyWith(color: Colors.white),
+          style:
+          StyleText.fontSize14Weight600.copyWith(color: Colors.white),
         ),
       ),
     ),
@@ -798,7 +790,7 @@ class _RequestDemoEditPageState extends State<RequestDemoEditPage> {
     );
   }
 
-  // ── HEADER ─────────────────────────────────────────────────────────────────
+  // ── HEADER ───────────────────────────────────────────────────────────────
   Widget _headerBody() => Padding(
     padding: EdgeInsets.symmetric(vertical: 16.h),
     child: Column(
@@ -826,7 +818,7 @@ class _RequestDemoEditPageState extends State<RequestDemoEditPage> {
     ),
   );
 
-  // ── QUESTIONS ──────────────────────────────────────────────────────────────
+  // ── QUESTIONS ────────────────────────────────────────────────────────────
   Widget _questionsBody() => Padding(
     padding: EdgeInsets.symmetric(vertical: 16.h),
     child: Column(
@@ -840,7 +832,9 @@ class _RequestDemoEditPageState extends State<RequestDemoEditPage> {
               if (_qs.isNotEmpty)
                 setState(
                       () => _qs.last.values.add(
-                    _VLocal(id: 'v_${DateTime.now().millisecondsSinceEpoch}'),
+                    _VLocal(
+                        id:
+                        'v_${DateTime.now().millisecondsSinceEpoch}'),
                   ),
                 );
             }),
@@ -849,7 +843,9 @@ class _RequestDemoEditPageState extends State<RequestDemoEditPage> {
               'Question',
                   () => setState(
                     () => _qs.add(
-                  _QLocal(id: 'q_${DateTime.now().millisecondsSinceEpoch}'),
+                  _QLocal(
+                      id:
+                      'q_${DateTime.now().millisecondsSinceEpoch}'),
                 ),
               ),
             ),
@@ -876,12 +872,11 @@ class _RequestDemoEditPageState extends State<RequestDemoEditPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Question EN/AR + remove dot
           Row(
             children: [
               Expanded(
                 child: Stack(
-                  alignment : Alignment.topRight,
+                  alignment: Alignment.topRight,
                   children: [
                     CustomValidatedTextFieldMaster(
                       label: 'Question',
@@ -903,8 +898,6 @@ class _RequestDemoEditPageState extends State<RequestDemoEditPage> {
                   ],
                 ),
               ),
-              SizedBox(width: 4.w),
-
               SizedBox(width: 8.w),
               Expanded(
                 child: Directionality(
@@ -925,8 +918,6 @@ class _RequestDemoEditPageState extends State<RequestDemoEditPage> {
             ],
           ),
           SizedBox(height: 8.h),
-
-          // Type dropdown + Required toggle
           Row(
             children: [
               Expanded(
@@ -976,8 +967,6 @@ class _RequestDemoEditPageState extends State<RequestDemoEditPage> {
             ],
           ),
           SizedBox(height: 8.h),
-
-          // Values (for dropdown type)
           if (q.type == QuestionType.dropdown) ...[
             _lbl('Values'),
             SizedBox(height: 4.h),
@@ -1047,7 +1036,7 @@ class _RequestDemoEditPageState extends State<RequestDemoEditPage> {
     );
   }
 
-  // ── CONFIRM ────────────────────────────────────────────────────────────────
+  // ── CONFIRM ──────────────────────────────────────────────────────────────
   Widget _confirmBody() => Padding(
     padding: EdgeInsets.symmetric(vertical: 16.h),
     child: Column(
@@ -1104,7 +1093,7 @@ class _RequestDemoEditPageState extends State<RequestDemoEditPage> {
     ),
   );
 
-  // ── SHARED ─────────────────────────────────────────────────────────────────
+  // ── SHARED ───────────────────────────────────────────────────────────────
   Widget _lbl(String t) =>
       Text(t, style: StyleText.fontSize12Weight500.copyWith(color: _C.label));
 
@@ -1113,47 +1102,49 @@ class _RequestDemoEditPageState extends State<RequestDemoEditPage> {
       String arL,
       TextEditingController enC,
       TextEditingController arC,
-      ) => Row(
-    children: [
-      Expanded(
-        child: CustomValidatedTextFieldMaster(
-          label: enL,
-          hint: 'Text Here',
-          controller: enC,
-          height: 36,
-          submitted: _sub,
-          fillColor: Colors.white,
-          textDirection: ui.TextDirection.ltr,
-          textAlign: TextAlign.left,
-          primaryColor: _p,
-        ),
-      ),
-      SizedBox(width: 16.w),
-      Expanded(
-        child: Directionality(
-          textDirection: ui.TextDirection.rtl,
-          child: CustomValidatedTextFieldMaster(
-            label: arL,
-            hint: 'أدخل النص هنا',
-            controller: arC,
-            height: 36,
-            submitted: _sub,
-            fillColor: Colors.white,
-            textDirection: ui.TextDirection.rtl,
-            textAlign: TextAlign.right,
-            primaryColor: _p,
+      ) =>
+      Row(
+        children: [
+          Expanded(
+            child: CustomValidatedTextFieldMaster(
+              label: enL,
+              hint: 'Text Here',
+              controller: enC,
+              height: 36,
+              submitted: _sub,
+              fillColor: Colors.white,
+              textDirection: ui.TextDirection.ltr,
+              textAlign: TextAlign.left,
+              primaryColor: _p,
+            ),
           ),
-        ),
-      ),
-    ],
-  );
+          SizedBox(width: 16.w),
+          Expanded(
+            child: Directionality(
+              textDirection: ui.TextDirection.rtl,
+              child: CustomValidatedTextFieldMaster(
+                label: arL,
+                hint: 'أدخل النص هنا',
+                controller: arC,
+                height: 36,
+                submitted: _sub,
+                fillColor: Colors.white,
+                textDirection: ui.TextDirection.rtl,
+                textAlign: TextAlign.right,
+                primaryColor: _p,
+              ),
+            ),
+          ),
+        ],
+      );
 
   Widget _removeDot(VoidCallback f) => GestureDetector(
     onTap: f,
     child: Container(
       width: 16.w,
       height: 16.h,
-      decoration: const BoxDecoration(color: _C.remove, shape: BoxShape.circle),
+      decoration: const BoxDecoration(
+          color: _C.remove, shape: BoxShape.circle),
       child: Icon(Icons.remove, color: Colors.white, size: 10.sp),
     ),
   );
@@ -1173,7 +1164,8 @@ class _RequestDemoEditPageState extends State<RequestDemoEditPage> {
           SizedBox(width: 4.w),
           Text(
             l,
-            style: StyleText.fontSize12Weight500.copyWith(color: Colors.white),
+            style:
+            StyleText.fontSize12Weight500.copyWith(color: Colors.white),
           ),
         ],
       ),
