@@ -30,6 +30,15 @@ import '../../core/custom_dialog.dart';
 import '../../model/contact_us/contact_model_location.dart';
 import '../../model/home/home_model.dart';
 import 'contact_us_cms_preview_page.dart';
+import 'dart:convert';
+import 'dart:ui_web' as ui_web;
+
+
+String _svgBytesToDataUrl(Uint8List bytes) {
+  final base64 = base64Encode(bytes);
+  return 'data:image/svg+xml;base64,$base64';
+}
+
 
 const Color _kPink       = Color(0xFFD16F9A);
 const Color _kRed        = Color(0xFFD32F2F);
@@ -238,13 +247,21 @@ class _ContactUsCmsEditPageState extends State<ContactUsCmsEditPage> {
       reader.onLoadEnd.listen((_) {
         if (reader.readyState == html.FileReader.DONE) {
           final result = reader.result;
+          Uint8List? bytes;
           if (result is ByteBuffer) {
-            completer.complete(result.asUint8List());
+            bytes = Uint8List.view(result);
           } else if (result is Uint8List) {
-            completer.complete(result);
-          } else {
-            completer.complete(null);
+            bytes = result;
+          } else if (result is List<int>) {
+            bytes = Uint8List.fromList(result);
           }
+
+          if (bytes != null && !_isValidSvgContent(bytes)) {
+            completer.complete(null);
+            return;
+          }
+
+          completer.complete(bytes);
         }
       });
       reader.onError.listen((_) => completer.complete(null));
@@ -252,6 +269,20 @@ class _ContactUsCmsEditPageState extends State<ContactUsCmsEditPage> {
 
     input.click();
     return completer.future;
+  }
+
+
+  bool _isValidSvgContent(Uint8List bytes) {
+    if (bytes.length < 10) return false;
+    try {
+      final content = String.fromCharCodes(
+          bytes.sublist(0, bytes.length.clamp(0, 500)));
+      final trimmed = content.trimLeft();
+      return trimmed.startsWith('<svg') ||
+          (trimmed.startsWith('<?xml') && trimmed.contains('<svg'));
+    } catch (e) {
+      return false;
+    }
   }
 
   // ── Build model ───────────────────────────────────────────────────────────
@@ -1064,32 +1095,45 @@ class _ContactUsCmsEditPageState extends State<ContactUsCmsEditPage> {
 
   Widget _buildImageWidget(Uint8List? bytes, String url) {
     if (bytes != null) {
-      try {
-        return Padding(
-          padding: EdgeInsets.all(16.r),
-          child: SvgPicture.memory(bytes, fit: BoxFit.contain,
-              placeholderBuilder: (context) =>
-                  Icon(Icons.description, color: Colors.grey[400], size: 28.sp)),
-        );
-      } catch (_) {
-        return Icon(Icons.broken_image, color: Colors.red[300], size: 28.sp);
-      }
-    } else if (url.isNotEmpty) {
-      return FutureBuilder(
-        future: _loadSvg(url),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting)
-            return Icon(Icons.description, color: Colors.grey[400], size: 28.sp);
-          if (snapshot.hasError || !snapshot.hasData)
-            return Icon(Icons.broken_image, color: Colors.red[300], size: 28.sp);
-          return Padding(
-            padding: EdgeInsets.all(16.r),
-            child: SvgPicture.memory(snapshot.data!, fit: BoxFit.contain),
-          );
-        },
+      final dataUrl = _svgBytesToDataUrl(bytes);
+      final viewId = 'svg-about-bytes-${bytes.hashCode}';
+
+      ui_web.platformViewRegistry.registerViewFactory(viewId, (int id) {
+        final img = html.ImageElement()
+          ..src = dataUrl
+          ..style.width = '100%'
+          ..style.height = '100%'
+          ..style.objectFit = 'contain';
+        return img;
+      });
+
+      return SizedBox(
+        width: 64.w,
+        height: 64.h,
+        child: HtmlElementView(viewType: viewId),
       );
     }
-    return Icon(Icons.description, color: Colors.grey, size: 28.sp);
+
+    if (url.isNotEmpty) {
+      final viewId = 'svg-about-url-${url.hashCode}';
+
+      ui_web.platformViewRegistry.registerViewFactory(viewId, (int id) {
+        final img = html.ImageElement()
+          ..src = url
+          ..style.width = '100%'
+          ..style.height = '100%'
+          ..style.objectFit = 'contain';
+        return img;
+      });
+
+      return SizedBox(
+        width: 64.w,
+        height: 64.h,
+        child: HtmlElementView(viewType: viewId),
+      );
+    }
+
+    return Icon(Icons.image_outlined, color: Colors.grey[500], size: 28.sp);
   }
 
   Future<Uint8List> _loadSvg(String url) async {

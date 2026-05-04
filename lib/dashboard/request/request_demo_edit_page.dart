@@ -25,6 +25,15 @@ import '../../controller/request/request_demo_state.dart';
 import '../../model/request/request_demo_model.dart';
 import '../../widgets/admin_sub_navbar.dart';
 import 'request_demo_preview_page.dart';
+import 'dart:convert';
+import 'dart:ui_web' as ui_web;
+
+
+String _svgBytesToDataUrl(Uint8List bytes) {
+  final base64 = base64Encode(bytes);
+  return 'data:image/svg+xml;base64,$base64';
+}
+
 
 class _C {
   static const Color primary = Color(0xFFD16F9A);
@@ -196,9 +205,13 @@ class _RequestDemoEditPageState extends State<RequestDemoEditPage> {
         if (!d) {
           d = true;
           final x = r.result;
-          c.complete(
-            x is List<int> ? _Img(bytes: Uint8List.fromList(x)) : null,
-          );
+          if (x is ByteBuffer) {
+            c.complete(_Img(bytes: Uint8List.view(x)));
+          } else if (x is List<int>) {
+            c.complete(_Img(bytes: Uint8List.fromList(x)));
+          } else {
+            c.complete(null);
+          }
         }
       });
       r.onError.listen((_) {
@@ -1174,7 +1187,20 @@ class _RequestDemoEditPageState extends State<RequestDemoEditPage> {
 
   Widget _imgBox(_Img picked, VoidCallback onPick) {
     Widget content;
+
     if (picked.bytes != null) {
+      final dataUrl = _svgBytesToDataUrl(picked.bytes!);
+      final viewId = 'svg-req-bytes-${picked.bytes!.hashCode}';
+
+      ui_web.platformViewRegistry.registerViewFactory(viewId, (int id) {
+        final img = html.ImageElement()
+          ..src = dataUrl
+          ..style.width = '100%'
+          ..style.height = '100%'
+          ..style.objectFit = 'contain';
+        return img;
+      });
+
       content = Container(
         width: 70.w,
         height: 70.h,
@@ -1182,21 +1208,26 @@ class _RequestDemoEditPageState extends State<RequestDemoEditPage> {
           color: Colors.white,
           shape: BoxShape.circle,
         ),
-        child: Center(
-          child: ClipOval(
-            child: Padding(
-              padding: EdgeInsets.all(10.w),
-              child: SvgPicture.memory(
-                picked.bytes!,
-                width: 30.w,
-                height: 30.h,
-                fit: BoxFit.scaleDown,
-              ),
-            ),
+        child: ClipOval(
+          child: SizedBox(
+            width: 70.w,
+            height: 70.h,
+            child: HtmlElementView(viewType: viewId),
           ),
         ),
       );
     } else if (picked.url != null && picked.url!.isNotEmpty) {
+      final viewId = 'svg-req-url-${picked.url!.hashCode}';
+
+      ui_web.platformViewRegistry.registerViewFactory(viewId, (int id) {
+        final img = html.ImageElement()
+          ..src = picked.url!
+          ..style.width = '100%'
+          ..style.height = '100%'
+          ..style.objectFit = 'contain';
+        return img;
+      });
+
       content = Container(
         width: 70.w,
         height: 70.h,
@@ -1204,18 +1235,11 @@ class _RequestDemoEditPageState extends State<RequestDemoEditPage> {
           color: Colors.white,
           shape: BoxShape.circle,
         ),
-        child: Center(
-          child: ClipOval(
-            child: Padding(
-              padding: EdgeInsets.all(10.w),
-              child: SvgPicture.network(
-                picked.url!,
-                width: 20.w,
-                height: 20.h,
-                fit: BoxFit.contain,
-                placeholderBuilder: (_) => const CircleProgressMaster(),
-              ),
-            ),
+        child: ClipOval(
+          child: SizedBox(
+            width: 70.w,
+            height: 70.h,
+            child: HtmlElementView(viewType: viewId),
           ),
         ),
       );
@@ -1228,9 +1252,6 @@ class _RequestDemoEditPageState extends State<RequestDemoEditPage> {
               ? _C.remove.withOpacity(0.1)
               : const Color(0xFFD9D9D9),
           shape: BoxShape.circle,
-          border: _sub && picked.isEmpty
-              ? Border.all(color: _C.remove, width: 1)
-              : null,
         ),
         child: Center(
           child: Icon(
@@ -1241,6 +1262,7 @@ class _RequestDemoEditPageState extends State<RequestDemoEditPage> {
         ),
       );
     }
+
     return Stack(
       clipBehavior: Clip.none,
       children: [
@@ -1256,7 +1278,6 @@ class _RequestDemoEditPageState extends State<RequestDemoEditPage> {
               decoration: BoxDecoration(
                 color: _C.primary,
                 shape: BoxShape.circle,
-                border: Border.all(color: Colors.white, width: 2),
               ),
               child: Center(
                 child: CustomSvg(

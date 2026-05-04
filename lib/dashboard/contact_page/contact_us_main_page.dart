@@ -24,6 +24,9 @@ import '../../widgets/app_admin_navbar.dart';
 import '../main_page/home_main_page.dart';
 import 'contact_us_cms_edit_page.dart';
 import 'contact_us_cms_preview_page.dart';
+import 'dart:html' as html;
+import 'dart:ui_web' as ui_web;
+
 
 class _C {
   static const Color primary   = Color(0xFFD16F9A);
@@ -361,24 +364,46 @@ class _ContactUsMainPageState extends State<ContactUsMainPage> {
 
   // ── Image Circle ───────────────────────────────────────────────────────────
   Widget _imgCircle(String url, {bool isSvg = false}) {
+    if (url.isNotEmpty) {
+      final viewId = 'svg-contact-main-${url.hashCode}';
+
+      ui_web.platformViewRegistry.registerViewFactory(viewId, (int id) {
+        final img = html.ImageElement()
+          ..src = url
+          ..style.width = '100%'
+          ..style.height = '100%'
+          ..style.objectFit = 'contain';
+        return img;
+      });
+
+      return Container(
+        width: 60.w,
+        height: 60.h,
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          shape: BoxShape.circle,
+        ),
+        child: ClipOval(
+          child: SizedBox(
+            width: 60.w,
+            height: 60.h,
+            child: HtmlElementView(viewType: viewId),
+          ),
+        ),
+      );
+    }
     return Container(
-      width: 60.w, height: 60.h,
-      decoration: BoxDecoration(
-        color: url.isNotEmpty ? Colors.white : const Color(0xFFD9D9D9),
+      width: 60.w,
+      height: 60.h,
+      decoration: const BoxDecoration(
+        color: Color(0xFFD9D9D9),
         shape: BoxShape.circle,
       ),
-      child: url.isNotEmpty
-          ? ClipOval(
-        child: Padding(
-          padding: EdgeInsets.all(15.r),
-          child: SvgPicture.network(url, fit: BoxFit.contain,
-              placeholderBuilder: (_) => const SizedBox()),
-        ),
-      )
-          : Center(
+      child: Center(
         child: Icon(
           isSvg ? Icons.description_outlined : Icons.image_outlined,
-          color: Colors.grey, size: 20.sp,
+          color: Colors.grey,
+          size: 20.sp,
         ),
       ),
     );

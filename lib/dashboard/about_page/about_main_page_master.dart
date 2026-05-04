@@ -9,7 +9,7 @@
 // ignore_for_file: avoid_web_libraries_in_flutter
 import 'dart:html' as html;
 import 'dart:typed_data';
-
+import 'dart:ui_web' as ui_web;
 import 'package:beauty_admin/dashboard/about_page/terms_page/terms_main_page.dart';
 import 'package:beauty_admin/dashboard/about_page/terms_page/terms_preview_page.dart';
 import 'package:flutter/material.dart';
@@ -182,31 +182,19 @@ class _AboutMainPageMasterDashboardState
         size: iconSize.sp,
       );
     }
-    return FutureBuilder<Uint8List>(
-      future: _cachedLoad(url, isSvg: isSvg),
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return Center(
-            child: SizedBox(
-              width: 16,
-              height: 16,
-              child: CircularProgressIndicator(
-                strokeWidth: 2,
-                color: _C.primary,
-              ),
-            ),
-          );
-        }
-        if (snapshot.hasData) {
-          return _renderBytes(snapshot.data!, isSvg: isSvg, fit: fit);
-        }
-        return Icon(
-          isSvg ? Icons.description_outlined : Icons.broken_image,
-          color: isSvg ? Colors.grey[400] : Colors.red[300],
-          size: iconSize.sp,
-        );
-      },
-    );
+
+    final viewId = 'svg-about-main-${url.hashCode}';
+
+    ui_web.platformViewRegistry.registerViewFactory(viewId, (int id) {
+      final img = html.ImageElement()
+        ..src = url
+        ..style.width = '100%'
+        ..style.height = '100%'
+        ..style.objectFit = 'contain';
+      return img;
+    });
+
+    return HtmlElementView(viewType: viewId);
   }
 
   void _onPreviewTap(AboutPageModel aboutModel) {
@@ -557,15 +545,24 @@ class _AboutMainPageMasterDashboardState
             shape: BoxShape.circle,
             color: Colors.white,
           ),
-          child: ClipOval(
-            child: Padding(
-              padding: EdgeInsets.all(14.r),
+          child: url.isNotEmpty
+              ? ClipOval(
+            child: SizedBox(
+              width: 56.w,
+              height: 56.w,
               child: _networkImage(
                 url: url,
                 isSvg: isSvg,
                 fit: BoxFit.contain,
                 iconSize: 24,
               ),
+            ),
+          )
+              : Center(
+            child: Icon(
+              isSvg ? Icons.description_outlined : Icons.image_outlined,
+              color: Colors.grey[500],
+              size: 24.sp,
             ),
           ),
         ),

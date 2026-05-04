@@ -11,6 +11,7 @@
 
 // ignore_for_file: avoid_web_libraries_in_flutter
 import 'dart:async';
+import 'dart:convert';
 import 'dart:html' as html;
 import 'dart:typed_data';
 
@@ -33,6 +34,16 @@ import '../../model/about_us/about_us.dart';
 import '../../widgets/app_admin_navbar.dart';
 import '../main_page/home_main_page.dart';
 import 'about_preview_page.dart';
+import 'dart:html' as html;
+import 'dart:ui_web' as ui_web;
+
+
+String _svgBytesToDataUrl(Uint8List bytes) {
+  final base64 = base64Encode(bytes);
+  return 'data:image/svg+xml;base64,$base64';
+}
+
+
 
 const Color _kGreen = Color(0xFFD16F9A);
 const Color _kGreenSolid = Color(0xFFD16F9A);
@@ -343,9 +354,11 @@ class _AboutEditPageMasterState extends State<AboutEditPageMaster> {
           final result = reader.result;
           Uint8List? bytes;
           if (result is ByteBuffer) {
-            bytes = result.asUint8List();
+            bytes = Uint8List.view(result);
           } else if (result is Uint8List) {
             bytes = result;
+          } else if (result is List<int>) {
+            bytes = Uint8List.fromList(result);
           }
 
           if (bytes != null && !_isValidSvgContent(bytes)) {
@@ -1327,44 +1340,42 @@ class _AboutEditPageMasterState extends State<AboutEditPageMaster> {
   }
 
   Widget _buildImageWidget(Uint8List? bytes, String url) {
-    bool isSvgBytes(Uint8List b) {
-      if (b.length < 10) return false;
-      try {
-        final header = String.fromCharCodes(
-          b.sublist(0, b.length.clamp(0, 500)),
-        ).trimLeft();
-        return header.startsWith('<svg') ||
-            (header.startsWith('<?xml') && header.contains('<svg'));
-      } catch (e) {
-        return false;
-      }
-    }
+    if (bytes != null) {
+      final dataUrl = _svgBytesToDataUrl(bytes);
+      final viewId = 'svg-about-bytes-${bytes.hashCode}';
 
-    Widget renderBytes(Uint8List b) {
-      return Padding(
-        padding: EdgeInsets.all(16.r),
-        child: SvgPicture.memory(b, fit: BoxFit.contain),
+      ui_web.platformViewRegistry.registerViewFactory(viewId, (int id) {
+        final img = html.ImageElement()
+          ..src = dataUrl
+          ..style.width = '100%'
+          ..style.height = '100%'
+          ..style.objectFit = 'contain';
+        return img;
+      });
+
+      return SizedBox(
+        width: 64.w,
+        height: 64.h,
+        child: HtmlElementView(viewType: viewId),
       );
     }
 
-    final Widget spinner = SizedBox(
-      width: 20,
-      height: 20,
-      child: CircularProgressIndicator(strokeWidth: 2, color: _kGreenSolid),
-    );
-
-    if (bytes != null) return renderBytes(bytes);
-
     if (url.isNotEmpty) {
-      return FutureBuilder<Uint8List>(
-        future: _cachedLoad(url),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return Center(child: spinner);
-          }
-          if (snapshot.hasData) return renderBytes(snapshot.data!);
-          return Icon(Icons.broken_image, color: Colors.red[300], size: 28.sp);
-        },
+      final viewId = 'svg-about-url-${url.hashCode}';
+
+      ui_web.platformViewRegistry.registerViewFactory(viewId, (int id) {
+        final img = html.ImageElement()
+          ..src = url
+          ..style.width = '100%'
+          ..style.height = '100%'
+          ..style.objectFit = 'contain';
+        return img;
+      });
+
+      return SizedBox(
+        width: 64.w,
+        height: 64.h,
+        child: HtmlElementView(viewType: viewId),
       );
     }
 

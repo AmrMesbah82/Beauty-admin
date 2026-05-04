@@ -26,6 +26,11 @@ import '../../model/home/home_model.dart';
 import '../../widgets/app_admin_navbar.dart';
 import 'home_edit_page.dart';
 import 'home_preview_page.dart';
+import 'dart:html' as html;
+import 'dart:ui_web' as ui_web;
+
+
+
 
 class _C {
   static const Color primary = Color(0xFFD16F9A);
@@ -337,18 +342,24 @@ class _HomeMainPageState extends State<HomeMainPage> {
             shape: BoxShape.circle,
           ),
           child: data.branding.logoUrl.isNotEmpty
-              ? Center(
-            child: ClipOval(
-              child: SvgPicture.network(
-                data.branding.logoUrl,
-                width: 30.w,
-                height: 30.h,
-                fit: BoxFit.contain,
-                placeholderBuilder: (_) =>
-                const CircularProgressIndicator(strokeWidth: 2),
+              ? () {
+            final viewId = 'svg-home-logo-${data.branding.logoUrl.hashCode}';
+            ui_web.platformViewRegistry.registerViewFactory(viewId, (int id) {
+              final img = html.ImageElement()
+                ..src = data.branding.logoUrl
+                ..style.width = '100%'
+                ..style.height = '100%'
+                ..style.objectFit = 'contain';
+              return img;
+            });
+            return ClipOval(
+              child: SizedBox(
+                width: 70.w,
+                height: 70.h,
+                child: HtmlElementView(viewType: viewId),
               ),
-            ),
-          )
+            );
+          }()
               : const Icon(Icons.image_outlined, color: Colors.grey),
         ),
         SizedBox(height: 16.h),
@@ -733,6 +744,17 @@ class _HomeMainPageState extends State<HomeMainPage> {
   /// Read-only icon circle — shows SVG from URL or placeholder
   Widget _readOnlyIconCircle(String url) {
     if (url.isNotEmpty) {
+      final viewId = 'svg-home-main-${url.hashCode}';
+
+      ui_web.platformViewRegistry.registerViewFactory(viewId, (int id) {
+        final img = html.ImageElement()
+          ..src = url
+          ..style.width = '100%'
+          ..style.height = '100%'
+          ..style.objectFit = 'contain';
+        return img;
+      });
+
       return Container(
         width: 60.w,
         height: 60.h,
@@ -740,19 +762,11 @@ class _HomeMainPageState extends State<HomeMainPage> {
           color: Colors.white,
           shape: BoxShape.circle,
         ),
-        child: Center(
-          child: ClipOval(
-            child: Padding(
-              padding: EdgeInsets.all(8.w),
-              child: SvgPicture.network(
-                url,
-                width: 30.w,
-                height: 30.h,
-                fit: BoxFit.contain,
-                placeholderBuilder: (_) =>
-                const CircularProgressIndicator(strokeWidth: 2),
-              ),
-            ),
+        child: ClipOval(
+          child: SizedBox(
+            width: 60.w,
+            height: 60.h,
+            child: HtmlElementView(viewType: viewId),
           ),
         ),
       );

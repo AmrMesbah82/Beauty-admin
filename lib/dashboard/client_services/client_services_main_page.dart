@@ -26,6 +26,10 @@ import '../../widgets/app_admin_navbar.dart';
 import '../main_page/home_main_page.dart';
 import 'client_services_edit_page.dart';
 import 'client_services_preview_page.dart';
+import 'dart:html' as html;
+import 'dart:ui_web' as ui_web;
+
+
 
 /// Custom Segmented Tabs Widget (reused from master_main_page)
 class CustomSegmentedTabs extends StatelessWidget {
@@ -560,23 +564,48 @@ class _ClientServicesMainPageState extends State<ClientServicesMainPage> {
 
   Widget _readOnlyImageCircle(String url) {
     if (url.isNotEmpty) {
+      final viewId = 'svg-client-svc-main-${url.hashCode}';
+
+      ui_web.platformViewRegistry.registerViewFactory(viewId, (int id) {
+        final img = html.ImageElement()
+          ..src = url
+          ..style.width = '100%'
+          ..style.height = '100%'
+          ..style.objectFit = 'contain';
+        return img;
+      });
+
       return Container(
-        width: 70.w, height: 70.h,
-        decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle),
-        child: Center(child: ClipOval(child: Padding(
-            padding: EdgeInsets.all(10.w),
-            child: SvgPicture.network(url, width: 30.w, height: 30.h,
-                fit: BoxFit.contain, placeholderBuilder: (_) => const CircleProgressMaster())))),
+        width: 70.w,
+        height: 70.h,
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          shape: BoxShape.circle,
+        ),
+        child: ClipOval(
+          child: SizedBox(
+            width: 70.w,
+            height: 70.h,
+            child: HtmlElementView(viewType: viewId),
+          ),
+        ),
       );
     }
     return Container(
-      width: 70.w, height: 70.h,
-      decoration: const BoxDecoration(color: Color(0xFFD9D9D9), shape: BoxShape.circle),
-      child: Center(child: CustomSvg(
+      width: 70.w,
+      height: 70.h,
+      decoration: const BoxDecoration(
+        color: Color(0xFFD9D9D9),
+        shape: BoxShape.circle,
+      ),
+      child: Center(
+        child: CustomSvg(
           assetPath: 'assets/home_control/image.svg',
           width: 20.w,
           height: 20.h,
-          fit: BoxFit.fill)),
+          fit: BoxFit.fill,
+        ),
+      ),
     );
   }
 }

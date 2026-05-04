@@ -27,6 +27,7 @@
 import 'dart:async';
 import 'dart:typed_data';
 import 'dart:html' as html;
+
 import 'dart:ui' as ui;
 
 import 'package:calendar_date_picker2/calendar_date_picker2.dart';
@@ -55,6 +56,15 @@ import '../../widgets/app_admin_navbar.dart';
 import '../main_page/home_main_page.dart';
 import 'master_preview_page.dart';
 import 'master_main_page.dart';
+import 'dart:typed_data';
+import 'package:flutter/widgets.dart';
+import 'dart:convert';
+import 'dart:ui_web' as ui_web;  // ← add this
+
+String _svgBytesToDataUrl(Uint8List bytes) {
+  final base64 = base64Encode(bytes);
+  return 'data:image/svg+xml;base64,$base64';
+}
 
 class _C {
   static const Color primary   = Color(0xFFD16F9A);
@@ -414,57 +424,80 @@ class _MasterEditPageState extends State<MasterEditPage> {
 
   // ─── Image picker (SVG only) ──────────────────────────────────────────────
   Future<_PickedImage?> _pickImage() async {
-    print('[MasterEditPage] _pickImage: opening file picker');
+    print('[_pickImage] ▶ START');
     final completer = Completer<_PickedImage?>();
     bool completed = false;
 
     final input = html.FileUploadInputElement()
       ..accept = '.svg,image/svg+xml';
 
+    print('[_pickImage] input created, adding onChange listener');
+
     input.onChange.listen((event) {
+      print('[_pickImage] onChange fired');
       final files = input.files;
       if (files == null || files.isEmpty) {
+        print('[_pickImage] ❌ no files selected');
         if (!completed) { completed = true; completer.complete(null); }
         return;
       }
+
       final file = files.first;
+      print('[_pickImage] file selected: name=${file.name} type=${file.type} size=${file.size}');
+
       if (!file.name.toLowerCase().endsWith('.svg') &&
           file.type != 'image/svg+xml') {
-        if (!completed) {
-          completed = true;
-          completer.complete(null);
-          if (mounted) {
-
-          }
-        }
+        print('[_pickImage] ❌ rejected: not an SVG (name=${file.name}, type=${file.type})');
+        if (!completed) { completed = true; completer.complete(null); }
         return;
       }
 
+      print('[_pickImage] ✅ SVG accepted, starting FileReader...');
       final reader = html.FileReader();
+
       reader.onLoadEnd.listen((_) {
         final result = reader.result;
+        print('[_pickImage] onLoadEnd: result runtimeType = ${result.runtimeType}');
         if (!completed) {
           completed = true;
-          if (result is List<int>) {
+          if (result is ByteBuffer) {
+            // ✅ ByteBuffer is from dart:typed_data, not dart:html
+            final bytes = Uint8List.view(result);
+            print('[_pickImage] ✅ ByteBuffer → ${bytes.length} bytes');
+            completer.complete(_PickedImage(bytes: bytes));
+          } else if (result is List<int>) {
+            print('[_pickImage] ✅ List<int> → ${result.length} bytes');
             completer.complete(_PickedImage(bytes: Uint8List.fromList(result)));
           } else {
+            print('[_pickImage] ❌ unknown result type: ${result.runtimeType}');
             completer.complete(null);
           }
         }
       });
-      reader.onError.listen((_) {
+
+      reader.onError.listen((e) {
+        print('[_pickImage] ❌ FileReader error: $e');
         if (!completed) { completed = true; completer.complete(null); }
       });
+
       reader.readAsArrayBuffer(file);
+      print('[_pickImage] readAsArrayBuffer called');
     });
 
     input.click();
+    print('[_pickImage] input.click() called — waiting for user...');
 
     Future.delayed(const Duration(minutes: 5), () {
-      if (!completed) { completed = true; completer.complete(null); }
+      if (!completed) {
+        print('[_pickImage] ⏰ TIMEOUT after 5 minutes');
+        completed = true;
+        completer.complete(null);
+      }
     });
 
-    return completer.future;
+    final result = await completer.future;
+    print('[_pickImage] ◀ DONE — result: ${result == null ? 'null' : 'bytes=${result.bytes?.length} url=${result.url}'}');
+    return result;
   }
 
   // ─── Date picker ──────────────────────────────────────────────────────────
@@ -871,9 +904,17 @@ class _MasterEditPageState extends State<MasterEditPage> {
           SizedBox(height: 6.h),
           _imgBox(
             picked: _headerImage,
+            // In _headerSectionBody onPick:
             onPick: () async {
+              print('[Header] onPick tapped');
               final p = await _pickImage();
-              if (p != null) setState(() => _headerImage = p);
+              print('[Header] _pickImage returned: ${p == null ? 'null' : 'bytes=${p.bytes?.length}'}');
+              if (p != null && mounted) {
+                print('[Header] calling setState with new image');
+                setState(() => _headerImage = p);
+              } else {
+                print('[Header] ❌ NOT setting state — p=$p mounted=$mounted');
+              }
             },
           ),
           if (_submitted && _headerImage.isEmpty)
@@ -1351,46 +1392,72 @@ class _MasterEditPageState extends State<MasterEditPage> {
     Widget content;
 
     if (picked.bytes != null) {
+      print('[_imgBox] rendering bytes: ${picked.bytes!.length}');
+
+      final dataUrl = _svgBytesToDataUrl(picked.bytes!);
+      final viewId = 'svg-preview-${picked.bytes!.hashCode}';
+
+      // ignore: undefined_prefixed_name
+      ui_web.platformViewRegistry.registerViewFactory(viewId, (int id) {
+        final img = html.ImageElement()
+          ..src = dataUrl
+          ..style.width = '100%'
+          ..style.height = '100%'
+          ..style.objectFit = 'contain';
+        return img;
+      });
+
       content = Container(
         width: 70.w,
         height: 70.h,
-        decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle),
-        child: Center(
-          child: ClipOval(
-            child: Padding(
-              padding: EdgeInsets.all(10.w),
-              child: SvgPicture.memory(
-                picked.bytes!,
-                width: 30.w,
-                height: 30.h,
-                fit: BoxFit.scaleDown,
-                placeholderBuilder: (_) => _placeholderCircle(),
-              ),
-            ),
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          shape: BoxShape.circle,
+        ),
+        child: ClipOval(
+          child: SizedBox(
+            width: 70.w,
+            height: 70.h,
+            child: HtmlElementView(viewType: viewId),
           ),
         ),
       );
-    } else if (picked.url != null && picked.url!.isNotEmpty) {
+    }
+
+
+    else if (picked.url != null && picked.url!.isNotEmpty) {
+      print('[_imgBox] rendering from URL: ${picked.url}');
+
+      final viewId = 'svg-url-preview-${picked.url!.hashCode}';
+
+      ui_web.platformViewRegistry.registerViewFactory(viewId, (int id) {
+        final img = html.ImageElement()
+          ..src = picked.url!
+          ..style.width = '100%'
+          ..style.height = '100%'
+          ..style.objectFit = 'contain';
+        return img;
+      });
+
       content = Container(
         width: 70.w,
         height: 70.h,
-        decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle),
-        child: Center(
-          child: ClipOval(
-            child: Padding(
-              padding: EdgeInsets.all(10.w),
-              child: SvgPicture.network(
-                picked.url!,
-                width: 20.w,
-                height: 20.h,
-                fit: BoxFit.contain,
-                placeholderBuilder: (_) => const CircleProgressMaster(),
-              ),
-            ),
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          shape: BoxShape.circle,
+        ),
+        child: ClipOval(
+          child: SizedBox(
+            width: 70.w,
+            height: 70.h,
+            child: HtmlElementView(viewType: viewId),
           ),
         ),
       );
-    } else {
+    }
+
+
+    else {
       content = _placeholderCircle();
     }
 

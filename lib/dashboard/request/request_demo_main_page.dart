@@ -21,7 +21,8 @@ import '../../widgets/app_admin_navbar.dart';
 import '../main_page/home_main_page.dart';
 import 'request_demo_edit_page.dart';
 import 'request_demo_preview_page.dart';
-
+import 'dart:html' as html;
+import 'dart:ui_web' as ui_web;
 class _C {
   static const Color primary = Color(0xFFD16F9A);
   static const Color sectionBg = Color(0xFFF5F5F5);
@@ -500,6 +501,17 @@ class _RequestDemoMainPageState extends State<RequestDemoMainPage> {
 
   Widget _svgCircle(String url) {
     if (url.isNotEmpty) {
+      final viewId = 'svg-req-demo-main-${url.hashCode}';
+
+      ui_web.platformViewRegistry.registerViewFactory(viewId, (int id) {
+        final img = html.ImageElement()
+          ..src = url
+          ..style.width = '100%'
+          ..style.height = '100%'
+          ..style.objectFit = 'contain';
+        return img;
+      });
+
       return Container(
         width: 70.w,
         height: 70.h,
@@ -507,18 +519,11 @@ class _RequestDemoMainPageState extends State<RequestDemoMainPage> {
           color: Colors.white,
           shape: BoxShape.circle,
         ),
-        child: Center(
-          child: ClipOval(
-            child: Padding(
-              padding: EdgeInsets.all(10.w),
-              child: SvgPicture.network(
-                url,
-                width: 30.w,
-                height: 30.h,
-                fit: BoxFit.contain,
-                placeholderBuilder: (_) => const CircleProgressMaster(),
-              ),
-            ),
+        child: ClipOval(
+          child: SizedBox(
+            width: 70.w,
+            height: 70.h,
+            child: HtmlElementView(viewType: viewId),
           ),
         ),
       );

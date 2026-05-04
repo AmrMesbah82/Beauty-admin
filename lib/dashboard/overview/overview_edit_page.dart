@@ -28,7 +28,8 @@ import 'dart:ui' as ui;
 import 'dart:async';
 import 'dart:typed_data';
 import 'dart:html' as html;
-
+import 'dart:html' as html;
+import 'dart:ui_web' as ui_web;
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -52,6 +53,13 @@ import '../../widgets/app_admin_navbar.dart';
 import '../main_page/home_main_page.dart';
 import 'overview_main_page.dart';
 import 'overview_preview_page.dart';
+
+
+String _svgBytesToDataUrl(Uint8List bytes) {
+  final base64 = base64Encode(bytes);
+  return 'data:image/svg+xml;base64,$base64';
+}
+
 
 class _C {
   static const Color primary    = Color(0xFFD16F9A);
@@ -573,39 +581,80 @@ class _OverviewEditPageState extends State<OverviewEditPage> {
   }
 
   Future<_PickedImage?> _pickImage() async {
+    print('[_pickImage] ▶ START');
     final completer = Completer<_PickedImage?>();
     bool completed = false;
+
     final input = html.FileUploadInputElement()
-      ..accept = '.svg,.png,.jpg,.jpeg,image/*';
+      ..accept = '.svg,image/svg+xml';
+
+    print('[_pickImage] input created, adding onChange listener');
+
     input.onChange.listen((event) {
+      print('[_pickImage] onChange fired');
       final files = input.files;
       if (files == null || files.isEmpty) {
+        print('[_pickImage] ❌ no files selected');
         if (!completed) { completed = true; completer.complete(null); }
         return;
       }
+
       final file = files.first;
+      print('[_pickImage] file selected: name=${file.name} type=${file.type} size=${file.size}');
+
+      if (!file.name.toLowerCase().endsWith('.svg') &&
+          file.type != 'image/svg+xml') {
+        print('[_pickImage] ❌ rejected: not an SVG (name=${file.name}, type=${file.type})');
+        if (!completed) { completed = true; completer.complete(null); }
+        return;
+      }
+
+      print('[_pickImage] ✅ SVG accepted, starting FileReader...');
       final reader = html.FileReader();
+
       reader.onLoadEnd.listen((_) {
         final result = reader.result;
+        print('[_pickImage] onLoadEnd: result runtimeType = ${result.runtimeType}');
         if (!completed) {
           completed = true;
-          if (result is List<int>) {
+          if (result is ByteBuffer) {
+            // ✅ ByteBuffer is from dart:typed_data, not dart:html
+            final bytes = Uint8List.view(result);
+            print('[_pickImage] ✅ ByteBuffer → ${bytes.length} bytes');
+            completer.complete(_PickedImage(bytes: bytes));
+          } else if (result is List<int>) {
+            print('[_pickImage] ✅ List<int> → ${result.length} bytes');
             completer.complete(_PickedImage(bytes: Uint8List.fromList(result)));
           } else {
+            print('[_pickImage] ❌ unknown result type: ${result.runtimeType}');
             completer.complete(null);
           }
         }
       });
-      reader.onError.listen((_) {
+
+      reader.onError.listen((e) {
+        print('[_pickImage] ❌ FileReader error: $e');
         if (!completed) { completed = true; completer.complete(null); }
       });
+
       reader.readAsArrayBuffer(file);
+      print('[_pickImage] readAsArrayBuffer called');
     });
+
     input.click();
+    print('[_pickImage] input.click() called — waiting for user...');
+
     Future.delayed(const Duration(minutes: 5), () {
-      if (!completed) { completed = true; completer.complete(null); }
+      if (!completed) {
+        print('[_pickImage] ⏰ TIMEOUT after 5 minutes');
+        completed = true;
+        completer.complete(null);
+      }
     });
-    return completer.future;
+
+    final result = await completer.future;
+    print('[_pickImage] ◀ DONE — result: ${result == null ? 'null' : 'bytes=${result.bytes?.length} url=${result.url}'}');
+    return result;
   }
 
   Future<void> _pickDate() async {
@@ -1525,43 +1574,61 @@ class _OverviewEditPageState extends State<OverviewEditPage> {
     VoidCallback? onPick,
   }) {
     Widget content;
+
     if (picked.bytes != null) {
+      final dataUrl = _svgBytesToDataUrl(picked.bytes!);
+      final viewId = 'svg-preview-${picked.bytes!.hashCode}';
+
+      ui_web.platformViewRegistry.registerViewFactory(viewId, (int id) {
+        final img = html.ImageElement()
+          ..src = dataUrl
+          ..style.width = '100%'
+          ..style.height = '100%'
+          ..style.objectFit = 'contain';
+        return img;
+      });
+
       content = Container(
         width: 70.w,
         height: 70.h,
-        decoration:
-        const BoxDecoration(color: Colors.white, shape: BoxShape.circle),
-        child: Center(
-            child: ClipOval(
-                child: Padding(
-                  padding: EdgeInsets.all(10.w),
-                  child: SvgPicture.memory(
-                    picked.bytes!,
-                    width: 30.w,
-                    height: 30.h,
-                    fit: BoxFit.scaleDown,
-                    placeholderBuilder: (_) => _placeholderCircle(),
-                  ),
-                ))),
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          shape: BoxShape.circle,
+        ),
+        child: ClipOval(
+          child: SizedBox(
+            width: 70.w,
+            height: 70.h,
+            child: HtmlElementView(viewType: viewId),
+          ),
+        ),
       );
     } else if (picked.url != null && picked.url!.isNotEmpty) {
+      final viewId = 'svg-url-preview-${picked.url!.hashCode}';
+
+      ui_web.platformViewRegistry.registerViewFactory(viewId, (int id) {
+        final img = html.ImageElement()
+          ..src = picked.url!
+          ..style.width = '100%'
+          ..style.height = '100%'
+          ..style.objectFit = 'contain';
+        return img;
+      });
+
       content = Container(
         width: 70.w,
         height: 70.h,
-        decoration:
-        const BoxDecoration(color: Colors.white, shape: BoxShape.circle),
-        child: Center(
-            child: ClipOval(
-                child: Padding(
-                  padding: EdgeInsets.all(10.w),
-                  child: SvgPicture.network(
-                    picked.url!,
-                    width: 20.w,
-                    height: 20.h,
-                    fit: BoxFit.contain,
-                    placeholderBuilder: (_) => const CircleProgressMaster(),
-                  ),
-                ))),
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          shape: BoxShape.circle,
+        ),
+        child: ClipOval(
+          child: SizedBox(
+            width: 70.w,
+            height: 70.h,
+            child: HtmlElementView(viewType: viewId),
+          ),
+        ),
       );
     } else {
       content = _placeholderCircle();
@@ -1582,16 +1649,19 @@ class _OverviewEditPageState extends State<OverviewEditPage> {
               shape: BoxShape.circle,
             ),
             child: Center(
-                child: CustomSvg(
-                    assetPath: 'assets/control/camera.svg',
-                    width: 12.w,
-                    height: 12.h,
-                    fit: BoxFit.fill)),
+              child: CustomSvg(
+                assetPath: 'assets/control/camera.svg',
+                width: 12.w,
+                height: 12.h,
+                fit: BoxFit.fill,
+              ),
+            ),
           ),
         ),
       ),
     ]);
   }
+
 
   Widget _placeholderCircle() => Container(
     width: 50.w,
