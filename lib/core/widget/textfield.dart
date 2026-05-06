@@ -2,7 +2,8 @@
 /// File Name: custom_textformfield.dart
 /// Description: this is custom Text field can reuse
 /// Created by: Amr Mesbah
-/// Last Update: 28/3/2026
+/// Last Update: 06/05/2026
+/// Changed: Removed Arabic/English character mixing validation
 
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -108,12 +109,8 @@ class _CustomValidatedTextFieldMasterState
   Widget build(BuildContext context) {
     final Color resolvedPrimary = widget.primaryColor ?? Color(0xFFD16F9A);
 
-    final bool isArabicField  = widget.textDirection == TextDirection.rtl;
-    final bool isEnglishField = widget.textDirection == TextDirection.ltr;
-    final String text         = widget.controller.text;
+    final String text = widget.controller.text;
 
-    final bool hasArabic   = RegExp(r'[\u0600-\u06FF]').hasMatch(text);
-    final bool hasEnglish  = RegExp(r'[a-zA-Z]').hasMatch(text);
     final bool isNotDigits =
         widget.onlyDigits && text.isNotEmpty && !RegExp(r'^\d+$').hasMatch(text);
     final bool isEmpty    = text.trim().isEmpty;
@@ -122,10 +119,7 @@ class _CustomValidatedTextFieldMasterState
 
     final bool showError = (widget.submitted && isEmpty) ||
         (widget.submitted && isTooShort) ||
-        (!isEmpty &&
-            ((isEnglishField && hasArabic) ||
-                (isArabicField && hasEnglish) ||
-                isNotDigits));
+        (!isEmpty && isNotDigits);
 
     String errorText = '';
     if (isEmpty) {
@@ -136,10 +130,6 @@ class _CustomValidatedTextFieldMasterState
       errorText = widget.textDirection == TextDirection.rtl
           ? "الحد الأدنى ${widget.minLength} حرف"
           : "Minimum ${widget.minLength} characters required.";
-    } else if (isEnglishField && hasArabic) {
-      errorText = "Please use English characters only.";
-    } else if (isArabicField && hasEnglish) {
-      errorText = "الرجاء استخدام الأحرف العربية فقط.";
     } else if (isNotDigits) {
       errorText = "Only numbers are allowed.";
     }
@@ -179,7 +169,6 @@ class _CustomValidatedTextFieldMasterState
                 primary:   resolvedPrimary,
                 onSurface: AppColors.text,
               ),
-              // ── Text selection + cursor use CMS primary color ──────────
               textSelectionTheme: TextSelectionThemeData(
                 selectionColor:       resolvedPrimary.withOpacity(0.3),
                 selectionHandleColor: resolvedPrimary,
@@ -192,7 +181,7 @@ class _CustomValidatedTextFieldMasterState
               enabled:           widget.enabled,
               textDirection:     widget.textDirection,
               textAlign:         widget.textAlign,
-              cursorColor:       resolvedPrimary, // ← also set directly
+              cursorColor:       resolvedPrimary,
               autovalidateMode:  AutovalidateMode.always,
               validator:         (_) => showError ? '' : null,
               keyboardType:
