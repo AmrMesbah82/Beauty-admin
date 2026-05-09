@@ -83,8 +83,8 @@ const List<Map<String, String>> _kLabelDestinations = [
   {'key': '',                                    'value': 'None'},
   // ── Main Pages ──────────────────────────────
   {'key': '/',                                   'value': 'Home'},
-  {'key': '/services',                           'value': 'Overview (Services)'},
-  {'key': '/about',                              'value': 'Our Products (About)'},
+  {'key': '/services',                           'value': 'Overview'},
+  {'key': '/about',                              'value': 'Our Products'},
   {'key': '/contact',                            'value': 'Contact Us'},
   {'key': '/terms',                              'value': 'Terms of Service'},
   // ── Our Products page tabs ──────────────────
@@ -1200,15 +1200,92 @@ class _HomeEditPageState extends State<HomeEditPage> {
           onTap: () async {
             final cubit = context.read<HomeCmsCubit>();
 
-            // Sync app-link icons into cubit so AppFooter can render them in preview
+            // ── Branding ──────────────────────────────────────────────
+            if (_logoPicked.bytes != null) await cubit.uploadLogo(_logoPicked.bytes!);
+            cubit.updatePrimaryColor(_primaryColor.text);
+            cubit.updateSecondaryColor(_secondaryColor.text);
+            cubit.updateBackgroundColor(_bgColor.text);
+            cubit.updateHeaderFooterColor(_headerFooterColor.text);
+            cubit.updateEnglishFont(_engFont ?? 'Cairo');
+            cubit.updateArabicFont(_arFont ?? 'Cairo');
+
+            // ── Nav Buttons ───────────────────────────────────────────
+            final snapshot = List<NavButtonModel>.from(cubit.current.navButtons);
+            final routeToId = {for (final b in snapshot) b.route: b.id};
+            for (var i = 0; i < _navBtns.length; i++) {
+              final localRoute = _navRoutes[i] ?? '';
+              if (localRoute.isEmpty) continue;
+              final id = routeToId[localRoute];
+              if (id == null) continue;
+              cubit.updateNavButtonName(id,
+                  en: _navBtns[i]['nameEn']!.text,
+                  ar: _navBtns[i]['nameAr']!.text);
+              cubit.updateNavButtonRoute(id, localRoute);
+              if (_navIcons[i].bytes != null) {
+                await cubit.uploadNavButtonIcon(id, _navIcons[i].bytes!);
+              }
+              final modelStatus = cubit.current.navButtons
+                  .firstWhere((b) => b.id == id, orElse: () => NavButtonModel(id: id))
+                  .status;
+              if (modelStatus != _navStatus[i]) cubit.toggleNavButtonStatus(id);
+            }
+
+            // ── Footer Columns ────────────────────────────────────────
+            while (cubit.current.footerColumns.length < _footerColumns.length) {
+              cubit.addFooterColumn();
+            }
+            while (cubit.current.footerColumns.length > _footerColumns.length) {
+              cubit.removeFooterColumn(cubit.current.footerColumns.last.id);
+            }
+            for (var i = 0; i < _footerColumns.length; i++) {
+              final colId = cubit.current.footerColumns[i].id;
+              cubit.updateFooterColumnTitle(colId,
+                  en: (_footerColumns[i]['titleEn'] as TextEditingController).text,
+                  ar: (_footerColumns[i]['titleAr'] as TextEditingController).text);
+              cubit.updateFooterColumnRoute(
+                  colId, _footerColumns[i]['route'] as String? ?? '');
+              final labels = _footerColumns[i]['labels'] as List<Map<String, dynamic>>;
+              while (cubit.current.footerColumns[i].labels.length < labels.length) {
+                cubit.addFooterLabel(colId);
+              }
+              while (cubit.current.footerColumns[i].labels.length > labels.length) {
+                cubit.removeFooterLabel(
+                    colId, cubit.current.footerColumns[i].labels.last.id);
+              }
+              for (var li = 0; li < labels.length; li++) {
+                final lblId = cubit.current.footerColumns[i].labels[li].id;
+                cubit.updateFooterLabel(colId, lblId,
+                    en: (labels[li]['en'] as TextEditingController).text,
+                    ar: (labels[li]['ar'] as TextEditingController).text);
+                cubit.updateFooterLabelRoute(
+                    colId, lblId, (labels[li]['route'] as String?) ?? '');
+              }
+            }
+
+            // ── Social Links ──────────────────────────────────────────
+            while (cubit.current.socialLinks.length < _links.length) {
+              cubit.addSocialLink();
+            }
+            while (cubit.current.socialLinks.length > _links.length) {
+              cubit.removeSocialLink(cubit.current.socialLinks.last.id);
+            }
+            for (var i = 0; i < _links.length; i++) {
+              final id = cubit.current.socialLinks[i].id;
+              cubit.updateSocialLink(id,
+                  url: _links[i].text.text,
+                  visibility: _links[i].visibility);
+              if (_links[i].icon.bytes != null) {
+                await cubit.uploadSocialLinkIcon(id, _links[i].icon.bytes!);
+              }
+            }
+
+            // ── App Link ──────────────────────────────────────────────
             if (_iosIconPicked.bytes != null) {
               await cubit.uploadAppLinkIcon('ios', _iosIconPicked.bytes!);
             }
             if (_androidIconPicked.bytes != null) {
               await cubit.uploadAppLinkIcon('android', _androidIconPicked.bytes!);
             }
-
-            // Sync all other app-link fields
             cubit.updateAppDownloadLinks(
               iosUrl:     _iosUrlCtrl.text,
               androidUrl: _androidUrlCtrl.text,
@@ -1300,23 +1377,24 @@ class _HomeEditPageState extends State<HomeEditPage> {
               padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
               decoration: BoxDecoration(
                 color: _C.primary,
-                borderRadius: isOpen
-                    ? BorderRadius.only(
-                    topLeft: Radius.circular(6.r),
-                    topRight: Radius.circular(6.r))
-                    : BorderRadius.circular(6.r),
+                borderRadius: BorderRadius.circular(8.r)
               ),
               child: Row(children: [
                 Expanded(
                     child: Text(title,
                         style: StyleText.fontSize14Weight600
                             .copyWith(color: Colors.white))),
-                Icon(
-                    isOpen
-                        ? Icons.keyboard_arrow_up_rounded
-                        : Icons.keyboard_arrow_down_rounded,
+                AnimatedRotation(
+                  turns: isOpen ? 0.5 : 0.0,
+                  duration: const Duration(milliseconds: 200),
+                  child: CustomSvg(
+                    assetPath: 'assets/arrowdown.svg',
+                    width: 20.w,
+                    height: 20.h,
+                    fit: BoxFit.scaleDown,
                     color: Colors.white,
-                    size: 20.sp),
+                  ),
+                ),
               ]),
             ),
           ),
@@ -1376,11 +1454,13 @@ class _HomeEditPageState extends State<HomeEditPage> {
       Row(children: [
         Expanded(child: CustomDropdownFormFieldInvMaster(
           label: 'English Font',
+          primaryColor: _resolvedPrimaryColor,
           hint: Text('Select font',
               style: StyleText.fontSize12Weight400
                   .copyWith(color: _C.hintText)),
           selectedValue: _engFont,
           dropdownColor: Colors.white,
+          borderRadius: 4.r,
           items: _kFonts,
           widthIcon: 18, heightIcon: 18, height: 36,
           onChanged: (val) => setState(() => _engFont = val),
@@ -1388,12 +1468,14 @@ class _HomeEditPageState extends State<HomeEditPage> {
         SizedBox(width: 16.w),
         Expanded(child: CustomDropdownFormFieldInvMaster(
           label: 'Arabic Font',
+          primaryColor: _resolvedPrimaryColor,
           hint: Text('Select font',
               style: StyleText.fontSize12Weight400
                   .copyWith(color: _C.hintText)),
           selectedValue: _arFont,
           dropdownColor: Colors.white,
           items: _kFonts,
+          borderRadius: 4.r,
           widthIcon: 18, heightIcon: 18, height: 36,
           onChanged: (val) => setState(() => _arFont = val),
         )),
@@ -1413,23 +1495,24 @@ class _HomeEditPageState extends State<HomeEditPage> {
             padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
             decoration: BoxDecoration(
               color: _C.primary,
-              borderRadius: isOpen
-                  ? BorderRadius.only(
-                  topLeft: Radius.circular(6.r),
-                  topRight: Radius.circular(6.r))
-                  : BorderRadius.circular(6.r),
+              borderRadius: BorderRadius.circular(8.r),
             ),
             child: Row(children: [
               Expanded(
                   child: Text('Header',
                       style: StyleText.fontSize14Weight600
                           .copyWith(color: Colors.white))),
-              Icon(
-                  isOpen
-                      ? Icons.keyboard_arrow_up_rounded
-                      : Icons.keyboard_arrow_down_rounded,
+              AnimatedRotation(
+                turns: isOpen ? 0.5 : 0.0,
+                duration: const Duration(milliseconds: 200),
+                child: CustomSvg(
+                  assetPath: 'assets/arrowdown.svg',
+                  width: 20.w,
+                  height: 20.h,
+                  fit: BoxFit.scaleDown,
                   color: Colors.white,
-                  size: 20.sp),
+                ),
+              ),
             ]),
           ),
         ),
@@ -1466,12 +1549,12 @@ class _HomeEditPageState extends State<HomeEditPage> {
 
     return Padding(
       key: key,
-      padding: EdgeInsets.only(bottom: 10.h),
+      padding: EdgeInsets.only(bottom: 0.h),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          SizedBox(height: 15.h),
 
+          SizedBox(height: index == 0 ? 15.h : 0.h),
           _sectionLabel('Icon'),
           SizedBox(height: 6.h),
           _imgBox(
@@ -1505,6 +1588,28 @@ class _HomeEditPageState extends State<HomeEditPage> {
                     child: CustomValidatedTextFieldMaster(
                       label: 'Title',
                       fillColor: Colors.white,
+                      labelTrailing: Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          Text('Status ',
+                              style: StyleText.fontSize12Weight500
+                                  .copyWith(color: _C.labelText)),
+                          FlutterSwitch(
+                            width: 38.sp,
+                            height: 22.sp,
+                            padding: 3.sp,
+                            borderRadius: 20.sp,
+                            toggleSize: 16.sp,
+                            activeColor: _C.primary,
+                            inactiveColor: Colors.grey.withOpacity(.16),
+                            value: _navStatus[index],
+                            onToggle: (val) {
+                              setState(() => _navStatus[index] = val);
+                              _hasChanges = true;
+                            },
+                          ),
+                        ],
+                      ),
                       hint: 'Home',
                       controller: nameEnCtrl,
                       height: 36,
@@ -1535,31 +1640,7 @@ class _HomeEditPageState extends State<HomeEditPage> {
                   ),
                 ],
               ),
-              Positioned(
-                left: MediaQuery.sizeOf(context).width * .3,
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    Text('Status ',
-                        style: StyleText.fontSize12Weight500
-                            .copyWith(color: _C.labelText)),
-                    FlutterSwitch(
-                      width: 38.sp,
-                      height: 22.sp,
-                      padding: 3.sp,
-                      borderRadius: 20.sp,
-                      toggleSize: 16.sp,
-                      activeColor: _C.primary,
-                      inactiveColor: Colors.grey.withOpacity(.16),
-                      value: _navStatus[index],
-                      onToggle: (val) {
-                        setState(() => _navStatus[index] = val);
-                        _hasChanges = true;
-                      },
-                    ),
-                  ],
-                ),
-              ),
+
             ],
           ),
         ],
@@ -1717,25 +1798,36 @@ class _HomeEditPageState extends State<HomeEditPage> {
     children: [
       ...List.generate(_footerColumns.length, (i) => _buildFooterColumn(i)),
       SizedBox(height: 4.h),
-      GestureDetector(
-        onTap: () => setState(() {
-          _footerColumns.add(_newFooterColumn());
-          _hasChanges = true;
+      if (_footerColumns.length < 6)
+        GestureDetector(
+          onTap: () {
+            print('🟢 [Footer] addColumn tapped: '
+                'currentColumns=${_footerColumns.length}  max=6');
+            setState(() {
+              _footerColumns.add(_newFooterColumn());
+              _hasChanges = true;
+            });
+          },
+          child: Container(
+            padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 7.h),
+            decoration: BoxDecoration(
+                color: const Color(0xFF797979),
+                borderRadius: BorderRadius.circular(4.r)),
+            child: Row(mainAxisSize: MainAxisSize.min, children: [
+              Icon(Icons.add, size: 14.sp, color: Colors.white),
+              SizedBox(width: 4.w),
+              Text('Column',
+                  style: StyleText.fontSize12Weight500
+                      .copyWith(color: Colors.white)),
+            ]),
+          ),
+        )
+      else
+        Builder(builder: (_) {
+          print('🔴 [Footer] addColumn HIDDEN: '
+              'columns=${_footerColumns.length} >= 6');
+          return const SizedBox();
         }),
-        child: Container(
-          padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 7.h),
-          decoration: BoxDecoration(
-              color: const Color(0xFF797979),
-              borderRadius: BorderRadius.circular(4.r)),
-          child: Row(mainAxisSize: MainAxisSize.min, children: [
-            Icon(Icons.add, size: 14.sp, color: Colors.white),
-            SizedBox(width: 4.w),
-            Text('Column',
-                style: StyleText.fontSize12Weight500
-                    .copyWith(color: Colors.white)),
-          ]),
-        ),
-      ),
     ],
   );
 
@@ -1743,6 +1835,11 @@ class _HomeEditPageState extends State<HomeEditPage> {
     final col    = _footerColumns[colIndex];
     final labels = col['labels'] as List<Map<String, dynamic>>;
     final navDropdownItems = _buildNavDropdownItems();
+
+    // 🟡 DEBUG
+    print('🟡 [Footer] buildFooterColumn: colIndex=$colIndex  '
+        'totalColumns=${_footerColumns.length}  '
+        'labelsCount=${labels.length}');
 
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
       SizedBox(height: 15.h),
@@ -1755,7 +1852,7 @@ class _HomeEditPageState extends State<HomeEditPage> {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text('${colIndex + 1}${_ord(colIndex + 1)} Column',
-              style: StyleText.fontSize13Weight600
+              style: StyleText.fontSize15Weight600
                   .copyWith(color: _C.labelText)),
           _removeBtn(
               label: 'Remove',
@@ -1776,6 +1873,7 @@ class _HomeEditPageState extends State<HomeEditPage> {
             flex: 1,
             child: CustomDropdownFormFieldInvMaster(
               label: 'Group Title',
+              primaryColor: _resolvedPrimaryColor,
               hint: Text('Select navigation item',
                   style: StyleText.fontSize12Weight400
                       .copyWith(color: _C.hintText)),
@@ -1861,10 +1959,23 @@ class _HomeEditPageState extends State<HomeEditPage> {
 
       ...List.generate(labels.length, (li) => _buildLabelRow(colIndex, li)),
       SizedBox(height: 4.h),
-      _addLabelBtn(onTap: () => setState(() {
-        labels.add(_newLabelRow());
-        _hasChanges = true;
-      })),
+
+      if (labels.length < 4)
+        _addLabelBtn(onTap: () {
+          print('🟢 [Footer] addLabel tapped: colIndex=$colIndex  '
+              'currentLabels=${labels.length}  max=4');
+          setState(() {
+            labels.add(_newLabelRow());
+            _hasChanges = true;
+          });
+        })
+      else
+        Builder(builder: (_) {
+          print('🔴 [Footer] addLabel HIDDEN: colIndex=$colIndex  '
+              'labelsCount=${labels.length} >= 4');
+          return const SizedBox();
+        }),
+
       SizedBox(height: 12.h),
     ]);
   }
@@ -1887,6 +1998,7 @@ class _HomeEditPageState extends State<HomeEditPage> {
                     Expanded(
                       child: CustomDropdownFormFieldInvMaster(
                         label: 'Navigate To',
+                        primaryColor: _resolvedPrimaryColor,
                         hint: Text('Select destination',
                             style: StyleText.fontSize12Weight400
                                 .copyWith(color: _C.hintText)),
@@ -1894,7 +2006,24 @@ class _HomeEditPageState extends State<HomeEditPage> {
                         items: _kLabelDestinations,
                         dropdownColor: Colors.white,
                         widthIcon: 18,
+                        labelTrailing: GestureDetector(
+                          onTap: () => setState(() {
+                            final removed = labels.removeAt(labelIndex);
+                            WidgetsBinding.instance.addPostFrameCallback(
+                                    (_) => _disposeLabel(removed));
+                            _hasChanges = true;
+                          }),
+                          child: Container(
+                            width: 16.w,
+                            height: 16.h,
+                            decoration: const BoxDecoration(
+                                color: _C.remove, shape: BoxShape.circle),
+                            child: Icon(Icons.remove,
+                                color: Colors.white, size: 16.sp),
+                          ),
+                        ),
                         heightIcon: 18,
+                        borderRadius: 4.r,
                         height: 36,
                         onChanged: (val) {
                           setState(() => label['route'] = val);
@@ -1902,26 +2031,7 @@ class _HomeEditPageState extends State<HomeEditPage> {
                         },
                       ),
                     ),
-                    SizedBox(width: 4.w),
-                    Padding(
-                      padding: EdgeInsets.only(top: 24.h),
-                      child: GestureDetector(
-                        onTap: () => setState(() {
-                          final removed = labels.removeAt(labelIndex);
-                          WidgetsBinding.instance.addPostFrameCallback(
-                                  (_) => _disposeLabel(removed));
-                          _hasChanges = true;
-                        }),
-                        child: Container(
-                          width: 16.w,
-                          height: 16.h,
-                          decoration: const BoxDecoration(
-                              color: _C.remove, shape: BoxShape.circle),
-                          child: Icon(Icons.remove,
-                              color: Colors.white, size: 16.sp),
-                        ),
-                      ),
-                    ),
+
                     SizedBox(width: 4.w),
                   ],
                 ),
@@ -2261,7 +2371,7 @@ class _HomeEditPageState extends State<HomeEditPage> {
   );
 
   Widget _sectionLabel(String text) => Text(text,
-      style: StyleText.fontSize12Weight500.copyWith(color: _C.labelText));
+      style: StyleText.fontSize14Weight500.copyWith(color: _C.labelText));
 
   Widget _imgBox({
     required _PickedImage picked,
@@ -2291,7 +2401,8 @@ class _HomeEditPageState extends State<HomeEditPage> {
           ),
         ),
       );
-    } else if (picked.url != null && picked.url!.isNotEmpty) {
+    }
+    else if (picked.url != null && picked.url!.isNotEmpty) {
       content = Container(
         width: 70.w, height: 70.h,
         decoration: const BoxDecoration(
@@ -2310,7 +2421,10 @@ class _HomeEditPageState extends State<HomeEditPage> {
           ),
         ),
       );
-    } else {
+    }
+
+
+    else {
       content = _placeholderCircle(placeholderAsset);
     }
 
@@ -2340,7 +2454,7 @@ class _HomeEditPageState extends State<HomeEditPage> {
   }
 
   Widget _placeholderCircle(String assetPath) => Container(
-    width: 50.w, height: 50.h,
+    width: 70.w, height: 70.h,
     decoration: const BoxDecoration(
         color: Color(0xFFD9D9D9), shape: BoxShape.circle),
     child: Center(

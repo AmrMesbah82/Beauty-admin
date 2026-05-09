@@ -103,9 +103,7 @@ class HomeRepositoryImpl implements HomeRepository {
 
   Map<String, dynamic> _sanitize(Map<String, dynamic> data) {
     final copy = Map<String, dynamic>.from(data);
-    copy.remove('Last_Updated_At');
-    print('   [Repo] _sanitize() → removed Last_Updated_At, '
-        'remaining keys = ${copy.keys.toList()}');
+    print('   [Repo] _sanitize() → remaining keys = ${copy.keys.toList()}');
     return copy;
   }
 

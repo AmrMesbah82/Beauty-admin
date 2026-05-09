@@ -142,12 +142,20 @@ class AppFooter extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<HomeCmsCubit, HomeCmsState>(
+      buildWhen: (_, __) => true,
       builder: (context, state) {
+        print('🟣 [AppFooter] BlocBuilder rebuild — state=${state.runtimeType}');
+
         final HomePageModel model = switch (state) {
           HomeCmsLoaded(:final data) => data,
-          HomeCmsSaved(:final data) => data,
-          _ => HomePageModel.defaultModel,
+          HomeCmsSaved(:final data)  => data,
+          _ => context.read<HomeCmsCubit>().current,
         };
+
+        print('🟣 [AppFooter] socialLinks count=${model.socialLinks.length}');
+        for (var i = 0; i < model.socialLinks.length; i++) {
+          print('🟣 [AppFooter] socialLinks[$i] iconUrl=${model.socialLinks[i].iconUrl}');
+        }
 
         final Color primary = _hexColor(
           model.branding.primaryColor,

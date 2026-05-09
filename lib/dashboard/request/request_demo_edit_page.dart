@@ -802,6 +802,15 @@ class _RequestDemoEditPageState extends State<RequestDemoEditPage> {
       ],
     );
   }
+  final _primaryColor      = TextEditingController(text: '#008037');
+
+  Color get _resolvedPrimaryColor {
+    try {
+      final hex = _primaryColor.text.replaceAll('#', '');
+      if (hex.length == 6) return Color(int.parse('FF$hex', radix: 16));
+    } catch (_) {}
+    return _C.primary;
+  }
 
   // ── HEADER ───────────────────────────────────────────────────────────────
   Widget _headerBody() => Padding(
@@ -936,6 +945,7 @@ class _RequestDemoEditPageState extends State<RequestDemoEditPage> {
               Expanded(
                 child: CustomDropdownFormFieldInvMaster(
                   label: 'Type Of Question',
+                  primaryColor: _resolvedPrimaryColor,
                   hint: Text(
                     'Text',
                     style: StyleText.fontSize12Weight400.copyWith(

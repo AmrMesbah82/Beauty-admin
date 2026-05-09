@@ -4,14 +4,13 @@
 // Created by: Amr Mesbah
 // UPDATED: updateAppDownloadLinks() now accepts labelEn, labelAr params ✅
 // ADDED: uploadAppLinkIcon() — uploads iOS/Android icon to Firebase Storage ✅
+// FIXED: emit(HomeCmsLoaded(_model)) added after every upload method ✅
 
 import 'dart:math';
 import 'dart:typed_data';
 
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get_storage/get_storage.dart';
-
-
 
 import '../../model/home/home_model.dart';
 import '../../repo/home_repo/repo.dart';
@@ -40,8 +39,8 @@ class HomeCmsCubit extends Cubit<HomeCmsState> {
   void _applyFontsToStorage(BrandingModel branding) {
     final engFont = branding.englishFont.isEmpty ? 'Cairo' : branding.englishFont;
     final arFont  = branding.arabicFont.isEmpty  ? 'Cairo' : branding.arabicFont;
-    _storage.write('font',         engFont);
-    _storage.write('font_arabic',  arFont);
+    _storage.write('font',        engFont);
+    _storage.write('font_arabic', arFont);
     print('✅ [HomeCubit] _applyFontsToStorage() '
         'font=$engFont font_arabic=$arFont');
   }
@@ -118,7 +117,6 @@ class HomeCmsCubit extends Cubit<HomeCmsState> {
             'iconUrl=${result.navButtons[i].iconUrl} | '
             'status=${result.navButtons[i].status}');
       }
-
       for (var i = 0; i < result.socialLinks.length; i++) {
         print('   socialLinks[$i] → '
             'id=${result.socialLinks[i].id} '
@@ -281,6 +279,14 @@ class HomeCmsCubit extends Cubit<HomeCmsState> {
     }
   }
 
+  void reorderNavButtonsSilent(int oldIndex, int newIndex) {
+    print('🔵 [HomeCubit] reorderNavButtonsSilent() $oldIndex → $newIndex');
+    final list = List<NavButtonModel>.from(_model.navButtons);
+    if (newIndex > oldIndex) newIndex--;
+    list.insert(newIndex, list.removeAt(oldIndex));
+    _model = _model.copyWith(navButtons: list);
+  }
+
   void updateNavButtonName(String id,
       {required String en, required String ar}) {
     print('🔵 [HomeCubit] updateNavButtonName() id=$id en="$en"');
@@ -308,13 +314,11 @@ class HomeCmsCubit extends Cubit<HomeCmsState> {
         .firstOrNull;
     print('🔵 [HomeCubit] toggleNavButtonStatus() '
         'id=$id before=$before → ${!(before ?? true)}');
-
     _model = _model.copyWith(
       navButtons: _model.navButtons
           .map((b) => b.id == id ? b.copyWith(status: !b.status) : b)
           .toList(),
     );
-
     final after = _model.navButtons
         .where((b) => b.id == id)
         .map((b) => b.status)
@@ -323,6 +327,7 @@ class HomeCmsCubit extends Cubit<HomeCmsState> {
   }
 
   // ── Nav Button Icon Upload ────────────────────────────────────────────────
+
   Future<void> uploadNavButtonIcon(String id, Uint8List bytes) async {
     print('🔵 [HomeCubit] uploadNavButtonIcon() id=$id bytes=${bytes.length}');
     final path = 'home_cms/nav_icons/${id}_${_uid()}.svg';
@@ -334,6 +339,7 @@ class HomeCmsCubit extends Cubit<HomeCmsState> {
             .map((b) => b.id == id ? b.copyWith(iconUrl: url) : b)
             .toList(),
       );
+      emit(HomeCmsLoaded(_model)); // ✅ FIXED
     } catch (e, st) {
       print('🔴 [HomeCubit] uploadNavButtonIcon() ERROR: $e');
       print('   StackTrace: $st');
@@ -368,6 +374,7 @@ class HomeCmsCubit extends Cubit<HomeCmsState> {
       final url = await _repo.uploadImage(bytes: bytes, storagePath: path);
       print('🟢 [HomeCubit] uploadSectionImage() SUCCESS → url=$url');
       _updateSection(index, (s) => s.copyWith(imageUrl: url));
+      emit(HomeCmsLoaded(_model)); // ✅ FIXED
     } catch (e, st) {
       print('🔴 [HomeCubit] uploadSectionImage() ERROR: $e');
       print('   StackTrace: $st');
@@ -383,6 +390,7 @@ class HomeCmsCubit extends Cubit<HomeCmsState> {
       final url = await _repo.uploadImage(bytes: bytes, storagePath: path);
       print('🟢 [HomeCubit] uploadSectionIcon() SUCCESS → url=$url');
       _updateSection(index, (s) => s.copyWith(iconUrl: url));
+      emit(HomeCmsLoaded(_model)); // ✅ FIXED
     } catch (e, st) {
       print('🔴 [HomeCubit] uploadSectionIcon() ERROR: $e');
       print('   StackTrace: $st');
@@ -398,6 +406,7 @@ class HomeCmsCubit extends Cubit<HomeCmsState> {
     }
     sections[index] = updater(sections[index]);
     _model = _model.copyWith(sections: sections);
+    // NOTE: no emit here — callers that need it emit themselves after calling
   }
 
   // ── Header Items ──────────────────────────────────────────────────────────
@@ -509,8 +518,7 @@ class HomeCmsCubit extends Cubit<HomeCmsState> {
     );
   }
 
-  void updateFooterLabelRoute(
-      String colId, String labelId, String route) {
+  void updateFooterLabelRoute(String colId, String labelId, String route) {
     print('🔵 [HomeCubit] updateFooterLabelRoute() '
         'colId=$colId labelId=$labelId route="$route"');
     _model = _model.copyWith(
@@ -571,6 +579,7 @@ class HomeCmsCubit extends Cubit<HomeCmsState> {
             .map((s) => s.id == id ? s.copyWith(iconUrl: url) : s)
             .toList(),
       );
+      emit(HomeCmsLoaded(_model)); // ✅ FIXED
     } catch (e, st) {
       print('🔴 [HomeCubit] uploadSocialLinkIcon() ERROR: $e');
       print('   StackTrace: $st');
@@ -578,7 +587,7 @@ class HomeCmsCubit extends Cubit<HomeCmsState> {
     }
   }
 
-  // ── App Download Links ✅ UPDATED ─────────────────────────────────────────
+  // ── App Download Links ────────────────────────────────────────────────────
 
   void updateAppDownloadLinks({
     String? iosUrl,
@@ -601,10 +610,8 @@ class HomeCmsCubit extends Cubit<HomeCmsState> {
     );
   }
 
-  // ── App Link Icon Upload ✅ NEW ───────────────────────────────────────────
+  // ── App Link Icon Upload ──────────────────────────────────────────────────
 
-  /// Uploads an icon for the App Link section.
-  /// [platform] must be 'ios' or 'android'.
   Future<void> uploadAppLinkIcon(String platform, Uint8List bytes) async {
     print('🔵 [HomeCubit] uploadAppLinkIcon() '
         'platform=$platform bytes=${bytes.length}');
@@ -614,13 +621,16 @@ class HomeCmsCubit extends Cubit<HomeCmsState> {
       print('🟢 [HomeCubit] uploadAppLinkIcon() SUCCESS → url=$url');
       if (platform == 'ios') {
         _model = _model.copyWith(
-          appDownloadLinks: _model.appDownloadLinks.copyWith(iosIconUrl: url),
+          appDownloadLinks:
+          _model.appDownloadLinks.copyWith(iosIconUrl: url),
         );
       } else {
         _model = _model.copyWith(
-          appDownloadLinks: _model.appDownloadLinks.copyWith(androidIconUrl: url),
+          appDownloadLinks:
+          _model.appDownloadLinks.copyWith(androidIconUrl: url),
         );
       }
+      emit(HomeCmsLoaded(_model)); // ✅ FIXED
     } catch (e, st) {
       print('🔴 [HomeCubit] uploadAppLinkIcon() ERROR: $e');
       print('   StackTrace: $st');
@@ -638,6 +648,7 @@ class HomeCmsCubit extends Cubit<HomeCmsState> {
       print('🟢 [HomeCubit] uploadLogo() SUCCESS → url=$url');
       _model =
           _model.copyWith(branding: _model.branding.copyWith(logoUrl: url));
+      emit(HomeCmsLoaded(_model)); // ✅ FIXED
     } catch (e, st) {
       print('🔴 [HomeCubit] uploadLogo() ERROR: $e');
       print('   StackTrace: $st');
@@ -673,14 +684,6 @@ class HomeCmsCubit extends Cubit<HomeCmsState> {
     print('🔵 [HomeCubit] updateEnglishFont() font=$font');
     _model = _model.copyWith(
         branding: _model.branding.copyWith(englishFont: font));
-  }
-
-  void reorderNavButtonsSilent(int oldIndex, int newIndex) {
-    print('🔵 [HomeCubit] reorderNavButtonsSilent() $oldIndex → $newIndex');
-    final list = List<NavButtonModel>.from(_model.navButtons);
-    if (newIndex > oldIndex) newIndex--;
-    list.insert(newIndex, list.removeAt(oldIndex));
-    _model = _model.copyWith(navButtons: list);
   }
 
   void updateArabicFont(String font) {

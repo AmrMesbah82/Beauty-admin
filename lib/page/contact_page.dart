@@ -48,6 +48,19 @@ import '../core/custom_segmant_tab.dart';
 import '../model/contact_us/contact_model_location.dart';
 import '../model/contact_us/contact_us_model.dart';
 
+class _C {
+  static const Color primary   = Color(0xFFD16F9A);
+  static const Color sectionBg = Color(0xFFF5F5F5);
+  static const Color cardBg    = Color(0xFFFFFFFF);
+  static const Color border    = Color(0xFFE0E0E0);
+  static const Color labelText = Color(0xFF333333);
+  static const Color hintText  = Color(0xFFAAAAAA);
+  static const Color divider   = Color(0xFFE8E8E8);
+  static const Color remove    = Color(0xFFE53935);
+  static const Color back      = Color(0xFFF1F2ED);
+}
+
+
 // Fallback colors
 const Color _kDefaultPink   = Color(0xFFBE6A7A);
 const Color _kPinkLight     = Color(0xFFFDF2F4);
@@ -2050,7 +2063,7 @@ class _DropdownField extends StatelessWidget {
   final Color primaryColor;
   final bool isSearchable;
 
-  const _DropdownField({
+   _DropdownField({
     required this.label,     required this.hint,
     required this.value,     required this.items,
     required this.onChanged, required this.submitted,
@@ -2058,6 +2071,16 @@ class _DropdownField extends StatelessWidget {
     required this.primaryColor,
     this.isSearchable = false,
   });
+
+  final _primaryColor      = TextEditingController(text: '#008037');
+
+  Color get _resolvedPrimaryColor {
+    try {
+      final hex = _primaryColor.text.replaceAll('#', '');
+      if (hex.length == 6) return Color(int.parse('FF$hex', radix: 16));
+    } catch (_) {}
+    return _C.primary;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -2072,6 +2095,8 @@ class _DropdownField extends StatelessWidget {
         SizedBox(height: 3.h),
         CustomDropdownFormFieldInvMaster(
           selectedValue: value,
+          primaryColor: _resolvedPrimaryColor,
+
           items:         items,
           onChanged:     onChanged,
           width:         double.infinity,
@@ -2104,18 +2129,30 @@ class _PhoneField extends StatelessWidget {
   final ValueChanged<String?> onCodeChanged;
   final Color  primaryColor;
 
-  const _PhoneField({
+   _PhoneField({
     required this.controller,  required this.submitted,
     required this.selectedCode, required this.onCodeChanged,
     required this.isRtl,       required this.label,
     required this.primaryColor, this.isMobile = false,
   });
 
+
+  final _primaryColor      = TextEditingController(text: '#008037');
+
+  Color get _resolvedPrimaryColor {
+    try {
+      final hex = _primaryColor.text.replaceAll('#', '');
+      if (hex.length == 6) return Color(int.parse('FF$hex', radix: 16));
+    } catch (_) {}
+    return _C.primary;
+  }
   @override
   Widget build(BuildContext context) {
     final Widget dropdown = CustomDropdownFormFieldInvMaster(
       selectedValue: selectedCode,
       items:         _phoneCodes,
+      primaryColor: _resolvedPrimaryColor,
+
       onChanged:     onCodeChanged,
       widthIcon: 16, heightIcon: 16,
       width: isMobile ? 100.w : 110.w, height: 32, borderRadius: 4,

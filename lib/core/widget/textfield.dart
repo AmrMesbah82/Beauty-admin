@@ -2,8 +2,8 @@
 /// File Name: custom_textformfield.dart
 /// Description: this is custom Text field can reuse
 /// Created by: Amr Mesbah
-/// Last Update: 06/05/2026
-/// Changed: Removed Arabic/English character mixing validation
+/// Last Update: 09/05/2026
+/// Changed: Added optional labelTrailing widget rendered at the end of the label row
 
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -28,6 +28,11 @@ class CustomValidatedTextFieldMaster extends StatefulWidget {
   final TextStyle? textStyle;
   final TextStyle? hintStyle;
   final Color? fillColor;
+
+  /// Optional widget placed at the trailing end of the label row.
+  /// Only rendered when [label] is not null.
+  /// Example: a status toggle, an icon button, a badge, etc.
+  final Widget? labelTrailing;
 
   /// Dynamic primary color from CMS branding (used for focused border,
   /// cursor, and text selection highlight).
@@ -58,6 +63,7 @@ class CustomValidatedTextFieldMaster extends StatefulWidget {
     this.textStyle,
     this.hintStyle,
     this.fillColor,
+    this.labelTrailing,
     this.primaryColor,
     this.maxLength = 500,
     this.minLength = 0,
@@ -151,15 +157,29 @@ class _CustomValidatedTextFieldMasterState
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        // ── Label row ─────────────────────────────────────────────────────
         if (widget.label != null) ...[
-          Text(
-            widget.label!,
-            textDirection: widget.textDirection,
-            style: StyleText.fontSize14Weight400.copyWith(color: AppColors.text),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Expanded(
+                child: Text(
+                  widget.label!,
+                  textDirection: widget.textDirection,
+                  style: StyleText.fontSize14Weight400
+                      .copyWith(color: AppColors.text),
+                ),
+              ),
+              if (widget.labelTrailing != null) ...[
+                SizedBox(width: 8.w),
+                widget.labelTrailing!,
+              ],
+            ],
           ),
           SizedBox(height: 6.h),
         ],
 
+        // ── Input field ───────────────────────────────────────────────────
         SizedBox(
           height: widget.height.h,
           width:  widget.width,
@@ -238,7 +258,7 @@ class _CustomValidatedTextFieldMasterState
           ),
         ),
 
-        // Fixed-height lane: error OR counter OR nothing
+        // ── Fixed-height lane: error OR counter OR nothing ─────────────────
         SizedBox(
           height: 18.h,
           child: showError

@@ -29,7 +29,9 @@ import 'home_preview_page.dart';
 import 'dart:html' as html;
 import 'dart:ui_web' as ui_web;
 
+import 'package:intl/intl.dart';
 
+import 'dart:ui' as ui;
 
 
 class _C {
@@ -66,6 +68,16 @@ class _HomeMainPageState extends State<HomeMainPage> {
   void _goToEdit() => Navigator.of(
     context,
   ).push(MaterialPageRoute(builder: (_) => const HomeEditPage()));
+
+
+
+
+
+
+  String _fmtDate(DateTime? date) {
+    if (date == null) return '—';
+    return DateFormat('dd MMM yyyy').format(date);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -158,7 +170,9 @@ class _HomeMainPageState extends State<HomeMainPage> {
                                     borderRadius: BorderRadius.circular(4.r),
                                   ),
                                   child: Text(
-                                    'Last Updated On 12 Jul 2026',
+                                    data?.lastUpdatedAt != null
+                                        ? 'Last Updated On ${_fmtDate(data!.lastUpdatedAt)}'
+                                        : 'Last Updated On —',
                                     style: StyleText.fontSize13Weight500
                                         .copyWith(color: _C.primary),
                                   ),
@@ -286,12 +300,16 @@ class _HomeMainPageState extends State<HomeMainPage> {
                       ),
                     ),
                   ),
-                  Icon(
-                    isOpen
-                        ? Icons.keyboard_arrow_up_rounded
-                        : Icons.keyboard_arrow_down_rounded,
-                    color: Colors.white,
-                    size: 20.sp,
+                  AnimatedRotation(
+                    turns: isOpen ? 0.5 : 0.0,
+                    duration: const Duration(milliseconds: 200),
+                    child: CustomSvg(
+                      assetPath: 'assets/arrowdown.svg',
+                      width: 20.w,
+                      height: 20.h,
+                      fit: BoxFit.scaleDown,
+                      color: Colors.white,
+                    ),
                   ),
                 ],
               ),
@@ -302,7 +320,7 @@ class _HomeMainPageState extends State<HomeMainPage> {
               width: double.infinity,
               padding: EdgeInsets.symmetric(vertical: 16.h),
               decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(6.r)
+                borderRadius: BorderRadius.circular(6.r),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -811,7 +829,7 @@ class _HomeMainPageState extends State<HomeMainPage> {
 
   /// Read-only field (RTL)
   Widget _readFieldRtl(String label, String value) => Directionality(
-    textDirection: TextDirection.rtl,
+    textDirection: ui.TextDirection.rtl,
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -833,7 +851,7 @@ class _HomeMainPageState extends State<HomeMainPage> {
             value.isEmpty ? 'أدخل النص هنا' : value,
             style: StyleText.fontSize12Weight400.copyWith(color: _C.hintText),
             overflow: TextOverflow.ellipsis,
-            textDirection: TextDirection.rtl,
+            textDirection: ui.TextDirection.rtl,
           ),
         ),
       ],

@@ -1,6 +1,13 @@
+/// ******************* FILE INFO *******************
+/// File Name: custom_dropdwon.dart
+/// UPDATED: primaryColor is now REQUIRED (not optional).
+///          All hover, focus, selected, and border colors
+///          are driven by the required primaryColor parameter.
+/// Author: Amr Mesbah
+
+import 'package:beauty_admin/core/custom_svg.dart';
 import 'package:dropdown_button2/dropdown_button2.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:beauty_admin/theme/appcolors.dart';
 import 'package:beauty_admin/theme/new_theme.dart';
@@ -9,7 +16,7 @@ import 'package:beauty_admin/theme/new_theme.dart';
 class CustomDropdownFormFieldInvMaster extends StatefulWidget {
   final String? selectedValue;
   final double? widthIcon;
-  final Color? primaryColor; // ← add this
+  final Color primaryColor;          // ← REQUIRED, no longer optional
   final Color? dropdownColor;
   final double? heightIcon;
   final List<Map<String, String>> items;
@@ -21,6 +28,10 @@ class CustomDropdownFormFieldInvMaster extends StatefulWidget {
   final double? dropdownWidth;
   final Widget? hint;
   final String? label;
+
+  /// Optional widget placed at the trailing end of the label row.
+  final Widget? labelTrailing;
+
   final String? iconPath;
   final Map<String, Color>? itemColors;
   final bool showColorDots;
@@ -33,8 +44,8 @@ class CustomDropdownFormFieldInvMaster extends StatefulWidget {
     required this.onChanged,
     required this.widthIcon,
     required this.heightIcon,
+    required this.primaryColor,       // ← REQUIRED
     this.validator,
-    this.primaryColor, // ← add this
     this.width,
     this.height,
     this.spaceHeight,
@@ -42,6 +53,7 @@ class CustomDropdownFormFieldInvMaster extends StatefulWidget {
     this.hint,
     this.dropdownColor,
     this.label,
+    this.labelTrailing,
     this.iconPath,
     this.itemColors,
     this.showColorDots = false,
@@ -71,6 +83,14 @@ class _CustomDropdownFormFieldInvMasterState
         setState(() => _popupWidth = box.size.width);
       }
     });
+  }
+
+  @override
+  void didUpdateWidget(CustomDropdownFormFieldInvMaster oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.selectedValue != widget.selectedValue) {
+      internalSelectedValue = widget.selectedValue;
+    }
   }
 
   // ── Color helper ──────────────────────────────────────────────────────────
@@ -117,10 +137,11 @@ class _CustomDropdownFormFieldInvMasterState
   }
 
   // ── Arrow icon ────────────────────────────────────────────────────────────
-  Widget _arrowIcon() => Icon(
-    Icons.keyboard_arrow_down_rounded,
-    size: (widget.widthIcon ?? 18).sp,
-    color: AppColors.secondaryBlack,
+  Widget _arrowIcon() => CustomSvg(
+    assetPath: "assets/arrowdown.svg",
+    color: widget.primaryColor,
+    width: 20,
+    height: 15,
   );
 
   @override
@@ -130,23 +151,35 @@ class _CustomDropdownFormFieldInvMasterState
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // ── Label ───────────────────────────────────────────────────────────
+        // ── Label row ──────────────────────────────────────────────────────
         if (widget.label != null) ...[
-          Text(
-            widget.label!,
-            style: StyleText.fontSize14Weight400.copyWith(color: AppColors.text),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Expanded(
+                child: Text(
+                  widget.label!,
+                  style: StyleText.fontSize14Weight400
+                      .copyWith(color: AppColors.text),
+                ),
+              ),
+              if (widget.labelTrailing != null) ...[
+                SizedBox(width: 8.w),
+                widget.labelTrailing!,
+              ],
+            ],
           ),
           SizedBox(height: widget.spaceHeight ?? 6.h),
         ],
 
-        // ── Dropdown container ───────────────────────────────────────────────
+        // ── Dropdown container ─────────────────────────────────────────────
         Container(
           key: _dropdownKey,
           width: widget.width,
           height: fieldHeight.h,
           decoration: BoxDecoration(
             color: AppColors.background,
-            borderRadius: BorderRadius.circular(widget.borderRadius.r),
+            borderRadius: BorderRadius.circular(4.r),
           ),
           child: FormField<String>(
             initialValue: internalSelectedValue,
@@ -172,7 +205,7 @@ class _CustomDropdownFormFieldInvMasterState
                     width: widget.width?.w,
                     padding: EdgeInsets.symmetric(horizontal: 8.w),
                     decoration: BoxDecoration(
-                      color: widget.dropdownColor ?? Color(0xFFF1F2ED),
+                      color: widget.dropdownColor ?? const Color(0xFFF1F2ED),
                       borderRadius:
                       BorderRadius.circular(widget.borderRadius.r),
                       border: Border.all(color: Colors.transparent),
@@ -189,18 +222,15 @@ class _CustomDropdownFormFieldInvMasterState
                       color: AppColors.background,
                       borderRadius:
                       BorderRadius.circular(widget.borderRadius.r),
-                      border: Border.all(color: Colors.grey.withOpacity(0.3)),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.1),
-                          blurRadius: 8,
-                          offset: const Offset(0, 2),
-                        ),
-                      ],
+                      border: Border.all(
+                        color: widget.primaryColor.withOpacity(0.3),
+                      ),
                     ),
                     scrollbarTheme: ScrollbarThemeData(
-                      thumbVisibility: MaterialStateProperty.all(false),
-                      trackVisibility: MaterialStateProperty.all(false),
+                      thumbVisibility:
+                      MaterialStateProperty.all(false),
+                      trackVisibility:
+                      MaterialStateProperty.all(false),
                       thickness: MaterialStateProperty.all(0),
                       radius: Radius.zero,
                     ),
@@ -208,12 +238,18 @@ class _CustomDropdownFormFieldInvMasterState
                   menuItemStyleData: MenuItemStyleData(
                     height: fieldHeight.h,
                     padding: EdgeInsets.symmetric(horizontal: 8.w),
-                    overlayColor: MaterialStateProperty.resolveWith<Color?>((states) {
-                      if (states.contains(MaterialState.hovered)) {
-                        return (widget.primaryColor ?? AppColors.primary).withOpacity(0.1); // ← fix
-                      }
-                      return null;
-                    }),
+                    overlayColor:
+                    MaterialStateProperty.resolveWith<Color?>(
+                            (states) {
+                          if (states.contains(MaterialState.hovered)) {
+                            return widget.primaryColor.withOpacity(0.12);
+                          }
+                          if (states.contains(MaterialState.focused) ||
+                              states.contains(MaterialState.selected)) {
+                            return widget.primaryColor.withOpacity(0.08);
+                          }
+                          return null;
+                        }),
                   ),
                   iconStyleData: IconStyleData(icon: _arrowIcon()),
                   style: StyleText.fontSize12Weight400
