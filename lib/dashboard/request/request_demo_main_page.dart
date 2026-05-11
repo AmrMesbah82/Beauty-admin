@@ -1,5 +1,6 @@
 /// File Name: request_demo_main_page.dart
 import 'dart:ui' as ui;
+import 'package:beauty_admin/core/widget/format.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -180,10 +181,10 @@ class _RequestDemoMainPageState extends State<RequestDemoMainPage> {
                                     selectedColor: _C.primary,
                                     unselectedColor: Colors.white,
                                     selectedTextColor: Colors.white,
-                                    unselectedTextColor: _C.labelText,
+                                    unselectedTextColor: AppColors.secondaryText,
                                     equalWidth: false,
                                     containerPadding: EdgeInsets.symmetric(
-                                      horizontal: 8.sp,
+                                      horizontal: 4.sp,
                                       vertical: 4.sp,
                                     ),
                                     containerColor: Colors.white,
@@ -434,14 +435,14 @@ class _RequestDemoMainPageState extends State<RequestDemoMainPage> {
           children: [
             if (enL.isNotEmpty) ...[
               Text(
-                enL,
+                FormatHelper.capitalize(enL),
                 style: StyleText.fontSize14Weight400.copyWith(
                   color: AppColors.text,
                 ),
               ),
               SizedBox(height: 6.h),
             ],
-            _roField(enV),
+            _roField(FormatHelper.capitalize(enV)),
           ],
         ),
       ),
@@ -466,12 +467,20 @@ class _RequestDemoMainPageState extends State<RequestDemoMainPage> {
     ],
   );
 
-  Widget _roBox(String label, String value) => Column(
-    crossAxisAlignment: CrossAxisAlignment.start,
+  Widget _roBox(String label, String value) => Row(
     children: [
-      _lbl(label),
-      SizedBox(height: 6.h),
-      _roField(value),
+      Expanded(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _lbl(label),
+            SizedBox(height: 6.h),
+            _roField(FormatHelper.capitalize(value)),
+          ],
+        ),
+      ),
+      SizedBox(width: 16.w),
+      Expanded(child: Container())
     ],
   );
 

@@ -324,142 +324,109 @@ class _InquiryMainPageState extends State<InquiryMainPage> {
                       SizedBox(height: 20.h),
 
                       // ── Title ──────────────────────────────────────────────
-                      Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 20.w),
-                        child: Text(
-                          'Inquires',
-                          style: StyleText.fontSize45Weight600.copyWith(
-                              color: _C.primary, fontWeight: FontWeight.w700),
-                        ),
+                      Text(
+                        'Inquires',
+                        style: StyleText.fontSize45Weight600.copyWith(
+                            color: _C.primary, fontWeight: FontWeight.w700),
                       ),
                       SizedBox(height: 16.h),
 
                       // ── Client / Owner toggle — CustomSegmentedTabs ────────
-                      Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 20.w),
-                        child: SizedBox(
-                          width: 220.w,
-                          height: 36.h,
-                          child: CustomSegmentedTabs(
-                            tabs: const ['Client', 'Owner'],
-                            selectedIndex: segmentIndex,
-                            onTabSelected: (index) {
-                              final label = index == 0 ? 'Client' : 'Owner';
-                              // Tap same tab again → clear filter
-                              if (activeUserType == label) {
-                                cubit.setUserTypeFilter(null);
-                              } else {
-                                cubit.setUserTypeFilter(label);
-                              }
-                            },
-                            selectedColor:       _C.primary,
-                            unselectedColor:     Colors.transparent,
-                            selectedTextColor:   Colors.white,
-                            unselectedTextColor: Colors.grey.shade500,
-                            containerColor:      _C.cardBg,
-                            equalWidth:          true,
-                            spacing:             8.w,
-                            tabHorizontalPadding: 16.w,
-                            tabVerticalPadding:   8.h,
-                            borderRadius:         8.r,
-                            containerPadding:     EdgeInsets.all(3.r),
-                          ),
+                      SizedBox(
+                        width: 220.w,
+                        height: 36.h,
+                        child: CustomSegmentedTabs(
+                          tabs: const ['Client', 'Owner'],
+                          selectedIndex: segmentIndex,
+                          onTabSelected: (index) {
+                            final label = index == 0 ? 'Client' : 'Owner';
+                            // Tap same tab again → clear filter
+                            if (activeUserType == label) {
+                              cubit.setUserTypeFilter(null);
+                            } else {
+                              cubit.setUserTypeFilter(label);
+                            }
+                          },
+                          selectedColor:       _C.primary,
+                          unselectedColor:     Colors.transparent,
+                          selectedTextColor:   Colors.white,
+                          unselectedTextColor: Colors.grey.shade500,
+                          containerColor:      _C.cardBg,
+                          equalWidth:          true,
+                          spacing:             8.w,
+                          tabHorizontalPadding: 16.w,
+                          tabVerticalPadding:   8.h,
+                          borderRadius:         8.r,
+                          containerPadding:     EdgeInsets.all(3.r),
                         ),
                       ),
                       SizedBox(height: 12.h),
 
                       // ── Search ─────────────────────────────────────────────
-                      Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 20.w),
-                        child: SizedBox(
-                          width: double.infinity,
-                          child: AppSearchTextField(
-                            controller: _searchController,
-                            onChanged: cubit.setSearch,
-                            hintText: 'Search',
-                          ),
+                      SizedBox(
+                        width: double.infinity,
+                        child: AppSearchTextField(
+                          controller: _searchController,
+                          onChanged: cubit.setSearch,
+                          hintText: 'Search',
                         ),
                       ),
                       SizedBox(height: 16.h),
 
                       // ── Summary cards ──────────────────────────────────────
-                      Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 20.w),
-                        child: _summaryRow(totalCount, newCount, repliedCount, closedCount),
-                      ),
+                      _summaryRow(totalCount, newCount, repliedCount, closedCount),
                       SizedBox(height: 16.h),
 
                       // ── Filters row ────────────────────────────────────────
-                      Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 20.w),
-                        child: _buildFiltersRow(
-                          cubit: cubit,
-                          uniqueStatuses: uniqueStatuses,
-                          uniqueGenders: uniqueGenders,
-                          uniqueCountries: uniqueCountries,
-                          uniqueMonths: uniqueMonths,
-                          activeStatus: activeStatus,
-                          activeGender: activeGender,
-                          activeCountry: activeCountry,
-                          activeMonth: activeMonth,
-                          hasFilters: hasFilters,
-                          inquiries: inquiries,
-                        ),
+                      _buildFiltersRow(
+                        cubit: cubit,
+                        uniqueStatuses: uniqueStatuses,
+                        uniqueGenders: uniqueGenders,
+                        uniqueCountries: uniqueCountries,
+                        uniqueMonths: uniqueMonths,
+                        activeStatus: activeStatus,
+                        activeGender: activeGender,
+                        activeCountry: activeCountry,
+                        activeMonth: activeMonth,
+                        hasFilters: hasFilters,
+                        inquiries: inquiries,
                       ),
                       SizedBox(height: 16.h),
 
                       // ── Table ──────────────────────────────────────────────
-                      Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 20.w),
-                        child: _buildTable(inquiries, context),
-                      ),
+                      _buildTable(inquiries, context),
                       SizedBox(height: 40.h),
 
                       // ── Dashboard heading ──────────────────────────────────
-                      Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 20.w),
-                        child: Text(
-                          'Dashboard',
-                          style: StyleText.fontSize24Weight600.copyWith(
-                              color: _C.primary, fontWeight: FontWeight.w700),
-                        ),
+                      Text(
+                        'Dashboard',
+                        style: StyleText.fontSize24Weight600.copyWith(
+                            color: _C.primary, fontWeight: FontWeight.w700),
                       ),
                       SizedBox(height: 16.h),
 
                       // ── Chart rows ─────────────────────────────────────────
-                      Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 20.w),
-                        child: _chartRow(
-                          left:  _chartCard('Submission Received', 'Total: $totalCount', _buildBarChart(monthlySubmissions)),
-                          right: _chartCard('Reasons', '',          _buildPieSection(reasonCounts,   _pieColors(reasonCounts.length))),
-                        ),
+                      _chartRow(
+                        left:  _chartCard('Submission Received', 'Total: $totalCount', _buildBarChart(monthlySubmissions)),
+                        right: _chartCard('Reasons', '',          _buildPieSection(reasonCounts,   _pieColors(reasonCounts.length))),
                       ),
                       SizedBox(height: 16.h),
 
-                      Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 20.w),
-                        child: _chartRow(
-                          left:  _chartCard('Language', '', _buildPieSection(languageCounts, _pieColors(languageCounts.length))),
-                          right: _chartCard('Gender',   '', _buildPieSection(genderCounts,   _pieColors(genderCounts.length))),
-                        ),
+                      _chartRow(
+                        left:  _chartCard('Language', '', _buildPieSection(languageCounts, _pieColors(languageCounts.length))),
+                        right: _chartCard('Gender',   '', _buildPieSection(genderCounts,   _pieColors(genderCounts.length))),
                       ),
                       SizedBox(height: 16.h),
 
-                      Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 20.w),
-                        child: _chartRow(
-                          left:  _chartCard('Location',        '', _buildLocationChart(locationCounts)),
-                          right: _chartCard('Inquiry Priority','', _buildDonutSection(priorityCounts, _priorityColors())),
-                        ),
+                      _chartRow(
+                        left:  _chartCard('Location',        '', _buildLocationChart(locationCounts)),
+                        right: _chartCard('Inquiry Priority','', _buildDonutSection(priorityCounts, _priorityColors())),
                       ),
                       SizedBox(height: 16.h),
 
-                      Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 20.w),
-                        child: _chartRow(
-                          left:  _chartCard('Inquiry Relevance', '', _buildDonutSection(relevanceCounts,      _relevanceColors())),
-                          right: _chartCard('Required Action',   '', _buildDonutSection(requiredActionCounts, _actionColors())),
-                        ),
+                      _chartRow(
+                        left:  _chartCard('Inquiry Relevance', '', _buildDonutSection(relevanceCounts,      _relevanceColors())),
+                        right: _chartCard('Required Action',   '', _buildDonutSection(requiredActionCounts, _actionColors())),
                       ),
                       SizedBox(height: 40.h),
                     ],

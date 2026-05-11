@@ -2299,30 +2299,6 @@ class _HomeEditPageState extends State<HomeEditPage> {
               }
             },
           ),
-          const Spacer(),
-          Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text('Visibility',
-                  style: StyleText.fontSize12Weight500
-                      .copyWith(color: _C.labelText)),
-              SizedBox(width: 6.w),
-              FlutterSwitch(
-                width: 38.sp,
-                height: 22.sp,
-                padding: 3.sp,
-                borderRadius: 20.sp,
-                toggleSize: 16.sp,
-                activeColor: _C.primary,
-                inactiveColor: Colors.grey.withOpacity(.16),
-                value: _links[i].visibility,
-                onToggle: (val) {
-                  setState(() => _links[i].visibility = val);
-                  _hasChanges = true;
-                },
-              ),
-            ],
-          ),
         ],
       ),
       SizedBox(height: 8.h),
@@ -2335,6 +2311,29 @@ class _HomeEditPageState extends State<HomeEditPage> {
         submitted: _submitted,
         primaryColor: _resolvedPrimaryColor,
         onChanged: (value) => _hasChanges = true,
+        labelTrailing: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text('Visibility',
+                style: StyleText.fontSize12Weight500
+                    .copyWith(color: _C.labelText)),
+            SizedBox(width: 6.w),
+            FlutterSwitch(
+              width: 38.sp,
+              height: 22.sp,
+              padding: 3.sp,
+              borderRadius: 20.sp,
+              toggleSize: 16.sp,
+              activeColor: _resolvedPrimaryColor,
+              inactiveColor: Colors.grey.withOpacity(.16),
+              value: _links[i].visibility,
+              onToggle: (val) {
+                setState(() => _links[i].visibility = val);
+                _hasChanges = true;
+              },
+            ),
+          ],
+        ),
       ),
     ],
   );

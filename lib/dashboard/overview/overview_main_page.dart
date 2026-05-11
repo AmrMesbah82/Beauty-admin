@@ -120,7 +120,7 @@ class CustomSegmentedTabs extends StatelessWidget {
           borderRadius: BorderRadius.circular(4.r),
           color: isSelected
               ? (selectedColor ?? _C.primary)
-              : (unselectedColor ?? _C.sectionBg),
+              : (unselectedColor ?? AppColors.secondaryText),
         ),
         padding: EdgeInsets.symmetric(
           vertical: tabVerticalPadding ?? 6.sp,
@@ -326,10 +326,10 @@ class _OverviewMainPageState extends State<OverviewMainPage> {
                                     selectedColor: _C.primary,
                                     unselectedColor: Colors.white,
                                     selectedTextColor: Colors.white,
-                                    unselectedTextColor: _C.labelText,
+                                    unselectedTextColor: AppColors.secondaryText,
                                     equalWidth: false,
                                     containerPadding: EdgeInsets.symmetric(
-                                        horizontal: 8.sp, vertical: 4.sp),
+                                        horizontal: 4.sp, vertical: 4.sp),
                                     containerColor: Colors.white,
                                   ),
                                   const Spacer(),
@@ -434,11 +434,7 @@ class _OverviewMainPageState extends State<OverviewMainPage> {
           padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
           decoration: BoxDecoration(
             color: _C.primary,
-            borderRadius: isOpen
-                ? BorderRadius.only(
-                topLeft: Radius.circular(6.r),
-                topRight: Radius.circular(6.r))
-                : BorderRadius.circular(6.r),
+            borderRadius: BorderRadius.circular(8.r),
           ),
           child: Row(children: [
             Expanded(
@@ -507,6 +503,7 @@ class _OverviewMainPageState extends State<OverviewMainPage> {
         child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              SizedBox(height: 6.h),
               _readOnlyLabel('Image'),
               SizedBox(height: 6.h),
               _readOnlyImageCircle(item.imageUrl),

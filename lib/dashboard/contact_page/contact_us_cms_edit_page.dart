@@ -12,6 +12,7 @@ import 'dart:async';
 import 'dart:html' as html;
 import 'dart:typed_data';
 
+import 'package:beauty_admin/theme/new_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -33,15 +34,13 @@ import 'contact_us_cms_preview_page.dart';
 import 'dart:convert';
 import 'dart:ui_web' as ui_web;
 
-
 String _svgBytesToDataUrl(Uint8List bytes) {
   final base64 = base64Encode(bytes);
   return 'data:image/svg+xml;base64,$base64';
 }
 
-
-const Color _kPink       = Color(0xFFD16F9A);
-const Color _kRed        = Color(0xFFD32F2F);
+const Color _kPink = Color(0xFFD16F9A);
+const Color _kRed = Color(0xFFD32F2F);
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // PAGE
@@ -56,12 +55,12 @@ class ContactUsCmsEditPage extends StatefulWidget {
 
 class _ContactUsCmsEditPageState extends State<ContactUsCmsEditPage> {
   // ── Headings ──
-  final _titleEnCtrl         = TextEditingController();
-  final _titleArCtrl         = TextEditingController();
-  final _shortDescEnCtrl     = TextEditingController();
-  final _shortDescArCtrl     = TextEditingController();
+  final _titleEnCtrl = TextEditingController();
+  final _titleArCtrl = TextEditingController();
+  final _shortDescEnCtrl = TextEditingController();
+  final _shortDescArCtrl = TextEditingController();
   Uint8List? _headingSvgBytes;
-  String     _headingSvgUrl = '';
+  String _headingSvgUrl = '';
 
   // ── Client Description ──
   final _clientDescEnCtrl = TextEditingController();
@@ -80,13 +79,13 @@ class _ContactUsCmsEditPageState extends State<ContactUsCmsEditPage> {
   int _socialLinkCounter = 0;
 
   // ── Accordion open/close ──
-  bool _headingsOpen   = true;
+  bool _headingsOpen = true;
   bool _clientDescOpen = true;
-  bool _ownerDescOpen  = true;
-  bool _socialOpen     = true;
+  bool _ownerDescOpen = true;
+  bool _socialOpen = true;
 
   bool _submitted = false;
-  bool _seeded    = false;
+  bool _seeded = false;
 
   ContactUsCmsModel? _pendingContactModel;
   List<SocialLinkModel> _footerSocialLinks = [];
@@ -94,7 +93,9 @@ class _ContactUsCmsEditPageState extends State<ContactUsCmsEditPage> {
   @override
   void initState() {
     super.initState();
-    print('🟡 [ContactEdit] initState() → loading ContactUsCmsCubit + HomeCmsCubit');
+    print(
+      '🟡 [ContactEdit] initState() → loading ContactUsCmsCubit + HomeCmsCubit',
+    );
     context.read<ContactUsCmsCubit>().load();
     context.read<HomeCmsCubit>().load();
   }
@@ -145,7 +146,7 @@ class _ContactUsCmsEditPageState extends State<ContactUsCmsEditPage> {
     bool changed = false;
 
     for (var i = 0; i < _socialLinkItems.length && i < modelIcons.length; i++) {
-      final item     = _socialLinkItems[i];
+      final item = _socialLinkItems[i];
       final modelUrl = modelIcons[i].link;
       if (item.selectedIndex == null && modelUrl.isNotEmpty) {
         final idx = _footerSocialLinks.indexWhere((l) => l.url == modelUrl);
@@ -168,11 +169,11 @@ class _ContactUsCmsEditPageState extends State<ContactUsCmsEditPage> {
     print('🟢 [ContactEdit] _seedFromModel START');
 
     // Headings
-    _titleEnCtrl.text     = m.headings.title.en;
-    _titleArCtrl.text     = m.headings.title.ar;
+    _titleEnCtrl.text = m.headings.title.en;
+    _titleArCtrl.text = m.headings.title.ar;
     _shortDescEnCtrl.text = m.headings.shortDescription.en;
     _shortDescArCtrl.text = m.headings.shortDescription.ar;
-    _headingSvgUrl        = m.headings.svgUrl;
+    _headingSvgUrl = m.headings.svgUrl;
 
     // Client Description
     _clientDescEnCtrl.text = m.clientDescription.description.en;
@@ -182,7 +183,7 @@ class _ContactUsCmsEditPageState extends State<ContactUsCmsEditPage> {
       final item = _ReasonItem(id: r.id, counter: ++_clientReasonCounter);
       item.labelEnCtrl.text = r.label.en;
       item.labelArCtrl.text = r.label.ar;
-      item.isRequired       = r.isRequired;
+      item.isRequired = r.isRequired;
       _clientReasons.add(item);
     }
 
@@ -194,7 +195,7 @@ class _ContactUsCmsEditPageState extends State<ContactUsCmsEditPage> {
       final item = _ReasonItem(id: r.id, counter: ++_ownerReasonCounter);
       item.labelEnCtrl.text = r.label.en;
       item.labelArCtrl.text = r.label.ar;
-      item.isRequired       = r.isRequired;
+      item.isRequired = r.isRequired;
       _ownerReasons.add(item);
     }
 
@@ -204,7 +205,7 @@ class _ContactUsCmsEditPageState extends State<ContactUsCmsEditPage> {
       final item = _SocialLinkItem(id: s.id, counter: ++_socialLinkCounter);
       final idx = _footerSocialLinks.indexWhere((l) => l.url == s.link);
       item.selectedIndex = idx >= 0 ? idx : null;
-      item.iconUrl       = s.iconUrl;
+      item.iconUrl = s.iconUrl;
       _socialLinkItems.add(item);
     }
 
@@ -215,8 +216,7 @@ class _ContactUsCmsEditPageState extends State<ContactUsCmsEditPage> {
 
   Future<Uint8List?> _pickSvgOnly() async {
     final completer = Completer<Uint8List?>();
-    final input = html.FileUploadInputElement()
-      ..accept = '.svg,image/svg+xml';
+    final input = html.FileUploadInputElement()..accept = '.svg,image/svg+xml';
 
     input.onChange.listen((_) {
       final files = input.files;
@@ -225,8 +225,9 @@ class _ContactUsCmsEditPageState extends State<ContactUsCmsEditPage> {
         return;
       }
       final file = files.first;
-      final isSvgExt  = file.name.toLowerCase().endsWith('.svg');
-      final isSvgMime = file.type == 'image/svg+xml' || file.type.contains('svg');
+      final isSvgExt = file.name.toLowerCase().endsWith('.svg');
+      final isSvgMime =
+          file.type == 'image/svg+xml' || file.type.contains('svg');
 
       if (!isSvgExt && !isSvgMime) {
         completer.complete(null);
@@ -271,12 +272,12 @@ class _ContactUsCmsEditPageState extends State<ContactUsCmsEditPage> {
     return completer.future;
   }
 
-
   bool _isValidSvgContent(Uint8List bytes) {
     if (bytes.length < 10) return false;
     try {
       final content = String.fromCharCodes(
-          bytes.sublist(0, bytes.length.clamp(0, 500)));
+        bytes.sublist(0, bytes.length.clamp(0, 500)),
+      );
       final trimmed = content.trimLeft();
       return trimmed.startsWith('<svg') ||
           (trimmed.startsWith('<?xml') && trimmed.contains('<svg'));
@@ -293,22 +294,19 @@ class _ContactUsCmsEditPageState extends State<ContactUsCmsEditPage> {
     // Social icons
     final socialIcons = <ContactSocialIcon>[];
     for (final s in _socialLinkItems) {
-      final hasSelection = s.selectedIndex != null &&
-          s.selectedIndex! < _footerSocialLinks.length;
+      final hasSelection =
+          s.selectedIndex != null &&
+              s.selectedIndex! < _footerSocialLinks.length;
       final selectedLink = hasSelection
           ? _footerSocialLinks[s.selectedIndex!]
           : null;
 
-      final url     = selectedLink?.url ?? '';
+      final url = selectedLink?.url ?? '';
       final iconUrl = (selectedLink != null && selectedLink.iconUrl.isNotEmpty)
           ? selectedLink.iconUrl
           : s.iconUrl;
 
-      socialIcons.add(ContactSocialIcon(
-        id:      s.id,
-        iconUrl: iconUrl,
-        link:    url,
-      ));
+      socialIcons.add(ContactSocialIcon(id: s.id, iconUrl: iconUrl, link: url));
     }
 
     return ContactUsCmsModel(
@@ -329,28 +327,36 @@ class _ContactUsCmsEditPageState extends State<ContactUsCmsEditPage> {
           en: _clientDescEnCtrl.text.trim(),
           ar: _clientDescArCtrl.text.trim(),
         ),
-        reasons: _clientReasons.map((r) => ContactReasonItem(
-          id:         r.id,
-          label:      ContactBilingualText(
-            en: r.labelEnCtrl.text.trim(),
-            ar: r.labelArCtrl.text.trim(),
+        reasons: _clientReasons
+            .map(
+              (r) => ContactReasonItem(
+            id: r.id,
+            label: ContactBilingualText(
+              en: r.labelEnCtrl.text.trim(),
+              ar: r.labelArCtrl.text.trim(),
+            ),
+            isRequired: r.isRequired,
           ),
-          isRequired: r.isRequired,
-        )).toList(),
+        )
+            .toList(),
       ),
       ownerDescription: ContactDescriptionSection(
         description: ContactBilingualText(
           en: _ownerDescEnCtrl.text.trim(),
           ar: _ownerDescArCtrl.text.trim(),
         ),
-        reasons: _ownerReasons.map((r) => ContactReasonItem(
-          id:         r.id,
-          label:      ContactBilingualText(
-            en: r.labelEnCtrl.text.trim(),
-            ar: r.labelArCtrl.text.trim(),
+        reasons: _ownerReasons
+            .map(
+              (r) => ContactReasonItem(
+            id: r.id,
+            label: ContactBilingualText(
+              en: r.labelEnCtrl.text.trim(),
+              ar: r.labelArCtrl.text.trim(),
+            ),
+            isRequired: r.isRequired,
           ),
-          isRequired: r.isRequired,
-        )).toList(),
+        )
+            .toList(),
       ),
       socialIcons: socialIcons,
     );
@@ -372,27 +378,63 @@ class _ContactUsCmsEditPageState extends State<ContactUsCmsEditPage> {
   bool _validate() {
     setState(() => _submitted = true);
 
-    if (_titleEnCtrl.text.trim().isEmpty)     { print('🔴 validate FAIL: titleEn'); return false; }
-    if (_titleArCtrl.text.trim().isEmpty)     { print('🔴 validate FAIL: titleAr'); return false; }
-    if (_shortDescEnCtrl.text.trim().isEmpty) { print('🔴 validate FAIL: shortDescEn'); return false; }
-    if (_shortDescArCtrl.text.trim().isEmpty) { print('🔴 validate FAIL: shortDescAr'); return false; }
+    if (_titleEnCtrl.text.trim().isEmpty) {
+      print('🔴 validate FAIL: titleEn');
+      return false;
+    }
+    if (_titleArCtrl.text.trim().isEmpty) {
+      print('🔴 validate FAIL: titleAr');
+      return false;
+    }
+    if (_shortDescEnCtrl.text.trim().isEmpty) {
+      print('🔴 validate FAIL: shortDescEn');
+      return false;
+    }
+    if (_shortDescArCtrl.text.trim().isEmpty) {
+      print('🔴 validate FAIL: shortDescAr');
+      return false;
+    }
     if (_headingSvgBytes == null && _headingSvgUrl.isEmpty) {
       print('🔴 validate FAIL: heading SVG missing');
       return false;
     }
 
-    if (_clientDescEnCtrl.text.trim().isEmpty) { print('🔴 validate FAIL: clientDescEn'); return false; }
-    if (_clientDescArCtrl.text.trim().isEmpty) { print('🔴 validate FAIL: clientDescAr'); return false; }
+    if (_clientDescEnCtrl.text.trim().isEmpty) {
+      print('🔴 validate FAIL: clientDescEn');
+      return false;
+    }
+    if (_clientDescArCtrl.text.trim().isEmpty) {
+      print('🔴 validate FAIL: clientDescAr');
+      return false;
+    }
     for (final r in _clientReasons) {
-      if (r.labelEnCtrl.text.trim().isEmpty) { print('🔴 validate FAIL: client reason ${r.id} en'); return false; }
-      if (r.labelArCtrl.text.trim().isEmpty) { print('🔴 validate FAIL: client reason ${r.id} ar'); return false; }
+      if (r.labelEnCtrl.text.trim().isEmpty) {
+        print('🔴 validate FAIL: client reason ${r.id} en');
+        return false;
+      }
+      if (r.labelArCtrl.text.trim().isEmpty) {
+        print('🔴 validate FAIL: client reason ${r.id} ar');
+        return false;
+      }
     }
 
-    if (_ownerDescEnCtrl.text.trim().isEmpty) { print('🔴 validate FAIL: ownerDescEn'); return false; }
-    if (_ownerDescArCtrl.text.trim().isEmpty) { print('🔴 validate FAIL: ownerDescAr'); return false; }
+    if (_ownerDescEnCtrl.text.trim().isEmpty) {
+      print('🔴 validate FAIL: ownerDescEn');
+      return false;
+    }
+    if (_ownerDescArCtrl.text.trim().isEmpty) {
+      print('🔴 validate FAIL: ownerDescAr');
+      return false;
+    }
     for (final r in _ownerReasons) {
-      if (r.labelEnCtrl.text.trim().isEmpty) { print('🔴 validate FAIL: owner reason ${r.id} en'); return false; }
-      if (r.labelArCtrl.text.trim().isEmpty) { print('🔴 validate FAIL: owner reason ${r.id} ar'); return false; }
+      if (r.labelEnCtrl.text.trim().isEmpty) {
+        print('🔴 validate FAIL: owner reason ${r.id} en');
+        return false;
+      }
+      if (r.labelArCtrl.text.trim().isEmpty) {
+        print('🔴 validate FAIL: owner reason ${r.id} ar');
+        return false;
+      }
     }
 
     print('🟢 validate PASS');
@@ -403,11 +445,11 @@ class _ContactUsCmsEditPageState extends State<ContactUsCmsEditPage> {
 
   Future<void> _save(String status) async {
     print('🟡 [ContactEdit] _save(status=$status) START');
-    final model   = _buildModel(status);
+    final model = _buildModel(status);
     final uploads = _collectUploads();
 
     await context.read<ContactUsCmsCubit>().save(
-      model:        model,
+      model: model,
       imageUploads: uploads.isEmpty ? null : uploads,
     );
     print('🟢 [ContactEdit] _save(status=$status) DONE');
@@ -418,8 +460,8 @@ class _ContactUsCmsEditPageState extends State<ContactUsCmsEditPage> {
     if (!_validate()) return;
 
     await showPublishConfirmDialog(
-      context:  context,
-      title:    'EDITING CONTACT US DETAILS',
+      context: context,
+      title: 'EDITING CONTACT US DETAILS',
       subtitle: 'Do you want to save the changes made to this Contact Us page?',
       onConfirm: () => _save('published'),
     );
@@ -433,10 +475,12 @@ class _ContactUsCmsEditPageState extends State<ContactUsCmsEditPage> {
 
   void _addClientReason() {
     setState(() {
-      _clientReasons.add(_ReasonItem(
-        id: 'reason_client_${DateTime.now().millisecondsSinceEpoch}',
-        counter: ++_clientReasonCounter,
-      ));
+      _clientReasons.add(
+        _ReasonItem(
+          id: 'reason_client_${DateTime.now().millisecondsSinceEpoch}',
+          counter: ++_clientReasonCounter,
+        ),
+      );
     });
   }
 
@@ -445,10 +489,12 @@ class _ContactUsCmsEditPageState extends State<ContactUsCmsEditPage> {
 
   void _addOwnerReason() {
     setState(() {
-      _ownerReasons.add(_ReasonItem(
-        id: 'reason_owner_${DateTime.now().millisecondsSinceEpoch}',
-        counter: ++_ownerReasonCounter,
-      ));
+      _ownerReasons.add(
+        _ReasonItem(
+          id: 'reason_owner_${DateTime.now().millisecondsSinceEpoch}',
+          counter: ++_ownerReasonCounter,
+        ),
+      );
     });
   }
 
@@ -457,10 +503,12 @@ class _ContactUsCmsEditPageState extends State<ContactUsCmsEditPage> {
 
   void _addSocialLink() {
     setState(() {
-      _socialLinkItems.add(_SocialLinkItem(
-        id: 'social_${DateTime.now().millisecondsSinceEpoch}',
-        counter: ++_socialLinkCounter,
-      ));
+      _socialLinkItems.add(
+        _SocialLinkItem(
+          id: 'social_${DateTime.now().millisecondsSinceEpoch}',
+          counter: ++_socialLinkCounter,
+        ),
+      );
     });
   }
 
@@ -479,10 +527,12 @@ class _ContactUsCmsEditPageState extends State<ContactUsCmsEditPage> {
           listener: (context, homeState) {
             final links = switch (homeState) {
               HomeCmsLoaded(:final data) => data.socialLinks,
-              HomeCmsSaved(:final data)  => data.socialLinks,
-              _                          => <SocialLinkModel>[],
+              HomeCmsSaved(:final data) => data.socialLinks,
+              _ => <SocialLinkModel>[],
             };
-            print('🟡 [ContactEdit] HomeCms state → footer links=${links.length}');
+            print(
+              '🟡 [ContactEdit] HomeCms state → footer links=${links.length}',
+            );
             if (links.isNotEmpty) {
               setState(() => _footerSocialLinks = links);
               _trySeed();
@@ -525,10 +575,13 @@ class _ContactUsCmsEditPageState extends State<ContactUsCmsEditPage> {
                             width: 1000.w,
                             child: (isLoading || waitingForSeed)
                                 ? Padding(
-                              padding: EdgeInsets.symmetric(vertical: 100.h),
+                              padding: EdgeInsets.symmetric(
+                                vertical: 100.h,
+                              ),
                               child: const Center(
                                 child: CircularProgressIndicator(
-                                    color: _kPink),
+                                  color: _kPink,
+                                ),
                               ),
                             )
                                 : _buildForm(),
@@ -555,8 +608,8 @@ class _ContactUsCmsEditPageState extends State<ContactUsCmsEditPage> {
         Text(
           'Editing Contact Us',
           style: AppTextStyles.font28BlackSemiBoldCairo.copyWith(
-            fontSize:   36.sp,
-            color:      _kPink,
+            fontSize: 36.sp,
+            color: _kPink,
             fontWeight: FontWeight.w700,
           ),
         ),
@@ -564,23 +617,23 @@ class _ContactUsCmsEditPageState extends State<ContactUsCmsEditPage> {
 
         // ── Headings ──
         _accordion(
-          title:    'Headings',
-          isOpen:   _headingsOpen,
+          title: 'Headings',
+          isOpen: _headingsOpen,
           onToggle: () => setState(() => _headingsOpen = !_headingsOpen),
-          child:    _headingsSection(),
+          child: _headingsSection(),
         ),
         SizedBox(height: 10.h),
 
         // ── Client Description ──
         _accordion(
-          title:    'Client Description',
-          isOpen:   _clientDescOpen,
+          title: 'Client Description',
+          isOpen: _clientDescOpen,
           onToggle: () => setState(() => _clientDescOpen = !_clientDescOpen),
-          child:    _descriptionSection(
+          child: _descriptionSection(
             descEnCtrl: _clientDescEnCtrl,
             descArCtrl: _clientDescArCtrl,
-            reasons:    _clientReasons,
-            onAddReason:    _addClientReason,
+            reasons: _clientReasons,
+            onAddReason: _addClientReason,
             onRemoveReason: _removeClientReason,
           ),
         ),
@@ -588,14 +641,14 @@ class _ContactUsCmsEditPageState extends State<ContactUsCmsEditPage> {
 
         // ── Owner Description ──
         _accordion(
-          title:    'Owner Description',
-          isOpen:   _ownerDescOpen,
+          title: 'Owner Description',
+          isOpen: _ownerDescOpen,
           onToggle: () => setState(() => _ownerDescOpen = !_ownerDescOpen),
-          child:    _descriptionSection(
+          child: _descriptionSection(
             descEnCtrl: _ownerDescEnCtrl,
             descArCtrl: _ownerDescArCtrl,
-            reasons:    _ownerReasons,
-            onAddReason:    _addOwnerReason,
+            reasons: _ownerReasons,
+            onAddReason: _addOwnerReason,
             onRemoveReason: _removeOwnerReason,
           ),
         ),
@@ -603,10 +656,10 @@ class _ContactUsCmsEditPageState extends State<ContactUsCmsEditPage> {
 
         // ── Social Media Links ──
         _accordion(
-          title:    'Social Media Links',
-          isOpen:   _socialOpen,
+          title: 'Social Media Links',
+          isOpen: _socialOpen,
           onToggle: () => setState(() => _socialOpen = !_socialOpen),
-          child:    _socialLinksSection(),
+          child: _socialLinksSection(),
         ),
         SizedBox(height: 32.h),
 
@@ -619,7 +672,8 @@ class _ContactUsCmsEditPageState extends State<ContactUsCmsEditPage> {
   // ── Headings Section ──────────────────────────────────────────────────────
 
   Widget _headingsSection() {
-    final svgMissing = _submitted && _headingSvgBytes == null && _headingSvgUrl.isEmpty;
+    final svgMissing =
+        _submitted && _headingSvgBytes == null && _headingSvgUrl.isEmpty;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -628,7 +682,7 @@ class _ContactUsCmsEditPageState extends State<ContactUsCmsEditPage> {
         _imageUploadCircle(
           label: 'SVG',
           bytes: _headingSvgBytes,
-          url:   _headingSvgUrl,
+          url: _headingSvgUrl,
           onTap: () async {
             final b = await _pickSvgOnly();
             if (b != null) setState(() => _headingSvgBytes = b);
@@ -637,8 +691,14 @@ class _ContactUsCmsEditPageState extends State<ContactUsCmsEditPage> {
         if (svgMissing)
           Padding(
             padding: EdgeInsets.only(top: 4.h),
-            child: Text('SVG is required',
-                style: TextStyle(fontFamily: 'Cairo', fontSize: 11.sp, color: _kRed)),
+            child: Text(
+              'SVG is required',
+              style: TextStyle(
+                fontFamily: 'Cairo',
+                fontSize: 11.sp,
+                color: _kRed,
+              ),
+            ),
           ),
         SizedBox(height: 16.h),
 
@@ -653,10 +713,15 @@ class _ContactUsCmsEditPageState extends State<ContactUsCmsEditPage> {
                   _fieldLabel('Title'),
                   SizedBox(height: 8.h),
                   CustomValidatedTextFieldMaster(
-                    hint: 'Text Here', fillColor: Colors.white,
-                    controller: _titleEnCtrl, height: 42, maxLines: 1,
-                    maxLength: 200, submitted: _submitted,
-                    textDirection: TextDirection.ltr, textAlign: TextAlign.start,
+                    hint: 'Text Here',
+                    fillColor: Colors.white,
+                    controller: _titleEnCtrl,
+                    height: 42,
+                    maxLines: 1,
+                    maxLength: 200,
+                    submitted: _submitted,
+                    textDirection: TextDirection.ltr,
+                    textAlign: TextAlign.start,
                     onChanged: (_) => setState(() {}),
                   ),
                 ],
@@ -670,10 +735,15 @@ class _ContactUsCmsEditPageState extends State<ContactUsCmsEditPage> {
                   _fieldLabelAr('العنوان'),
                   SizedBox(height: 8.h),
                   CustomValidatedTextFieldMaster(
-                    hint: 'أدخل النص هنا', fillColor: Colors.white,
-                    controller: _titleArCtrl, height: 42, maxLines: 1,
-                    maxLength: 200, submitted: _submitted,
-                    textDirection: TextDirection.rtl, textAlign: TextAlign.right,
+                    hint: 'أدخل النص هنا',
+                    fillColor: Colors.white,
+                    controller: _titleArCtrl,
+                    height: 42,
+                    maxLines: 1,
+                    maxLength: 200,
+                    submitted: _submitted,
+                    textDirection: TextDirection.rtl,
+                    textAlign: TextAlign.right,
                     onChanged: (_) => setState(() {}),
                   ),
                 ],
@@ -687,10 +757,15 @@ class _ContactUsCmsEditPageState extends State<ContactUsCmsEditPage> {
         _fieldLabel('Short Description'),
         SizedBox(height: 8.h),
         CustomValidatedTextFieldMaster(
-          hint: 'Text Here', fillColor: Colors.white,
-          controller: _shortDescEnCtrl, height: 42, maxLines: 1,
-          maxLength: 300, submitted: _submitted,
-          textDirection: TextDirection.ltr, textAlign: TextAlign.start,
+          hint: 'Text Here',
+          fillColor: Colors.white,
+          controller: _shortDescEnCtrl,
+          height: 42,
+          maxLines: 1,
+          maxLength: 300,
+          submitted: _submitted,
+          textDirection: TextDirection.ltr,
+          textAlign: TextAlign.start,
           onChanged: (_) => setState(() {}),
         ),
         SizedBox(height: 12.h),
@@ -699,10 +774,15 @@ class _ContactUsCmsEditPageState extends State<ContactUsCmsEditPage> {
         _fieldLabelAr('وصف مختصر'),
         SizedBox(height: 8.h),
         CustomValidatedTextFieldMaster(
-          hint: 'أدخل النص هنا', fillColor: Colors.white,
-          controller: _shortDescArCtrl, height: 42, maxLines: 1,
-          maxLength: 300, submitted: _submitted,
-          textDirection: TextDirection.rtl, textAlign: TextAlign.right,
+          hint: 'أدخل النص هنا',
+          fillColor: Colors.white,
+          controller: _shortDescArCtrl,
+          height: 42,
+          maxLines: 1,
+          maxLength: 300,
+          submitted: _submitted,
+          textDirection: TextDirection.rtl,
+          textAlign: TextAlign.right,
           onChanged: (_) => setState(() {}),
         ),
         SizedBox(height: 10.h),
@@ -728,10 +808,16 @@ class _ContactUsCmsEditPageState extends State<ContactUsCmsEditPage> {
         _fieldLabel('Description'),
         SizedBox(height: 8.h),
         CustomValidatedTextFieldMaster(
-          hint: 'Text Here', fillColor: Colors.white,
-          controller: descEnCtrl, height: 100, maxLines: 4,
-          maxLength: 500, showCharCount: true, submitted: _submitted,
-          textDirection: TextDirection.ltr, textAlign: TextAlign.start,
+          hint: 'Text Here',
+          fillColor: Colors.white,
+          controller: descEnCtrl,
+          height: 100,
+          maxLines: 4,
+          maxLength: 500,
+          showCharCount: true,
+          submitted: _submitted,
+          textDirection: TextDirection.ltr,
+          textAlign: TextAlign.start,
           onChanged: (_) => setState(() {}),
         ),
         SizedBox(height: 12.h),
@@ -740,36 +826,44 @@ class _ContactUsCmsEditPageState extends State<ContactUsCmsEditPage> {
         _fieldLabelAr('الوصف'),
         SizedBox(height: 8.h),
         CustomValidatedTextFieldMaster(
-          hint: 'أدخل النص هنا', fillColor: Colors.white,
-          controller: descArCtrl, height: 100, maxLines: 4,
-          maxLength: 500, showCharCount: true, submitted: _submitted,
-          textDirection: TextDirection.rtl, textAlign: TextAlign.right,
+          hint: 'أدخل النص هنا',
+          fillColor: Colors.white,
+          controller: descArCtrl,
+          height: 100,
+          maxLines: 4,
+          maxLength: 500,
+          showCharCount: true,
+          submitted: _submitted,
+          textDirection: TextDirection.rtl,
+          textAlign: TextAlign.right,
           onChanged: (_) => setState(() {}),
         ),
         SizedBox(height: 20.h),
 
         // Reasons
-        ...reasons.map((r) => _reasonEditItem(r, onRemoveReason)),
-
+        ...reasons.asMap().entries.map((e) => _reasonEditItem(e.value, e.key, onRemoveReason)),
         // + Reason button
         GestureDetector(
           onTap: onAddReason,
           child: Container(
-            padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 10.h),
+            width: 110.w,
+            height: 30.h,
             decoration: BoxDecoration(
-              color: const Color(0xFF555555),
-              borderRadius: BorderRadius.circular(8.r),
+              color: const Color(0xFF797979),
+              borderRadius: BorderRadius.circular(4.r),
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Icon(Icons.add, color: Colors.white, size: 16.sp),
                 SizedBox(width: 6.w),
-                Text('Reason',
-                    style: TextStyle(
-                      fontFamily: 'Cairo', fontSize: 13.sp,
-                      fontWeight: FontWeight.w600, color: Colors.white,
-                    )),
+                Text(
+                  'Reason',
+                  style: StyleText.fontSize14Weight500.copyWith(
+                    color: Colors.white
+                  )
+                ),
               ],
             ),
           ),
@@ -781,49 +875,46 @@ class _ContactUsCmsEditPageState extends State<ContactUsCmsEditPage> {
 
   // ── Reason Edit Item ──────────────────────────────────────────────────────
 
-  Widget _reasonEditItem(_ReasonItem r, void Function(String) onRemove) {
+  Widget _reasonEditItem(_ReasonItem r, int index, void Function(String) onRemove) {
     return Padding(
       padding: EdgeInsets.only(bottom: 16.h),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              _fieldLabel('Reason'),
-              SizedBox(width: 20.w),
-              Text('Required',
-                  style: TextStyle(fontFamily: 'Cairo', fontSize: 12.sp,
-                      fontWeight: FontWeight.w500, color: Colors.black87)),
-              SizedBox(width: 8.w),
-              GestureDetector(
-                onTap: () => setState(() => r.isRequired = !r.isRequired),
-                child: _toggleSwitch(r.isRequired),
-              ),
-              const Spacer(),
-              // Remove button (shown as red dot if more than 1 reason)
-              GestureDetector(
-                onTap: () => onRemove(r.id),
-                child: Container(
-                  width: 18.w, height: 18.h,
-                  decoration: const BoxDecoration(
-                    color: _kRed,
-                    shape: BoxShape.circle,
-                  ),
-                  child: Icon(Icons.close, color: Colors.white, size: 12.sp),
-                ),
-              ),
-            ],
-          ),
           SizedBox(height: 8.h),
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Expanded(
                 child: CustomValidatedTextFieldMaster(
-                  hint: 'Text Here', fillColor: Colors.white,
-                  controller: r.labelEnCtrl, height: 42, maxLines: 1,
-                  maxLength: 200, submitted: _submitted,
-                  textDirection: TextDirection.ltr, textAlign: TextAlign.start,
+                  hint: 'Text Here',
+                  label: 'Reason',
+                  labelTrailing: Row(
+                    children: [
+                      Text(
+                        'Required',
+                        style: TextStyle(
+                          fontFamily: 'Cairo',
+                          fontSize: 12.sp,
+                          fontWeight: FontWeight.w500,
+                          color: Colors.black87,
+                        ),
+                      ),
+                      SizedBox(width: 8.w),
+                      GestureDetector(
+                        onTap: () => setState(() => r.isRequired = !r.isRequired),
+                        child: _toggleSwitch(r.isRequired),
+                      ),
+                    ],
+                  ),
+                  fillColor: Colors.white,
+                  controller: r.labelEnCtrl,
+                  height: 42,
+                  maxLines: 1,
+                  maxLength: 200,
+                  submitted: _submitted,
+                  textDirection: TextDirection.ltr,
+                  textAlign: TextAlign.start,
                   onChanged: (_) => setState(() {}),
                 ),
               ),
@@ -832,13 +923,38 @@ class _ContactUsCmsEditPageState extends State<ContactUsCmsEditPage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
-                    _fieldLabelAr('السبب'),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        if (index > 0)
+                          GestureDetector(
+                            onTap: () => onRemove(r.id),
+                            child: Container(
+                              width: 18.w,
+                              height: 18.h,
+                              decoration: const BoxDecoration(
+                                color: _kRed,
+                                shape: BoxShape.circle,
+                              ),
+                              child: Icon(Icons.remove, color: Colors.white, size: 12.sp),
+                            ),
+                          )
+                        else
+                          const SizedBox(),
+                        _fieldLabelAr('السبب'),
+                      ],
+                    ),
                     SizedBox(height: 4.h),
                     CustomValidatedTextFieldMaster(
-                      hint: 'أدخل النص هنا', fillColor: Colors.white,
-                      controller: r.labelArCtrl, height: 42, maxLines: 1,
-                      maxLength: 200, submitted: _submitted,
-                      textDirection: TextDirection.rtl, textAlign: TextAlign.right,
+                      hint: 'أدخل النص هنا',
+                      fillColor: Colors.white,
+                      controller: r.labelArCtrl,
+                      height: 42,
+                      maxLines: 1,
+                      maxLength: 200,
+                      submitted: _submitted,
+                      textDirection: TextDirection.rtl,
+                      textAlign: TextAlign.right,
                       onChanged: (_) => setState(() {}),
                     ),
                   ],
@@ -853,7 +969,8 @@ class _ContactUsCmsEditPageState extends State<ContactUsCmsEditPage> {
 
   Widget _toggleSwitch(bool isOn) {
     return Container(
-      width: 40.w, height: 22.h,
+      width: 40.w,
+      height: 22.h,
       decoration: BoxDecoration(
         color: isOn ? _kPink : Colors.grey.shade300,
         borderRadius: BorderRadius.circular(11.r),
@@ -862,7 +979,8 @@ class _ContactUsCmsEditPageState extends State<ContactUsCmsEditPage> {
         duration: const Duration(milliseconds: 200),
         alignment: isOn ? Alignment.centerRight : Alignment.centerLeft,
         child: Container(
-          width: 18.w, height: 18.h,
+          width: 18.w,
+          height: 18.h,
           margin: EdgeInsets.symmetric(horizontal: 2.w),
           decoration: const BoxDecoration(
             color: Colors.white,
@@ -883,14 +1001,14 @@ class _ContactUsCmsEditPageState extends State<ContactUsCmsEditPage> {
         if (_socialLinkItems.isNotEmpty)
           GridView.builder(
             shrinkWrap: true,
-            physics:    const NeverScrollableScrollPhysics(),
+            physics: const NeverScrollableScrollPhysics(),
             gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount:   2,
+              crossAxisCount: 2,
               crossAxisSpacing: 16.w,
-              mainAxisSpacing:  12.h,
-              mainAxisExtent:   70.sp,
+              mainAxisSpacing: 12.h,
+              mainAxisExtent: 50.sp,
             ),
-            itemCount:   _socialLinkItems.length,
+            itemCount: _socialLinkItems.length,
             itemBuilder: (context, index) =>
                 _socialLinkDropdownWidget(_socialLinkItems[index]),
           ),
@@ -898,21 +1016,24 @@ class _ContactUsCmsEditPageState extends State<ContactUsCmsEditPage> {
         GestureDetector(
           onTap: _addSocialLink,
           child: Container(
-            padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 10.h),
+            width: 90.w,
+            height: 30.h,
             decoration: BoxDecoration(
-              color: const Color(0xFF555555),
-              borderRadius: BorderRadius.circular(8.r),
+              color: const Color(0xFF797979),
+              borderRadius: BorderRadius.circular(4.r),
             ),
             child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
               mainAxisSize: MainAxisSize.min,
               children: [
                 Icon(Icons.add, color: Colors.white, size: 16.sp),
                 SizedBox(width: 6.w),
-                Text('Link',
-                    style: TextStyle(
-                      fontFamily: 'Cairo', fontSize: 13.sp,
-                      fontWeight: FontWeight.w600, color: Colors.white,
-                    )),
+                Text(
+                  'Link',
+                  style: StyleText.fontSize14Weight500.copyWith(
+                    color: Colors.white
+                  )
+                ),
               ],
             ),
           ),
@@ -927,9 +1048,9 @@ class _ContactUsCmsEditPageState extends State<ContactUsCmsEditPage> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         _SocialLinkDropdown(
-          footerLinks:   _footerSocialLinks,
+          footerLinks: _footerSocialLinks,
           selectedIndex: s.selectedIndex,
-          onChanged:     (idx) {
+          onChanged: (idx) {
             setState(() => s.selectedIndex = idx);
           },
           submitted: _submitted,
@@ -941,10 +1062,10 @@ class _ContactUsCmsEditPageState extends State<ContactUsCmsEditPage> {
   // ── Accordion ─────────────────────────────────────────────────────────────
 
   Widget _accordion({
-    required String       title,
-    required bool         isOpen,
+    required String title,
+    required bool isOpen,
     required VoidCallback onToggle,
-    required Widget       child,
+    required Widget child,
   }) {
     return Column(
       children: [
@@ -962,14 +1083,19 @@ class _ContactUsCmsEditPageState extends State<ContactUsCmsEditPage> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(title,
-                    style: TextStyle(
-                      fontFamily: 'Cairo', fontSize: 16.sp,
-                      fontWeight: FontWeight.w700, color: Colors.white,
-                    )),
+                Text(
+                  title,
+                  style: TextStyle(
+                    fontFamily: 'Cairo',
+                    fontSize: 16.sp,
+                    fontWeight: FontWeight.w700,
+                    color: Colors.white,
+                  ),
+                ),
                 Icon(
                   isOpen ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down,
-                  color: Colors.white, size: 22.sp,
+                  color: Colors.white,
+                  size: 22.sp,
                 ),
               ],
             ),
@@ -979,8 +1105,9 @@ class _ContactUsCmsEditPageState extends State<ContactUsCmsEditPage> {
           Container(
             width: double.infinity,
             decoration: BoxDecoration(
-              borderRadius:
-              BorderRadius.vertical(bottom: Radius.circular(12.r)),
+              borderRadius: BorderRadius.vertical(
+                bottom: Radius.circular(12.r),
+              ),
             ),
             child: child,
           ),
@@ -998,7 +1125,7 @@ class _ContactUsCmsEditPageState extends State<ContactUsCmsEditPage> {
             Expanded(
               child: _btn(
                 label: 'Preview',
-                color: _kPink,
+                color: Color(0xFF8A5C70),
                 onTap: () => Navigator.push(
                   context,
                   MaterialPageRoute(
@@ -1007,13 +1134,9 @@ class _ContactUsCmsEditPageState extends State<ContactUsCmsEditPage> {
                 ),
               ),
             ),
-            SizedBox(width: 16.w),
+            SizedBox(width: 300.w),
             Expanded(
-              child: _btn(
-                label: 'Save',
-                color: _kPink,
-                onTap: _onSaveTap,
-              ),
+              child: _btn(label: 'Save', color: _kPink, onTap: _onSaveTap),
             ),
           ],
         ),
@@ -1027,7 +1150,7 @@ class _ContactUsCmsEditPageState extends State<ContactUsCmsEditPage> {
                 onTap: () => Navigator.pop(context),
               ),
             ),
-            SizedBox(width: 15.sp),
+            SizedBox(width: 300.sp),
             Expanded(child: Container()),
           ],
         ),
@@ -1038,20 +1161,24 @@ class _ContactUsCmsEditPageState extends State<ContactUsCmsEditPage> {
   // ── Shared Helpers ────────────────────────────────────────────────────────
 
   Widget _imageUploadCircle({
-    required String       label,
-    required Uint8List?   bytes,
-    required String       url,
+    required String label,
+    required Uint8List? bytes,
+    required String url,
     required VoidCallback onTap,
   }) {
     final hasImage = bytes != null || url.isNotEmpty;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label,
-            style: TextStyle(
-              fontFamily: 'Cairo', fontSize: 13.sp,
-              fontWeight: FontWeight.w600, color: Colors.black87,
-            )),
+        Text(
+          label,
+          style: TextStyle(
+            fontFamily: 'Cairo',
+            fontSize: 13.sp,
+            fontWeight: FontWeight.w600,
+            color: Colors.black87,
+          ),
+        ),
         SizedBox(height: 8.h),
         GestureDetector(
           onTap: onTap,
@@ -1059,20 +1186,28 @@ class _ContactUsCmsEditPageState extends State<ContactUsCmsEditPage> {
             clipBehavior: Clip.none,
             children: [
               Container(
-                width: 64.w, height: 64.h,
+                width: 64.w,
+                height: 64.h,
                 decoration: const BoxDecoration(
-                    shape: BoxShape.circle, color: Colors.white),
+                  shape: BoxShape.circle,
+                  color: Colors.white,
+                ),
                 child: hasImage
                     ? ClipOval(child: _buildImageWidget(bytes, url))
-                    : Icon(Icons.description_outlined,
-                    color: Colors.grey[600], size: 28.sp),
+                    : Icon(
+                  Icons.description_outlined,
+                  color: Colors.grey[600],
+                  size: 28.sp,
+                ),
               ),
               Positioned(
-                bottom: 0, right: 0,
+                bottom: 0,
+                right: 0,
                 child: GestureDetector(
                   onTap: onTap,
                   child: Container(
-                    width: 25.w, height: 25.h,
+                    width: 25.w,
+                    height: 25.h,
                     decoration: const BoxDecoration(
                       color: _kPink,
                       shape: BoxShape.circle,
@@ -1080,7 +1215,9 @@ class _ContactUsCmsEditPageState extends State<ContactUsCmsEditPage> {
                     child: Center(
                       child: CustomSvg(
                         assetPath: "assets/control/camera.svg",
-                        width: 10.w, height: 10.h, fit: BoxFit.scaleDown,
+                        width: 10.w,
+                        height: 10.h,
+                        fit: BoxFit.scaleDown,
                       ),
                     ),
                   ),
@@ -1138,38 +1275,52 @@ class _ContactUsCmsEditPageState extends State<ContactUsCmsEditPage> {
 
   Future<Uint8List> _loadSvg(String url) async {
     final response = await html.HttpRequest.request(
-        url, method: 'GET', responseType: 'arraybuffer');
+      url,
+      method: 'GET',
+      responseType: 'arraybuffer',
+    );
     if (response.status != 200)
       throw Exception('Failed to load SVG: ${response.status}');
     return (response.response as ByteBuffer).asUint8List();
   }
 
-  Widget _fieldLabel(String text) => Text(text,
-      style: TextStyle(fontFamily: 'Cairo', fontSize: 13.sp,
-          fontWeight: FontWeight.w600, color: Colors.black87));
+  Widget _fieldLabel(String text) => Text(
+    text,
+    style: StyleText.fontSize14Weight600.copyWith(color: AppColors.text),
+  );
 
   Widget _fieldLabelAr(String text) => Align(
     alignment: Alignment.centerRight,
-    child: Text(text,
-        style: TextStyle(fontFamily: 'Cairo', fontSize: 13.sp,
-            fontWeight: FontWeight.w600, color: Colors.black87)),
+    child: Text(
+      text,
+      style: StyleText.fontSize14Weight600.copyWith(color: AppColors.text),
+    ),
   );
 
   Widget _btn({
-    required String       label,
-    required Color        color,
+    required String label,
+    required Color color,
     required VoidCallback onTap,
   }) {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        width: double.infinity, height: 48.h,
+        width: double.infinity,
+        height: 48.h,
         decoration: BoxDecoration(
-            color: color, borderRadius: BorderRadius.circular(10.r)),
+          color: color,
+          borderRadius: BorderRadius.circular(10.r),
+        ),
         child: Center(
-          child: Text(label,
-              style: TextStyle(fontFamily: 'Cairo', fontSize: 15.sp,
-                  fontWeight: FontWeight.w700, color: Colors.white)),
+          child: Text(
+            label,
+            style: TextStyle(
+              fontFamily: 'Cairo',
+              fontSize: 15.sp,
+              fontWeight: FontWeight.w700,
+              color: Colors.white,
+            ),
+          ),
         ),
       ),
     );
@@ -1182,9 +1333,9 @@ class _ContactUsCmsEditPageState extends State<ContactUsCmsEditPage> {
 
 class _SocialLinkDropdown extends StatelessWidget {
   final List<SocialLinkModel> footerLinks;
-  final int?                  selectedIndex;
-  final ValueChanged<int?>    onChanged;
-  final bool                  submitted;
+  final int? selectedIndex;
+  final ValueChanged<int?> onChanged;
+  final bool submitted;
 
   const _SocialLinkDropdown({
     required this.footerLinks,
@@ -1206,50 +1357,71 @@ class _SocialLinkDropdown extends StatelessWidget {
         child: Row(
           children: [
             SizedBox(
-              width: 14.w, height: 14.w,
+              width: 14.w,
+              height: 14.w,
               child: const CircularProgressIndicator(
-                  strokeWidth: 2, color: _kPink),
+                strokeWidth: 2,
+                color: _kPink,
+              ),
             ),
             SizedBox(width: 10.w),
-            Text('Loading footer social links...',
-                style: TextStyle(fontFamily: 'Cairo', fontSize: 12.sp,
-                    color: Colors.grey.shade500)),
+            Text(
+              'Loading footer social links...',
+              style: TextStyle(
+                fontFamily: 'Cairo',
+                fontSize: 12.sp,
+                color: Colors.grey.shade500,
+              ),
+            ),
           ],
         ),
       );
     }
 
     final items = footerLinks.asMap().entries.map((entry) {
-      final index  = entry.key;
-      final link   = entry.value;
+      final index = entry.key;
+      final link = entry.value;
       final hasUrl = link.url.isNotEmpty;
       return DropdownMenuItem<int>(
-        value:   index,
+        value: index,
         enabled: hasUrl,
         child: Row(
           children: [
             if (link.iconUrl.isNotEmpty)
-              SvgPicture.network(link.iconUrl,
-                width: 18.w, height: 18.w, fit: BoxFit.contain,
+              SvgPicture.network(
+                link.iconUrl,
+                width: 18.w,
+                height: 18.w,
+                fit: BoxFit.contain,
                 colorFilter: ColorFilter.mode(
                   hasUrl ? _kPink : Colors.grey.shade400,
                   BlendMode.srcIn,
                 ),
-                placeholderBuilder: (_) => Icon(Icons.link,
-                    size: 16.sp,
-                    color: hasUrl ? _kPink : Colors.grey.shade400),
+                placeholderBuilder: (_) => Icon(
+                  Icons.link,
+                  size: 16.sp,
+                  color: hasUrl ? _kPink : Colors.grey.shade400,
+                ),
               )
             else
-              Icon(Icons.link, size: 16.sp,
-                  color: hasUrl ? _kPink : Colors.grey.shade400),
+              Icon(
+                Icons.link,
+                size: 16.sp,
+                color: hasUrl ? _kPink : Colors.grey.shade400,
+              ),
             SizedBox(width: 10.w),
             Expanded(
               child: Text(
-                hasUrl ? _truncateUrl(link.url) : 'Social ${index + 1} — no URL',
+                hasUrl
+                    ? _truncateUrl(link.url)
+                    : 'Social ${index + 1} — no URL',
                 overflow: TextOverflow.ellipsis,
-                style: TextStyle(fontFamily: 'Cairo', fontSize: 12.sp,
-                    color: hasUrl ? Colors.black87 : Colors.grey.shade400,
-                    fontStyle: hasUrl ? FontStyle.normal : FontStyle.italic),
+                style: TextStyle(
+                  fontFamily: 'Cairo',
+                  fontSize: 12.sp,
+                  color: hasUrl ? Colors.black87 : Colors.grey.shade400,
+                  fontStyle: hasUrl ? FontStyle.normal : FontStyle.italic,
+                ),
               ),
             ),
           ],
@@ -1257,65 +1429,95 @@ class _SocialLinkDropdown extends StatelessWidget {
       );
     }).toList();
 
-    final selectedLink = selectedIndex != null &&
-        selectedIndex! < footerLinks.length
+    final selectedLink =
+    selectedIndex != null && selectedIndex! < footerLinks.length
         ? footerLinks[selectedIndex!]
         : null;
 
     Widget selectedDisplay() {
       if (selectedLink == null) {
-        return Row(children: [
-          Icon(Icons.link, size: 16.sp, color: Colors.grey.shade400),
-          SizedBox(width: 8.w),
-          Text('Insert Links',
-              style: TextStyle(fontFamily: 'Cairo', fontSize: 12.sp,
-                  color: Colors.grey.shade400)),
-        ]);
+        return Row(
+          children: [
+            Icon(Icons.link, size: 16.sp, color: Colors.grey.shade400),
+            SizedBox(width: 8.w),
+            Text(
+              'Insert Links',
+              style: TextStyle(
+                fontFamily: 'Cairo',
+                fontSize: 12.sp,
+                color: Colors.grey.shade400,
+              ),
+            ),
+          ],
+        );
       }
-      return Row(children: [
-        if (selectedLink.iconUrl.isNotEmpty)
-          SvgPicture.network(selectedLink.iconUrl,
-              width: 18.w, height: 18.w, fit: BoxFit.contain,
+      return Row(
+        children: [
+          if (selectedLink.iconUrl.isNotEmpty)
+            SvgPicture.network(
+              selectedLink.iconUrl,
+              width: 18.w,
+              height: 18.w,
+              fit: BoxFit.contain,
               colorFilter: const ColorFilter.mode(_kPink, BlendMode.srcIn),
               placeholderBuilder: (_) =>
-                  Icon(Icons.link, size: 16.sp, color: _kPink))
-        else
-          Icon(Icons.link, size: 16.sp, color: _kPink),
-        SizedBox(width: 8.w),
-        Expanded(
-          child: Text(
-            selectedLink.url.isNotEmpty
-                ? _truncateUrl(selectedLink.url)
-                : 'Insert Links',
-            overflow: TextOverflow.ellipsis,
-            style: TextStyle(fontFamily: 'Cairo', fontSize: 12.sp,
-                color: Colors.black87),
+                  Icon(Icons.link, size: 16.sp, color: _kPink),
+            )
+          else
+            Icon(Icons.link, size: 16.sp, color: _kPink),
+          SizedBox(width: 8.w),
+          Expanded(
+            child: Text(
+              selectedLink.url.isNotEmpty
+                  ? _truncateUrl(selectedLink.url)
+                  : 'Insert Links',
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                fontFamily: 'Cairo',
+                fontSize: 12.sp,
+                color: Colors.black87,
+              ),
+            ),
           ),
-        ),
-      ]);
+        ],
+      );
     }
 
-    final selectedItemWidgets =
-    List.generate(footerLinks.length, (_) => selectedDisplay());
+    final selectedItemWidgets = List.generate(
+      footerLinks.length,
+          (_) => selectedDisplay(),
+    );
 
     return Container(
-      height: 48.h,
+      height: 38.h,
       padding: EdgeInsets.symmetric(horizontal: 12.w),
       decoration: BoxDecoration(
-          color: Colors.white, borderRadius: BorderRadius.circular(8.r)),
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(4.r),
+      ),
       child: DropdownButtonHideUnderline(
         child: DropdownButton<int>(
           value: selectedIndex,
           isExpanded: true,
-          icon: Icon(Icons.keyboard_arrow_down_rounded,
-              size: 20.sp, color: Colors.grey.shade600),
-          hint: Row(children: [
-            Icon(Icons.link, size: 16.sp, color: Colors.grey.shade400),
-            SizedBox(width: 8.w),
-            Text('Insert Links',
-                style: TextStyle(fontFamily: 'Cairo', fontSize: 12.sp,
-                    color: Colors.grey.shade400)),
-          ]),
+          icon: Icon(
+            Icons.keyboard_arrow_down_rounded,
+            size: 20.sp,
+            color: Colors.grey.shade600,
+          ),
+          hint: Row(
+            children: [
+              Icon(Icons.link, size: 16.sp, color: Colors.grey.shade400),
+              SizedBox(width: 8.w),
+              Text(
+                'Insert Links',
+                style: TextStyle(
+                  fontFamily: 'Cairo',
+                  fontSize: 12.sp,
+                  color: Colors.grey.shade400,
+                ),
+              ),
+            ],
+          ),
           selectedItemBuilder: (_) => selectedItemWidgets,
           items: items,
           onChanged: (idx) {
@@ -1343,7 +1545,7 @@ class _SocialLinkDropdown extends StatelessWidget {
 
 class _ReasonItem {
   final String id;
-  final int    counter;
+  final int counter;
   final labelEnCtrl = TextEditingController();
   final labelArCtrl = TextEditingController();
   bool isRequired = false;
@@ -1352,8 +1554,8 @@ class _ReasonItem {
 
 class _SocialLinkItem {
   final String id;
-  final int    counter;
-  int?       selectedIndex;
-  String     iconUrl = '';
+  final int counter;
+  int? selectedIndex;
+  String iconUrl = '';
   _SocialLinkItem({required this.id, required this.counter});
 }

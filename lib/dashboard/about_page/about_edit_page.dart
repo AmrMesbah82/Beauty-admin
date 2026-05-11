@@ -640,7 +640,10 @@ class _AboutEditPageMasterState extends State<AboutEditPageMaster> {
         if (state is AboutLoaded) _seedFromModel(state.data);
         if (state is AboutSaved) {
           setState(() => _isSaving = false);
-          if (mounted) Navigator.pop(context);
+          if (mounted) {
+            context.read<AboutCubit>().load(); // ← reload before popping
+            Navigator.pop(context);
+          }
         }
         if (state is AboutError) {
           setState(() => _isSaving = false);
@@ -812,9 +815,7 @@ class _AboutEditPageMasterState extends State<AboutEditPageMaster> {
             padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 14.h),
             decoration: BoxDecoration(
               color: _kGreenSolid,
-              borderRadius: isOpen
-                  ? BorderRadius.vertical(top: Radius.circular(12.r))
-                  : BorderRadius.circular(12.r),
+              borderRadius: BorderRadius.circular(4.r),
             ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -971,7 +972,7 @@ class _AboutEditPageMasterState extends State<AboutEditPageMaster> {
           textAlign: TextAlign.start,
           onChanged: (_) => setState(() => _hasChanges = true),
         ),
-
+        SizedBox(height: 10.h),
         _fieldLabelAr('وصف فرعي'),
         SizedBox(height: 4.h),
         CustomValidatedTextFieldMaster(
@@ -987,7 +988,7 @@ class _AboutEditPageMasterState extends State<AboutEditPageMaster> {
           textAlign: TextAlign.right,
           onChanged: (_) => setState(() => _hasChanges = true),
         ),
-
+        SizedBox(height: 10.h),
         _fieldLabel('Description'),
         SizedBox(height: 8.h),
         CustomValidatedTextFieldMaster(
@@ -1003,7 +1004,7 @@ class _AboutEditPageMasterState extends State<AboutEditPageMaster> {
           textAlign: TextAlign.start,
           onChanged: (_) => setState(() => _hasChanges = true),
         ),
-
+        SizedBox(height: 10.h),
         _fieldLabelAr('الوصف'),
         SizedBox(height: 4.h),
         CustomValidatedTextFieldMaster(
@@ -1176,11 +1177,11 @@ class _AboutEditPageMasterState extends State<AboutEditPageMaster> {
             Expanded(
               child: _btn(
                 label: 'Preview',
-                color: const Color(0xFFD16F9A).withOpacity(0.5),
+                color: const Color(0xFF8A5C70),
                 onTap: _onPreview,
               ),
             ),
-            SizedBox(width: 16.w),
+            SizedBox(width: 300.w),
 
             // ── Publish ───────────────────────────────────────────────────
             Expanded(
@@ -1223,7 +1224,7 @@ class _AboutEditPageMasterState extends State<AboutEditPageMaster> {
                 onTap: () => Navigator.pop(context),
               ),
             ),
-            SizedBox(width: 15.sp),
+            SizedBox(width: 300.w),
             Expanded(child: Container()),
           ],
         ),
@@ -1428,24 +1429,18 @@ class _AboutEditPageMasterState extends State<AboutEditPageMaster> {
 
   Widget _fieldLabel(String text) => Text(
     text,
-    style: TextStyle(
-      fontFamily: 'Cairo',
-      fontSize: 13.sp,
-      fontWeight: FontWeight.w600,
-      color: Colors.black87,
-    ),
+      style: StyleText.fontSize14Weight600.copyWith(
+          color: AppColors.text
+      )
   );
 
   Widget _fieldLabelAr(String text) => Align(
     alignment: Alignment.centerRight,
     child: Text(
       text,
-      style: TextStyle(
-        fontFamily: 'Cairo',
-        fontSize: 13.sp,
-        fontWeight: FontWeight.w600,
-        color: Colors.black87,
-      ),
+      style: StyleText.fontSize14Weight600.copyWith(
+        color: AppColors.text
+      )
     ),
   );
 

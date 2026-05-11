@@ -57,7 +57,7 @@ class CustomDropdownFormFieldInvMaster extends StatefulWidget {
     this.iconPath,
     this.itemColors,
     this.showColorDots = false,
-    this.borderRadius = 8.0,
+    this.borderRadius = 4,
   }) : super(key: key);
 
   @override
@@ -221,7 +221,7 @@ class _CustomDropdownFormFieldInvMasterState
                     decoration: BoxDecoration(
                       color: AppColors.background,
                       borderRadius:
-                      BorderRadius.circular(widget.borderRadius.r),
+                      BorderRadius.circular(4.r),
                       border: Border.all(
                         color: widget.primaryColor.withOpacity(0.3),
                       ),

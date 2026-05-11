@@ -413,7 +413,7 @@ class _AboutMainPageMasterDashboardState
           key: 'headings',
           title: 'Headings',
           children: [
-            SizedBox(height: 16.h),
+
             Row(
               children: [
                 Expanded(
@@ -497,7 +497,7 @@ class _AboutMainPageMasterDashboardState
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        SizedBox(height: 16.h),
+
         Row(
           children: [
             _iconPreviewCircle(label: 'Icon', url: iconUrl),
@@ -511,7 +511,7 @@ class _AboutMainPageMasterDashboardState
           subDescEn.isEmpty ? 'Text Here' : subDescEn,
           height: 80,
         ),
-        SizedBox(height: 8.h),
+        SizedBox(height: 15.h),
         _readFieldRtl('وصف فرعي', subDescAr, height: 80),
         SizedBox(height: 10.h),
         _readField(
@@ -519,7 +519,7 @@ class _AboutMainPageMasterDashboardState
           descEn.isEmpty ? 'Text Here' : descEn,
           height: 80,
         ),
-        SizedBox(height: 8.h),
+        SizedBox(height: 15.h),
         _readFieldRtl('الوصف', descAr, height: 80),
       ],
     );
@@ -583,6 +583,7 @@ class _AboutMainPageMasterDashboardState
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+
                   ...row.map(
                     (item) => Expanded(
                       child: Padding(
@@ -728,12 +729,7 @@ class _AboutMainPageMasterDashboardState
               padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
               decoration: BoxDecoration(
                 color: _C.primary,
-                borderRadius: isOpen
-                    ? BorderRadius.only(
-                        topLeft: Radius.circular(6.r),
-                        topRight: Radius.circular(6.r),
-                      )
-                    : BorderRadius.circular(6.r),
+                borderRadius:  BorderRadius.circular(8.r),
               ),
               child: Row(
                 children: [
@@ -757,9 +753,12 @@ class _AboutMainPageMasterDashboardState
             ),
           ),
           if (isOpen)
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: children,
+            Padding(  // ← add this
+              padding: EdgeInsets.symmetric(vertical: 12.h,),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: children,
+              ),
             ),
         ],
       ),

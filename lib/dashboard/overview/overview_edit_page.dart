@@ -891,7 +891,7 @@ class _OverviewEditPageState extends State<OverviewEditPage> {
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   AppAdminNavbar(
-                    activeLabel: 'Web Pages',
+                    activeLabel: 'Web Page',
                     homePage: HomeMainPage(),
                     webPage: HomeMainPage(),
                     jobListingPage: HomeMainPage(),
@@ -953,8 +953,9 @@ class _OverviewEditPageState extends State<OverviewEditPage> {
                           SizedBox(height: 10.h),
                           _accordionWrap('download', 'Download Applications', [_downloadBody()]),
                           SizedBox(height: 10.h),
-                          _accordionWrap('schedule', 'Publish Schedule',      [_scheduleBody()]),
 
+                          _accordionWrap('schedule', 'Publish Schedule',      [_scheduleBody()]),
+                          SizedBox(height: 15.h),
                           _actionRow(cubit, canPublish),
                           SizedBox(height: 10.h),
                           _secondaryRow(cubit),
@@ -977,28 +978,28 @@ class _OverviewEditPageState extends State<OverviewEditPage> {
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
       GestureDetector(
         onTap: () => setState(() => _open[key] = !isOpen),
-        child: Container(
-          width: double.infinity,
-          padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
-          decoration: BoxDecoration(
-            color: _C.primary,
-            borderRadius: isOpen
-                ? BorderRadius.only(
-                topLeft:  Radius.circular(6.r),
-                topRight: Radius.circular(6.r))
-                : BorderRadius.circular(6.r),
-          ),
-          child: Row(children: [
-            Expanded(
-                child: Text(title,
-                    style: StyleText.fontSize14Weight600.copyWith(color: Colors.white))),
-            Icon(
-                isOpen
-                    ? Icons.keyboard_arrow_up_rounded
-                    : Icons.keyboard_arrow_down_rounded,
-                color: Colors.white,
-                size: 20.sp),
-          ]),
+        child: Column(
+          children: [
+            Container(
+              width: double.infinity,
+              padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
+              decoration: BoxDecoration(
+                color: _C.primary,
+                borderRadius: BorderRadius.circular(8.r),
+              ),
+              child: Row(children: [
+                Expanded(
+                    child: Text(title,
+                        style: StyleText.fontSize14Weight600.copyWith(color: Colors.white))),
+                Icon(
+                    isOpen
+                        ? Icons.keyboard_arrow_up_rounded
+                        : Icons.keyboard_arrow_down_rounded,
+                    color: Colors.white,
+                    size: 20.sp),
+              ]),
+            ),
+          ],
         ),
       ),
       if (isOpen)
@@ -1068,6 +1069,7 @@ class _OverviewEditPageState extends State<OverviewEditPage> {
       padding: EdgeInsets.only(bottom: 14.h),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             _sectionLabel('Service ${i + 1}'),
@@ -1081,7 +1083,7 @@ class _OverviewEditPageState extends State<OverviewEditPage> {
                 decoration: BoxDecoration(
                     color: _C.remove, borderRadius: BorderRadius.circular(4.r)),
                 child: Row(mainAxisSize: MainAxisSize.min, children: [
-                  Icon(Icons.delete_outline, color: Colors.white, size: 12.sp),
+                  CustomSvg(assetPath: "assets/delete_icon.svg",color: Colors.white,width: 20.w,height: 20.h,),
                   SizedBox(width: 4.w),
                   Text('Remove',
                       style: StyleText.fontSize10Weight400.copyWith(color: Colors.white)),
@@ -1108,7 +1110,7 @@ class _OverviewEditPageState extends State<OverviewEditPage> {
   }
 
   Widget _galleryBody() => Padding(
-    padding: EdgeInsets.all(16.w),
+    padding: EdgeInsets.symmetric(vertical: 16.h),
     child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
       Wrap(
         spacing: 10.w,
@@ -1119,6 +1121,7 @@ class _OverviewEditPageState extends State<OverviewEditPage> {
       _addButton('Image', () {
         setState(() => _galleryItems.add(
             _GalleryLocal(id: 'gal_${DateTime.now().millisecondsSinceEpoch}')));
+
       }),
     ]),
   );
@@ -1306,56 +1309,54 @@ class _OverviewEditPageState extends State<OverviewEditPage> {
     ]),
   );
 
-  Widget _scheduleBody() => Padding(
-    padding: EdgeInsets.symmetric(vertical: 16.h),
-    child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      Row(children: [
-        Expanded(
-          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            _sectionLabel('Publish Date *'),
-            SizedBox(height: 6.h),
-            GestureDetector(
-              onTap: _pickDate,
-              child: Container(
-                height: 36.h,
-                padding: EdgeInsets.symmetric(horizontal: 8.w),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(4.r),
-                  border: _publishDate == null && _submitted
-                      ? Border.all(color: _C.error, width: 1)
-                      : null,
-                ),
-                child: Row(children: [
-                  Expanded(
-                    child: Text(
-                      _publishDate != null
-                          ? DateFormat('dd/MM/yyyy').format(_publishDate!)
-                          : 'Select Date',
-                      style: StyleText.fontSize12Weight400.copyWith(
-                          color: _publishDate != null
-                              ? _C.labelText
-                              : _C.hintText),
-                    ),
+  Widget _scheduleBody() => Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+    SizedBox(height: 15.h),
+    Row(children: [
+      Expanded(
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          _sectionLabel('Publish Date *'),
+          SizedBox(height: 6.h),
+          GestureDetector(
+            onTap: _pickDate,
+            child: Container(
+              height: 36.h,
+              padding: EdgeInsets.symmetric(horizontal: 8.w),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(4.r),
+                border: _publishDate == null && _submitted
+                    ? Border.all(color: _C.error, width: 1)
+                    : null,
+              ),
+              child: Row(children: [
+                Expanded(
+                  child: Text(
+                    _publishDate != null
+                        ? DateFormat('dd MMM yyyy').format(_publishDate!)
+                        : 'Select Date',
+                    style: StyleText.fontSize12Weight400.copyWith(
+                        color: _publishDate != null
+                            ? _C.labelText
+                            : _C.hintText),
                   ),
-                  Icon(Icons.calendar_today_outlined,
-                      size: 16.sp, color: _C.hintText),
-                ]),
-              ),
+                ),
+                
+                CustomSvg(assetPath: "assets/calendar.svg",width: 20.w,height: 20.h,)
+              ]),
             ),
-            if (_publishDate == null && _submitted)
-              Padding(
-                padding: EdgeInsets.only(top: 4.h),
-                child: Text('Publish date is required',
-                    style: TextStyle(color: _C.error, fontSize: 10.sp)),
-              ),
-          ]),
-        ),
-        SizedBox(width: 16.w),
-        Expanded(child: Column()),
-      ]),
+          ),
+          if (_publishDate == null && _submitted)
+            Padding(
+              padding: EdgeInsets.only(top: 4.h),
+              child: Text('Publish date is required',
+                  style: TextStyle(color: _C.error, fontSize: 10.sp)),
+            ),
+        ]),
+      ),
+      SizedBox(width: 16.w),
+      Expanded(child: Column()),
     ]),
-  );
+  ]);
 
   // ── Action buttons: Preview + Publish ─────────────────────────────────────
   Widget _actionRow(OverviewCmsCubit cubit, bool canPublish) =>
@@ -1380,7 +1381,7 @@ class _OverviewEditPageState extends State<OverviewEditPage> {
             child: Container(
               height: 44.h,
               decoration: BoxDecoration(
-                  color: _C.primary.withOpacity(0.5),
+                  color: Color(0xFF8A5C70),
                   borderRadius: BorderRadius.circular(6.r)),
               child: Center(
                   child: Text('Preview',
@@ -1389,7 +1390,7 @@ class _OverviewEditPageState extends State<OverviewEditPage> {
             ),
           ),
         ),
-        SizedBox(width: 16.w),
+        SizedBox(width: 300.w),
         Expanded(
           child: AbsorbPointer(
             absorbing: !canPublish,
@@ -1474,7 +1475,7 @@ class _OverviewEditPageState extends State<OverviewEditPage> {
         ),
       ),
     ),
-    SizedBox(width: 16.w),
+    SizedBox(width: 300.w),
 
     // ── Save For Later button (saves as DRAFT, published stays live) ─
     Expanded(
@@ -1492,7 +1493,7 @@ class _OverviewEditPageState extends State<OverviewEditPage> {
         child: Container(
           height: 44.h,
           decoration: BoxDecoration(
-              color: _C.addBtn,
+              color: Color(0xFF525252),
               borderRadius: BorderRadius.circular(6.r)),
           child: Center(
               child: Text('Save For Later',
@@ -1504,7 +1505,7 @@ class _OverviewEditPageState extends State<OverviewEditPage> {
   ]);
 
   Widget _sectionLabel(String t) =>
-      Text(t, style: StyleText.fontSize12Weight500.copyWith(color: _C.labelText));
+      Text(t, style: StyleText.fontSize16Weight500.copyWith(color: _C.labelText));
 
   Widget _biRow(
       String enLbl,
@@ -1559,7 +1560,7 @@ class _OverviewEditPageState extends State<OverviewEditPage> {
     child: Container(
       padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 7.h),
       decoration: BoxDecoration(
-          color: _C.primary, borderRadius: BorderRadius.circular(4.r)),
+          color: Color(0xFF797979), borderRadius: BorderRadius.circular(4.r)),
       child: Row(mainAxisSize: MainAxisSize.min, children: [
         Icon(Icons.add, size: 14.sp, color: Colors.white),
         SizedBox(width: 4.w),
@@ -1664,8 +1665,8 @@ class _OverviewEditPageState extends State<OverviewEditPage> {
 
 
   Widget _placeholderCircle() => Container(
-    width: 50.w,
-    height: 50.h,
+    width: 70.w,
+    height: 70.h,
     decoration: const BoxDecoration(
         color: Color(0xFFD9D9D9), shape: BoxShape.circle),
     child: Center(

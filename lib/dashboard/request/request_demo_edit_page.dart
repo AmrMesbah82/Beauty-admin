@@ -678,7 +678,7 @@ class _RequestDemoEditPageState extends State<RequestDemoEditPage> {
                               Expanded(
                                 child: _btn(
                                   'Preview',
-                                  _C.primary.withOpacity(0.5),
+                               Color(0xFF8A5C70),
                                       () => Navigator.push(
                                     context,
                                     MaterialPageRoute(
@@ -688,7 +688,7 @@ class _RequestDemoEditPageState extends State<RequestDemoEditPage> {
                                   ),
                                 ),
                               ),
-                              SizedBox(width: 16.w),
+                              SizedBox(width: 300.w),
                               Expanded(
                                 child: _btn(
                                   'Publish',
@@ -721,7 +721,7 @@ class _RequestDemoEditPageState extends State<RequestDemoEditPage> {
                                       () => Navigator.pop(context),
                                 ),
                               ),
-                              SizedBox(width: 16.w),
+                              SizedBox(width: 300.w),
                               Expanded(child: Container()),
                             ],
                           ),
@@ -769,12 +769,7 @@ class _RequestDemoEditPageState extends State<RequestDemoEditPage> {
             padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
             decoration: BoxDecoration(
               color: _C.primary,
-              borderRadius: o
-                  ? BorderRadius.only(
-                topLeft: Radius.circular(6.r),
-                topRight: Radius.circular(6.r),
-              )
-                  : BorderRadius.circular(6.r),
+              borderRadius: BorderRadius.circular(4.r),
             ),
             child: Row(
               children: [
@@ -842,12 +837,12 @@ class _RequestDemoEditPageState extends State<RequestDemoEditPage> {
 
   // ── QUESTIONS ────────────────────────────────────────────────────────────
   Widget _questionsBody() => Padding(
-    padding: EdgeInsets.symmetric(vertical: 16.h),
+    padding: EdgeInsets.symmetric(vertical: 10.h),
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         ...List.generate(_qs.length, (i) => _qRow(i)),
-        SizedBox(height: 8.h),
+
         Row(
           children: [
             _addBtn('Value', () {
@@ -941,6 +936,7 @@ class _RequestDemoEditPageState extends State<RequestDemoEditPage> {
           ),
           SizedBox(height: 8.h),
           Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               Expanded(
                 child: CustomDropdownFormFieldInvMaster(
@@ -968,7 +964,7 @@ class _RequestDemoEditPageState extends State<RequestDemoEditPage> {
                   children: [
                     Text(
                       'Required',
-                      style: StyleText.fontSize12Weight500.copyWith(
+                      style: StyleText.fontSize14Weight500.copyWith(
                         color: _C.label,
                       ),
                     ),
@@ -1053,7 +1049,7 @@ class _RequestDemoEditPageState extends State<RequestDemoEditPage> {
                 ),
               ),
           ],
-          Divider(color: _C.border),
+
         ],
       ),
     );
@@ -1177,7 +1173,7 @@ class _RequestDemoEditPageState extends State<RequestDemoEditPage> {
     child: Container(
       padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 7.h),
       decoration: BoxDecoration(
-        color: _C.primary,
+        color: Color(0xFF797979),
         borderRadius: BorderRadius.circular(4.r),
       ),
       child: Row(

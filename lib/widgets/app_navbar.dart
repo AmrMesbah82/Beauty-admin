@@ -188,39 +188,30 @@ class _NavbarDesktop extends StatelessWidget {
 
         return Directionality(
           textDirection: isRtl ? TextDirection.rtl : TextDirection.ltr,
-          child: Padding(
-            padding: EdgeInsets.only(
-              left: ((MediaQuery.of(context).size.width - contentW) / 2)
-                  .clamp(16.0, double.infinity),
-              right: ((MediaQuery.of(context).size.width - contentW) / 2)
-                  .clamp(16.0, double.infinity),
-              top: 20.h,
+          child: Container(
+            padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 12.h),
+            decoration: BoxDecoration(
+              color:        navbarBg, // ✅ CMS-driven background
+              borderRadius: BorderRadius.circular(8.r),
             ),
-            child: Container(
-              padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 12.h),
-              decoration: BoxDecoration(
-                color:        navbarBg, // ✅ CMS-driven background
-                borderRadius: BorderRadius.circular(8.r),
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const _BayanatzLogo(),
-                  Row(
-                    children: navItems
-                        .map((e) => _NavItem(
-                      key:          ValueKey('${e.route}_${langState.locale.languageCode}'),
-                      label:        e.label,
-                      route:        e.route,
-                      currentRoute: currentRoute,
-                      primary:      primary,
-                      onItemTap:    onItemTap,
-                    ))
-                        .toList(),
-                  ),
-                  _LanguageToggle(primary: primary),
-                ],
-              ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const _BayanatzLogo(),
+                Row(
+                  children: navItems
+                      .map((e) => _NavItem(
+                    key:          ValueKey('${e.route}_${langState.locale.languageCode}'),
+                    label:        e.label,
+                    route:        e.route,
+                    currentRoute: currentRoute,
+                    primary:      primary,
+                    onItemTap:    onItemTap,
+                  ))
+                      .toList(),
+                ),
+                _LanguageToggle(primary: primary),
+              ],
             ),
           ),
         );

@@ -25,6 +25,7 @@ import 'package:get/get_navigation/src/extension_navigation.dart';
 import '../../../core/custom_dialog.dart';
 import '../../controller/owner_services/owner_services_cubit.dart';
 import '../../controller/owner_services/owner_services_state.dart';
+import '../../core/custom_segmant_tab.dart';
 import '../../core/custom_svg.dart';
 import '../../core/widget/circle_progress.dart';
 import '../../core/widget/textfield.dart';
@@ -754,32 +755,18 @@ class _OwnerServicesEditPageState extends State<OwnerServicesEditPage> {
   }
 
   Widget _alignmentPills(_MockupLocal mock) {
-    return Row(
-      children: [
-        for (final a in ['left', 'centered', 'right'])
-          Padding(
-            padding: EdgeInsets.only(right: 6.w),
-            child: GestureDetector(
-              onTap: () => setState(() => mock.alignment = a),
-              child: Container(
-                padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 4.h),
-                decoration: BoxDecoration(
-                  color: a == mock.alignment ? _C.primary : Colors.white,
-                  borderRadius: BorderRadius.circular(4.r),
-                  border: Border.all(
-                    color: a == mock.alignment ? _C.primary : _C.border,
-                  ),
-                ),
-                child: Text(
-                  a[0].toUpperCase() + a.substring(1),
-                  style: StyleText.fontSize10Weight400.copyWith(
-                    color: a == mock.alignment ? Colors.white : _C.labelText,
-                  ),
-                ),
-              ),
-            ),
-          ),
-      ],
+    const options = ['left', 'centered', 'right'];
+    return CustomSegmentedTabs(
+      tabs: const ['Left', 'Centered', 'Right'],
+      selectedIndex: options.indexOf(mock.alignment).clamp(0, 2),
+      onTabSelected: (index) => setState(() => mock.alignment = options[index]),
+      selectedColor: _C.primary,
+      unselectedColor: Colors.white,
+      selectedTextColor: Colors.white,
+      unselectedTextColor: _C.labelText,
+      equalWidth: false,
+      containerPadding: EdgeInsets.symmetric(horizontal: 8.sp, vertical: 4.sp),
+      containerColor: Colors.white,
     );
   }
 
@@ -794,7 +781,7 @@ class _OwnerServicesEditPageState extends State<OwnerServicesEditPage> {
           child: Container(
             height: 44.h,
             decoration: BoxDecoration(
-              color: _C.primary.withOpacity(0.5),
+              color: Color(0xFF8A5C70),
               borderRadius: BorderRadius.circular(6.r),
             ),
             child: Center(
@@ -808,7 +795,7 @@ class _OwnerServicesEditPageState extends State<OwnerServicesEditPage> {
           ),
         ),
       ),
-      SizedBox(width: 16.w),
+      SizedBox(width: 300.w),
       Expanded(
         child: GestureDetector(
           onTap: () => showPublishConfirmDialog(
@@ -860,7 +847,7 @@ class _OwnerServicesEditPageState extends State<OwnerServicesEditPage> {
           ),
         ),
       ),
-      SizedBox(width: 16.w),
+      SizedBox(width: 300.w),
       Expanded(child: Column()),
     ],
   );
@@ -961,8 +948,8 @@ class _OwnerServicesEditPageState extends State<OwnerServicesEditPage> {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(Icons.delete_outline, color: Colors.white, size: 12.sp),
-          SizedBox(width: 4.w),
+            CustomSvg(assetPath: "assetPath",width: 20.w,height: 20.h,),
+            SizedBox(width: 4.w),
           Text(
             'Remove',
             style: StyleText.fontSize10Weight400.copyWith(color: Colors.white),

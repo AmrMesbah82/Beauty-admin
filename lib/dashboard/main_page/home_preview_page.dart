@@ -1,19 +1,15 @@
 /// ******************* FILE INFO *******************
 /// File Name: home_preview_page.dart
-/// Page 3 — "Preview Main Details" (Figma screen 6)
-/// Shows Desktop / Tablet / Mobile tabs with a live preview of the real
-/// AppNavbar + AppFooter widgets (no simulated components).
-///
-/// FIXES APPLIED:
-/// • Mobile: footer is now pinned to the bottom of the phone shell.
-/// • Mobile: navbar horizontal padding set to 20px only.
-/// • Mobile: overflow stripe eliminated (ClipRect + OverflowBox).
-/// • Shell width = fake width (375) so scale = 1.0, no squishing.
+/// Page 3 — "Preview Main Details"
+/// UPDATED: Correct viewport sizes per device:
+///          Desktop  → 1366 × 768  (browser chrome frame)
+///          Tablet   →  768 × 1024 (browser chrome frame)
+///          Mobile   →  375 × 812  (phone shell with notch)
+/// Author: Amr Mesbah
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:go_router/go_router.dart';
 
 import 'package:beauty_admin/theme/app_wight.dart';
 import 'package:beauty_admin/theme/appcolors.dart';
@@ -29,7 +25,6 @@ import '../../controller/home/home_state.dart';
 class _C {
   static const Color primary   = Color(0xFFD16F9A);
   static const Color sectionBg = Color(0xFFF5F5F5);
-  static const Color cardBg    = Color(0xFFFFFFFF);
   static const Color border    = Color(0xFFE0E0E0);
   static const Color labelText = Color(0xFF333333);
   static const Color hintText  = Color(0xFFAAAAAA);
@@ -38,19 +33,18 @@ class _C {
 
 enum _PreviewDevice { desktop, tablet, mobile }
 
-// ── Phone shell constants ─────────────────────────────────────────────────────
-// Shell width now equals the fake width so scale = 1.0 → no squishing / overflow.
-// We shrink the on-screen size by wrapping in a FittedBox at the outer level.
-const double _kPhoneShellW  = 375.0;  // rendered shell width  (logical px)
-const double _kFakeMobileW  = 375.0;  // faked viewport width
-const double _kFakeMobileH  = 812.0;  // faked viewport height
+// ── Viewport constants ────────────────────────────────────────────────────────
+const double _kDesktopW = 1366.0;
+const double _kDesktopH =  768.0;
 
-// How large the phone actually appears on screen (display scale)
-const double _kMobileDisplayScale = 0.72; // ~270px wide on screen
+const double _kTabletW  =  768.0;
+const double _kTabletH  = 1024.0;
 
-// ── Desktop / Tablet fake viewport ───────────────────────────────────────────
-const double _kFakeDesktopW = 1366.0;
-const double _kFakeDesktopH =  768.0;
+const double _kMobileW  =  375.0;
+const double _kMobileH  =  812.0;
+
+double _safeScale(double v) =>
+    (v.isFinite && !v.isNaN && v > 0) ? v : 1.0;
 
 class HomePreviewPage extends StatefulWidget {
   const HomePreviewPage({super.key});
@@ -74,10 +68,7 @@ class _HomePreviewPageState extends State<HomePreviewPage> {
   @override
   Widget build(BuildContext context) {
     return BlocConsumer<HomeCmsCubit, HomeCmsState>(
-      listener: (context, state) {
-        if (state is HomeCmsSaved) {}
-        if (state is HomeCmsError) {}
-      },
+      listener: (context, state) {},
       builder: (context, state) {
         final cubit = context.read<HomeCmsCubit>();
 
@@ -93,118 +84,114 @@ class _HomePreviewPageState extends State<HomePreviewPage> {
             Scaffold(
               backgroundColor: _C.back,
               body: SingleChildScrollView(
-                child: SizedBox(
-                  width: double.infinity,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      SizedBox(
-                        width: 1000.w,
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
+                child: Center(
+                  child: SizedBox(
+                    width: 1000.w,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        SizedBox(height: 20.h),
+                        AdminSubNavBar(activeIndex: 0),
+                        SizedBox(height: 16.h),
+
+                        Text(
+                          'Preview Main Details',
+                          style: StyleText.fontSize45Weight600.copyWith(
+                            color: _C.primary,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        SizedBox(height: 16.h),
+
+                        // ── Device tabs ──────────────────────────────────
+                        Row(
                           children: [
-                            SizedBox(height: 20.h),
-                            AdminSubNavBar(activeIndex: 0),
-                            SizedBox(height: 16.h),
-
-                            // ── Page title ──────────────────────────────────
-                            Text(
-                              'Preview Main Details',
-                              style: StyleText.fontSize45Weight600.copyWith(
-                                color: _C.primary,
-                                fontWeight: FontWeight.w700,
-                              ),
-                            ),
-                            SizedBox(height: 16.h),
-
-                            // ── Device tabs ─────────────────────────────────
-                            Row(
-                              children: [
-                                _deviceTab('Desktop', _PreviewDevice.desktop),
-                                SizedBox(width: 24.w),
-                                _deviceTab('Tablet',  _PreviewDevice.tablet),
-                                SizedBox(width: 24.w),
-                                _deviceTab('Mobile',  _PreviewDevice.mobile),
-                              ],
-                            ),
-                            SizedBox(height: 16.h),
-
-                            // ── Preview frame ────────────────────────────────
-                            LayoutBuilder(
-                              builder: (ctx, constraints) =>
-                                  _previewFrame(constraints.maxWidth),
-                            ),
-
-                            SizedBox(height: 24.h),
-
-                            // ── Back + Publish ──────────────────────────────
-                            // ── Back + Publish ──────────────────────────────────────────────
-                            Row(
-                              children: [
-                                Expanded(
-                                  child: GestureDetector(
-                                    onTap: () => Navigator.of(context).pop(), // Fixed: Use Navigator.pop
-                                    child: Container(
-                                      height: 44.h,
-                                      decoration: BoxDecoration(
-                                        color: const Color(0xFF797979),
-                                        borderRadius: BorderRadius.circular(6.r),
-                                      ),
-                                      child: Center(
-                                        child: Text('Back',
-                                            style: StyleText.fontSize14Weight600
-                                                .copyWith(color: Colors.white)),
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                                SizedBox(width: 16.w),
-                                Expanded(
-                                  child: GestureDetector(
-                                    onTap: _isSaving
-                                        ? null
-                                        : () => showPublishConfirmDialog(
-                                      context: context,
-                                      onConfirm: () => _publish(cubit),
-                                    ),
-                                    child: AnimatedContainer(
-                                      duration: const Duration(milliseconds: 200),
-                                      height: 44.h,
-                                      decoration: BoxDecoration(
-                                        color: _isSaving
-                                            ? _C.primary.withOpacity(0.5)
-                                            : _C.primary,
-                                        borderRadius: BorderRadius.circular(6.r),
-                                      ),
-                                      child: Center(
-                                        child: _isSaving
-                                            ? SizedBox(
-                                          width: 18.w,
-                                          height: 18.h,
-                                          child: const CircularProgressIndicator(
-                                              color: Colors.white,
-                                              strokeWidth: 2),
-                                        )
-                                            : Text('Publish',
-                                            style: StyleText.fontSize14Weight600
-                                                .copyWith(color: Colors.white)),
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                            SizedBox(height: 40.h),
+                            _tab('Desktop', _PreviewDevice.desktop),
+                            SizedBox(width: 24.w),
+                            _tab('Tablet',  _PreviewDevice.tablet),
+                            SizedBox(width: 24.w),
+                            _tab('Mobile',  _PreviewDevice.mobile),
                           ],
                         ),
-                      ),
-                    ],
+                        SizedBox(height: 16.h),
+
+                        // ── Preview area ─────────────────────────────────
+                        Container(
+                          width: double.infinity,
+                          decoration: BoxDecoration(
+
+                            borderRadius: BorderRadius.circular(12.r),
+
+                          ),
+                          padding: EdgeInsets.all(24.w),
+                          child: LayoutBuilder(
+                            builder: (ctx, box) => _buildFrame(box.maxWidth),
+                          ),
+                        ),
+
+                        SizedBox(height: 24.h),
+
+                        // ── Back + Publish ───────────────────────────────
+                        Row(
+                          children: [
+                            Expanded(
+                              child: GestureDetector(
+                                onTap: () => Navigator.of(context).pop(),
+                                child: Container(
+                                  height: 44.h,
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFF797979),
+                                    borderRadius: BorderRadius.circular(6.r),
+                                  ),
+                                  child: Center(
+                                    child: Text('Back',
+                                        style: StyleText.fontSize14Weight600
+                                            .copyWith(color: Colors.white)),
+                                  ),
+                                ),
+                              ),
+                            ),
+                            SizedBox(width: 16.w),
+                            Expanded(
+                              child: GestureDetector(
+                                onTap: _isSaving
+                                    ? null
+                                    : () => showPublishConfirmDialog(
+                                  context: context,
+                                  onConfirm: () => _publish(cubit),
+                                ),
+                                child: AnimatedContainer(
+                                  duration: const Duration(milliseconds: 200),
+                                  height: 44.h,
+                                  decoration: BoxDecoration(
+                                    color: _isSaving
+                                        ? _C.primary.withOpacity(0.5)
+                                        : _C.primary,
+                                    borderRadius: BorderRadius.circular(6.r),
+                                  ),
+                                  child: Center(
+                                    child: _isSaving
+                                        ? SizedBox(
+                                      width: 18.w, height: 18.h,
+                                      child: const CircularProgressIndicator(
+                                          color: Colors.white, strokeWidth: 2),
+                                    )
+                                        : Text('Publish',
+                                        style: StyleText.fontSize14Weight600
+                                            .copyWith(color: Colors.white)),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        SizedBox(height: 40.h),
+                      ],
+                    ),
                   ),
                 ),
               ),
             ),
-
-            // ── Saving overlay ──────────────────────────────────────────────
             if (_isSaving)
               Container(
                 color: Colors.black.withOpacity(0.35),
@@ -217,100 +204,271 @@ class _HomePreviewPageState extends State<HomePreviewPage> {
     );
   }
 
-  // ── Device tab ──────────────────────────────────────────────────────────────
-  Widget _deviceTab(String label, _PreviewDevice device) {
+  // ── Tab widget ───────────────────────────────────────────────────────────────
+  Widget _tab(String label, _PreviewDevice device) {
     final active = _device == device;
     return GestureDetector(
       onTap: () => setState(() => _device = device),
-      child: IntrinsicWidth(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Padding(
-              padding: EdgeInsets.only(bottom: 6.h),
-              child: Text(
-                label,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Padding(
+            padding: EdgeInsets.only(bottom: 6.h),
+            child: Text(label,
                 style: TextStyle(
                   fontSize: 15.sp,
                   fontWeight: active ? FontWeight.w700 : FontWeight.w500,
                   color: active ? _C.primary : _C.hintText,
+                )),
+          ),
+          Container(
+            height: 2,
+            width: label.length * 8.0,
+            color: active ? _C.primary : Colors.transparent,
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ── Frame dispatcher ──────────────────────────────────────────────────────────
+  Widget _buildFrame(double containerW) {
+    switch (_device) {
+      case _PreviewDevice.desktop:
+        return _DesktopFrame(containerWidth: containerW);
+      case _PreviewDevice.tablet:
+        return _TabletFrame(containerWidth: containerW);
+      case _PreviewDevice.mobile:
+        return _MobileFrame(containerWidth: containerW);
+    }
+  }
+}
+
+class _DesktopFrame extends StatelessWidget {
+  final double containerWidth;
+  const _DesktopFrame({required this.containerWidth});
+
+  @override
+  Widget build(BuildContext context) {
+    final scale  = _safeScale(containerWidth / _kDesktopW);
+    final frameH = _kDesktopH * scale;
+
+    return SizedBox(
+      width: containerWidth,
+      height: frameH + 28,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(8),
+        child: Column(
+          children: [
+            _BrowserChrome(),
+            SizedBox(
+              width: containerWidth,
+              height: frameH,
+              child: ClipRect(                          // ← ADD THIS
+                child: OverflowBox(                     // ← ADD THIS
+                  alignment: Alignment.topLeft,
+                  maxWidth: _kDesktopW,
+                  maxHeight: _kDesktopH,
+                  child: Transform.scale(
+                    scale: scale,
+                    alignment: Alignment.topLeft,
+                    child: SizedBox(
+                      width: _kDesktopW,
+                      child: _PreviewContent(
+                        fakeWidth:  _kDesktopW,
+                        fakeHeight: _kDesktopH,
+                      ),
+                    ),
+                  ),
                 ),
               ),
-            ),
-            Container(
-              height: 2,
-              color: active ? _C.primary : Colors.transparent,
             ),
           ],
         ),
       ),
     );
   }
+}
 
-  // ── Preview frame dispatcher ────────────────────────────────────────────────
-  Widget _previewFrame(double containerWidth) {
-    if (_device == _PreviewDevice.mobile) {
-      return _MobilePhoneShell(containerWidth: containerWidth);
-    }
+// ─────────────────────────────────────────────────────────────────────────────
+// Tablet frame  (768 × 1024 — centered, aspect-ratio preserved)
+// ─────────────────────────────────────────────────────────────────────────────
+class _TabletFrame extends StatelessWidget {
+  final double containerWidth;
+  const _TabletFrame({required this.containerWidth});
 
-    // Desktop / Tablet — scale 1366-wide content to fill containerWidth
-    final double scale  = _safeScale(containerWidth / _kFakeDesktopW);
-    final double outerH = _kFakeDesktopH * scale;
+  @override
+  Widget build(BuildContext context) {
+    // Target display width = 55% of container, max 500
+    final double displayW = (containerWidth * 0.55).clamp(280, 500);
+    final double scale    = _safeScale(displayW / _kTabletW);
+    final double displayH = _kTabletH * scale;
 
-    return SizedBox(
-      width:  double.infinity,
-      height: outerH,
-      child: Container(
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(8.r),
-        ),
-        clipBehavior: Clip.antiAlias,
-        child: Transform.scale(
-          scale:     scale,
-          alignment: Alignment.topCenter,
-          child: _PreviewContent(
-            fakeWidth:  _kFakeDesktopW,
-            fakeHeight: _kFakeDesktopH,
-            navbarHorizontalPadding: null, // desktop uses its own padding
+    return Column(
+      children: [
+
+        Center(
+          child: Container(
+            width: displayW + 4,   // +4 for border
+            height: displayH + 28 + 4,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: _C.border, width: 2),
+              color: Colors.white,
+              boxShadow: [
+                BoxShadow(
+                    color: Colors.black.withOpacity(0.08),
+                    blurRadius: 16,
+                    offset: const Offset(0, 4))
+              ],
+            ),
+            clipBehavior: Clip.antiAlias,
+            child: Column(
+              children: [
+                _BrowserChrome(compact: true),
+                SizedBox(
+                  width: displayW,
+                  height: displayH,
+                  child: ClipRect(
+                    child: OverflowBox(
+                      alignment: Alignment.topLeft,
+                      maxWidth: _kTabletW,
+                      maxHeight: _kTabletH,
+                      child: Transform.scale(
+                        scale: scale,
+                        alignment: Alignment.topLeft,
+                        child: _PreviewContent(
+                          fakeWidth:  _kTabletW,
+                          fakeHeight: _kTabletH,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
-      ),
+      ],
     );
   }
 }
 
-// ── Safe scale helper ─────────────────────────────────────────────────────────
-double _safeScale(double v) =>
-    (v.isFinite && !v.isNaN && v > 0) ? v : 1.0;
+// ─────────────────────────────────────────────────────────────────────────────
+// Mobile frame  (375 × 812 — phone shell with notch)
+// ─────────────────────────────────────────────────────────────────────────────
+class _MobileFrame extends StatelessWidget {
+  final double containerWidth;
+  const _MobileFrame({required this.containerWidth});
 
-// ── Shared preview content ────────────────────────────────────────────────────
-// fakeHeight drives the Column so Expanded fills correctly and footer pins to bottom.
+  @override
+  Widget build(BuildContext context) {
+    // Target display width = 35% of container, max 280
+    final double displayW = (containerWidth * 0.35).clamp(200, 280);
+    final double scale    = _safeScale(displayW / _kMobileW);
+    final double displayH = _kMobileH * scale;
+
+    // Shell adds notch bar (24) + bottom bar (12) + border (4)
+    final double shellH = displayH + 24 + 12 + 4;
+    final double shellW = displayW + 4;
+
+    return Column(
+      children: [
+
+        Center(
+          child: Container(
+            width: shellW,
+            height: shellH,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(28),
+
+
+            ),
+            clipBehavior: Clip.antiAlias,
+            child: Column(
+              children: [
+                // ── Notch ──────────────────────────────────────────────
+                Container(
+                  color: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 6),
+                  child: Center(
+                    child: Container(
+                      width: displayW * 0.3,
+                      height: 12,
+                      decoration: BoxDecoration(
+                        color: _C.border,
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                    ),
+                  ),
+                ),
+
+                // ── Content ────────────────────────────────────────────
+                SizedBox(
+                  width: displayW,
+                  height: displayH,
+                  child: ClipRect(
+                    child: OverflowBox(
+                      alignment: Alignment.topLeft,
+                      maxWidth: _kMobileW,
+                      maxHeight: _kMobileH,
+                      child: Transform.scale(
+                        scale: scale,
+                        alignment: Alignment.topLeft,
+                        child: _PreviewContent(
+                          fakeWidth:  _kMobileW,
+                          fakeHeight: _kMobileH,
+                          mobileNavbarPadding: 16,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+
+                // ── Home indicator ─────────────────────────────────────
+                Container(
+                  color: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 6),
+                  child: Center(
+                    child: Container(
+                      width: displayW * 0.3,
+                      height: 4,
+                      decoration: BoxDecoration(
+                        color: _C.border,
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Shared preview content (real widgets, faked MediaQuery)
+// ─────────────────────────────────────────────────────────────────────────────
 class _PreviewContent extends StatelessWidget {
   final double fakeWidth;
   final double fakeHeight;
-
-  /// When set, overrides the navbar's horizontal padding (mobile fix = 20).
-  /// When null, the navbar renders with its own default padding.
-  final double? navbarHorizontalPadding;
+  final double? mobileNavbarPadding;
 
   const _PreviewContent({
     required this.fakeWidth,
     required this.fakeHeight,
-    this.navbarHorizontalPadding,
+    this.mobileNavbarPadding,
   });
 
   @override
   Widget build(BuildContext context) {
-    final Widget navbar = navbarHorizontalPadding != null
+    final Widget navbar = mobileNavbarPadding != null
         ? Padding(
-      padding: EdgeInsets.symmetric(horizontal: navbarHorizontalPadding!),
-      // We wrap AppNavbar in a SizedBox so it doesn't try to be wider
-      // than fakeWidth, then remove its own internal padding via the
-      // outer Padding widget above.
-      child: SizedBox(
-        width: fakeWidth - (navbarHorizontalPadding! * 2),
-        child: AppNavbar(currentRoute: '/'),
-      ),
+      padding: EdgeInsets.symmetric(horizontal: mobileNavbarPadding!),
+      child: AppNavbar(currentRoute: '/'),
     )
         : AppNavbar(currentRoute: '/');
 
@@ -322,20 +480,13 @@ class _PreviewContent extends StatelessWidget {
         viewPadding: EdgeInsets.zero,
       ),
       child: SizedBox(
-        width:  fakeWidth,
-        height: fakeHeight, // explicit height — required for Expanded + footer pin
+        width: fakeWidth,
+        height: fakeHeight,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // ── Real AppNavbar (with mobile padding override) ───────────
             navbar,
-
-            // ── Body spacer — pushes footer to the very bottom ──────────
-            const Expanded(
-              child: ColoredBox(color: _C.back),
-            ),
-
-            // ── Real AppFooter — always pinned at the bottom ────────────
+            const Expanded(child: ColoredBox(color: _C.back)),
             const AppFooter(),
           ],
         ),
@@ -344,64 +495,49 @@ class _PreviewContent extends StatelessWidget {
   }
 }
 
-// ── Mobile phone shell ────────────────────────────────────────────────────────
-//
-// Strategy:
-//   • Content faked at _kFakeMobileW × _kFakeMobileH (375 × 812).
-//   • Shell size = fake size, so scale = 1.0 → NO squishing, no overflow.
-//   • The whole shell is then shrunk on screen via Transform.scale at
-//     _kMobileDisplayScale (0.72) so it fits nicely in the page.
-//   • ClipRect + OverflowBox ensure nothing bleeds outside the shell border.
-class _MobilePhoneShell extends StatelessWidget {
-  final double containerWidth;
-  const _MobilePhoneShell({required this.containerWidth});
+// ─────────────────────────────────────────────────────────────────────────────
+// Browser chrome bar (dots + URL bar)
+// ─────────────────────────────────────────────────────────────────────────────
+class _BrowserChrome extends StatelessWidget {
+  final bool compact;
+  const _BrowserChrome({this.compact = false});
 
   @override
   Widget build(BuildContext context) {
-    // Displayed shell dimensions on screen
-    final double displayW = _kPhoneShellW * _kMobileDisplayScale; // ≈ 270
-    final double displayH = _kFakeMobileH * _kMobileDisplayScale; // ≈ 585
-
+    final double h = compact ? 22 : 28;
     return Container(
-      width:  double.infinity,
-      decoration: BoxDecoration(
-        color:        _C.back,
-        borderRadius: BorderRadius.circular(8.r),
-      ),
-      padding: const EdgeInsets.symmetric(vertical: 32, horizontal: 16),
-      // Reserve the exact display height so the outer scroll doesn't collapse
-      height: displayH + 64, // + vertical padding (32*2)
-      child: Center(
-        child: Transform.scale(
-          scale:     _kMobileDisplayScale,
-          alignment: Alignment.topCenter,
-          child: SizedBox(
-            width:  _kPhoneShellW,   // 375 — full fake width
-            height: _kFakeMobileH,   // 812 — full fake height
+      height: h,
+      color: const Color(0xFFF5F5F5),
+      padding: const EdgeInsets.symmetric(horizontal: 10),
+      child: Row(
+        children: [
+          _dot(const Color(0xFFFF5F57)),
+          const SizedBox(width: 4),
+          _dot(const Color(0xFFFEBC2E)),
+          const SizedBox(width: 4),
+          _dot(const Color(0xFF28C840)),
+          const SizedBox(width: 8),
+          Expanded(
             child: Container(
+              height: compact ? 10 : 14,
               decoration: BoxDecoration(
-                color:        Colors.white,
-                borderRadius: BorderRadius.circular(28),
-                border: Border.all(color: _C.border, width: 2),
-                boxShadow: [
-                  BoxShadow(
-                    color:      Colors.black.withOpacity(0.12),
-                    blurRadius: 24,
-                    offset:     const Offset(0, 6),
-                  ),
-                ],
-              ),
-              // ClipRect prevents any child overflow from showing outside the shell
-              clipBehavior: Clip.antiAlias,
-              child: _PreviewContent(
-                fakeWidth:  _kFakeMobileW,  // 375
-                fakeHeight: _kFakeMobileH,  // 812
-                navbarHorizontalPadding: 20, // ← mobile navbar padding = 20px
+                color: const Color(0xFFE9E9E9),
+                borderRadius: BorderRadius.circular(4),
               ),
             ),
           ),
-        ),
+          const SizedBox(width: 8),
+        ],
       ),
     );
   }
+
+  Widget _dot(Color color) => Container(
+    width: 8, height: 8,
+    decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+  );
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Size badge
+// ─────────────────────────────────────────────────────────────────────────────

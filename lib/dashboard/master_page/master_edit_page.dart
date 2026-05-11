@@ -882,7 +882,7 @@ class _MasterEditPageState extends State<MasterEditPage> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              _sectionLabel('Image *'),
+              _sectionLabel('Image'),
               Row(children: [
                 Text('Visibility',
                     style: StyleText.fontSize12Weight500.copyWith(color: _C.labelText)),
@@ -1142,15 +1142,14 @@ class _MasterEditPageState extends State<MasterEditPage> {
                             Expanded(
                               child: Text(
                                 _publishDate != null
-                                    ? DateFormat('dd/MM/yyyy').format(_publishDate!)
-                                    : 'select date (optional)',
+                                    ? DateFormat('dd MMM yyyy').format(_publishDate!)
+                                    : 'Select date',
                                 style: StyleText.fontSize12Weight400.copyWith(
                                   color: _publishDate != null ? _C.labelText : _C.hintText,
                                 ),
                               ),
                             ),
-                            Icon(Icons.calendar_today_outlined,
-                                size: 16.sp, color: _C.hintText),
+                            CustomSvg(assetPath: "assets/calendar.svg",width: 20.w,height: 20.h,fit: BoxFit.scaleDown,)
                           ],
                         ),
                       ),
@@ -1190,7 +1189,7 @@ class _MasterEditPageState extends State<MasterEditPage> {
             child: Container(
               height: 44.h,
               decoration: BoxDecoration(
-                color: _C.primary.withOpacity(0.5),
+                color: Color(0xFF8A5C70),
                 borderRadius: BorderRadius.circular(6.r),
               ),
               child: Center(
@@ -1200,7 +1199,7 @@ class _MasterEditPageState extends State<MasterEditPage> {
             ),
           ),
         ),
-        SizedBox(width: 16.w),
+        SizedBox(width: 300.w),
 
         Expanded(
           child: AbsorbPointer(
@@ -1300,33 +1299,34 @@ class _MasterEditPageState extends State<MasterEditPage> {
             ),
           ),
         ),
-        SizedBox(width: 16.w),
+        SizedBox(width: 300.w),
 
+        //GestureDetector(
+        //             onTap: () {
+        //               showPublishConfirmDialog(
+        //                 title: 'SAVE AS DRAFT',
+        //                 subtitle:
+        //                 'Your changes will be saved as a draft. '
+        //                     'The published version will remain live and unchanged.',
+        //                 context: context,
+        //                 onConfirm: () => _save(cubit, publishStatus: 'draft'),
+        //               );
+        //             },
+        //             child: Container(
+        //               height: 44.h,
+        //               decoration: BoxDecoration(
+        //                 color: const Color(0xFF797979),
+        //                 borderRadius: BorderRadius.circular(6.r),
+        //               ),
+        //               child: Center(
+        //                 child: Text('Save For Later',
+        //                     style: StyleText.fontSize14Weight600.copyWith(color: Colors.white)),
+        //               ),
+        //             ),
+        //           ),
         // ── Save For Later button (saves as DRAFT, published stays live) ─
         Expanded(
-          child: GestureDetector(
-            onTap: () {
-              showPublishConfirmDialog(
-                title: 'SAVE AS DRAFT',
-                subtitle:
-                'Your changes will be saved as a draft. '
-                    'The published version will remain live and unchanged.',
-                context: context,
-                onConfirm: () => _save(cubit, publishStatus: 'draft'),
-              );
-            },
-            child: Container(
-              height: 44.h,
-              decoration: BoxDecoration(
-                color: const Color(0xFF797979),
-                borderRadius: BorderRadius.circular(6.r),
-              ),
-              child: Center(
-                child: Text('Save For Later',
-                    style: StyleText.fontSize14Weight600.copyWith(color: Colors.white)),
-              ),
-            ),
-          ),
+          child: Expanded(child: Container())
         ),
       ],
     );
@@ -1490,8 +1490,8 @@ class _MasterEditPageState extends State<MasterEditPage> {
   }
 
   Widget _placeholderCircle() => Container(
-    width: 50.w,
-    height: 50.h,
+    width: 70.w,
+    height: 70.h,
     decoration: const BoxDecoration(
         color: Color(0xFFD9D9D9), shape: BoxShape.circle),
     child: Center(

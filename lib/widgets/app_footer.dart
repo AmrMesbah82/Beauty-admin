@@ -20,6 +20,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -225,80 +226,84 @@ class _FooterDesktop extends StatelessWidget {
     final double hPad = ((MediaQuery.of(context).size.width - contentW) / 2)
         .clamp(16.0, double.infinity);
 
-    return Padding(
-      padding: EdgeInsets.symmetric(horizontal: hPad),
-      child: Container(
-        padding: EdgeInsets.all(22.sp),
-        decoration: BoxDecoration(
-          color: footerBg,
-          borderRadius: BorderRadiusDirectional.only(
-            topStart: Radius.circular(24.r),
-            topEnd: Radius.circular(24.r),
+    return Container(
+      padding: EdgeInsets.all(22.sp),
+      decoration: BoxDecoration(
+        color: footerBg,
+        borderRadius: BorderRadiusDirectional.only(
+          topStart: Radius.circular(24.r),
+          topEnd: Radius.circular(24.r),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // ── Top row: Logo + Footer columns ──────────────────────────
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _LogoBox(
+                logoUrl: model.branding.logoUrl,
+                primary: primary,
+                size: 50.sp,
+              ),
+              SizedBox(width: 32.w),
+              Expanded(
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: columns
+                      .map(
+                        (col) => _FooterColumnWidget(
+                      column: col,
+                      titleColor: AppColors.text,
+                      primary: primary,
+                      isRtl: isRtl,
+                    ),
+                  )
+                      .toList(),
+                ),
+              ),
+            ],
           ),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // ── Top row: Logo + Footer columns ──────────────────────────
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _LogoBox(
-                  logoUrl: model.branding.logoUrl,
-                  primary: primary,
-                  size: 50.sp,
-                ),
-                SizedBox(width: 32.w),
-                Expanded(
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: columns
-                        .map(
-                          (col) => _FooterColumnWidget(
-                        column: col,
-                        titleColor: AppColors.text,
-                        primary: primary,
-                        isRtl: isRtl,
-                      ),
-                    )
-                        .toList(),
-                  ),
-                ),
-              ],
-            ),
-            SizedBox(height: 24.h),
-            Divider(color: primary, thickness: 0.5),
-            SizedBox(height: 14.h),
+          SizedBox(height: 24.h),
+          Divider(color: primary, thickness: 0.5),
+          SizedBox(height: 14.h),
 
-            // ── Bottom row: Download App | Social Icons | Copyright ──────
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                if (model.appDownloadLinks.visibility)
-                  _DownloadAppRow(
-                    appDownloadLinks: model.appDownloadLinks,
-                    primary: primary,
-                    isRtl: isRtl,
-                  ),
-                const Spacer(),
-                Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: _socialIcons(model.socialLinks, primary),
+          // ── Bottom row: Download App | Social Icons | Copyright ──────
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              if (model.appDownloadLinks.visibility)
+                _DownloadAppRow(
+                  appDownloadLinks: model.appDownloadLinks,
+                  primary: primary,
+                  isRtl: isRtl,
                 ),
-                const Spacer(),
-                Text(
-                  _staticCopyright(isRtl),
-                  style: StyleText.fontSize14Weight400.copyWith(
-                    color: AppColors.text,
-                    fontWeight: FontWeight.w900,
-                    fontSize: 12.sp,
-                  ),
+              const Spacer(),
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: _socialIcons(model.socialLinks, primary),
+              ),
+              const Spacer(),
+              Text(
+                _staticCopyright(isRtl),
+                style: context.isTablet  ?StyleText.fontSize14Weight400.copyWith(
+                  color: AppColors.text,
+                  fontWeight: FontWeight.w900,
+                  fontSize: 10.sp,
+                ):
+
+
+                StyleText.fontSize14Weight400.copyWith(
+                  color: AppColors.text,
+                  fontWeight: FontWeight.w900,
+                  fontSize: 12.sp,
                 ),
-              ],
-            ),
-          ],
-        ),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }
