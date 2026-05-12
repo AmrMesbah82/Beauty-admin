@@ -282,7 +282,7 @@ class _RequestDemoDetailPageState extends State<RequestDemoDetailPage> {
                           children: [
                             // ── Navbar ─────────────────────────────────────
                             AppAdminNavbar(
-                              activeLabel:    "Demo's",
+                              activeLabel:    "Demos",
                               homePage:       HomeMainPage(),
                               webPage:        HomeMainPage(),
                               jobListingPage: HomeMainPage(),

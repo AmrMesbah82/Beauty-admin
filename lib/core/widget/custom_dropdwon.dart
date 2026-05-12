@@ -139,9 +139,9 @@ class _CustomDropdownFormFieldInvMasterState
   // ── Arrow icon ────────────────────────────────────────────────────────────
   Widget _arrowIcon() => CustomSvg(
     assetPath: "assets/arrowdown.svg",
-    color: widget.primaryColor,
-    width: 20,
-    height: 15,
+    width: 20.w,
+    height: 20.h,
+    fit: BoxFit.fill,
   );
 
   @override

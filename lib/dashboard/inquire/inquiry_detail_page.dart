@@ -1,25 +1,6 @@
 // ═══════════════════════════════════════════════════════════════════
 // FILE: inquiry_detail_page.dart  (UPDATED — 100% Figma-aligned)
 // Path: lib/pages/dashboard/inquiry/inquiry_detail_page.dart
-//
-// Figma layout (top to bottom):
-//  1. AppAdminNavbar (Inquiries | Web Page)
-//  2. "Submission Details" title (pink)
-//  3. "Submission Date: DD Mon YYYY" + Status dropdown (right)
-//  4. Read-only fields (NO card wrapper — directly on page bg):
-//       Preferred Language (full)
-//       First Name | Last Name
-//       Email | Phone Number
-//       Gender | Country
-//       Subject | Reason
-//       Message (full, taller)
-//  5. "Our Comments" label
-//       Inquiry Priority | Inquiry Relevance | Required Action (3-col dropdowns)
-//       Notes textarea
-//  6. Legend section — 3 columns:
-//       Priority colours | Relevance list | Required Action list
-//  7. Discard (grey) | Submit (pink)
-//  8. Dialogs: simple text with "Back" button only
 // ═══════════════════════════════════════════════════════════════════
 
 import 'package:flutter/material.dart';
@@ -36,6 +17,7 @@ import 'package:beauty_admin/widgets/app_admin_navbar.dart';
 import '../../../core/widget/custom_dropdwon.dart';
 import '../../controller/home/home_cubit.dart';
 import '../../controller/home/home_state.dart';
+import '../../core/widget/format.dart';
 import '../../model/inquire/inquire.dart';
 import '../main_page/home_main_page.dart';
 
@@ -169,19 +151,23 @@ class _InquiryDetailPageState extends State<InquiryDetailPage> {
             mainAxisSize: MainAxisSize.min,
             children: [
               SizedBox(height: 8.h),
-              Text(title,
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                      fontSize: 14.sp,
-                      fontWeight: FontWeight.w700,
-                      color: _C.labelText)),
+              Text(
+                FormatHelper.capitalize(title),
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                    fontSize: 14.sp,
+                    fontWeight: FontWeight.w700,
+                    color: _C.labelText),
+              ),
               SizedBox(height: 8.h),
-              Text(body,
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                      fontSize: 12.sp,
-                      color: _C.hintText,
-                      height: 1.5)),
+              Text(
+                FormatHelper.capitalize(body),
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                    fontSize: 12.sp,
+                    color: _C.hintText,
+                    height: 1.5),
+              ),
               SizedBox(height: 16.h),
               Row(
                 children: [
@@ -195,11 +181,13 @@ class _InquiryDetailPageState extends State<InquiryDetailPage> {
                           borderRadius: BorderRadius.circular(6.r),
                         ),
                         alignment: Alignment.center,
-                        child: Text('Back',
-                            style: TextStyle(
-                                fontSize: 13.sp,
-                                fontWeight: FontWeight.w600,
-                                color: _C.labelText)),
+                        child: Text(
+                          FormatHelper.capitalize('Back'),
+                          style: TextStyle(
+                              fontSize: 13.sp,
+                              fontWeight: FontWeight.w600,
+                              color: _C.labelText),
+                        ),
                       ),
                     ),
                   ),
@@ -214,11 +202,13 @@ class _InquiryDetailPageState extends State<InquiryDetailPage> {
                           borderRadius: BorderRadius.circular(6.r),
                         ),
                         alignment: Alignment.center,
-                        child: Text('Confirm',
-                            style: TextStyle(
-                                fontSize: 13.sp,
-                                fontWeight: FontWeight.w600,
-                                color: Colors.white)),
+                        child: Text(
+                          FormatHelper.capitalize('Confirm'),
+                          style: TextStyle(
+                              fontSize: 13.sp,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.white),
+                        ),
                       ),
                     ),
                   ),
@@ -288,24 +278,30 @@ class _InquiryDetailPageState extends State<InquiryDetailPage> {
                             SizedBox(height: 20.h),
 
                             // ── Title ──────────────────────────────────────
-                            Text('Submission Details',
-                                style: StyleText.fontSize45Weight600.copyWith(
-                                    color: cmsPrimary,
-                                    fontWeight: FontWeight.w700)),
+                            Text(
+                              FormatHelper.capitalize('Submission Details'),
+                              style: StyleText.fontSize45Weight600.copyWith(
+                                  color: cmsPrimary,
+                                  fontWeight: FontWeight.w700),
+                            ),
                             SizedBox(height: 16.h),
 
                             // ── Date + Status dropdown ─────────────────────
                             Row(
                               children: [
-                                Text('Submission Date: ',
-                                    style: TextStyle(
-                                        fontSize: 13.sp,
-                                        fontWeight: FontWeight.w500,
-                                        color: _C.labelText)),
-                                Text(dateStr,
-                                    style: TextStyle(
-                                        fontSize: 13.sp,
-                                        color: _C.hintText)),
+                                Text(
+                                  FormatHelper.capitalize('Submission Date: '),
+                                  style: TextStyle(
+                                      fontSize: 13.sp,
+                                      fontWeight: FontWeight.w500,
+                                      color: _C.labelText),
+                                ),
+                                Text(
+                                  FormatHelper.capitalize(dateStr),
+                                  style: TextStyle(
+                                      fontSize: 13.sp,
+                                      color: _C.hintText),
+                                ),
                                 const Spacer(),
                                 SizedBox(
                                   width: 140.w,
@@ -333,21 +329,21 @@ class _InquiryDetailPageState extends State<InquiryDetailPage> {
                             ),
                             SizedBox(height: 16.h),
 
-                            // ── Read-only fields (NO card wrapper) ─────────
+                            // ── Read-only fields ───────────────────────────
                             Container(
                               decoration: BoxDecoration(
                                 color: Colors.white,
-                                borderRadius: BorderRadius.circular(8.r)
+                                borderRadius: BorderRadius.circular(8.r),
                               ),
                               child: Padding(
-                                padding:  EdgeInsets.all(25.sp),
+                                padding: EdgeInsets.all(25.sp),
                                 child: Column(
                                   children: [
                                     Row(
                                       children: [
                                         Expanded(child: _readField('Preferred Language', inq.preferredLanguage)),
                                         SizedBox(width: 16.w),
-Expanded(child: Column())
+                                        Expanded(child: Column()),
                                       ],
                                     ),
                                     SizedBox(height: 10.h),
@@ -396,20 +392,22 @@ Expanded(child: Column())
                             SizedBox(height: 24.h),
 
                             // ── Our Comments ───────────────────────────────
-                            Text('Our Comments',
-                                style: TextStyle(
-                                    fontSize: 16.sp,
-                                    fontWeight: FontWeight.w700,
-                                    color: _C.labelText)),
+                            Text(
+                              FormatHelper.capitalize('Our Comments'),
+                              style: TextStyle(
+                                  fontSize: 16.sp,
+                                  fontWeight: FontWeight.w700,
+                                  color: _C.labelText),
+                            ),
                             SizedBox(height: 14.h),
 
                             Container(
                               decoration: BoxDecoration(
                                 color: Colors.white,
-                                borderRadius: BorderRadius.circular(8.r)
+                                borderRadius: BorderRadius.circular(8.r),
                               ),
                               child: Padding(
-                                padding:  EdgeInsets.all(25.sp),
+                                padding: EdgeInsets.all(25.sp),
                                 child: Column(
                                   children: [
                                     Row(
@@ -447,11 +445,17 @@ Expanded(child: Column())
                                     ),
                                     SizedBox(height: 14.h),
 
-                                    Text('Notes',
-                                        style: TextStyle(
-                                            fontSize: 12.sp,
-                                            fontWeight: FontWeight.w500,
-                                            color: _C.labelText)),
+                                    Row(
+                                      children: [
+                                        Text(
+                                          FormatHelper.capitalize('Notes'),
+                                          style: TextStyle(
+                                              fontSize: 12.sp,
+                                              fontWeight: FontWeight.w500,
+                                              color: _C.labelText),
+                                        ),
+                                      ],
+                                    ),
                                     SizedBox(height: 6.h),
                                     SizedBox(
                                       height: 80.h,
@@ -461,7 +465,7 @@ Expanded(child: Column())
                                         style: TextStyle(fontSize: 12.sp, color: _C.labelText),
                                         decoration: InputDecoration(
                                           hoverColor: Colors.transparent,
-                                          hintText: 'Text Here',
+                                          hintText: FormatHelper.capitalize('Text Here'),
                                           hintStyle: TextStyle(fontSize: 12.sp, color: _C.hintText),
                                           filled: true,
                                           fillColor: _C.fieldBg,
@@ -478,34 +482,6 @@ Expanded(child: Column())
                             ),
                             SizedBox(height: 24.h),
 
-                            // // ── Legend section — 3 columns ─────────────────
-                            // Row(
-                            //   crossAxisAlignment: CrossAxisAlignment.start,
-                            //   children: [
-                            //     // Priority (colored tiles)
-                            //     Expanded(child: _priorityLegend(cmsPrimary)),
-                            //     SizedBox(width: 12.w),
-                            //     // Relevance (pink shaded list)
-                            //     Expanded(child: _listLegend(
-                            //       title: 'Strategic Opportunity',
-                            //       items: InquiryRelevance.values
-                            //           .map((r) => r.label)
-                            //           .toList(),
-                            //       baseColor: cmsPrimary,
-                            //     )),
-                            //     SizedBox(width: 12.w),
-                            //     // Required Action (pink shaded list)
-                            //     Expanded(child: _listLegend(
-                            //       title: 'Immediate Response Required',
-                            //       items: RequiredAction.values
-                            //           .map((a) => a.label)
-                            //           .toList(),
-                            //       baseColor: cmsPrimary,
-                            //     )),
-                            //   ],
-                            // ),
-                            // SizedBox(height: 30.h),
-
                             // ── Discard / Submit ───────────────────────────
                             Row(
                               children: [
@@ -519,13 +495,15 @@ Expanded(child: Column())
                                         borderRadius: BorderRadius.circular(8.r),
                                       ),
                                       alignment: Alignment.center,
-                                      child: Text('Discard',
-                                          style: StyleText.fontSize14Weight600
-                                              .copyWith(color: Colors.white)),
+                                      child: Text(
+                                        FormatHelper.capitalize('Discard'),
+                                        style: StyleText.fontSize14Weight600
+                                            .copyWith(color: Colors.white),
+                                      ),
                                     ),
                                   ),
                                 ),
-                                SizedBox(width: 16.w),
+                                SizedBox(width: 300.w),
                                 Expanded(
                                   child: GestureDetector(
                                     onTap: _isSaving ? null : () => _onSubmit(cmsPrimary),
@@ -541,9 +519,11 @@ Expanded(child: Column())
                                           width: 20.w, height: 20.h,
                                           child: const CircularProgressIndicator(
                                               color: Colors.white, strokeWidth: 2))
-                                          : Text('Submit',
-                                          style: StyleText.fontSize14Weight600
-                                              .copyWith(color: Colors.white)),
+                                          : Text(
+                                        FormatHelper.capitalize('Submit'),
+                                        style: StyleText.fontSize14Weight600
+                                            .copyWith(color: Colors.white),
+                                      ),
                                     ),
                                   ),
                                 ),
@@ -571,18 +551,20 @@ Expanded(child: Column())
   }
 
   // ─────────────────────────────────────────────────────────────────────────
-  //  READ-ONLY FIELD (Figma style: label above, #F5F5F5 bg, no card wrapper)
+  //  READ-ONLY FIELD
   // ─────────────────────────────────────────────────────────────────────────
 
   Widget _readField(String label, String value, {bool multiLine = false}) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label,
-            style: TextStyle(
-                fontSize: 12.sp,
-                fontWeight: FontWeight.w500,
-                color: _C.labelText)),
+        Text(
+          FormatHelper.capitalize(label),
+          style: TextStyle(
+              fontSize: 12.sp,
+              fontWeight: FontWeight.w500,
+              color: _C.labelText),
+        ),
         SizedBox(height: 4.h),
         Container(
           width: double.infinity,
@@ -595,7 +577,7 @@ Expanded(child: Column())
           ),
           alignment: multiLine ? Alignment.topLeft : Alignment.centerLeft,
           child: Text(
-            value.isEmpty ? 'Text Here' : value,
+            FormatHelper.capitalize(value.isEmpty ? 'Text Here' : value),
             style: StyleText.fontSize12Weight400.copyWith(
                 color: value.isEmpty ? _C.hintText : _C.labelText),
             maxLines: multiLine ? 4 : 1,
@@ -621,21 +603,25 @@ Expanded(child: Column())
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label,
-            style: TextStyle(
-                fontSize: 12.sp,
-                fontWeight: FontWeight.w500,
-                color: _C.labelText)),
+        Text(
+          FormatHelper.capitalize(label),
+          style: TextStyle(
+              fontSize: 12.sp,
+              fontWeight: FontWeight.w500,
+              color: _C.labelText),
+        ),
         SizedBox(height: 4.h),
         CustomDropdownFormFieldInvMaster(
           selectedValue: value,
           items: items.map((s) => {'key': s, 'value': s}).toList(),
           widthIcon: 14, heightIcon: 14, height: 36,
           borderRadius: 4,
-          dropdownColor: Color(0xFFF1F1F1),
+          dropdownColor: const Color(0xFFF1F1F1),
           primaryColor: cmsPrimary,
-          hint: Text(hint,
-              style: TextStyle(fontSize: 11.sp, color: _C.hintText)),
+          hint: Text(
+            FormatHelper.capitalize(hint),
+            style: TextStyle(fontSize: 11.sp, color: _C.hintText),
+          ),
           onChanged: onChanged,
         ),
       ],
@@ -643,14 +629,13 @@ Expanded(child: Column())
   }
 
   // ─────────────────────────────────────────────────────────────────────────
-  //  PRIORITY LEGEND (Figma: colored tiles — Critical/High/Medium/Low/Info)
+  //  PRIORITY LEGEND
   // ─────────────────────────────────────────────────────────────────────────
 
   Widget _priorityLegend(Color cmsPrimary) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Critical (full width, top tile)
         Container(
           width: double.infinity,
           padding: EdgeInsets.symmetric(vertical: 10.h, horizontal: 10.w),
@@ -659,48 +644,54 @@ Expanded(child: Column())
             borderRadius: BorderRadius.circular(6.r),
           ),
           child: Center(
-            child: Text('Critical',
-                style: TextStyle(
-                    fontSize: 10.sp,
-                    color: Colors.white,
-                    fontWeight: FontWeight.w600)),
+            child: Text(
+              FormatHelper.capitalize('Critical'),
+              style: TextStyle(
+                  fontSize: 10.sp,
+                  color: Colors.white,
+                  fontWeight: FontWeight.w600),
+            ),
           ),
         ),
         SizedBox(height: 6.h),
-        // High
         Container(
           width: double.infinity,
           padding: EdgeInsets.symmetric(vertical: 6.h, horizontal: 10.w),
-          child: Text('High',
-              style: TextStyle(fontSize: 10.sp, color: _C.labelText)),
+          child: Text(
+            FormatHelper.capitalize('High'),
+            style: TextStyle(fontSize: 10.sp, color: _C.labelText),
+          ),
         ),
-        // Medium
         Container(
           width: double.infinity,
           padding: EdgeInsets.symmetric(vertical: 6.h, horizontal: 10.w),
-          child: Text('Medium',
-              style: TextStyle(fontSize: 10.sp, color: _C.labelText)),
+          child: Text(
+            FormatHelper.capitalize('Medium'),
+            style: TextStyle(fontSize: 10.sp, color: _C.labelText),
+          ),
         ),
-        // Low
         Container(
           width: double.infinity,
           padding: EdgeInsets.symmetric(vertical: 6.h, horizontal: 10.w),
-          child: Text('Low',
-              style: TextStyle(fontSize: 10.sp, color: _C.labelText)),
+          child: Text(
+            FormatHelper.capitalize('Low'),
+            style: TextStyle(fontSize: 10.sp, color: _C.labelText),
+          ),
         ),
-        // Informational Only
         Container(
           width: double.infinity,
           padding: EdgeInsets.symmetric(vertical: 6.h, horizontal: 10.w),
-          child: Text('Informational Only',
-              style: TextStyle(fontSize: 10.sp, color: _C.labelText)),
+          child: Text(
+            FormatHelper.capitalize('Informational Only'),
+            style: TextStyle(fontSize: 10.sp, color: _C.labelText),
+          ),
         ),
       ],
     );
   }
 
   // ─────────────────────────────────────────────────────────────────────────
-  //  LIST LEGEND (Figma: pink header tile + text list below)
+  //  LIST LEGEND
   // ─────────────────────────────────────────────────────────────────────────
 
   Widget _listLegend({
@@ -711,7 +702,6 @@ Expanded(child: Column())
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Header tile (pink)
         Container(
           width: double.infinity,
           padding: EdgeInsets.symmetric(vertical: 10.h, horizontal: 10.w),
@@ -720,21 +710,24 @@ Expanded(child: Column())
             borderRadius: BorderRadius.circular(6.r),
           ),
           child: Center(
-            child: Text(title,
-                style: TextStyle(
-                    fontSize: 10.sp,
-                    color: Colors.white,
-                    fontWeight: FontWeight.w600),
-                textAlign: TextAlign.center),
+            child: Text(
+              FormatHelper.capitalize(title),
+              style: TextStyle(
+                  fontSize: 10.sp,
+                  color: Colors.white,
+                  fontWeight: FontWeight.w600),
+              textAlign: TextAlign.center,
+            ),
           ),
         ),
         SizedBox(height: 6.h),
-        // List items (plain text)
         ...items.skip(1).map((item) => Container(
           width: double.infinity,
           padding: EdgeInsets.symmetric(vertical: 6.h, horizontal: 10.w),
-          child: Text(item,
-              style: TextStyle(fontSize: 10.sp, color: _C.labelText)),
+          child: Text(
+            FormatHelper.capitalize(item),
+            style: TextStyle(fontSize: 10.sp, color: _C.labelText),
+          ),
         )),
       ],
     );

@@ -7,6 +7,7 @@
 // UPDATED: ALL fields flattened — NO nested maps in Firestore ✅
 // UPDATED: EVERY single field is versioned (array in Firestore,
 //          .last = active value). fromMap uses Versioned.read() on ALL. ✅
+// UPDATED: Added malePrimaryColor + mainWidgetColor to BrandingModel ✅
 
 /// Bilingual text wrapper
 class BiText {
@@ -251,7 +252,7 @@ class SocialLinkModel {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// App Download Links — flattened into HomePageModel
+// App Download Links
 // ─────────────────────────────────────────────────────────────────────────────
 
 class AppDownloadLinksModel {
@@ -294,24 +295,29 @@ class AppDownloadLinksModel {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Branding — flattened into HomePageModel
+// Branding
+// UPDATED: Added malePrimaryColor + mainWidgetColor ✅
 // ─────────────────────────────────────────────────────────────────────────────
 
 class BrandingModel {
   final String logoUrl;
-  final String primaryColor;
+  final String primaryColor;       // Female Primary Color
+  final String malePrimaryColor;   // Male Primary Color  ← NEW
   final String secondaryColor;
   final String backgroundColor;
   final String headerFooterColor;
+  final String mainWidgetColor;    // Main Widget Color   ← NEW
   final String englishFont;
   final String arabicFont;
 
   const BrandingModel({
     this.logoUrl           = '',
     this.primaryColor      = '#008037',
+    this.malePrimaryColor  = '#D9D9D9',   // ← NEW
     this.secondaryColor    = '#D9D9D9',
     this.backgroundColor   = '#D9D9D9',
     this.headerFooterColor = '#D9D9D9',
+    this.mainWidgetColor   = '#D9D9D9',   // ← NEW
     this.englishFont       = 'Cairo',
     this.arabicFont        = 'Cairo',
   });
@@ -319,18 +325,22 @@ class BrandingModel {
   BrandingModel copyWith({
     String? logoUrl,
     String? primaryColor,
+    String? malePrimaryColor,     // ← NEW
     String? secondaryColor,
     String? backgroundColor,
     String? headerFooterColor,
+    String? mainWidgetColor,      // ← NEW
     String? englishFont,
     String? arabicFont,
   }) =>
       BrandingModel(
         logoUrl:           logoUrl           ?? this.logoUrl,
         primaryColor:      primaryColor      ?? this.primaryColor,
+        malePrimaryColor:  malePrimaryColor  ?? this.malePrimaryColor,   // ← NEW
         secondaryColor:    secondaryColor    ?? this.secondaryColor,
         backgroundColor:   backgroundColor   ?? this.backgroundColor,
         headerFooterColor: headerFooterColor ?? this.headerFooterColor,
+        mainWidgetColor:   mainWidgetColor   ?? this.mainWidgetColor,    // ← NEW
         englishFont:       englishFont       ?? this.englishFont,
         arabicFont:        arabicFont        ?? this.arabicFont,
       );
@@ -406,22 +416,18 @@ class HomePageModel {
       );
 
   // ═══════════════════════════════════════════════════════════════════════════
-  // toMap — ALL fields flattened, Capital_Underscore naming
-  // Outputs plain primitives. Repo wraps EVERY key in Versioned.append().
+  // toMap
   // ═══════════════════════════════════════════════════════════════════════════
 
   Map<String, dynamic> toMap() {
     final map = <String, dynamic>{};
 
-    // ── Title ────────────────────────────────────────────────────────
     map['Title_En'] = title.en;
     map['Title_Ar'] = title.ar;
 
-    // ── Short Description ────────────────────────────────────────────
     map['Short_Description_En'] = shortDescription.en;
     map['Short_Description_Ar'] = shortDescription.ar;
 
-    // ── Nav_Buttons ──────────────────────────────────────────────────
     map['Nav_Buttons_Count'] = navButtons.length;
     for (int i = 0; i < navButtons.length; i++) {
       final nb = navButtons[i];
@@ -433,7 +439,6 @@ class HomePageModel {
       map['Nav_Buttons_${i}_Status']   = nb.status;
     }
 
-    // ── Sections ─────────────────────────────────────────────────────
     map['Sections_Count'] = sections.length;
     for (int i = 0; i < sections.length; i++) {
       final s = sections[i];
@@ -445,7 +450,6 @@ class HomePageModel {
       map['Sections_${i}_Visibility']     = s.visibility;
     }
 
-    // ── Header_Items ─────────────────────────────────────────────────
     map['Header_Items_Count'] = headerItems.length;
     for (int i = 0; i < headerItems.length; i++) {
       final hi = headerItems[i];
@@ -455,7 +459,6 @@ class HomePageModel {
       map['Header_Items_${i}_Status']   = hi.status;
     }
 
-    // ── Footer_Columns ───────────────────────────────────────────────
     map['Footer_Columns_Count'] = footerColumns.length;
     for (int i = 0; i < footerColumns.length; i++) {
       final fc = footerColumns[i];
@@ -474,7 +477,6 @@ class HomePageModel {
       }
     }
 
-    // ── Social_Links ─────────────────────────────────────────────────
     map['Social_Links_Count'] = socialLinks.length;
     for (int i = 0; i < socialLinks.length; i++) {
       final sl = socialLinks[i];
@@ -484,16 +486,17 @@ class HomePageModel {
       map['Social_Links_${i}_Visibility'] = sl.visibility;
     }
 
-    // ── Branding ─────────────────────────────────────────────────────
-    map['Branding_Logo_Url']            = branding.logoUrl;
-    map['Branding_Primary_Color']       = branding.primaryColor;
-    map['Branding_Secondary_Color']     = branding.secondaryColor;
-    map['Branding_Background_Color']    = branding.backgroundColor;
-    map['Branding_Header_Footer_Color'] = branding.headerFooterColor;
-    map['Branding_English_Font']        = branding.englishFont;
-    map['Branding_Arabic_Font']         = branding.arabicFont;
+    // ── Branding (includes 2 new fields) ─────────────────────────────────
+    map['Branding_Logo_Url']              = branding.logoUrl;
+    map['Branding_Primary_Color']         = branding.primaryColor;
+    map['Branding_Male_Primary_Color']    = branding.malePrimaryColor;   // ← NEW
+    map['Branding_Secondary_Color']       = branding.secondaryColor;
+    map['Branding_Background_Color']      = branding.backgroundColor;
+    map['Branding_Header_Footer_Color']   = branding.headerFooterColor;
+    map['Branding_Main_Widget_Color']     = branding.mainWidgetColor;    // ← NEW
+    map['Branding_English_Font']          = branding.englishFont;
+    map['Branding_Arabic_Font']           = branding.arabicFont;
 
-    // ── App Download Links ───────────────────────────────────────────
     map['App_Download_Links_Ios_Url']          = appDownloadLinks.iosUrl;
     map['App_Download_Links_Android_Url']      = appDownloadLinks.androidUrl;
     map['App_Download_Links_Label_En']         = appDownloadLinks.labelEn;
@@ -502,7 +505,6 @@ class HomePageModel {
     map['App_Download_Links_Android_Icon_Url'] = appDownloadLinks.androidIconUrl;
     map['App_Download_Links_Visibility']       = appDownloadLinks.visibility;
 
-    // ── Scalars ──────────────────────────────────────────────────────
     map['Publish_Status']         = publishStatus;
     map['Last_Updated_At']        = lastUpdatedAt?.toIso8601String();
     map['Scheduled_Publish_Date'] = scheduledPublishDate?.toIso8601String();
@@ -512,14 +514,10 @@ class HomePageModel {
   }
 
   // ═══════════════════════════════════════════════════════════════════════════
-  // fromMap — EVERY field uses Versioned.read()
-  //
-  // In Firestore each key is an array: [v0, v1, v2, ...]
-  // Versioned.read() picks .last as active value.
+  // fromMap
   // ═══════════════════════════════════════════════════════════════════════════
 
   factory HomePageModel.fromMap(Map<String, dynamic> map) {
-    // ── Nav_Buttons ──────────────────────────────────────────────────
     final nbCount = Versioned.read<int>(
       map['Nav_Buttons_Count'], (v) => (v as int?) ?? 0,
     );
@@ -549,7 +547,6 @@ class HomePageModel {
       ));
     }
 
-    // ── Sections ─────────────────────────────────────────────────────
     final sCount = Versioned.read<int>(
       map['Sections_Count'], (v) => (v as int?) ?? 0,
     );
@@ -579,7 +576,6 @@ class HomePageModel {
       ));
     }
 
-    // ── Header_Items ─────────────────────────────────────────────────
     final hiCount = Versioned.read<int>(
       map['Header_Items_Count'], (v) => (v as int?) ?? 0,
     );
@@ -603,7 +599,6 @@ class HomePageModel {
       ));
     }
 
-    // ── Footer_Columns ───────────────────────────────────────────────
     final fcCount = Versioned.read<int>(
       map['Footer_Columns_Count'], (v) => (v as int?) ?? 0,
     );
@@ -651,7 +646,6 @@ class HomePageModel {
       ));
     }
 
-    // ── Social_Links ─────────────────────────────────────────────────
     final slCount = Versioned.read<int>(
       map['Social_Links_Count'], (v) => (v as int?) ?? 0,
     );
@@ -674,33 +668,23 @@ class HomePageModel {
     }
 
     return HomePageModel(
-      // ── Title ──────────────────────────────────────────────────────
       title: BiText(
-        en: Versioned.read<String>(
-          map['Title_En'], (v) => v?.toString() ?? '',
-        ),
-        ar: Versioned.read<String>(
-          map['Title_Ar'], (v) => v?.toString() ?? '',
-        ),
+        en: Versioned.read<String>(map['Title_En'], (v) => v?.toString() ?? ''),
+        ar: Versioned.read<String>(map['Title_Ar'], (v) => v?.toString() ?? ''),
       ),
-
-      // ── Short Description ──────────────────────────────────────────
       shortDescription: BiText(
-        en: Versioned.read<String>(
-          map['Short_Description_En'], (v) => v?.toString() ?? '',
-        ),
-        ar: Versioned.read<String>(
-          map['Short_Description_Ar'], (v) => v?.toString() ?? '',
-        ),
+        en: Versioned.read<String>(map['Short_Description_En'], (v) => v?.toString() ?? ''),
+        ar: Versioned.read<String>(map['Short_Description_Ar'], (v) => v?.toString() ?? ''),
       ),
-
-      // ── Branding ───────────────────────────────────────────────────
       branding: BrandingModel(
         logoUrl: Versioned.read<String>(
           map['Branding_Logo_Url'], (v) => v?.toString() ?? '',
         ),
         primaryColor: Versioned.read<String>(
           map['Branding_Primary_Color'], (v) => v?.toString() ?? '#008037',
+        ),
+        malePrimaryColor: Versioned.read<String>(            // ← NEW
+          map['Branding_Male_Primary_Color'], (v) => v?.toString() ?? '#D9D9D9',
         ),
         secondaryColor: Versioned.read<String>(
           map['Branding_Secondary_Color'], (v) => v?.toString() ?? '#D9D9D9',
@@ -711,6 +695,9 @@ class HomePageModel {
         headerFooterColor: Versioned.read<String>(
           map['Branding_Header_Footer_Color'], (v) => v?.toString() ?? '#D9D9D9',
         ),
+        mainWidgetColor: Versioned.read<String>(              // ← NEW
+          map['Branding_Main_Widget_Color'], (v) => v?.toString() ?? '#D9D9D9',
+        ),
         englishFont: Versioned.read<String>(
           map['Branding_English_Font'], (v) => v?.toString() ?? 'Cairo',
         ),
@@ -718,8 +705,6 @@ class HomePageModel {
           map['Branding_Arabic_Font'], (v) => v?.toString() ?? 'Cairo',
         ),
       ),
-
-      // ── App Download Links ─────────────────────────────────────────
       appDownloadLinks: AppDownloadLinksModel(
         iosUrl: Versioned.read<String>(
           map['App_Download_Links_Ios_Url'], (v) => v?.toString() ?? '',
@@ -743,8 +728,6 @@ class HomePageModel {
           map['App_Download_Links_Visibility'], (v) => v as bool? ?? true,
         ),
       ),
-
-      // ── Scalars ────────────────────────────────────────────────────
       publishStatus: Versioned.read<String>(
         map['Publish_Status'], (v) => v?.toString() ?? 'draft',
       ),
@@ -755,8 +738,6 @@ class HomePageModel {
         map['Scheduled_Publish_Date'], (v) => _parseDateTime(v),
       ),
       lastUpdatedAt: _parseDateTime(map['Last_Updated_At']),
-
-      // ── Lists (parsed above) ───────────────────────────────────────
       navButtons:    navButtons,
       sections:      sections,
       headerItems:   headerItems,
@@ -768,15 +749,12 @@ class HomePageModel {
   static DateTime? _parseDateTime(dynamic value) {
     if (value == null) return null;
     if (value.runtimeType.toString().contains('Timestamp')) {
-      try {
-        return (value as dynamic).toDate() as DateTime;
-      } catch (_) {}
+      try { return (value as dynamic).toDate() as DateTime; } catch (_) {}
     }
     if (value is String) return DateTime.tryParse(value);
     return null;
   }
 
-  // ── Default model ─────────────────────────────────────────────────────────
   static HomePageModel get defaultModel => HomePageModel(
     title: const BiText(en: 'Bayanatz', ar: 'بيانتز'),
     shortDescription: const BiText(
@@ -792,37 +770,31 @@ class HomePageModel {
       NavButtonModel(id: 'nb_6', name: BiText(en: 'Contact Us',       ar: 'اتصل بنا'),    route: '/contactus', status: true),
     ],
     sections: List.generate(
-      4,
-          (i) => SectionCardModel(
-        textBoxColor: '#008037',
-        description: BiText(
-          en: 'Section ${i + 1} description goes here.',
-          ar: 'وصف القسم ${i + 1} يأتي هنا.',
-        ),
+      4, (i) => SectionCardModel(
+      textBoxColor: '#008037',
+      description: BiText(
+        en: 'Section ${i + 1} description goes here.',
+        ar: 'وصف القسم ${i + 1} يأتي هنا.',
       ),
     ),
+    ),
     headerItems: List.generate(
-      5,
-          (i) => HeaderItemModel(
-        id:     'hi_$i',
-        title:  BiText(en: 'Header Title ${i + 1}', ar: 'عنوان ${i + 1}'),
-        status: true,
-      ),
+      5, (i) => HeaderItemModel(
+      id:     'hi_$i',
+      title:  BiText(en: 'Header Title ${i + 1}', ar: 'عنوان ${i + 1}'),
+      status: true,
+    ),
     ),
     footerColumns: const [
       FooterColumnModel(
-        id:    'fc_1',
-        title: BiText(en: 'Our Products', ar: 'منتجاتنا'),
-        route: '/about',
+        id: 'fc_1', title: BiText(en: 'Our Products', ar: 'منتجاتنا'), route: '/about',
         labels: [
           FooterLabelModel(id: 'fl_1a', label: BiText(en: 'Client Services', ar: 'خدمات العملاء')),
           FooterLabelModel(id: 'fl_1b', label: BiText(en: 'Owner Services',  ar: 'خدمات المالك')),
         ],
       ),
       FooterColumnModel(
-        id:    'fc_2',
-        title: BiText(en: 'About Us', ar: 'من نحن'),
-        route: '/contact',
+        id: 'fc_2', title: BiText(en: 'About Us', ar: 'من نحن'), route: '/contact',
         labels: [
           FooterLabelModel(id: 'fl_2a', label: BiText(en: 'Mission', ar: 'الرسالة'), route: '/about?tab=mission'),
           FooterLabelModel(id: 'fl_2b', label: BiText(en: 'Vision',  ar: 'الرؤية'),  route: '/about?tab=vision'),
@@ -830,18 +802,14 @@ class HomePageModel {
         ],
       ),
       FooterColumnModel(
-        id:    'fc_3',
-        title: BiText(en: 'Terms of Service', ar: 'شروط الخدمة'),
-        route: '/terms',
+        id: 'fc_3', title: BiText(en: 'Terms of Service', ar: 'شروط الخدمة'), route: '/terms',
         labels: [
           FooterLabelModel(id: 'fl_3a', label: BiText(en: 'Terms and Conditions', ar: 'الشروط والأحكام'), route: '/about?tab=terms-and-conditions'),
           FooterLabelModel(id: 'fl_3b', label: BiText(en: 'Privacy Policy',       ar: 'سياسة الخصوصية'), route: '/about?tab=privacy-policy'),
         ],
       ),
       FooterColumnModel(
-        id:    'fc_4',
-        title: BiText(en: 'Contact Us', ar: 'اتصل بنا'),
-        route: '/contactus',
+        id: 'fc_4', title: BiText(en: 'Contact Us', ar: 'اتصل بنا'), route: '/contactus',
         labels: [
           FooterLabelModel(id: 'fl_4a', label: BiText(en: 'Contact Form', ar: 'نموذج التواصل'), route: '/contactus'),
         ],

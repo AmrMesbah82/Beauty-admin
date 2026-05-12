@@ -139,7 +139,8 @@ class HomeCmsCubit extends Cubit<HomeCmsState> {
   Future<void> save({
     String publishStatus = 'published',
     DateTime? scheduledPublishDate,
-  }) async {
+  }) async
+  {
     print('🔵 [HomeCubit] save() called — publishStatus=$publishStatus '
         'scheduledPublishDate=$scheduledPublishDate');
     print('   _model.navButtons.length = ${_model.navButtons.length}');
@@ -243,6 +244,23 @@ class HomeCmsCubit extends Cubit<HomeCmsState> {
     print('🔵 [HomeCubit] updateTitle() en="$en" ar="$ar"');
     _model = _model.copyWith(title: BiText(en: en, ar: ar));
   }
+
+
+
+  // ── in the Branding / Logo section, after updateHeaderFooterColor() ───────
+
+  void updateMalePrimaryColor(String hex) {
+    print('🔵 [HomeCubit] updateMalePrimaryColor() hex=$hex');
+    _model = _model.copyWith(
+        branding: _model.branding.copyWith(malePrimaryColor: hex));
+  }
+
+  void updateMainWidgetColor(String hex) {
+    print('🔵 [HomeCubit] updateMainWidgetColor() hex=$hex');
+    _model = _model.copyWith(
+        branding: _model.branding.copyWith(mainWidgetColor: hex));
+  }
+
 
   void updateShortDescription({required String en, required String ar}) {
     print('🔵 [HomeCubit] updateShortDescription() en="$en"');

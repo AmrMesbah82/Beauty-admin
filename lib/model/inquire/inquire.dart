@@ -1,10 +1,9 @@
 // ═══════════════════════════════════════════════════════════════════
-// FILE: inquire.dart  (UPDATED — Figma-aligned model)
+// FILE: inquire.dart (FULLY UPDATED)
 // Path: lib/model/inquire/inquire.dart
-// UPDATED: gender fallback to targetAudience, country fallback to salonCountry
-//          so existing Firestore documents show data in admin table
 // ═══════════════════════════════════════════════════════════════════
 
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -72,7 +71,7 @@ enum InquiryPriority {
   }
 
   static InquiryPriority? fromString(String? value) {
-    if (value == null) return null;
+    if (value == null || value.isEmpty) return null;
     switch (value.toLowerCase()) {
       case 'critical':           return InquiryPriority.critical;
       case 'high':               return InquiryPriority.high;
@@ -83,9 +82,8 @@ enum InquiryPriority {
     }
   }
 
-  static List<String> get allLabels => [
-    'Critical', 'High', 'Medium', 'Low', 'Informational Only',
-  ];
+  static List<String> get allLabels =>
+      ['Critical', 'High', 'Medium', 'Low', 'Informational Only'];
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -101,17 +99,17 @@ enum InquiryRelevance {
 
   String get label {
     switch (this) {
-      case InquiryRelevance.strategicOpportunity:   return 'Strategic Opportunity';
-      case InquiryRelevance.potentialClient:         return 'Potential Client';
-      case InquiryRelevance.existingClientMatter:    return 'Existing Client Matter';
-      case InquiryRelevance.partnershipOpportunity:  return 'Partnership Opportunity';
-      case InquiryRelevance.lowRelevance:            return 'Low Relevance';
-      case InquiryRelevance.notRelevantIgnore:       return 'Not Relevant / Ignore';
+      case InquiryRelevance.strategicOpportunity:  return 'Strategic Opportunity';
+      case InquiryRelevance.potentialClient:        return 'Potential Client';
+      case InquiryRelevance.existingClientMatter:   return 'Existing Client Matter';
+      case InquiryRelevance.partnershipOpportunity: return 'Partnership Opportunity';
+      case InquiryRelevance.lowRelevance:           return 'Low Relevance';
+      case InquiryRelevance.notRelevantIgnore:      return 'Not Relevant / Ignore';
     }
   }
 
   static InquiryRelevance? fromString(String? value) {
-    if (value == null) return null;
+    if (value == null || value.isEmpty) return null;
     for (final v in InquiryRelevance.values) {
       if (v.label.toLowerCase() == value.toLowerCase()) return v;
     }
@@ -119,12 +117,8 @@ enum InquiryRelevance {
   }
 
   static List<String> get allLabels => [
-    'Strategic Opportunity',
-    'Potential Client',
-    'Existing Client Matter',
-    'Partnership Opportunity',
-    'Low Relevance',
-    'Not Relevant / Ignore',
+    'Strategic Opportunity', 'Potential Client', 'Existing Client Matter',
+    'Partnership Opportunity', 'Low Relevance', 'Not Relevant / Ignore',
   ];
 }
 
@@ -155,7 +149,7 @@ enum RequiredAction {
   }
 
   static RequiredAction? fromString(String? value) {
-    if (value == null) return null;
+    if (value == null || value.isEmpty) return null;
     for (final v in RequiredAction.values) {
       if (v.label.toLowerCase() == value.toLowerCase()) return v;
     }
@@ -163,14 +157,9 @@ enum RequiredAction {
   }
 
   static List<String> get allLabels => [
-    'Immediate Response Required',
-    'Follow Up Needed',
-    'Review Internally',
-    'Assign to Sales',
-    'Assign to Technical Team',
-    'Monitor Only',
-    'No Action Required',
-    'Closed',
+    'Immediate Response Required', 'Follow Up Needed', 'Review Internally',
+    'Assign to Sales', 'Assign to Technical Team', 'Monitor Only',
+    'No Action Required', 'Closed',
   ];
 }
 
@@ -188,8 +177,6 @@ class InquiryModel {
   final String phone;
   final String gender;
   final String country;
-
-  // ── Salon info (Owner) ──
   final String salonNameEn;
   final String salonNameAr;
   final String targetAudience;
@@ -198,19 +185,13 @@ class InquiryModel {
   final String noBranches;
   final String services;
   final String atLocation;
-
-  // ── Message info ──
   final String subject;
   final String reason;
   final String message;
-
-  // ── Admin comment fields ──
   final String note;
   final InquiryPriority?  inquiryPriority;
   final InquiryRelevance? inquiryRelevance;
   final RequiredAction?   requiredAction;
-
-  // ── Status / Meta ──
   final InquiryStatus status;
   final DateTime? submissionDate;
 
@@ -248,74 +229,129 @@ class InquiryModel {
 
   // ── From Firestore Map ──────────────────────────────────────────────────
   factory InquiryModel.fromMap(String id, Map<String, dynamic> map) {
-    String firstName = (map['firstName'] as String?) ?? '';
-    String lastName  = (map['lastName']  as String?) ?? '';
+
+    // ── Helper: try multiple key variants, return first non-empty string ──
+    String str(List<String> keys) {
+      for (final k in keys) {
+        final v = map[k];
+        if (v is String && v.isNotEmpty) return v;
+      }
+      return '';
+    }
+
+    // ── Helper: parse DateTime from Timestamp or ISO string ──
+    DateTime? parseDate(List<String> keys) {
+      for (final k in keys) {
+        final v = map[k];
+        if (v is Timestamp) {
+          print('🗓  [fromMap $id] "$k" is Timestamp → ${v.toDate()}');
+          return v.toDate();
+        }
+        if (v is String && v.isNotEmpty) {
+          final parsed = DateTime.tryParse(v);
+          if (parsed != null) {
+            print('🗓  [fromMap $id] "$k" is String → $parsed');
+            return parsed;
+          }
+        }
+      }
+      print('⚠️  [fromMap $id] No valid date found in keys: $keys');
+      return null;
+    }
+
+    // ── Name ──
+    String firstName = str(['First_Name', 'firstName', 'first_name']);
+    String lastName  = str(['Last_Name',  'lastName',  'last_name']);
     if (firstName.isEmpty && lastName.isEmpty) {
-      final legacy = (map['fullName'] as String?) ?? '';
+      final legacy = str(['Full_Name', 'fullName', 'full_name']);
       if (legacy.isNotEmpty) {
         final parts = legacy.split(' ');
         firstName = parts.first;
         lastName  = parts.length > 1 ? parts.sublist(1).join(' ') : '';
+        print('🔁 [fromMap $id] Used Full_Name fallback → "$firstName" "$lastName"');
       }
     }
 
-    String salonNameEn = (map['salonNameEn'] as String?) ?? '';
-    if (salonNameEn.isEmpty) salonNameEn = (map['entityName'] as String?) ?? '';
-
-    String salonCountry = (map['salonCountry'] as String?) ?? '';
-    if (salonCountry.isEmpty) salonCountry = (map['location'] as String?) ?? '';
-
-    // ── FIXED: gender fallback chain ──
-    // 1. Try dedicated 'gender' field (written by updated toMap)
-    // 2. Fallback to 'targetAudience' (old docs that never had 'gender')
-    String gender = (map['gender'] as String?) ?? '';
+    // ── Gender with fallback ──
+    String gender = str(['Gender', 'gender']);
     if (gender.isEmpty) {
-      gender = (map['targetAudience'] as String?) ?? '';
+      gender = str(['Target_Audience', 'targetAudience']);
+      if (gender.isNotEmpty) {
+        print('🔁 [fromMap $id] gender fallback → targetAudience = "$gender"');
+      }
     }
 
-    // ── FIXED: country fallback chain ──
-    // 1. Try dedicated 'country' field (written by updated toMap)
-    // 2. Fallback to 'salonCountry'
-    // 3. Fallback to legacy 'location'
-    String country = (map['country'] as String?) ?? '';
+    // ── Country with fallback ──
+    String country = str(['Country', 'country']);
     if (country.isEmpty) {
-      country = (map['salonCountry'] as String?) ?? '';
-    }
-    if (country.isEmpty) {
-      country = (map['location'] as String?) ?? '';
+      country = str(['Salon_Country', 'salonCountry', 'location', 'Location']);
+      if (country.isNotEmpty) {
+        print('🔁 [fromMap $id] country fallback → "$country"');
+      }
     }
 
-    return InquiryModel(
+    // ── salonCountry ──
+    String salonCountry = str(['Salon_Country', 'salonCountry']);
+    if (salonCountry.isEmpty) {
+      salonCountry = str(['location', 'Location']);
+    }
+
+    // ── salonNameEn ──
+    String salonNameEn = str(['Salon_Name_En', 'salonNameEn', 'salon_name_en']);
+    if (salonNameEn.isEmpty) {
+      salonNameEn = str(['Entity_Name', 'entityName']);
+    }
+
+    final model = InquiryModel(
       id:                id,
-      userType:          (map['userType']          as String?) ?? 'client',
-      preferredLanguage: (map['preferredLanguage'] as String?) ?? 'en',
+      userType:          str(['User_Type',          'userType',          'user_type']),
+      preferredLanguage: str(['Preferred_Language', 'preferredLanguage', 'preferred_language']),
       firstName:         firstName,
       lastName:          lastName,
-      email:             (map['email']             as String?) ?? '',
-      countryCode:       (map['countryCode']       as String?) ?? '',
-      phone:             (map['phoneNumber']       as String?) ?? '',
+      email:             str(['Email',              'email']),
+      countryCode:       str(['Country_Code',       'countryCode',       'country_code']),
+      phone:             str(['Phone_Number',       'phoneNumber',       'phone_number', 'phone']),
       gender:            gender,
       country:           country,
       salonNameEn:       salonNameEn,
-      salonNameAr:       (map['salonNameAr']       as String?) ?? '',
-      targetAudience:    (map['targetAudience']    as String?) ?? '',
+      salonNameAr:       str(['Salon_Name_Ar',      'salonNameAr',       'salon_name_ar']),
+      targetAudience:    str(['Target_Audience',    'targetAudience',    'target_audience']),
       salonCountry:      salonCountry,
-      salonCity:         (map['salonCity']         as String?) ?? '',
-      noBranches:        (map['noBranches']        as String?) ?? '',
-      services:          (map['services']          as String?) ?? '',
-      atLocation:        (map['atLocation']        as String?) ?? '',
-      subject:           (map['subject']           as String?) ?? '',
-      reason:            (map['reason']            as String?) ?? '',
-      message:           (map['message']           as String?) ?? '',
-      note:              (map['note']              as String?) ?? '',
-      inquiryPriority:   InquiryPriority.fromString(map['inquiryPriority']  as String?),
-      inquiryRelevance:  InquiryRelevance.fromString(map['inquiryRelevance'] as String?),
-      requiredAction:    RequiredAction.fromString(map['requiredAction']     as String?),
-      status: InquiryStatus.fromString((map['status'] as String?) ?? 'New'),
-      submissionDate: map['submissionDate'] != null
-          ? DateTime.tryParse(map['submissionDate'] as String)
-          : null,
+      salonCity:         str(['Salon_City',         'salonCity',         'salon_city']),
+      noBranches:        str(['No_Branches',        'noBranches',        'no_branches']),
+      services:          str(['Services',           'services']),
+      atLocation:        str(['At_Location',        'atLocation',        'at_location']),
+      subject:           str(['Subject',            'subject']),
+      reason:            str(['Reason',             'reason']),
+      message:           str(['Message',            'message']),
+      note:              str(['Note',               'note']),
+      inquiryPriority:   InquiryPriority.fromString(
+          str(['Inquiry_Priority',  'inquiryPriority',  'inquiry_priority'])),
+      inquiryRelevance:  InquiryRelevance.fromString(
+          str(['Inquiry_Relevance', 'inquiryRelevance', 'inquiry_relevance'])),
+      requiredAction:    RequiredAction.fromString(
+          str(['Required_Action',   'requiredAction',   'required_action'])),
+      status: InquiryStatus.fromString(
+          str(['Status', 'status']).isEmpty ? 'New' : str(['Status', 'status'])),
+      submissionDate: parseDate([
+        'Submission_Date', 'submissionDate', 'submission_date',
+        'createdAt',       'created_at',     'Created_At',
+      ]),
     );
+
+    print(
+      '📦 [fromMap $id] → '
+          'name="${model.firstName} ${model.lastName}" | '
+          'email="${model.email}" | '
+          'phone="${model.phone}" | '
+          'gender="${model.gender}" | '
+          'country="${model.country}" | '
+          'userType="${model.userType}" | '
+          'status="${model.status.label}" | '
+          'date="${model.submissionDate}"',
+    );
+
+    return model;
   }
 
   // ── To Firestore Map ────────────────────────────────────────────────────
@@ -349,6 +385,7 @@ class InquiryModel {
     'submissionDate':    submissionDate?.toIso8601String(),
   };
 
+  // ── copyWith ────────────────────────────────────────────────────────────
   InquiryModel copyWith({
     String? id,
     String? userType,
@@ -401,13 +438,15 @@ class InquiryModel {
         reason:            reason            ?? this.reason,
         message:           message           ?? this.message,
         note:              note              ?? this.note,
-        inquiryPriority:  inquiryPriority  == _sentinel ? this.inquiryPriority  : inquiryPriority  as InquiryPriority?,
-        inquiryRelevance: inquiryRelevance == _sentinel ? this.inquiryRelevance : inquiryRelevance as InquiryRelevance?,
-        requiredAction:   requiredAction   == _sentinel ? this.requiredAction   : requiredAction   as RequiredAction?,
+        inquiryPriority:  inquiryPriority  == _sentinel
+            ? this.inquiryPriority  : inquiryPriority  as InquiryPriority?,
+        inquiryRelevance: inquiryRelevance == _sentinel
+            ? this.inquiryRelevance : inquiryRelevance as InquiryRelevance?,
+        requiredAction:   requiredAction   == _sentinel
+            ? this.requiredAction   : requiredAction   as RequiredAction?,
         status:            status            ?? this.status,
         submissionDate:    submissionDate    ?? this.submissionDate,
       );
 }
 
-// sentinel for nullable copyWith fields
 const Object _sentinel = Object();

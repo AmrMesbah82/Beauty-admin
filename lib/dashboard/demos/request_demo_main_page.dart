@@ -23,6 +23,9 @@ import '../../controller/demos/request_demo_cubit.dart';
 import '../../controller/demos/request_demo_state.dart';
 import '../../controller/home/home_cubit.dart';
 import '../../controller/home/home_state.dart';
+import '../../controller/request/request_demo_cubit.dart';
+import '../../controller/request/request_demo_state.dart';
+import '../../model/request/request_demo_model.dart';
 import '../main_page/home_main_page.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -56,6 +59,71 @@ const List<String> _kMonthNames = [
 ];
 
 // ─────────────────────────────────────────────────────────────────────────────
+//  STATIC HEADERS (always shown — before & after dynamic questions)
+// ─────────────────────────────────────────────────────────────────────────────
+const List<String> _kStaticHeadersLeft = [
+  'Submission Date',
+  'Salon Name',
+  'Country',
+  'City',
+  'No.Branches',
+  'No.Employees',
+  'First Name',
+  'Last Name',
+  'Phone Number',
+  'Email',
+];
+
+const List<String> _kStaticHeadersRight = [
+  'Inquiry Priority',
+  'Inquiry Relevance',
+  'Required Action',
+  'Notes',
+  'Status',
+];
+
+
+// ─────────────────────────────────────────────────────────────────────────────
+//  FIXED DROPDOWN LISTS (always show all options — not data-derived)
+// ─────────────────────────────────────────────────────────────────────────────
+
+/// All possible Status values
+const List<String> _kAllStatuses = ['New', 'Replied', 'Closed'];
+
+/// All 12 months
+const List<int> _kAllMonths = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
+
+/// All countries
+const List<String> _kAllCountries = [
+  'Afghanistan', 'Albania', 'Algeria', 'Andorra', 'Angola',
+  'Argentina', 'Armenia', 'Australia', 'Austria', 'Azerbaijan',
+  'Bahrain', 'Bangladesh', 'Belarus', 'Belgium', 'Bolivia',
+  'Bosnia and Herzegovina', 'Brazil', 'Bulgaria', 'Cambodia', 'Cameroon',
+  'Canada', 'Chile', 'China', 'Colombia', 'Croatia',
+  'Cuba', 'Cyprus', 'Czech Republic', 'Denmark', 'Ecuador',
+  'Egypt', 'Estonia', 'Ethiopia', 'Finland', 'France',
+  'Georgia', 'Germany', 'Ghana', 'Greece', 'Hungary',
+  'India', 'Indonesia', 'Iran', 'Iraq', 'Ireland',
+  'Israel', 'Italy', 'Japan', 'Jordan', 'Kazakhstan',
+  'Kenya', 'Kuwait', 'Latvia', 'Lebanon', 'Libya',
+  'Lithuania', 'Luxembourg', 'Malaysia', 'Mexico', 'Morocco',
+  'Netherlands', 'New Zealand', 'Nigeria', 'Norway', 'Oman',
+  'Pakistan', 'Palestine', 'Panama', 'Peru', 'Philippines',
+  'Poland', 'Portugal', 'Qatar', 'Romania', 'Russia',
+  'Saudi Arabia', 'Serbia', 'Singapore', 'Slovakia', 'Slovenia',
+  'Somalia', 'South Africa', 'South Korea', 'Spain', 'Sri Lanka',
+  'Sudan', 'Sweden', 'Switzerland', 'Syria', 'Taiwan',
+  'Thailand', 'Tunisia', 'Turkey', 'Ukraine', 'United Arab Emirates',
+  'United Kingdom', 'United States', 'Uruguay', 'Venezuela', 'Vietnam',
+  'Yemen', 'Zimbabwe',
+];
+
+/// All Entity Types — adjust to match your app's full set
+const List<String> _kAllEntityTypes = [
+  'Salon', 'Spa', 'Barbershop', 'Nail Studio', 'Beauty Center',
+  'Wellness Center', 'Hair Studio', 'Medical Spa', 'Other',
+];
+// ─────────────────────────────────────────────────────────────────────────────
 //  PAGE
 // ─────────────────────────────────────────────────────────────────────────────
 class RequestDemoMainPage extends StatefulWidget {
@@ -70,12 +138,43 @@ class _RequestDemoMainPageState extends State<RequestDemoMainPage> {
   void initState() {
     super.initState();
     context.read<RequestDemoCubit>().loadDemos();
+    // Also load the CMS form config so we can read dynamic questions
+    context.read<RequestDemoCmsCubit>().load();
   }
 
   @override
   void dispose() {
     _searchController.dispose();
     super.dispose();
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  //  DYNAMIC QUESTIONS from CMS
+  //  Returns the list of DemoQuestionModel configured in the edit page.
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  List<DemoQuestionModel> _getDynamicQuestions(RequestDemoCmsState cmsState) {
+    if (cmsState is RequestDemoCmsLoaded) {
+      return cmsState.data.demoQuestions;
+    }
+    return [];
+  }
+
+  /// Build all column headers: static-left + dynamic + static-right
+  List<String> _buildHeaders(List<DemoQuestionModel> dynamicQuestions) {
+    return [
+      ..._kStaticHeadersLeft,
+      ...dynamicQuestions.map((q) => q.question.en),
+      ..._kStaticHeadersRight,
+    ];
+  }
+
+  /// Get answer for a specific question from a demo submission.
+  /// Looks up by question id inside d.answers (Map<String, dynamic>).
+  String _getAnswer(RequestDemoModel d, String questionId) {
+    final val = d.questionAnswers[questionId];
+    if (val == null || val.isEmpty) return '-';
+    return val;
   }
 
   // ═══════════════════════════════════════════════════════════════════════════
@@ -95,7 +194,10 @@ class _RequestDemoMainPageState extends State<RequestDemoMainPage> {
     return '${_kMonthNames[d.month - 1]} ${d.day}, ${d.year}';
   }
 
-  void _showExportDialog(List<RequestDemoModel> demos) {
+  void _showExportDialog(
+      List<RequestDemoModel> demos,
+      List<DemoQuestionModel> dynamicQuestions,
+      ) {
     final fileNameCtrl = TextEditingController();
     bool isExporting = false;
     showDialog(
@@ -141,7 +243,7 @@ class _RequestDemoMainPageState extends State<RequestDemoMainPage> {
                       return;
                     }
                     setDlg(() => isExporting = true);
-                    _performExport(demos, fn);
+                    _performExport(demos, dynamicQuestions, fn);
                     Navigator.of(ctx).pop();
                     _showExportSuccessDialog(fn);
                   },
@@ -164,19 +266,43 @@ class _RequestDemoMainPageState extends State<RequestDemoMainPage> {
     );
   }
 
-  void _performExport(List<RequestDemoModel> demos, String fileName) {
+  void _performExport(
+      List<RequestDemoModel> demos,
+      List<DemoQuestionModel> dynamicQuestions,
+      String fileName,
+      ) {
     try {
       final buf = StringBuffer();
+
+      // Build CSV headers dynamically
       final headers = [
-        'No', 'Submission Date', 'Salon Name', 'Country', 'City',
-        'No.Branches', 'No.Employees', 'First Name', 'Last Name',
-        'Phone Number', 'Email', 'Primary Reasons from Requesting a Demo',
-        'How did you hear about us?', 'Inquiry Priority', 'Inquiry Relevance',
-        'Required Action', 'Notes', 'Status',
+        'No',
+        'Submission Date',
+        'Salon Name',
+        'Country',
+        'City',
+        'No.Branches',
+        'No.Employees',
+        'First Name',
+        'Last Name',
+        'Phone Number',
+        'Email',
+        // Dynamic question headers
+        ...dynamicQuestions.map((q) => q.question.en),
+        'Inquiry Priority',
+        'Inquiry Relevance',
+        'Required Action',
+        'Notes',
+        'Status',
       ];
       buf.writeln(headers.map(_esc).join(','));
+
       for (int i = 0; i < demos.length; i++) {
         final d = demos[i];
+        final dynamicValues = dynamicQuestions
+            .map((q) => _getAnswer(d, q.id))
+            .toList();
+
         buf.writeln([
           '${i + 1}',
           _fmtDate(d.submissionDate),
@@ -189,8 +315,7 @@ class _RequestDemoMainPageState extends State<RequestDemoMainPage> {
           d.lastName,
           '${d.countryCode} ${d.phone}',
           d.email,
-          d.primaryReason,
-          d.howDidYouHearAboutUs,
+          ...dynamicValues,
           d.inquiryPriority?.label ?? '',
           d.inquiryRelevance?.label ?? '',
           d.requiredAction?.label ?? '',
@@ -198,6 +323,7 @@ class _RequestDemoMainPageState extends State<RequestDemoMainPage> {
           d.status.label,
         ].map(_esc).join(','));
       }
+
       final blob = html.Blob([utf8.encode(buf.toString())], 'text/csv;charset=utf-8');
       final url  = html.Url.createObjectUrlFromBlob(blob);
       final fn   = fileName.toLowerCase().endsWith('.csv') ? fileName : '$fileName.csv';
@@ -259,273 +385,280 @@ class _RequestDemoMainPageState extends State<RequestDemoMainPage> {
       builder: (context, cmsState) {
         final Color cmsPrimary = _primaryFromCmsState(cmsState);
 
-        return BlocListener<RequestDemoCubit, RequestDemoState>(
-          listener: (context, state) {
-            if (state is RequestDemoUpdated) {
-              context.read<RequestDemoCubit>().loadDemos();
-            }
-          },
-          child: BlocBuilder<RequestDemoCubit, RequestDemoState>(
-            builder: (context, state) {
-              if (state is RequestDemoInitial || state is RequestDemoLoading) {
-                return Scaffold(
-                  backgroundColor: _C.back,
-                  body: Center(child: CircularProgressIndicator(color: cmsPrimary)),
-                );
-              }
+        // ── Listen to the CMS cubit to get dynamic questions ───────────────
+        return BlocBuilder<RequestDemoCmsCubit, RequestDemoCmsState>(
+          builder: (context, demoCmsState) {
+            final dynamicQuestions = _getDynamicQuestions(demoCmsState);
 
-              final cubit = context.read<RequestDemoCubit>();
-              List<RequestDemoModel> demos = [];
-              int totalCount = 0, newCount = 0, repliedCount = 0, closedCount = 0;
-              Map<int, int>    monthlySubmissions  = {};
-              Map<String, int> noBranchesCounts    = {};
-              Map<String, int> noEmployeesCounts   = {};
-              Map<String, int> primaryReasonCounts = {};
-              Map<String, int> howDidYouHearCounts = {};
-              Map<String, int> inquiryPriorityCounts  = {};
-              Map<String, int> inquiryRelevanceCounts = {};
-              Map<String, int> requiredActionCounts   = {};
-              List<String> uniqueStatuses    = [];
-              List<String> uniqueEntityTypes = [];
-              List<String> uniqueCountries   = [];
-              List<int>    uniqueMonths      = [];
-              String? activeStatus, activeEntityType, activeCountry;
-              int?    activeMonth;
+            return BlocListener<RequestDemoCubit, RequestDemoState>(
+              listener: (context, state) {
+                if (state is RequestDemoUpdated) {
+                  context.read<RequestDemoCubit>().loadDemos();
+                }
+              },
+              child: BlocBuilder<RequestDemoCubit, RequestDemoState>(
+                builder: (context, state) {
+                  if (state is RequestDemoInitial || state is RequestDemoLoading) {
+                    return Scaffold(
+                      backgroundColor: _C.back,
+                      body: Center(child: CircularProgressIndicator(color: cmsPrimary)),
+                    );
+                  }
 
-              if (state is RequestDemoLoaded) {
-                demos                  = state.filtered;
-                totalCount             = state.totalCount;
-                newCount               = state.newCount;
-                repliedCount           = state.repliedCount;
-                closedCount            = state.closedCount;
-                monthlySubmissions     = state.monthlySubmissions;
-                noBranchesCounts       = state.noBranchesCounts;
-                noEmployeesCounts      = state.noEmployeesCounts;
-                primaryReasonCounts    = state.primaryReasonCounts;
-                howDidYouHearCounts    = state.howDidYouHearCounts;
-                inquiryPriorityCounts  = state.priorityCounts;
-                inquiryRelevanceCounts = state.relevanceCounts;
-                requiredActionCounts   = state.requiredActionCounts;
-                uniqueStatuses         = state.uniqueStatuses;
-                uniqueEntityTypes      = state.uniqueEntityTypes;
-                uniqueCountries        = state.uniqueCountries;
-                uniqueMonths           = state.uniqueMonths;
-                activeStatus           = state.statusFilter;
-                activeEntityType       = state.entityTypeFilter;
-                activeCountry          = state.countryFilter;
-                activeMonth            = state.monthFilter;
-              }
+                  final cubit = context.read<RequestDemoCubit>();
+                  List<RequestDemoModel> demos = [];
+                  int totalCount = 0, newCount = 0, repliedCount = 0, closedCount = 0;
+                  Map<int, int>    monthlySubmissions  = {};
+                  Map<String, int> noBranchesCounts    = {};
+                  Map<String, int> noEmployeesCounts   = {};
+                  Map<String, int> primaryReasonCounts = {};
+                  Map<String, int> howDidYouHearCounts = {};
+                  Map<String, int> inquiryPriorityCounts  = {};
+                  Map<String, int> inquiryRelevanceCounts = {};
+                  Map<String, int> requiredActionCounts   = {};
+                  List<String> uniqueStatuses    = [];
+                  List<String> uniqueEntityTypes = [];
+                  List<String> uniqueCountries   = [];
+                  List<int>    uniqueMonths      = [];
+                  String? activeStatus, activeEntityType, activeCountry;
+                  int?    activeMonth;
 
-              final hasFilters = activeStatus != null || activeEntityType != null ||
-                  activeCountry != null || activeMonth != null;
+                  if (state is RequestDemoLoaded) {
+                    demos                  = state.filtered;
+                    totalCount             = state.totalCount;
+                    newCount               = state.newCount;
+                    repliedCount           = state.repliedCount;
+                    closedCount            = state.closedCount;
+                    monthlySubmissions     = state.monthlySubmissions;
+                    noBranchesCounts       = state.noBranchesCounts;
+                    noEmployeesCounts      = state.noEmployeesCounts;
+                    primaryReasonCounts    = state.primaryReasonCounts;
+                    howDidYouHearCounts    = state.howDidYouHearCounts;
+                    inquiryPriorityCounts  = state.priorityCounts;
+                    inquiryRelevanceCounts = state.relevanceCounts;
+                    requiredActionCounts   = state.requiredActionCounts;
+                    uniqueStatuses         = state.uniqueStatuses;
+                    uniqueEntityTypes      = state.uniqueEntityTypes;
+                    uniqueCountries        = state.uniqueCountries;
+                    uniqueMonths           = state.uniqueMonths;
+                    activeStatus           = state.statusFilter;
+                    activeEntityType       = state.entityTypeFilter;
+                    activeCountry          = state.countryFilter;
+                    activeMonth            = state.monthFilter;
+                  }
 
-              final priorityTotal    = inquiryPriorityCounts.values.fold(0, (a, b) => a + b);
-              final relevanceTotal   = inquiryRelevanceCounts.values.fold(0, (a, b) => a + b);
-              final reqActionTotal   = requiredActionCounts.values.fold(0, (a, b) => a + b);
-              final howHearTotal     = howDidYouHearCounts.values.fold(0, (a, b) => a + b);
+                  final hasFilters = activeStatus != null || activeEntityType != null ||
+                      activeCountry != null || activeMonth != null;
 
-              return Scaffold(
-                backgroundColor: _C.back,
-                body: SingleChildScrollView(
-                  child: Center(
-                    child: SizedBox(
-                      width: 1000.w,
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          // ── Navbar ───────────────────────────────────────
-                          AppAdminNavbar(
-                            activeLabel:    "Demos",
-                            homePage:       HomeMainPage(),
-                            webPage:        HomeMainPage(),
-                            jobListingPage: HomeMainPage(),
-                          ),
-                          SizedBox(height: 20.h),
+                  final priorityTotal    = inquiryPriorityCounts.values.fold(0, (a, b) => a + b);
+                  final relevanceTotal   = inquiryRelevanceCounts.values.fold(0, (a, b) => a + b);
+                  final reqActionTotal   = requiredActionCounts.values.fold(0, (a, b) => a + b);
+                  final howHearTotal     = howDidYouHearCounts.values.fold(0, (a, b) => a + b);
 
-                          // ── Title ────────────────────────────────────────
-                          Text("Demo's",
-                              style: StyleText.fontSize45Weight600.copyWith(
-                                  color: cmsPrimary, fontWeight: FontWeight.w700)),
-                          SizedBox(height: 16.h),
-
-                          // ── Search + Filter row ──────────────────────────
-                          Row(
+                  return Scaffold(
+                    backgroundColor: _C.back,
+                    body: SingleChildScrollView(
+                      child: Center(
+                        child: SizedBox(
+                          width: 1000.w,
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Expanded(
-                                child: AppSearchTextField(
-                                  controller: _searchController,
-                                  onChanged: cubit.setSearch,
-                                  hintText: 'Search',
+                              // ── Navbar ─────────────────────────────────
+                              AppAdminNavbar(
+                                activeLabel:    "Demos",
+                                homePage:       HomeMainPage(),
+                                webPage:        HomeMainPage(),
+                                jobListingPage: HomeMainPage(),
+                              ),
+                              SizedBox(height: 20.h),
+
+                              // ── Title ───────────────────────────────────
+                              Text("Demo's",
+                                  style: StyleText.fontSize45Weight600.copyWith(
+                                      color: cmsPrimary, fontWeight: FontWeight.w700)),
+                              SizedBox(height: 16.h),
+
+                              // ── Search + Filter row ──────────────────────
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: AppSearchTextField(
+                                      controller: _searchController,
+                                      onChanged: cubit.setSearch,
+                                      hintText: 'Search',
+                                    ),
+                                  ),
+                                  SizedBox(width: 12.w),
+                                  Container(
+                                    height: 36.h,
+                                    padding: EdgeInsets.symmetric(horizontal: 25.w),
+                                    decoration: BoxDecoration(
+                                      color: cmsPrimary,
+                                      borderRadius: BorderRadius.circular(6.r),
+                                    ),
+                                    child: Row(mainAxisSize: MainAxisSize.min, children: [
+
+                                      Text('Filter',
+                                          style: TextStyle(fontSize: 13.sp, fontWeight: FontWeight.w600, color: Colors.white)),
+                                    ]),
+                                  ),
+                                ],
+                              ),
+                              SizedBox(height: 16.h),
+
+                              // ── Summary cards ───────────────────────────
+                              _summaryRow(totalCount, newCount, repliedCount, closedCount, cmsPrimary),
+                              SizedBox(height: 16.h),
+
+                              // ── Filters row ─────────────────────────────
+                              _buildFiltersRow(
+                                cubit: cubit,
+                                cmsPrimary: cmsPrimary,
+                                uniqueStatuses: uniqueStatuses,
+                                uniqueEntityTypes: uniqueEntityTypes,
+                                uniqueCountries: uniqueCountries,
+                                uniqueMonths: uniqueMonths,
+                                activeStatus: activeStatus,
+                                activeEntityType: activeEntityType,
+                                activeCountry: activeCountry,
+                                activeMonth: activeMonth,
+                                hasFilters: hasFilters,
+                                demos: demos,
+                                dynamicQuestions: dynamicQuestions,
+                              ),
+                              SizedBox(height: 16.h),
+
+                              // ── Table (now dynamic) ─────────────────────
+                              _buildTable(demos, dynamicQuestions, context, cmsPrimary),
+                              SizedBox(height: 40.h),
+
+                              // ── Dashboard heading ───────────────────────
+                              Text('Dashboard',
+                                  style: StyleText.fontSize24Weight600.copyWith(
+                                      color: cmsPrimary, fontWeight: FontWeight.w700)),
+                              SizedBox(height: 16.h),
+
+                              // ══════════════════════════════════════════════
+                              //  ROW 1: Submission Received | No.Branches
+                              // ══════════════════════════════════════════════
+                              _chartRow(
+                                left: _chartCard(
+                                  'Submission Received',
+                                  'Total: $totalCount',
+                                  _buildBarChart(monthlySubmissions, cmsPrimary),
+                                  cmsPrimary,
+                                ),
+                                right: _chartCard(
+                                  'No.Branches',
+                                  '',
+                                  _buildSegmentedBarChart(
+                                    counts: noBranchesCounts,
+                                    colors: [
+                                      Colors.grey.shade400,
+                                      Colors.grey.shade300,
+                                      cmsPrimary,
+                                      cmsPrimary.withOpacity(0.7),
+                                    ],
+                                  ),
+                                  cmsPrimary,
                                 ),
                               ),
-                              SizedBox(width: 12.w),
-                              Container(
-                                height: 40.h,
-                                padding: EdgeInsets.symmetric(horizontal: 16.w),
-                                decoration: BoxDecoration(
-                                  color: cmsPrimary,
-                                  borderRadius: BorderRadius.circular(6.r),
+                              SizedBox(height: 16.h),
+
+                              // ══════════════════════════════════════════════
+                              //  ROW 2: Primary Reasons | How did you hear
+                              // ══════════════════════════════════════════════
+                              _chartRow(
+                                left: _chartCard(
+                                  'Primary Reasons from Requesting a Demo',
+                                  '',
+                                  _buildTwoColumnHorizontalBarChart(primaryReasonCounts, cmsPrimary),
+                                  cmsPrimary,
                                 ),
-                                child: Row(mainAxisSize: MainAxisSize.min, children: [
-                                  Icon(Icons.tune, size: 16.sp, color: Colors.white),
-                                  SizedBox(width: 6.w),
-                                  Text('Filter',
-                                      style: TextStyle(fontSize: 13.sp, fontWeight: FontWeight.w600, color: Colors.white)),
-                                ]),
+                                right: _chartCard(
+                                  'How did you hear about us?',
+                                  '',
+                                  _buildDonutSection(
+                                    counts: howDidYouHearCounts,
+                                    centerTotal: howHearTotal,
+                                    colors: _pieColors(howDidYouHearCounts.length, cmsPrimary),
+                                  ),
+                                  cmsPrimary,
+                                ),
                               ),
+                              SizedBox(height: 16.h),
+
+                              // ══════════════════════════════════════════════
+                              //  ROW 3: No.Employees | Inquiry Priority
+                              // ══════════════════════════════════════════════
+                              _chartRow(
+                                left: _chartCard(
+                                  'No. Employees',
+                                  '',
+                                  _buildSegmentedBarChart(
+                                    counts: noEmployeesCounts,
+                                    colors: [
+                                      cmsPrimary,
+                                      cmsPrimary.withOpacity(0.7),
+                                      cmsPrimary.withOpacity(0.5),
+                                      Colors.grey.shade400,
+                                      Colors.grey.shade300,
+                                    ],
+                                  ),
+                                  cmsPrimary,
+                                ),
+                                right: _chartCard(
+                                  'Inquiry Priority',
+                                  '',
+                                  _buildDonutSection(
+                                    counts: inquiryPriorityCounts,
+                                    centerTotal: priorityTotal,
+                                    colors: _priorityColors(inquiryPriorityCounts.keys.toList()),
+                                    usePriorityColors: true,
+                                  ),
+                                  cmsPrimary,
+                                ),
+                              ),
+                              SizedBox(height: 16.h),
+
+                              // ══════════════════════════════════════════════
+                              //  ROW 4: Inquiry Relevance | Required Action
+                              // ══════════════════════════════════════════════
+                              _chartRow(
+                                left: _chartCard(
+                                  'Inquiry Relevance',
+                                  '',
+                                  _buildDonutSection(
+                                    counts: inquiryRelevanceCounts,
+                                    centerTotal: relevanceTotal,
+                                    colors: _pieColors(inquiryRelevanceCounts.length, cmsPrimary),
+                                  ),
+                                  cmsPrimary,
+                                ),
+                                right: _chartCard(
+                                  'Required Action',
+                                  '',
+                                  _buildDonutSection(
+                                    counts: requiredActionCounts,
+                                    centerTotal: reqActionTotal,
+                                    colors: _pieColors(requiredActionCounts.length, cmsPrimary),
+                                  ),
+                                  cmsPrimary,
+                                ),
+                              ),
+                              SizedBox(height: 40.h),
                             ],
                           ),
-                          SizedBox(height: 16.h),
-
-                          // ── Summary cards ────────────────────────────────
-                          _summaryRow(totalCount, newCount, repliedCount, closedCount, cmsPrimary),
-                          SizedBox(height: 16.h),
-
-                          // ── Filters row ──────────────────────────────────
-                          _buildFiltersRow(
-                            cubit: cubit,
-                            cmsPrimary: cmsPrimary,
-                            uniqueStatuses: uniqueStatuses,
-                            uniqueEntityTypes: uniqueEntityTypes,
-                            uniqueCountries: uniqueCountries,
-                            uniqueMonths: uniqueMonths,
-                            activeStatus: activeStatus,
-                            activeEntityType: activeEntityType,
-                            activeCountry: activeCountry,
-                            activeMonth: activeMonth,
-                            hasFilters: hasFilters,
-                            demos: demos,
-                          ),
-                          SizedBox(height: 16.h),
-
-                          // ── Table ────────────────────────────────────────
-                          _buildTable(demos, context, cmsPrimary),
-                          SizedBox(height: 40.h),
-
-                          // ── Dashboard heading ────────────────────────────
-                          Text('Dashboard',
-                              style: StyleText.fontSize24Weight600.copyWith(
-                                  color: cmsPrimary, fontWeight: FontWeight.w700)),
-                          SizedBox(height: 16.h),
-
-                          // ═══════════════════════════════════════════════
-                          //  ROW 1: Submission Received | No.Branches
-                          // ═══════════════════════════════════════════════
-                          _chartRow(
-                            left: _chartCard(
-                              'Submission Received',
-                              'Total: $totalCount',
-                              _buildBarChart(monthlySubmissions, cmsPrimary),
-                              cmsPrimary,
-                            ),
-                            right: _chartCard(
-                              'No.Branches',
-                              '',
-                              _buildSegmentedBarChart(
-                                counts: noBranchesCounts,
-                                colors: [
-                                  Colors.grey.shade400,
-                                  Colors.grey.shade300,
-                                  cmsPrimary,
-                                  cmsPrimary.withOpacity(0.7),
-                                ],
-                              ),
-                              cmsPrimary,
-                            ),
-                          ),
-                          SizedBox(height: 16.h),
-
-                          // ═══════════════════════════════════════════════
-                          //  ROW 2: Primary Reasons | How did you hear
-                          // ═══════════════════════════════════════════════
-                          _chartRow(
-                            left: _chartCard(
-                              'Primary Reasons from Requesting a Demo',
-                              '',
-                              _buildTwoColumnHorizontalBarChart(primaryReasonCounts, cmsPrimary),
-                              cmsPrimary,
-                            ),
-                            right: _chartCard(
-                              'How did you hear about us?',
-                              '',
-                              _buildDonutSection(
-                                counts: howDidYouHearCounts,
-                                centerTotal: howHearTotal,
-                                colors: _pieColors(howDidYouHearCounts.length, cmsPrimary),
-                              ),
-                              cmsPrimary,
-                            ),
-                          ),
-                          SizedBox(height: 16.h),
-
-                          // ═══════════════════════════════════════════════
-                          //  ROW 3: No.Employees | Inquiry Priority
-                          // ═══════════════════════════════════════════════
-                          _chartRow(
-                            left: _chartCard(
-                              'No. Employees',
-                              '',
-                              _buildSegmentedBarChart(
-                                counts: noEmployeesCounts,
-                                colors: [
-                                  cmsPrimary,
-                                  cmsPrimary.withOpacity(0.7),
-                                  cmsPrimary.withOpacity(0.5),
-                                  Colors.grey.shade400,
-                                  Colors.grey.shade300,
-                                ],
-                              ),
-                              cmsPrimary,
-                            ),
-                            right: _chartCard(
-                              'Inquiry Priority',
-                              '',
-                              _buildDonutSection(
-                                counts: inquiryPriorityCounts,
-                                centerTotal: priorityTotal,
-                                colors: _priorityColors(inquiryPriorityCounts.keys.toList()),
-                                usePriorityColors: true,
-                              ),
-                              cmsPrimary,
-                            ),
-                          ),
-                          SizedBox(height: 16.h),
-
-                          // ═══════════════════════════════════════════════
-                          //  ROW 4: Inquiry Relevance | Required Action
-                          // ═══════════════════════════════════════════════
-                          _chartRow(
-                            left: _chartCard(
-                              'Inquiry Relevance',
-                              '',
-                              _buildDonutSection(
-                                counts: inquiryRelevanceCounts,
-                                centerTotal: relevanceTotal,
-                                colors: _pieColors(inquiryRelevanceCounts.length, cmsPrimary),
-                              ),
-                              cmsPrimary,
-                            ),
-                            right: _chartCard(
-                              'Required Action',           // ← was incorrectly "Inquiry Relevance"
-                              '',
-                              _buildDonutSection(
-                                counts: requiredActionCounts,
-                                centerTotal: reqActionTotal,
-                                colors: _pieColors(requiredActionCounts.length, cmsPrimary),
-                              ),
-                              cmsPrimary,
-                            ),
-                          ),
-                          SizedBox(height: 40.h),
-                        ],
+                        ),
                       ),
                     ),
-                  ),
-                ),
-              );
-            },
-          ),
+                  );
+                },
+              ),
+            );
+          },
         );
       },
     );
@@ -535,11 +668,10 @@ class _RequestDemoMainPageState extends State<RequestDemoMainPage> {
   //  LAYOUT HELPERS
   // ═══════════════════════════════════════════════════════════════════════════
 
-  /// ── FIX 1: IntrinsicHeight makes both cards stretch to the taller sibling ──
   Widget _chartRow({required Widget left, required Widget right}) {
     return IntrinsicHeight(
       child: Row(
-        crossAxisAlignment: CrossAxisAlignment.stretch, // both children fill height
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Expanded(child: left),
           SizedBox(width: 16.w),
@@ -567,61 +699,72 @@ class _RequestDemoMainPageState extends State<RequestDemoMainPage> {
   Widget _buildFiltersRow({
     required RequestDemoCubit cubit,
     required Color cmsPrimary,
-    required List<String> uniqueStatuses,
-    required List<String> uniqueEntityTypes,
-    required List<String> uniqueCountries,
-    required List<int>    uniqueMonths,
+    required List<String> uniqueStatuses,      // kept in signature but no longer used
+    required List<String> uniqueEntityTypes,   // kept in signature but no longer used
+    required List<String> uniqueCountries,     // kept in signature but no longer used
+    required List<int>    uniqueMonths,        // kept in signature but no longer used
     required String?      activeStatus,
     required String?      activeEntityType,
     required String?      activeCountry,
     required int?         activeMonth,
-    required bool         hasFilters,
+    required bool         hasFilters,          // kept in signature but no longer used
     required List<RequestDemoModel> demos,
+    required List<DemoQuestionModel> dynamicQuestions,
   }) {
     return Row(
       mainAxisSize: MainAxisSize.max,
       children: [
         Wrap(spacing: 8.w, runSpacing: 6.h, children: [
+          // STATUS — always shows: New, Replied, Closed
           SizedBox(
             width: 120.w,
             child: CustomDropdownFormFieldInvMaster(
               selectedValue: activeStatus,
-              items: uniqueStatuses.map((s) => {'key': s, 'value': s}).toList(),
+              items: _kAllStatuses
+                  .map((s) => {'key': s, 'value': s})
+                  .toList(),
               widthIcon: 14, heightIcon: 14, height: 32,
               dropdownColor: _C.cardBg, primaryColor: cmsPrimary,
               hint: Text('Status', style: TextStyle(fontSize: 11.sp, color: _C.hintText)),
               onChanged: cubit.setStatusFilter,
             ),
           ),
+          // ENTITY TYPE — always shows full fixed list
           SizedBox(
             width: 130.w,
             child: CustomDropdownFormFieldInvMaster(
               selectedValue: activeEntityType,
-              items: uniqueEntityTypes.map((s) => {'key': s, 'value': s}).toList(),
+              items: _kAllEntityTypes
+                  .map((s) => {'key': s, 'value': s})
+                  .toList(),
               widthIcon: 14, heightIcon: 14, height: 32,
               dropdownColor: _C.cardBg, primaryColor: cmsPrimary,
               hint: Text('Entity Type', style: TextStyle(fontSize: 11.sp, color: _C.hintText)),
               onChanged: cubit.setEntityTypeFilter,
             ),
           ),
+          // COUNTRY — always shows full world country list
           SizedBox(
             width: 130.w,
             child: CustomDropdownFormFieldInvMaster(
               selectedValue: activeCountry,
-              items: uniqueCountries.map((s) => {'key': s, 'value': s}).toList(),
+              items: _kAllCountries
+                  .map((s) => {'key': s, 'value': s})
+                  .toList(),
               widthIcon: 14, heightIcon: 14, height: 32,
               dropdownColor: _C.cardBg, primaryColor: cmsPrimary,
               hint: Text('Location', style: TextStyle(fontSize: 11.sp, color: _C.hintText)),
               onChanged: cubit.setCountryFilter,
             ),
           ),
+          // CALENDAR — always shows all 12 months
           SizedBox(
             width: 130.w,
             child: CustomDropdownFormFieldInvMaster(
               selectedValue: activeMonth?.toString(),
-              items: uniqueMonths.map((m) => {
-                'key': m.toString(),
-                'value': m >= 1 && m <= 12 ? _kMonthNames[m - 1] : m.toString(),
+              items: _kAllMonths.map((m) => {
+                'key':   m.toString(),
+                'value': _kMonthNames[m - 1],
               }).toList(),
               widthIcon: 14, heightIcon: 14, height: 32,
               dropdownColor: _C.cardBg, primaryColor: cmsPrimary,
@@ -629,29 +772,12 @@ class _RequestDemoMainPageState extends State<RequestDemoMainPage> {
               onChanged: (v) => cubit.setMonthFilter(v != null ? int.tryParse(v) : null),
             ),
           ),
-          if (hasFilters)
-            GestureDetector(
-              onTap: () { cubit.clearAllFilters(); _searchController.clear(); },
-              child: Container(
-                height: 32.h,
-                padding: EdgeInsets.symmetric(horizontal: 10.w),
-                decoration: BoxDecoration(
-                  color: _C.cardBg,
-                  borderRadius: BorderRadius.circular(4.r),
-                  border: Border.all(color: _C.border),
-                ),
-                child: Row(mainAxisSize: MainAxisSize.min, children: [
-                  Icon(Icons.clear, size: 12.sp, color: _C.hintText),
-                  SizedBox(width: 4.w),
-                  Text('Clear', style: TextStyle(fontSize: 11.sp, color: _C.hintText)),
-                ]),
-              ),
-            ),
+          // ← NO Clear button (removed to match inquiry page)
         ]),
         const Spacer(),
         customButtonWithImage(
           title: 'Export',
-          function: () => _showExportDialog(demos),
+          function: () => _showExportDialog(demos, dynamicQuestions),
           textStyle: TextStyle(fontSize: 12.sp, fontWeight: FontWeight.w600, color: Colors.white),
           height: 32.h, space: 4.w, radius: 6, color: cmsPrimary,
           image: 'assets/images/export.svg',
@@ -694,35 +820,45 @@ class _RequestDemoMainPageState extends State<RequestDemoMainPage> {
   }
 
   // ─────────────────────────────────────────────────────────────────────────
-  //  TABLE
+  //  TABLE  (now fully dynamic)
   // ─────────────────────────────────────────────────────────────────────────
 
-  static const _headers = [
-    'Submission Date', 'Salon Name', 'Country', 'City', 'No.Branches',
-    'No.Employees', 'First Name', 'Last Name', 'Phone Number', 'Email',
-    'Primary Reasons from Requesting a Demo', 'How did you hear about us?',
-    'Inquiry Priority', 'Inquiry Relevance', 'Required Action', 'Notes', 'Status',
-  ];
+  /// Build per-column widths.
+  /// Static-left columns get fixed widths; each dynamic question column gets
+  /// 140.sp; static-right columns keep their original fixed widths.
+  Map<int, TableColumnWidth> _buildColumnWidths(int dynamicCount) {
+    final Map<int, TableColumnWidth> widths = {
+      // ── static-left ──────────────────────────────────────────────────────
+      0:  FixedColumnWidth(110.sp), // Submission Date
+      1:  FixedColumnWidth(120.sp), // Salon Name
+      2:  FixedColumnWidth(100.sp), // Country
+      3:  FixedColumnWidth(90.sp),  // City
+      4:  FixedColumnWidth(90.sp),  // No.Branches
+      5:  FixedColumnWidth(90.sp),  // No.Employees
+      6:  FixedColumnWidth(100.sp), // First Name
+      7:  FixedColumnWidth(100.sp), // Last Name
+      8:  FixedColumnWidth(110.sp), // Phone Number
+      9:  FixedColumnWidth(160.sp), // Email
+    };
 
-  Map<int, TableColumnWidth> get _columnWidths => {
-    0:  FixedColumnWidth(110.sp),
-    1:  FixedColumnWidth(120.sp),
-    2:  FixedColumnWidth(100.sp),
-    3:  FixedColumnWidth(90.sp),
-    4:  FixedColumnWidth(90.sp),
-    5:  FixedColumnWidth(90.sp),
-    6:  FixedColumnWidth(100.sp),
-    7:  FixedColumnWidth(100.sp),
-    8:  FixedColumnWidth(110.sp),
-    9:  FixedColumnWidth(160.sp),
-    10: FixedColumnWidth(160.sp),
-    11: FixedColumnWidth(150.sp),
-    12: FixedColumnWidth(110.sp),
-    13: FixedColumnWidth(150.sp),
-    14: FixedColumnWidth(160.sp),
-    15: FixedColumnWidth(140.sp),
-    16: FixedColumnWidth(80.sp),
-  };
+    final staticLeftCount = _kStaticHeadersLeft.length; // 10
+
+    // ── dynamic question columns ──────────────────────────────────────────
+    for (int i = 0; i < dynamicCount; i++) {
+      widths[staticLeftCount + i] = FixedColumnWidth(140.sp);
+    }
+
+    final rightStart = staticLeftCount + dynamicCount;
+
+    // ── static-right ──────────────────────────────────────────────────────
+    widths[rightStart + 0] = FixedColumnWidth(110.sp); // Inquiry Priority
+    widths[rightStart + 1] = FixedColumnWidth(150.sp); // Inquiry Relevance
+    widths[rightStart + 2] = FixedColumnWidth(160.sp); // Required Action
+    widths[rightStart + 3] = FixedColumnWidth(140.sp); // Notes
+    widths[rightStart + 4] = FixedColumnWidth(80.sp);  // Status
+
+    return widths;
+  }
 
   TextStyle get _cellStyle => TextStyle(fontSize: 11.sp, color: _C.labelText);
 
@@ -734,7 +870,15 @@ class _RequestDemoMainPageState extends State<RequestDemoMainPage> {
   Widget _tc(String text, {int ml = 2}) =>
       _cell(Text(text.isEmpty ? '-' : text, maxLines: ml, overflow: TextOverflow.ellipsis));
 
-  Widget _buildTable(List<RequestDemoModel> demos, BuildContext context, Color cmsPrimary) {
+  Widget _buildTable(
+      List<RequestDemoModel> demos,
+      List<DemoQuestionModel> dynamicQuestions,
+      BuildContext context,
+      Color cmsPrimary,
+      ) {
+    final headers      = _buildHeaders(dynamicQuestions);
+    final columnWidths = _buildColumnWidths(dynamicQuestions.length);
+
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
       child: ClipRRect(
@@ -742,14 +886,16 @@ class _RequestDemoMainPageState extends State<RequestDemoMainPage> {
         child: Table(
           border: TableBorder.all(color: Colors.transparent),
           defaultVerticalAlignment: TableCellVerticalAlignment.middle,
-          columnWidths: _columnWidths,
+          columnWidths: columnWidths,
           children: [
+            // ── Header row ────────────────────────────────────────────────
             TableRow(
               decoration: BoxDecoration(color: cmsPrimary),
-              children: _headers
+              children: headers
                   .map((h) => Padding(
                 padding: EdgeInsets.all(8.sp),
-                child: Text(h, maxLines: 2,
+                child: Text(h,
+                    maxLines: 2,
                     style: TextStyle(
                         fontSize: 11.sp,
                         fontWeight: FontWeight.w600,
@@ -757,13 +903,18 @@ class _RequestDemoMainPageState extends State<RequestDemoMainPage> {
               ))
                   .toList(),
             ),
+
+            // ── Data rows ─────────────────────────────────────────────────
             ...List.generate(demos.length, (idx) {
               final d        = demos[idx];
               final rowColor = idx.isEven ? const Color(0xFFF7F8FA) : Colors.white;
               final dateStr  = d.submissionDate != null
                   ? '${d.submissionDate!.day}/${d.submissionDate!.month}/${d.submissionDate!.year}'
                   : '-';
-              final cells = [
+
+              // Build cells: static-left + dynamic + static-right
+              final cells = <Widget>[
+                // ── static-left ────────────────────────────────────────
                 _tc(dateStr, ml: 1),
                 _tc(d.salonName),
                 _tc(d.country),
@@ -774,8 +925,11 @@ class _RequestDemoMainPageState extends State<RequestDemoMainPage> {
                 _tc(d.lastName),
                 _tc('${d.countryCode} ${d.phone}'.trim()),
                 _tc(d.email),
-                _tc(d.primaryReason),
-                _tc(d.howDidYouHearAboutUs),
+
+                // ── dynamic question answers ───────────────────────────
+                ...dynamicQuestions.map((q) => _tc(_getAnswer(d, q.id))),
+
+                // ── static-right ───────────────────────────────────────
                 _cell(_priorityChip(d.inquiryPriority)),
                 _tc(d.inquiryRelevance?.label ?? '-'),
                 _tc(d.requiredAction?.label ?? '-'),
@@ -786,6 +940,7 @@ class _RequestDemoMainPageState extends State<RequestDemoMainPage> {
                         fontWeight: FontWeight.w600,
                         color: d.status.color))),
               ];
+
               return TableRow(
                 decoration: BoxDecoration(color: rowColor),
                 children: cells.map((cell) => InkWell(
@@ -822,7 +977,6 @@ class _RequestDemoMainPageState extends State<RequestDemoMainPage> {
 
   // ═══════════════════════════════════════════════════════════════════════════
   //  CHART CARD WRAPPER
-  //  ── FIX 2: expand vertically so both siblings fill the IntrinsicHeight ──
   // ═══════════════════════════════════════════════════════════════════════════
 
   Widget _chartCard(String title, String subtitle, Widget chart, Color cmsPrimary) {
@@ -831,7 +985,7 @@ class _RequestDemoMainPageState extends State<RequestDemoMainPage> {
       padding: EdgeInsets.all(15.sp),
       decoration: BoxDecoration(color: _C.cardBg, borderRadius: BorderRadius.circular(8.r)),
       child: Column(
-        mainAxisSize: MainAxisSize.max,   // ← stretch to parent height
+        mainAxisSize: MainAxisSize.max,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(title,
@@ -848,12 +1002,10 @@ class _RequestDemoMainPageState extends State<RequestDemoMainPage> {
   }
 
   // ═══════════════════════════════════════════════════════════════════════════
-  //  1. BAR CHART — Monthly Submissions
-  //  ── FIX 3: always renders 12 months; zero months show empty placeholder bar
+  //  BAR CHART — Monthly Submissions
   // ═══════════════════════════════════════════════════════════════════════════
 
   Widget _buildBarChart(Map<int, int> monthly, Color cmsPrimary) {
-    // Always treat maxVal as at least 1 so layout doesn't collapse
     final maxVal  = monthly.values.fold(0, (a, b) => a > b ? a : b);
     const maxBarH = 130.0;
     const labelH  = 16.0;
@@ -863,10 +1015,7 @@ class _RequestDemoMainPageState extends State<RequestDemoMainPage> {
         crossAxisAlignment: CrossAxisAlignment.end,
         children: List.generate(12, (i) {
           final val  = monthly[i + 1] ?? 0;
-          // Give zero-value bars a minimal visible height so axes stay intact
-          final barH = maxVal > 0
-              ? (val / maxVal) * maxBarH
-              : 0.0;
+          final barH = maxVal > 0 ? (val / maxVal) * maxBarH : 0.0;
           return Expanded(
             child: Padding(
               padding: EdgeInsets.symmetric(horizontal: 2.w),
@@ -887,7 +1036,6 @@ class _RequestDemoMainPageState extends State<RequestDemoMainPage> {
                     )
                         : const SizedBox(),
                   ),
-                  // When val == 0 show a thin grey placeholder so the row is visible
                   Container(
                     height: val > 0 ? barH.h : 4.h,
                     decoration: BoxDecoration(
@@ -910,15 +1058,13 @@ class _RequestDemoMainPageState extends State<RequestDemoMainPage> {
   }
 
   // ═══════════════════════════════════════════════════════════════════════════
-  //  2. SEGMENTED BAR CHART — No.Branches & No.Employees
-  //  ── FIX 4: when empty show a full-width grey placeholder bar + "No data" ──
+  //  SEGMENTED BAR CHART — No.Branches & No.Employees
   // ═══════════════════════════════════════════════════════════════════════════
 
   Widget _buildSegmentedBarChart({
     required Map<String, int> counts,
     required List<Color> colors,
   }) {
-    // ── Empty / all-zero state ───────────────────────────────────────────────
     if (counts.isEmpty) {
       return Column(
         mainAxisSize: MainAxisSize.min,
@@ -940,17 +1086,14 @@ class _RequestDemoMainPageState extends State<RequestDemoMainPage> {
       );
     }
 
-    final total   = counts.values.fold(0, (a, b) => a + b);
-    final entries = counts.entries.toList();
-
-    // When total == 0, render equal-width grey segments so layout is preserved
+    final total     = counts.values.fold(0, (a, b) => a + b);
+    final entries   = counts.entries.toList();
     final isAllZero = total == 0;
 
     return Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // ── Legend row ──────────────────────────────────────────────────────
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: List.generate(entries.length, (i) {
@@ -964,9 +1107,7 @@ class _RequestDemoMainPageState extends State<RequestDemoMainPage> {
                   Container(
                     width: 8.sp, height: 8.sp,
                     decoration: BoxDecoration(
-                        color: isAllZero
-                            ? _C.border
-                            : colors[i % colors.length],
+                        color: isAllZero ? _C.border : colors[i % colors.length],
                         shape: BoxShape.circle),
                   ),
                   SizedBox(width: 3.w),
@@ -981,17 +1122,12 @@ class _RequestDemoMainPageState extends State<RequestDemoMainPage> {
           }),
         ),
         SizedBox(height: 12.h),
-        // ── Segmented bar ────────────────────────────────────────────────────
         ClipRRect(
           borderRadius: BorderRadius.circular(4.r),
           child: isAllZero
-          // All-zero: equal grey segments
               ? Row(
             children: List.generate(entries.length, (i) => Expanded(
-              child: Container(
-                height: 28.h,
-                color: _C.border,
-              ),
+              child: Container(height: 28.h, color: _C.border),
             )),
           )
               : Row(
@@ -1013,13 +1149,11 @@ class _RequestDemoMainPageState extends State<RequestDemoMainPage> {
   }
 
   // ═══════════════════════════════════════════════════════════════════════════
-  //  3. TWO-COLUMN HORIZONTAL BAR CHART — Primary Reasons
-  //  ── FIX 5: show zero-width bars (grey track visible) when all values are 0 ─
+  //  TWO-COLUMN HORIZONTAL BAR CHART — Primary Reasons
   // ═══════════════════════════════════════════════════════════════════════════
 
   Widget _buildTwoColumnHorizontalBarChart(
       Map<String, int> counts, Color cmsPrimary) {
-    // ── Empty state ──────────────────────────────────────────────────────────
     if (counts.isEmpty) {
       return SizedBox(
         height: 100.h,
@@ -1037,7 +1171,6 @@ class _RequestDemoMainPageState extends State<RequestDemoMainPage> {
     final right   = entries.length > half ? entries.sublist(half) : <MapEntry<String,int>>[];
 
     Widget buildEntry(MapEntry<String, int> e) {
-      // When total == 0 pct shows "0%" and fill = 0 → grey track only
       final pct  = total > 0 ? (e.value / total * 100).round() : 0;
       final fill = total > 0 ? e.value / total : 0.0;
       return Padding(
@@ -1091,9 +1224,7 @@ class _RequestDemoMainPageState extends State<RequestDemoMainPage> {
   }
 
   // ═══════════════════════════════════════════════════════════════════════════
-  //  4. DONUT SECTION
-  //  ── FIX 6: empty counts → show placeholder grey donut (single segment = 1)
-  //            all-zero counts → same placeholder, legend shows "0%"
+  //  DONUT SECTION
   // ═══════════════════════════════════════════════════════════════════════════
 
   Widget _buildDonutSection({
@@ -1102,7 +1233,6 @@ class _RequestDemoMainPageState extends State<RequestDemoMainPage> {
     required List<Color> colors,
     bool usePriorityColors = false,
   }) {
-    // ── Completely empty: show grey placeholder donut + "No data" legend ─────
     if (counts.isEmpty) {
       return Row(
         crossAxisAlignment: CrossAxisAlignment.center,
@@ -1131,14 +1261,12 @@ class _RequestDemoMainPageState extends State<RequestDemoMainPage> {
     final total   = counts.values.fold(0, (a, b) => a + b);
     final entries = counts.entries.toList();
 
-    // Resolve per-entry dot colours
     final dotColors = List.generate(entries.length, (i) {
       if (usePriorityColors) return _priorityColorForLabel(entries[i].key);
       if (colors.isEmpty) return _C.border;
       return colors[i % colors.length];
     });
 
-    // When total == 0 paint equal grey slices so the donut still looks good
     final paintValues = total == 0
         ? List<double>.filled(entries.length, 1.0)
         : entries.map((e) => e.value.toDouble()).toList();
@@ -1149,7 +1277,6 @@ class _RequestDemoMainPageState extends State<RequestDemoMainPage> {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        // ── Legend list ──────────────────────────────────────────────────────
         Expanded(
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -1184,7 +1311,6 @@ class _RequestDemoMainPageState extends State<RequestDemoMainPage> {
           ),
         ),
         SizedBox(width: 16.w),
-        // ── Donut chart ──────────────────────────────────────────────────────
         SizedBox(
           width: 110.w,
           height: 110.w,

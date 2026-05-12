@@ -1,7 +1,10 @@
 // ═══════════════════════════════════════════════════════════════════
 // FILE: inquiry_main_page.dart  (UPDATED)
 // Path: lib/dashboard/inquire/inquiry_main_page.dart
-// UPDATED: Client/Owner toggle now uses CustomSegmentedTabs
+// FIXES:
+//   1. Client/Owner toggle: no tab selected by default (selectedIndex: -1)
+//   2. Removed "Clear" button from filters row
+//   3. Dropdowns use full fixed lists, not data-derived lists
 // ═══════════════════════════════════════════════════════════════════
 
 import 'dart:convert';
@@ -44,6 +47,45 @@ const List<String> _kMonthNames = [
 ];
 
 // ─────────────────────────────────────────────────────────────────────────────
+//  FIX 3 — FIXED DROPDOWN LISTS (always show all options)
+// ─────────────────────────────────────────────────────────────────────────────
+
+/// All possible Status values — always shown regardless of data
+const List<String> _kAllStatuses = ['New', 'Replied', 'Closed'];
+
+/// All possible Gender values — always shown regardless of data
+const List<String> _kAllGenders = ['Male', 'Female', 'Other'];
+
+/// All 12 months — always shown regardless of data
+const List<int> _kAllMonths = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
+
+/// All countries (standard full list).
+/// Extend or trim as needed for your app's scope.
+const List<String> _kAllCountries = [
+  'Afghanistan', 'Albania', 'Algeria', 'Andorra', 'Angola',
+  'Argentina', 'Armenia', 'Australia', 'Austria', 'Azerbaijan',
+  'Bahrain', 'Bangladesh', 'Belarus', 'Belgium', 'Bolivia',
+  'Bosnia and Herzegovina', 'Brazil', 'Bulgaria', 'Cambodia', 'Cameroon',
+  'Canada', 'Chile', 'China', 'Colombia', 'Croatia',
+  'Cuba', 'Cyprus', 'Czech Republic', 'Denmark', 'Ecuador',
+  'Egypt', 'Estonia', 'Ethiopia', 'Finland', 'France',
+  'Georgia', 'Germany', 'Ghana', 'Greece', 'Hungary',
+  'India', 'Indonesia', 'Iran', 'Iraq', 'Ireland',
+  'Israel', 'Italy', 'Japan', 'Jordan', 'Kazakhstan',
+  'Kenya', 'Kuwait', 'Latvia', 'Lebanon', 'Libya',
+  'Lithuania', 'Luxembourg', 'Malaysia', 'Mexico', 'Morocco',
+  'Netherlands', 'New Zealand', 'Nigeria', 'Norway', 'Oman',
+  'Pakistan', 'Palestine', 'Panama', 'Peru', 'Philippines',
+  'Poland', 'Portugal', 'Qatar', 'Romania', 'Russia',
+  'Saudi Arabia', 'Serbia', 'Singapore', 'Slovakia', 'Slovenia',
+  'Somalia', 'South Africa', 'South Korea', 'Spain', 'Sri Lanka',
+  'Sudan', 'Sweden', 'Switzerland', 'Syria', 'Taiwan',
+  'Thailand', 'Tunisia', 'Turkey', 'Ukraine', 'United Arab Emirates',
+  'United Kingdom', 'United States', 'Uruguay', 'Venezuela', 'Vietnam',
+  'Yemen', 'Zimbabwe',
+];
+
+// ─────────────────────────────────────────────────────────────────────────────
 //  PAGE
 // ─────────────────────────────────────────────────────────────────────────────
 class InquiryMainPage extends StatefulWidget {
@@ -57,7 +99,12 @@ class _InquiryMainPageState extends State<InquiryMainPage> {
   @override
   void initState() {
     super.initState();
-    context.read<InquiryCubit>().loadInquiries();
+    final cubit = context.read<InquiryCubit>();
+    cubit.loadInquiries();
+    // Default: select Client tab and filter table to Client records on first load
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      cubit.setUserTypeFilter('Client');
+    });
   }
 
   @override
@@ -222,15 +269,13 @@ class _InquiryMainPageState extends State<InquiryMainPage> {
   }
 
   // ═══════════════════════════════════════════════════════════════════════════
-  //  HELPER: convert activeUserType to selectedIndex for CustomSegmentedTabs
+  //  FIX 1 — convert activeUserType to selectedIndex
+  //  Returns -1 when nothing is selected → no tab highlighted by default
   // ═══════════════════════════════════════════════════════════════════════════
-
-  // null = no filter (neither selected), 'Client' = 0, 'Owner' = 1
-  // We use a 3-state approach: tap same tab again = deselect (clear filter)
   int _userTypeToIndex(String? activeUserType) {
     if (activeUserType == 'Client') return 0;
     if (activeUserType == 'Owner')  return 1;
-    return -1; // no selection
+    return -1; // ← no tab selected by default
   }
 
   // ═══════════════════════════════════════════════════════════════════════════
@@ -263,10 +308,6 @@ class _InquiryMainPageState extends State<InquiryMainPage> {
           Map<String, int> priorityCounts       = {};
           Map<String, int> relevanceCounts      = {};
           Map<String, int> requiredActionCounts = {};
-          List<String> uniqueStatuses  = [];
-          List<String> uniqueGenders   = [];
-          List<String> uniqueCountries = [];
-          List<int>    uniqueMonths    = [];
           String? activeStatus, activeUserType, activeGender, activeCountry;
           int?    activeMonth;
 
@@ -284,10 +325,8 @@ class _InquiryMainPageState extends State<InquiryMainPage> {
             priorityCounts       = state.priorityCounts;
             relevanceCounts      = state.relevanceCounts;
             requiredActionCounts = state.requiredActionCounts;
-            uniqueStatuses       = state.uniqueStatuses;
-            uniqueGenders        = state.uniqueGenders;
-            uniqueCountries      = state.uniqueCountries;
-            uniqueMonths         = state.uniqueMonths;
+            // NOTE: uniqueStatuses / uniqueGenders / uniqueCountries / uniqueMonths
+            // from state are intentionally NOT used anymore (Fix 3).
             activeStatus         = state.statusFilter;
             activeUserType       = state.userTypeFilter;
             activeGender         = state.genderFilter;
@@ -297,9 +336,6 @@ class _InquiryMainPageState extends State<InquiryMainPage> {
           if (state is InquiryError && state.lastInquiries != null) {
             inquiries = state.lastInquiries!;
           }
-
-          final hasFilters = activeStatus != null || activeUserType != null ||
-              activeGender != null || activeCountry != null || activeMonth != null;
 
           final int segmentIndex = _userTypeToIndex(activeUserType);
 
@@ -315,7 +351,6 @@ class _InquiryMainPageState extends State<InquiryMainPage> {
                     children: [
                       AppAdminNavbar(
                         activeLabel: 'Inquiries',
-
                         homePage:       HomeMainPage(),
                         webPage:        HomeMainPage(),
                         jobListingPage: HomeMainPage(),
@@ -331,29 +366,30 @@ class _InquiryMainPageState extends State<InquiryMainPage> {
                       ),
                       SizedBox(height: 16.h),
 
-                      // ── Client / Owner toggle — CustomSegmentedTabs ────────
+                      // ── Client / Owner toggle ──────────────────────────────
+                      // FIX 1: selectedIndex starts at -1 (nothing selected)
                       SizedBox(
                         width: 220.w,
                         height: 36.h,
                         child: CustomSegmentedTabs(
                           tabs: const ['Client', 'Owner'],
-                          selectedIndex: segmentIndex,
+                          selectedIndex: segmentIndex, // -1 = no selection
                           onTabSelected: (index) {
                             final label = index == 0 ? 'Client' : 'Owner';
-                            // Tap same tab again → clear filter
+                            // Tap the already-active tab → deselect (clear filter)
                             if (activeUserType == label) {
                               cubit.setUserTypeFilter(null);
                             } else {
                               cubit.setUserTypeFilter(label);
                             }
                           },
-                          selectedColor:       _C.primary,
-                          unselectedColor:     Colors.transparent,
-                          selectedTextColor:   Colors.white,
-                          unselectedTextColor: Colors.grey.shade500,
-                          containerColor:      _C.cardBg,
-                          equalWidth:          true,
-                          spacing:             8.w,
+                          selectedColor:        _C.primary,
+                          unselectedColor:      Colors.transparent,
+                          selectedTextColor:    Colors.white,
+                          unselectedTextColor:  Colors.grey.shade500,
+                          containerColor:       _C.cardBg,
+                          equalWidth:           true,
+                          spacing:              8.w,
                           tabHorizontalPadding: 16.w,
                           tabVerticalPadding:   8.h,
                           borderRadius:         8.r,
@@ -380,16 +416,11 @@ class _InquiryMainPageState extends State<InquiryMainPage> {
                       // ── Filters row ────────────────────────────────────────
                       _buildFiltersRow(
                         cubit: cubit,
-                        uniqueStatuses: uniqueStatuses,
-                        uniqueGenders: uniqueGenders,
-                        uniqueCountries: uniqueCountries,
-                        uniqueMonths: uniqueMonths,
-                        activeStatus: activeStatus,
-                        activeGender: activeGender,
+                        activeStatus:  activeStatus,
+                        activeGender:  activeGender,
                         activeCountry: activeCountry,
-                        activeMonth: activeMonth,
-                        hasFilters: hasFilters,
-                        inquiries: inquiries,
+                        activeMonth:   activeMonth,
+                        inquiries:     inquiries,
                       ),
                       SizedBox(height: 16.h),
 
@@ -477,63 +508,73 @@ class _InquiryMainPageState extends State<InquiryMainPage> {
     });
   }
 
+  // ─────────────────────────────────────────────────────────────────────────
+  //  FILTERS ROW
+  //  FIX 2: "Clear" button removed entirely
+  //  FIX 3: dropdowns use fixed lists (_kAllStatuses, _kAllGenders, etc.)
+  // ─────────────────────────────────────────────────────────────────────────
   Widget _buildFiltersRow({
     required InquiryCubit cubit,
-    required List<String> uniqueStatuses,
-    required List<String> uniqueGenders,
-    required List<String> uniqueCountries,
-    required List<int>    uniqueMonths,
     required String?      activeStatus,
     required String?      activeGender,
     required String?      activeCountry,
     required int?         activeMonth,
-    required bool         hasFilters,
     required List<InquiryModel> inquiries,
   }) {
     return Row(
       mainAxisSize: MainAxisSize.max,
       children: [
         Wrap(spacing: 8.w, runSpacing: 6.h, children: [
+          // STATUS — always shows: New, Replied, Closed
           SizedBox(
             width: 120.w,
             child: CustomDropdownFormFieldInvMaster(
               selectedValue: activeStatus,
-              items: uniqueStatuses.map((s) => {'key': s, 'value': s}).toList(),
+              items: _kAllStatuses
+                  .map((s) => {'key': s, 'value': s})
+                  .toList(),
               widthIcon: 14, heightIcon: 14, height: 32,
               dropdownColor: _C.cardBg, primaryColor: _C.primary,
               hint: Text('Status', style: TextStyle(fontSize: 11.sp, color: _C.hintText)),
               onChanged: cubit.setStatusFilter,
             ),
           ),
+          // GENDER — always shows: Male, Female, Other
           SizedBox(
             width: 120.w,
             child: CustomDropdownFormFieldInvMaster(
               selectedValue: activeGender,
-              items: uniqueGenders.map((s) => {'key': s, 'value': s}).toList(),
+              items: _kAllGenders
+                  .map((s) => {'key': s, 'value': s})
+                  .toList(),
               widthIcon: 14, heightIcon: 14, height: 32,
               dropdownColor: _C.cardBg, primaryColor: _C.primary,
               hint: Text('Gender', style: TextStyle(fontSize: 11.sp, color: _C.hintText)),
               onChanged: cubit.setGenderFilter,
             ),
           ),
+          // COUNTRY — always shows the full world country list
           SizedBox(
             width: 130.w,
             child: CustomDropdownFormFieldInvMaster(
               selectedValue: activeCountry,
-              items: uniqueCountries.map((s) => {'key': s, 'value': s}).toList(),
+              items: _kAllCountries
+                  .map((s) => {'key': s, 'value': s})
+                  .toList(),
               widthIcon: 14, heightIcon: 14, height: 32,
               dropdownColor: _C.cardBg, primaryColor: _C.primary,
               hint: Text('Country', style: TextStyle(fontSize: 11.sp, color: _C.hintText)),
               onChanged: cubit.setCountryFilter,
             ),
           ),
+          // CALENDAR — always shows all 12 months
           SizedBox(
             width: 120.w,
             child: CustomDropdownFormFieldInvMaster(
               selectedValue: activeMonth?.toString(),
-              items: uniqueMonths.map((m) => {
-                'key': m.toString(),
-                'value': m >= 1 && m <= 12 ? _kMonthNames[m - 1] : m.toString(),
+              items: _kAllMonths.map((m) => {
+                'key':   m.toString(),
+                'value': _kMonthNames[m - 1],
               }).toList(),
               widthIcon: 14, heightIcon: 14, height: 32,
               dropdownColor: _C.cardBg, primaryColor: _C.primary,
@@ -541,24 +582,7 @@ class _InquiryMainPageState extends State<InquiryMainPage> {
               onChanged: (v) => cubit.setMonthFilter(v != null ? int.tryParse(v) : null),
             ),
           ),
-          if (hasFilters)
-            GestureDetector(
-              onTap: () { cubit.clearAllFilters(); _searchController.clear(); },
-              child: Container(
-                height: 32.h,
-                padding: EdgeInsets.symmetric(horizontal: 10.w),
-                decoration: BoxDecoration(
-                  color: _C.cardBg,
-                  borderRadius: BorderRadius.circular(4.r),
-                  border: Border.all(color: _C.border),
-                ),
-                child: Row(mainAxisSize: MainAxisSize.min, children: [
-                  Icon(Icons.clear, size: 12.sp, color: _C.hintText),
-                  SizedBox(width: 4.w),
-                  Text('Clear', style: TextStyle(fontSize: 11.sp, color: _C.hintText)),
-                ]),
-              ),
-            ),
+          // FIX 2: Clear button removed — no Clear button here
         ]),
         const Spacer(),
         customButtonWithImage(

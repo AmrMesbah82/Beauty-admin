@@ -395,6 +395,21 @@ class _HomeMainPageState extends State<HomeMainPage> {
             ),
           ],
         ),
+        SizedBox(height: 16.h),
+        Row(
+          children: [
+            Expanded(
+              child: _colorReadField(
+                'Male Primary Color',
+                data.branding.malePrimaryColor,
+              ),
+            ),
+            SizedBox(width: 16.w),
+            Expanded(
+              child: _colorReadField('Main Widget Color', data.branding.mainWidgetColor),
+            ),
+          ],
+        ),
         SizedBox(height: 12.h),
         Row(
           children: [
