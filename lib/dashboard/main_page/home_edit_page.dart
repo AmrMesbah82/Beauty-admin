@@ -94,9 +94,11 @@ const List<Map<String, String>> _kLabelDestinations = [
   {'key': '/about?tab=vision',                   'value': 'Vision'},
   {'key': '/about?tab=mission',                  'value': 'Mission'},
   {'key': '/about?tab=values',                   'value': 'Values'},
-  {'key': '/careers?tab=why-join-our-team',      'value': 'Why Join Our Team'},
-  {'key': '/careers?tab=interns',                'value': 'Our Interns'},
-  {'key': '/careers?tab=our-team',               'value': 'Our Team'},
+  // ← REMOVED: Why Join Our Team, Our Interns, Our Team
+  // ← ADDED:
+  {'key': '/request-demo',                       'value': 'Request Demo'},
+  {'key': '/contactus?type=client',              'value': 'User Contact'},
+  {'key': '/contactus?type=owner',               'value': 'Owner Contact'},
 ];
 
 const List<Map<String, String>> _kFonts = [
@@ -2287,7 +2289,7 @@ class _HomeEditPageState extends State<HomeEditPage> {
               padding: 3.sp,
               borderRadius: 20.sp,
               toggleSize: 16.sp,
-              activeColor: _resolvedPrimaryColor,
+              activeColor: _C.primary,
               inactiveColor: Colors.grey.withOpacity(.16),
               value: _links[i].visibility,
               onToggle: (val) {

@@ -3,6 +3,7 @@
 // Screen 2 of 3 — Terms of Service CMS: Edit page
 // FIX: _validate() now only checks visible fields (nav label section is commented out)
 // UPDATE: Publish button disabled when: no changes / missing fields+SVGs / text errors
+// UPDATE: PDF file UI with better styling (file name + remove button)
 
 // ignore_for_file: avoid_web_libraries_in_flutter
 import 'dart:async';
@@ -25,6 +26,7 @@ import 'package:beauty_admin/widgets/app_navbar.dart';
 import '../../../core/custom_dialog.dart';
 import '../../../core/widget/circle_progress.dart';
 import '../../../model/about_us/about_us.dart';
+import '../../../theme/appcolors.dart';
 import '../../../widgets/app_admin_navbar.dart';
 import '../../main_page/home_main_page.dart';
 import 'terms_preview_page.dart';
@@ -58,7 +60,7 @@ class TermsEditPage extends StatefulWidget {
 }
 
 class _TermsEditPageState extends State<TermsEditPage> {
-  // Navigation Label
+  // Navigation Label (commented out)
   final _navTitleEnCtrl = TextEditingController();
   final _navTitleArCtrl = TextEditingController();
   Uint8List? _navIconBytes;
@@ -202,6 +204,7 @@ class _TermsEditPageState extends State<TermsEditPage> {
           setState(() {
             docItem.bytes = bytes;
             docItem.fileName = file.name;
+            docItem.existingUrl = ''; // Clear existing URL when new file is picked
           });
         }
         c.complete();
@@ -498,10 +501,10 @@ class _TermsEditPageState extends State<TermsEditPage> {
                           width: 1000.w,
                           child: loading
                               ? const Center(
-                                  child: CircularProgressIndicator(
-                                    color: _kGreenSolid,
-                                  ),
-                                )
+                            child: CircularProgressIndicator(
+                              color: _kGreenSolid,
+                            ),
+                          )
                               : _buildForm(),
                         ),
                       ],
@@ -579,25 +582,25 @@ class _TermsEditPageState extends State<TermsEditPage> {
             Expanded(
               child: _btn(
                 label: 'Preview',
-                color: const Color(0xFFD16F9A),
+                color: const Color(0xFF8A5C70),
                 onTap: _onPreview,
               ),
             ),
-            SizedBox(width: 16.w),
+            SizedBox(width: 300.w),
             Expanded(
               child: _btn(
                 label: 'Publish',
                 color: publishEnabled ? _kGreenSolid : const Color(0xFFBDBDBD),
                 onTap: publishEnabled
                     ? () {
-                        showPublishConfirmDialog(
-                          context: context,
-                          title: 'EDITING TERMS OF SERVICE',
-                          subtitle:
-                              'Do you want to save the changes made to Terms of Service?',
-                          onConfirm: () => _save('published'),
-                        );
-                      }
+                  showPublishConfirmDialog(
+                    context: context,
+                    title: 'EDITING TERMS OF SERVICE',
+                    subtitle:
+                    'Do you want to save the changes made to Terms of Service?',
+                    onConfirm: () => _save('published'),
+                  );
+                }
                     : null,
               ),
             ),
@@ -613,7 +616,7 @@ class _TermsEditPageState extends State<TermsEditPage> {
                 onTap: () => Navigator.pop(context),
               ),
             ),
-            SizedBox(width: 16.w),
+            SizedBox(width: 300.w),
             Expanded(child: Column()),
           ],
         ),
@@ -673,10 +676,11 @@ class _TermsEditPageState extends State<TermsEditPage> {
           onChanged: (_) => setState(() {}),
         ),
         SizedBox(height: 16.h),
+        // ── PDF Upload Fields with improved UI ─────────────────────────────
         Row(
           children: [
             Expanded(
-              child: _docUploadField(
+              child: _attachField(
                 label: 'Attach Eng Document',
                 docItem: docEn,
                 onPick: onPickDocEn,
@@ -689,7 +693,7 @@ class _TermsEditPageState extends State<TermsEditPage> {
             ),
             SizedBox(width: 16.w),
             Expanded(
-              child: _docUploadField(
+              child: _attachField(
                 label: 'Attach Ar Document',
                 docItem: docAr,
                 onPick: onPickDocAr,
@@ -706,7 +710,8 @@ class _TermsEditPageState extends State<TermsEditPage> {
     );
   }
 
-  Widget _docUploadField({
+  // ── Improved PDF attachment field with file name and remove button ────────
+  Widget _attachField({
     required String label,
     required _DocItem docItem,
     required VoidCallback onPick,
@@ -719,72 +724,93 @@ class _TermsEditPageState extends State<TermsEditPage> {
         SizedBox(height: 8.h),
         docItem.hasFile
             ? Container(
-                padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 10.h),
+          width: double.infinity,
+          padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 10.h),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(8.r),
+            border: Border.all(color: const Color(0xFFE0E0E0), width: 1),
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 32.w,
+                height: 32.h,
                 decoration: BoxDecoration(
-                  color: const Color(0xFFD16F9A).withOpacity(0.1),
+                  color: _kRed.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(8.r),
                 ),
-                child: Row(
-                  children: [
-                    Icon(Icons.picture_as_pdf, size: 18.sp, color: _kRed),
-                    SizedBox(width: 8.w),
-                    Expanded(
-                      child: Text(
-                        docItem.displayName,
-                        style: TextStyle(
-                          fontFamily: 'Cairo',
-                          fontSize: 12.sp,
-                          color: Colors.black87,
-                        ),
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                    GestureDetector(
-                      onTap: onRemove,
-                      child: Container(
-                        width: 22.w,
-                        height: 22.h,
-                        decoration: BoxDecoration(
-                          color: _kRed,
-                          shape: BoxShape.circle,
-                        ),
-                        child: Icon(
-                          Icons.close,
-                          color: Colors.white,
-                          size: 14.sp,
-                        ),
-                      ),
-                    ),
-                  ],
+                child: Icon(
+                  Icons.picture_as_pdf,
+                  color: _kRed,
+                  size: 18.sp,
                 ),
-              )
-            : GestureDetector(
-                onTap: onPick,
-                child: Container(
-                  width: double.infinity,
-                  height: 44.h,
-                  decoration: BoxDecoration(
-                    color: _kGreenSolid,
-                    borderRadius: BorderRadius.circular(8.r),
+              ),
+              SizedBox(width: 12.w),
+              Expanded(
+                child: Text(
+                  docItem.displayName,
+                  style: TextStyle(
+                    fontFamily: 'Cairo',
+                    fontSize: 13.sp,
+                    fontWeight: FontWeight.w500,
+                    color: Colors.black87,
                   ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(Icons.upload_file, color: Colors.white, size: 18.sp),
-                      SizedBox(width: 8.w),
-                      Text(
-                        'Attach Document',
-                        style: TextStyle(
-                          fontFamily: 'Cairo',
-                          fontSize: 13.sp,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ],
+                  overflow: TextOverflow.ellipsis,
+                  maxLines: 1,
+                ),
+              ),
+              GestureDetector(
+                onTap: onRemove,
+                child: Container(
+                  width: 28.w,
+                  height: 28.h,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: _kRed.withOpacity(0.9),
+                  ),
+                  child: Icon(
+                    Icons.remove,
+                    color: Colors.white,
+                    size: 12.sp,
                   ),
                 ),
               ),
+            ],
+          ),
+        )
+            : GestureDetector(
+          onTap: onPick,
+          child: Container(
+            width: double.infinity,
+            height: 52.h,
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(8.r),
+              border: Border.all(color: const Color(0xFFE0E0E0), width: 1),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  Icons.upload_file,
+                  color: _kGreenSolid,
+                  size: 18.sp,
+                ),
+                SizedBox(width: 8.w),
+                Text(
+                  'Attach Document',
+                  style: TextStyle(
+                    fontFamily: 'Cairo',
+                    fontSize: 13.sp,
+                    fontWeight: FontWeight.w600,
+                    color: _kGreenSolid,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
       ],
     );
   }
@@ -805,9 +831,7 @@ class _TermsEditPageState extends State<TermsEditPage> {
             padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 14.h),
             decoration: BoxDecoration(
               color: _kGreenSolid,
-              borderRadius: isOpen
-                  ? BorderRadius.vertical(top: Radius.circular(12.r))
-                  : BorderRadius.circular(12.r),
+              borderRadius: BorderRadius.circular(8.r),
             ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -945,68 +969,16 @@ class _TermsEditPageState extends State<TermsEditPage> {
     ),
   );
 
-  Widget _bilingualRow({
-    required TextEditingController enCtrl,
-    required TextEditingController arCtrl,
-    required String enHint,
-    required String arHint,
-  }) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Expanded(
-          child: CustomValidatedTextFieldMaster(
-            fillColor: Colors.white,
-            hint: enHint,
-            controller: enCtrl,
-            height: 42,
-            maxLines: 1,
-            maxLength: 200,
-            submitted: _submitted,
-            textDirection: TextDirection.ltr,
-            textAlign: TextAlign.start,
-            onChanged: (_) => setState(() {}),
-          ),
-        ),
-        SizedBox(width: 12.w),
-        Expanded(
-          child: CustomValidatedTextFieldMaster(
-            fillColor: Colors.white,
-            hint: arHint,
-            controller: arCtrl,
-            height: 42,
-            maxLines: 1,
-            maxLength: 200,
-            submitted: _submitted,
-            textDirection: TextDirection.rtl,
-            textAlign: TextAlign.right,
-            onChanged: (_) => setState(() {}),
-          ),
-        ),
-      ],
-    );
-  }
-
   Widget _fieldLabel(String t) => Text(
-    t,
-    style: TextStyle(
-      fontFamily: 'Cairo',
-      fontSize: 13.sp,
-      fontWeight: FontWeight.w600,
-      color: Colors.black87,
-    ),
+      t,
+      style: StyleText.fontSize14Weight500.copyWith(color: AppColors.text)
   );
 
   Widget _fieldLabelAr(String t) => Align(
     alignment: Alignment.centerRight,
     child: Text(
-      t,
-      style: TextStyle(
-        fontFamily: 'Cairo',
-        fontSize: 13.sp,
-        fontWeight: FontWeight.w600,
-        color: Colors.black87,
-      ),
+        t,
+        style: StyleText.fontSize14Weight500.copyWith(color: AppColors.text)
     ),
   );
 

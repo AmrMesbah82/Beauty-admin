@@ -6,15 +6,21 @@
 ///              Download section with store badges.
 ///              Desktop / Tablet / Mobile frames, EN / AR toggle.
 ///              Back + Publish buttons at bottom.
-/// Updated: 09/05/2026
-///   - Added proper device frame rendering (Desktop/Tablet/Mobile)
-///   - Desktop: 1366×768 browser chrome frame
-///   - Tablet: 768×1024 browser chrome frame (centered)
-///   - Mobile: 375×812 phone shell with notch (centered)
-///   - Maintained EN/AR toggle functionality
-///   - Preserved previewModel and onPublish callback support
+/// Updated: 14/05/2026
+///   - Updated to match overview_page.dart UI exactly
+///   - Uses proper SVG/image loading via HtmlElementView
+///   - Applies mainWidgetColor background to sections
+///   - Matches spacing, colors, and layout from user-facing page
+///   - Maintains device frame rendering (Desktop/Tablet/Mobile)
+///   - EN/AR toggle functionality preserved
 /// Created by: Amr Mesbah
 
+// ignore_for_file: avoid_web_libraries_in_flutter
+import 'dart:html' as html;
+import 'dart:ui_web' as ui_web;
+
+import 'package:beauty_admin/controller/home/home_cubit.dart';
+import 'package:beauty_admin/controller/home/home_state.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -38,8 +44,62 @@ class _C {
   static const Color labelText   = Color(0xFF333333);
   static const Color hintText    = Color(0xFFAAAAAA);
   static const Color border      = Color(0xFFE0E0E0);
-  static const Color commentCard = Color(0xFFF8F8F8);
   static const Color sectionBg   = Color(0xFFF5F5F5);
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// Helper — parse hex color from branding
+// ══════════════════════════════════════════════════════════════════════════════
+
+Color _parseHex(String hex, {required Color fallback}) {
+  try {
+    final h = hex.replaceAll('#', '');
+    if (h.length == 6) return Color(int.parse('FF$h', radix: 16));
+  } catch (_) {}
+  return fallback;
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// Network Image Helper (matching overview_page.dart approach)
+// ══════════════════════════════════════════════════════════════════════════════
+
+Widget _netImg({
+  required String url,
+  double? width,
+  double? height,
+  BoxFit fit = BoxFit.cover,
+  BorderRadius? borderRadius,
+  Widget? placeholder,
+  Widget? errorWidget,
+}) {
+  if (url.isEmpty) return errorWidget ?? const SizedBox.shrink();
+
+  final viewId = 'svg-preview-${url.hashCode}-${width?.toInt()}-${height?.toInt()}';
+
+  ui_web.platformViewRegistry.registerViewFactory(viewId, (int id) {
+    final img = html.ImageElement()
+      ..src = url
+      ..style.width = '100%'
+      ..style.height = '100%'
+      ..style.objectFit = fit == BoxFit.contain
+          ? 'contain'
+          : fit == BoxFit.scaleDown
+          ? 'scale-down'
+          : 'cover';
+    return img;
+  });
+
+  Widget inner = HtmlElementView(viewType: viewId);
+
+  if (width != null || height != null) {
+    inner = SizedBox(width: width, height: height, child: inner);
+  }
+
+  if (borderRadius != null) {
+    inner = ClipRRect(borderRadius: borderRadius, child: inner);
+  }
+
+  return inner;
 }
 
 enum _PreviewDevice { desktop, tablet, mobile }
@@ -82,13 +142,11 @@ class _OverviewPreviewPageState extends State<OverviewPreviewPage> {
   bool _isEnglish        = true;
   bool _isPublishing     = false;
 
-  // ✅ KEY FIX: Store the effective model once in initState.
   late OverviewPageModel _effectiveModel;
 
   @override
   void initState() {
     super.initState();
-    // If a draft was passed, use it. Otherwise fall back to cubit's current.
     _effectiveModel = widget.previewModel ??
         context.read<OverviewCmsCubit>().current;
   }
@@ -180,7 +238,6 @@ class _OverviewPreviewPageState extends State<OverviewPreviewPage> {
                           decoration: BoxDecoration(
                             borderRadius: BorderRadius.circular(12.r),
                           ),
-
                           child: LayoutBuilder(
                             builder: (ctx, box) => _buildFrame(box.maxWidth),
                           ),
@@ -263,7 +320,6 @@ class _OverviewPreviewPageState extends State<OverviewPreviewPage> {
     );
   }
 
-  // ── Tab widget ───────────────────────────────────────────────────────────────
   Widget _tab(String label, _PreviewDevice device) {
     final active = _device == device;
     return GestureDetector(
@@ -290,7 +346,6 @@ class _OverviewPreviewPageState extends State<OverviewPreviewPage> {
     );
   }
 
-  // ── Frame dispatcher ──────────────────────────────────────────────────────────
   Widget _buildFrame(double containerW) {
     switch (_device) {
       case _PreviewDevice.desktop:
@@ -338,7 +393,7 @@ class _DesktopFrame extends StatelessWidget {
       width: containerWidth,
       height: frameH + 28,
       decoration: BoxDecoration(
-        color: _C.back
+          color: _C.back
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(8),
@@ -482,7 +537,6 @@ class _MobileFrame extends StatelessWidget {
             clipBehavior: Clip.antiAlias,
             child: Column(
               children: [
-                // ── Notch ──────────────────────────────────────────────
                 Container(
                   color: Colors.white,
                   padding: const EdgeInsets.symmetric(vertical: 6),
@@ -497,8 +551,6 @@ class _MobileFrame extends StatelessWidget {
                     ),
                   ),
                 ),
-
-                // ── Content ────────────────────────────────────────────
                 SizedBox(
                   width: displayW,
                   height: displayH,
@@ -521,8 +573,6 @@ class _MobileFrame extends StatelessWidget {
                     ),
                   ),
                 ),
-
-                // ── Home indicator ─────────────────────────────────────
                 Container(
                   color: Colors.white,
                   padding: const EdgeInsets.symmetric(vertical: 6),
@@ -573,6 +623,24 @@ class _PreviewContentState extends State<_PreviewContent> {
 
   @override
   Widget build(BuildContext context) {
+    // Get background color from HomePage branding if available
+    final homeState = context.watch<HomeCmsCubit>().state;
+    final homeData = switch (homeState) {
+      HomeCmsLoaded(:final data) => data,
+      HomeCmsSaved(:final data) => data,
+      HomeCmsSaving(:final data) => data,
+      HomeCmsError(:final lastData) => lastData,
+      _ => null,
+    };
+
+    final Color mainWidgetColor = homeData != null
+        ? _parseHex(homeData.branding.mainWidgetColor, fallback: Colors.white)
+        : Colors.white;
+
+    final Color backgroundColor = homeData != null
+        ? _parseHex(homeData.branding.backgroundColor, fallback: _C.back)
+        : _C.back;
+
     return MediaQuery(
       data: MediaQuery.of(context).copyWith(
         size: Size(widget.fakeWidth, widget.fakeHeight),
@@ -583,7 +651,7 @@ class _PreviewContentState extends State<_PreviewContent> {
       child: Material(
         color: Colors.white,
         child: Container(
-          color: _C.back,
+          color: backgroundColor,
           width: widget.fakeWidth,
           height: widget.fakeHeight,
           child: SingleChildScrollView(
@@ -591,15 +659,15 @@ class _PreviewContentState extends State<_PreviewContent> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 const SizedBox(height: 20),
-                _buildOverview(),
+                _buildOverview(mainWidgetColor),
                 const SizedBox(height: 50),
                 _buildServices(),
                 const SizedBox(height: 50),
-                _buildGallery(),
+                _buildGallery(mainWidgetColor),
                 const SizedBox(height: 50),
-                _buildComments(),
+                _buildComments(mainWidgetColor),
                 const SizedBox(height: 50),
-                _buildDownload(),
+                _buildDownload(mainWidgetColor),
                 const SizedBox(height: 40),
               ],
             ),
@@ -609,46 +677,8 @@ class _PreviewContentState extends State<_PreviewContent> {
     );
   }
 
-  // ── Helper: renders an image URL (remote SVG or base64 data-URL) ──────────
-  Widget _buildImage({
-    required String url,
-    required double width,
-    required double height,
-    BoxFit fit = BoxFit.cover,
-    Widget? placeholder,
-  }) {
-    final ph = placeholder ??
-        Container(
-          width: width,
-          height: height,
-          color: _C.primary.withOpacity(0.12),
-          child: Icon(Icons.image_outlined,
-              color: _C.primary.withOpacity(0.4), size: 36),
-        );
-
-    if (url.isEmpty) return ph;
-
-    if (url.startsWith('data:')) {
-      return Image.network(
-        url,
-        width: width,
-        height: height,
-        fit: fit,
-        errorBuilder: (_, __, ___) => ph,
-      );
-    }
-
-    return SvgPicture.network(
-      url,
-      width: width,
-      height: height,
-      fit: fit,
-      placeholderBuilder: (_) => ph,
-    );
-  }
-
   // ── Overview section ───────────────────────────────────────────────────────
-  Widget _buildOverview() {
+  Widget _buildOverview(Color mainWidgetColor) {
     final m = widget.model;
     final title = widget.isEnglish ? m.headings.title.en : m.headings.title.ar;
     final desc = widget.isEnglish
@@ -656,9 +686,15 @@ class _PreviewContentState extends State<_PreviewContent> {
         : m.headings.description.ar;
 
     return Container(
-      color: Colors.white,
+      decoration: BoxDecoration(
+        color: mainWidgetColor,
+        borderRadius: BorderRadius.circular(16),
+      ),
       child: Padding(
-        padding: EdgeInsets.symmetric(vertical: 10.h,horizontal: widget.isMobile ? 16 : 20),
+        padding: EdgeInsets.symmetric(
+          vertical: 32,
+          horizontal: widget.isMobile ? 16 : 20,
+        ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -667,7 +703,7 @@ class _PreviewContentState extends State<_PreviewContent> {
               style: TextStyle(
                 color: _C.primary,
                 fontSize: 22,
-                fontWeight: FontWeight.w700,
+                fontWeight: FontWeight.w600,
               ),
             ),
             const SizedBox(height: 16),
@@ -746,7 +782,7 @@ class _PreviewContentState extends State<_PreviewContent> {
             style: const TextStyle(
               color: _C.primary,
               fontSize: 22,
-              fontWeight: FontWeight.w700,
+              fontWeight: FontWeight.w600,
             ),
           ),
           const SizedBox(height: 24),
@@ -756,7 +792,7 @@ class _PreviewContentState extends State<_PreviewContent> {
               children: m.services.items.map((item) {
                 final name = widget.isEnglish ? item.name.en : item.name.ar;
                 return Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  padding: const EdgeInsets.only(right: 20),
                   child: Column(
                     children: [
                       Container(
@@ -772,12 +808,21 @@ class _PreviewContentState extends State<_PreviewContent> {
                         child: ClipOval(
                           child: Center(
                             child: item.imageUrl.isNotEmpty
-                                ? _buildImage(
+                                ? _netImg(
                               url: item.imageUrl,
                               width: 48,
                               height: 48,
                               fit: BoxFit.scaleDown,
-                              placeholder: const CircleProgressMaster(),
+                              placeholder: Icon(
+                                Icons.spa_outlined,
+                                color: _C.primary.withOpacity(0.4),
+                                size: 28,
+                              ),
+                              errorWidget: Icon(
+                                Icons.spa_outlined,
+                                color: _C.primary.withOpacity(0.4),
+                                size: 28,
+                              ),
                             )
                                 : Icon(
                               Icons.spa_outlined,
@@ -808,7 +853,7 @@ class _PreviewContentState extends State<_PreviewContent> {
   }
 
   // ── Gallery section ────────────────────────────────────────────────────────
-  Widget _buildGallery() {
+  Widget _buildGallery(Color mainWidgetColor) {
     final m = widget.model;
     if (m.gallery.images.isEmpty) return const SizedBox.shrink();
 
@@ -826,9 +871,15 @@ class _PreviewContentState extends State<_PreviewContent> {
     final double activeSize   = isMobileView ? 160 : 284;
 
     return Container(
-      color: Color(0xFFFFEFF2),
+      decoration: BoxDecoration(
+        color: mainWidgetColor,
+        borderRadius: BorderRadius.circular(16),
+      ),
       child: Padding(
-        padding: EdgeInsets.symmetric(horizontal: widget.isMobile ? 16 : 40),
+        padding: EdgeInsets.symmetric(
+          horizontal: widget.isMobile ? 16 : 40,
+          vertical: 32,
+        ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -837,7 +888,7 @@ class _PreviewContentState extends State<_PreviewContent> {
               style: const TextStyle(
                 color: _C.primary,
                 fontSize: 22,
-                fontWeight: FontWeight.w700,
+                fontWeight: FontWeight.w600,
               ),
             ),
             const SizedBox(height: 24),
@@ -865,11 +916,26 @@ class _PreviewContentState extends State<_PreviewContent> {
                           height: size,
                           child: ClipRRect(
                             borderRadius: BorderRadius.circular(24),
-                            child: _buildImage(
+                            child: _netImg(
                               url: visibleImages[i].imageUrl,
                               width: size,
                               height: size,
                               fit: BoxFit.cover,
+                              placeholder: Container(
+                                color: _C.primary.withOpacity(0.12),
+                                child: Icon(
+                                  Icons.image_outlined,
+                                  color: _C.primary.withOpacity(0.4),
+                                  size: 36,
+                                ),
+                              ),
+                              errorWidget: Container(
+                                color: _C.primary.withOpacity(0.08),
+                                child: Icon(
+                                  Icons.broken_image_outlined,
+                                  color: _C.primary.withOpacity(0.3),
+                                ),
+                              ),
                             ),
                           ),
                         ),
@@ -906,7 +972,7 @@ class _PreviewContentState extends State<_PreviewContent> {
   }
 
   // ── Comments section ───────────────────────────────────────────────────────
-  Widget _buildComments() {
+  Widget _buildComments(Color mainWidgetColor) {
     final m = widget.model;
     if (m.clientComments.comments.isEmpty) return const SizedBox.shrink();
 
@@ -949,9 +1015,9 @@ class _PreviewContentState extends State<_PreviewContent> {
                   margin: const EdgeInsets.only(right: 16),
                   padding: const EdgeInsets.all(20),
                   decoration: BoxDecoration(
-                    color: _C.commentCard,
+                    color: mainWidgetColor,
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: _C.border),
+                    border: Border.all(color: Colors.grey.shade200),
                     boxShadow: [
                       BoxShadow(
                         color: Colors.black.withOpacity(0.04),
@@ -968,12 +1034,22 @@ class _PreviewContentState extends State<_PreviewContent> {
                         children: [
                           ClipOval(
                             child: cmt.imageUrl.isNotEmpty
-                                ? _buildImage(
+                                ? _netImg(
                               url: cmt.imageUrl,
                               width: 48,
                               height: 48,
                               fit: BoxFit.cover,
                               placeholder: CircleAvatar(
+                                radius: 24,
+                                backgroundColor:
+                                _C.primary.withOpacity(0.15),
+                                child: Icon(
+                                  Icons.person_outline,
+                                  color: _C.primary,
+                                  size: 22,
+                                ),
+                              ),
+                              errorWidget: CircleAvatar(
                                 radius: 24,
                                 backgroundColor:
                                 _C.primary.withOpacity(0.15),
@@ -1022,7 +1098,7 @@ class _PreviewContentState extends State<_PreviewContent> {
                           height: 1.6,
                           color: _C.labelText.withOpacity(0.75),
                         ),
-                        maxLines: 5,
+                        maxLines: 6,
                         overflow: TextOverflow.ellipsis,
                       ),
                     ],
@@ -1072,7 +1148,7 @@ class _PreviewContentState extends State<_PreviewContent> {
   }
 
   // ── Download section ───────────────────────────────────────────────────────
-  Widget _buildDownload() {
+  Widget _buildDownload(Color mainWidgetColor) {
     final m = widget.model;
     final title = widget.isEnglish ? m.download.title.en : m.download.title.ar;
     final titleText = title.isNotEmpty
@@ -1087,7 +1163,7 @@ class _PreviewContentState extends State<_PreviewContent> {
         width: double.infinity,
         padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 30),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: mainWidgetColor,
           borderRadius: BorderRadius.circular(16),
         ),
         child: LayoutBuilder(

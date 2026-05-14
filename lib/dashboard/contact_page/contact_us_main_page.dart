@@ -276,25 +276,16 @@ class _ContactUsMainPageState extends State<ContactUsMainPage> {
   }
 
   // ── Reason read-only item ──────────────────────────────────────────────────
+// ── Reason read-only item — isRequired removed ─────────────────────────────
   Widget _reasonReadItem(ContactReasonItem reason, int index) {
     return Padding(
       padding: EdgeInsets.only(bottom: 12.h),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              Text('Reason',
-                  style: StyleText.fontSize12Weight500
-                      .copyWith(color: _C.labelText)),
-              SizedBox(width: 16.w),
-              Text('Required',
-                  style: StyleText.fontSize12Weight400
-                      .copyWith(color: _C.labelText)),
-              SizedBox(width: 6.w),
-              _requiredIndicator(reason.isRequired),
-            ],
-          ),
+          Text('Reason',
+              style: StyleText.fontSize12Weight500
+                  .copyWith(color: _C.labelText)),
           SizedBox(height: 6.h),
           Row(
             children: [

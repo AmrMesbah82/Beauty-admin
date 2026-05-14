@@ -314,6 +314,8 @@ class _RequestDemoEditPageState extends State<RequestDemoEditPage> {
           if (v.en.text.trim().isEmpty) return false;
           if (v.ar.text.trim().isEmpty) return false;
         }
+        // Check for duplicates in dropdown values
+        if (_hasDuplicateValues(q)) return false;
       }
     }
 
@@ -324,6 +326,33 @@ class _RequestDemoEditPageState extends State<RequestDemoEditPage> {
     if (_cSvg.isEmpty) return false;
 
     return true;
+  }
+
+  /// Returns true if a question has duplicate values (case-insensitive on EN or AR)
+  bool _hasDuplicateValues(_QLocal q) {
+    final enSeen = <String>{};
+    final arSeen = <String>{};
+    for (final v in q.values) {
+      final en = v.en.text.trim().toLowerCase();
+      final ar = v.ar.text.trim();
+      if (en.isNotEmpty && !enSeen.add(en)) return true;
+      if (ar.isNotEmpty && !arSeen.add(ar)) return true;
+    }
+    return false;
+  }
+
+  /// Check if adding a new value would duplicate an existing one in the given question
+  bool _isDuplicateValue(_QLocal q, String newEn, String newAr,
+      {String? excludeId}) {
+    final newEnLow = newEn.trim().toLowerCase();
+    final newArTrim = newAr.trim();
+    for (final v in q.values) {
+      if (excludeId != null && v.id == excludeId) continue;
+      if (newEnLow.isNotEmpty &&
+          v.en.text.trim().toLowerCase() == newEnLow) return true;
+      if (newArTrim.isNotEmpty && v.ar.text.trim() == newArTrim) return true;
+    }
+    return false;
   }
 
   void _showValidationErrorDialog() {
@@ -352,6 +381,10 @@ class _RequestDemoEditPageState extends State<RequestDemoEditPage> {
               if (v.en.text.trim().isEmpty || v.ar.text.trim().isEmpty) {
                 errorMessage += '• Question ${i + 1} - Value ${vi + 1}\n';
               }
+            }
+            if (_hasDuplicateValues(q)) {
+              errorMessage +=
+              '• Question ${i + 1} - Duplicate values found. Each value must be unique\n';
             }
           }
         }
@@ -678,7 +711,7 @@ class _RequestDemoEditPageState extends State<RequestDemoEditPage> {
                               Expanded(
                                 child: _btn(
                                   'Preview',
-                               Color(0xFF8A5C70),
+                                  Color(0xFF8A5C70),
                                       () => Navigator.push(
                                     context,
                                     MaterialPageRoute(
@@ -846,14 +879,35 @@ class _RequestDemoEditPageState extends State<RequestDemoEditPage> {
         Row(
           children: [
             _addBtn('Value', () {
-              if (_qs.isNotEmpty)
-                setState(
-                      () => _qs.last.values.add(
-                    _VLocal(
-                        id:
-                        'v_${DateTime.now().millisecondsSinceEpoch}'),
-                  ),
-                );
+              if (_qs.isNotEmpty) {
+                final lastQ = _qs.last;
+
+                // Only relevant for dropdown type questions
+                if (lastQ.type != QuestionType.dropdown) {
+                  _showErrorDialog(
+                    'Not a Dropdown',
+                    'Values can only be added to dropdown-type questions. Please change the question type to Dropdown first.',
+                  );
+                  return;
+                }
+
+                // Prevent adding if the last existing value is still empty
+                if (lastQ.values.isNotEmpty) {
+                  final lastVal = lastQ.values.last;
+                  if (lastVal.en.text.trim().isEmpty ||
+                      lastVal.ar.text.trim().isEmpty) {
+                    _showErrorDialog(
+                      'Incomplete Value',
+                      'Please fill in the current value fields (English & Arabic) before adding a new one.',
+                    );
+                    return;
+                  }
+                }
+
+                setState(() => lastQ.values.add(
+                  _VLocal(id: 'v_${DateTime.now().millisecondsSinceEpoch}'),
+                ));
+              }
             }),
             SizedBox(width: 8.w),
             _addBtn(
@@ -987,55 +1041,80 @@ class _RequestDemoEditPageState extends State<RequestDemoEditPage> {
           ),
           SizedBox(height: 8.h),
           if (q.type == QuestionType.dropdown) ...[
-            _lbl('Values'),
-            SizedBox(height: 4.h),
             ...List.generate(q.values.length, (vi) {
               final v = q.values[vi];
-              return Padding(
-                padding: EdgeInsets.only(bottom: 6.h),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    Expanded(
-                      child: CustomValidatedTextFieldMaster(
-                        hint: 'Text Here',
-                        controller: v.en,
-                        height: 36,
-                        submitted: _sub,
-                        fillColor: Colors.white,
-                        primaryColor: _p,
-                      ),
-                    ),
-                    SizedBox(width: 4.w),
-                    Padding(
-                      padding: EdgeInsets.only(bottom: 15.h),
-                      child: _removeDot(
-                            () => setState(() {
-                          final r = q.values.removeAt(vi);
-                          WidgetsBinding.instance.addPostFrameCallback(
-                                (_) => r.dispose(),
-                          );
-                        }),
-                      ),
-                    ),
-                    SizedBox(width: 8.w),
-                    Expanded(
-                      child: Directionality(
-                        textDirection: ui.TextDirection.rtl,
+
+              // Detect if this value is a duplicate of another in the same question
+              final isDupEn = q.values
+                  .where((other) => other.id != v.id)
+                  .any((other) =>
+              other.en.text.trim().toLowerCase() ==
+                  v.en.text.trim().toLowerCase() &&
+                  v.en.text.trim().isNotEmpty);
+              final isDupAr = q.values
+                  .where((other) => other.id != v.id)
+                  .any((other) =>
+              other.ar.text.trim() == v.ar.text.trim() &&
+                  v.ar.text.trim().isNotEmpty);
+              final isDuplicate = isDupEn || isDupAr;
+
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Expanded(
                         child: CustomValidatedTextFieldMaster(
-                          hint: 'أدخل النص هنا',
-                          controller: v.ar,
+                          hint: 'Text Here',
+                          label: 'Values',
+                          controller: v.en,
+                          labelTrailing: _removeDot(
+                                () => setState(() {
+                              final r = q.values.removeAt(vi);
+                              WidgetsBinding.instance.addPostFrameCallback(
+                                    (_) => r.dispose(),
+                              );
+                            }),
+                          ),
                           height: 36,
                           submitted: _sub,
                           fillColor: Colors.white,
-                          textDirection: ui.TextDirection.rtl,
-                          textAlign: TextAlign.right,
-                          primaryColor: _p,
+                          primaryColor:
+                          isDuplicate ? _C.remove : _p,
+                          onChanged: (_) => setState(() {}),
                         ),
                       ),
+                      SizedBox(width: 8.w),
+                      Expanded(
+                        child: Directionality(
+                          textDirection: ui.TextDirection.rtl,
+                          child: CustomValidatedTextFieldMaster(
+                            hint: 'أدخل النص هنا',
+                            controller: v.ar,
+                            label: "القيم",
+                            height: 36,
+                            submitted: _sub,
+                            fillColor: Colors.white,
+                            textDirection: ui.TextDirection.rtl,
+                            textAlign: TextAlign.right,
+                            primaryColor:
+                            isDuplicate ? _C.remove : _p,
+                            onChanged: (_) => setState(() {}),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  // Show inline duplicate warning beneath the row
+                  if (isDuplicate)
+                    Text(
+                      'Duplicate value — each option must be unique',
+                      style: StyleText.fontSize10Weight400.copyWith(
+                        color: _C.remove,
+                      ),
                     ),
-                  ],
-                ),
+                ],
               );
             }),
             if (_sub && q.type == QuestionType.dropdown && q.values.isEmpty)

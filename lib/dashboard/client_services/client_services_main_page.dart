@@ -29,8 +29,6 @@ import 'client_services_preview_page.dart';
 import 'dart:html' as html;
 import 'dart:ui_web' as ui_web;
 
-
-
 /// Custom Segmented Tabs Widget (reused from master_main_page)
 class CustomSegmentedTabs extends StatelessWidget {
   const CustomSegmentedTabs({
@@ -88,17 +86,17 @@ class CustomSegmentedTabs extends StatelessWidget {
 
           return equalWidth
               ? Expanded(
-            child: _buildTab(
-              title: tabs[tabIndex],
-              isSelected: isSelected,
-              onTap: () => onTabSelected(tabIndex),
-            ),
-          )
+                  child: _buildTab(
+                    title: tabs[tabIndex],
+                    isSelected: isSelected,
+                    onTap: () => onTabSelected(tabIndex),
+                  ),
+                )
               : _buildTab(
-            title: tabs[tabIndex],
-            isSelected: isSelected,
-            onTap: () => onTabSelected(tabIndex),
-          );
+                  title: tabs[tabIndex],
+                  isSelected: isSelected,
+                  onTap: () => onTabSelected(tabIndex),
+                );
         }),
       ),
     );
@@ -184,9 +182,7 @@ class _ClientServicesMainPageState extends State<ClientServicesMainPage> {
   void _navigateToEdit() {
     Navigator.push(
       context,
-      MaterialPageRoute(
-        builder: (context) => const ClientServicesEditPage(),
-      ),
+      MaterialPageRoute(builder: (context) => const ClientServicesEditPage()),
     );
   }
 
@@ -204,19 +200,27 @@ class _ClientServicesMainPageState extends State<ClientServicesMainPage> {
     return BlocConsumer<ClientServicesCmsCubit, ClientServicesCmsState>(
       listener: (context, state) {
         if (state is ClientServicesCmsError) {
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-            content: Text('Error: ${state.message}',
-                style: StyleText.fontSize14Weight400.copyWith(color: Colors.white)),
-            backgroundColor: Colors.red,
-            behavior: SnackBarBehavior.floating,
-          ));
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                'Error: ${state.message}',
+                style: StyleText.fontSize14Weight400.copyWith(
+                  color: Colors.white,
+                ),
+              ),
+              backgroundColor: Colors.red,
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
         }
       },
       builder: (context, state) {
-        if (state is ClientServicesCmsInitial || state is ClientServicesCmsLoading) {
+        if (state is ClientServicesCmsInitial ||
+            state is ClientServicesCmsLoading) {
           return const Scaffold(
-              backgroundColor: _C.back,
-              body: Center(child: CircularProgressIndicator(color: _C.primary)));
+            backgroundColor: _C.back,
+            body: Center(child: CircularProgressIndicator(color: _C.primary)),
+          );
         }
 
         ClientServicesPageModel? model;
@@ -254,19 +258,35 @@ class _ClientServicesMainPageState extends State<ClientServicesMainPage> {
                             children: [
                               // ── Title + Preview ─────────────────────────
                               Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
                                 children: [
-                                  Text('Client Services Details',
-                                      style: StyleText.fontSize45Weight600
-                                          .copyWith(color: _C.primary, fontWeight: FontWeight.w700)),
+                                  Text(
+                                    'Client Services Details',
+                                    style: StyleText.fontSize45Weight600
+                                        .copyWith(
+                                          color: _C.primary,
+                                          fontWeight: FontWeight.w700,
+                                        ),
+                                  ),
                                   GestureDetector(
                                     onTap: _navigateToPreview,
                                     child: Container(
-                                      padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
+                                      padding: EdgeInsets.symmetric(
+                                        horizontal: 16.w,
+                                        vertical: 8.h,
+                                      ),
                                       decoration: BoxDecoration(
-                                          color: _C.primary, borderRadius: BorderRadius.circular(6.r)),
-                                      child: Text('Preview Screen',
-                                          style: StyleText.fontSize12Weight500.copyWith(color: Colors.white)),
+                                        color: _C.primary,
+                                        borderRadius: BorderRadius.circular(
+                                          6.r,
+                                        ),
+                                      ),
+                                      child: Text(
+                                        'Preview Screen',
+                                        style: StyleText.fontSize12Weight500
+                                            .copyWith(color: Colors.white),
+                                      ),
                                     ),
                                   ),
                                 ],
@@ -310,7 +330,9 @@ class _ClientServicesMainPageState extends State<ClientServicesMainPage> {
                                     unselectedTextColor: _C.labelText,
                                     equalWidth: false,
                                     containerPadding: EdgeInsets.symmetric(
-                                        horizontal: 8.sp, vertical: 4.sp),
+                                      horizontal: 8.sp,
+                                      vertical: 4.sp,
+                                    ),
                                     containerColor: Colors.white,
                                   ),
                                   const Spacer(),
@@ -359,7 +381,9 @@ class _ClientServicesMainPageState extends State<ClientServicesMainPage> {
         Container(
           padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 8.h),
           decoration: BoxDecoration(
-              color: _C.cardBg, borderRadius: BorderRadius.circular(4.r)),
+            color: _C.cardBg,
+            borderRadius: BorderRadius.circular(4.r),
+          ),
           child: Text(
             'Last Updated On ${_fmtDate(lastUpdated)}',
             style: StyleText.fontSize13Weight500.copyWith(color: _C.primary),
@@ -379,16 +403,20 @@ class _ClientServicesMainPageState extends State<ClientServicesMainPage> {
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Text('Edit Details',
-                      style: StyleText.fontSize14Weight500
-                          .copyWith(color: Colors.black)),
+                  Text(
+                    'Edit Details',
+                    style: StyleText.fontSize14Weight500.copyWith(
+                      color: Colors.black,
+                    ),
+                  ),
                   SizedBox(width: 6.w),
                   CustomSvg(
-                      assetPath: "assets/control/edit_icon_pick.svg",
-                      width: 20.w,
-                      height: 20.h,
-                      fit: BoxFit.scaleDown,
-                      color: _C.primary),
+                    assetPath: "assets/control/edit_icon_pick.svg",
+                    width: 20.w,
+                    height: 20.h,
+                    fit: BoxFit.scaleDown,
+                    color: _C.primary,
+                  ),
                 ],
               ),
             ),
@@ -398,38 +426,62 @@ class _ClientServicesMainPageState extends State<ClientServicesMainPage> {
     );
   }
 
-  Widget _accordion({required String key, required String title, required List<Widget> children}) {
+  Widget _accordion({
+    required String key,
+    required String title,
+    required List<Widget> children,
+  }) {
     final isOpen = _open[key] ?? true;
-    return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      GestureDetector(
-        onTap: () => setState(() => _open[key] = !isOpen),
-        child: Container(
-          width: double.infinity,
-          padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
-          decoration: BoxDecoration(
-            color: _C.primary,
-            borderRadius: isOpen
-                ? BorderRadius.only(topLeft: Radius.circular(6.r), topRight: Radius.circular(6.r))
-                : BorderRadius.circular(6.r),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        GestureDetector(
+          onTap: () => setState(() => _open[key] = !isOpen),
+          child: Container(
+            width: double.infinity,
+            padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
+            decoration: BoxDecoration(
+              color: _C.primary,
+              borderRadius: BorderRadius.circular(8.r),
+            ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    title,
+                    style: StyleText.fontSize14Weight600.copyWith(
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+                Icon(
+                  isOpen
+                      ? Icons.keyboard_arrow_up_rounded
+                      : Icons.keyboard_arrow_down_rounded,
+                  color: Colors.white,
+                  size: 20.sp,
+                ),
+              ],
+            ),
           ),
-          child: Row(children: [
-            Expanded(child: Text(title, style: StyleText.fontSize14Weight600.copyWith(color: Colors.white))),
-            Icon(isOpen ? Icons.keyboard_arrow_up_rounded : Icons.keyboard_arrow_down_rounded,
-                color: Colors.white, size: 20.sp),
-          ]),
         ),
-      ),
-      if (isOpen)
-        Container(
-          width: double.infinity,
-          padding: EdgeInsets.symmetric(vertical: 16.h), // Changed from all(16) to symmetric(vertical: 16.h)
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.only(
-                bottomLeft: Radius.circular(6.r), bottomRight: Radius.circular(6.r)),
+        if (isOpen)
+          Container(
+            width: double.infinity,
+            padding: EdgeInsets.symmetric(vertical: 16.h),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.only(
+                bottomLeft: Radius.circular(6.r),
+                bottomRight: Radius.circular(6.r),
+              ),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: children,
+            ),
           ),
-          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: children),
-        ),
-    ]);
+      ],
+    );
   }
 
   Widget _headerSection(ClientServicesPageModel m) => _accordion(
@@ -447,10 +499,18 @@ class _ClientServicesMainPageState extends State<ClientServicesMainPage> {
       _readOnlyBox(m.header.description.en, maxLines: 4),
       SizedBox(height: 8.h),
       Align(
-          alignment: Alignment.centerRight,
-          child: Text('الوصف', style: StyleText.fontSize14Weight400.copyWith(color: AppColors.text))),
+        alignment: Alignment.centerRight,
+        child: Text(
+          'الوصف',
+          style: StyleText.fontSize14Weight400.copyWith(color: AppColors.text),
+        ),
+      ),
       SizedBox(height: 6.h),
-      _readOnlyBox(m.header.description.ar, maxLines: 4, textDirection: ui.TextDirection.rtl),
+      _readOnlyBox(
+        m.header.description.ar,
+        maxLines: 4,
+        textDirection: ui.TextDirection.rtl,
+      ),
     ],
   );
 
@@ -458,21 +518,48 @@ class _ClientServicesMainPageState extends State<ClientServicesMainPage> {
     key: 'download',
     title: 'Download Applications',
     children: [
-      _readOnlyBiRow('Title', 'العنوان', m.download.title.en, m.download.title.ar),
+      _readOnlyBiRow(
+        'Title',
+        'العنوان',
+        m.download.title.en,
+        m.download.title.ar,
+      ),
       SizedBox(height: 10.h),
-      Row(children: [
-        Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Text('Apple Store Link', style: StyleText.fontSize14Weight400.copyWith(color: AppColors.text)),
-          SizedBox(height: 6.h),
-          _readOnlyBox(m.download.appStoreLink),
-        ])),
-        SizedBox(width: 16.w),
-        Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Text('Android Link', style: StyleText.fontSize14Weight400.copyWith(color: AppColors.text)),
-          SizedBox(height: 6.h),
-          _readOnlyBox(m.download.googlePlayLink),
-        ])),
-      ]),
+      Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Apple Store Link',
+                  style: StyleText.fontSize14Weight400.copyWith(
+                    color: AppColors.text,
+                  ),
+                ),
+                SizedBox(height: 6.h),
+                _readOnlyBox(m.download.appStoreLink),
+              ],
+            ),
+          ),
+          SizedBox(width: 16.w),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Android Link',
+                  style: StyleText.fontSize14Weight400.copyWith(
+                    color: AppColors.text,
+                  ),
+                ),
+                SizedBox(height: 6.h),
+                _readOnlyBox(m.download.googlePlayLink),
+              ],
+            ),
+          ),
+        ],
+      ),
     ],
   );
 
@@ -480,85 +567,156 @@ class _ClientServicesMainPageState extends State<ClientServicesMainPage> {
     key: 'mockups',
     title: 'Mockups',
     children: [
-      ...m.mockups.items.map((item) => Padding(
-        padding: EdgeInsets.only(bottom: 14.h),
-        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Row(children: [
-            _readOnlyLabel('SVG'),
-            const Spacer(),
-            _layoutChips(item.layout),
-          ]),
-          SizedBox(height: 6.h),
-          _readOnlyImageCircle(item.svgUrl),
-          SizedBox(height: 10.h),
-          _readOnlyBiRow('Title', 'العنوان', item.title.en, item.title.ar),
-          SizedBox(height: 8.h),
-          _readOnlyLabel('Description'),
-          SizedBox(height: 6.h),
-          _readOnlyBox(item.description.en, maxLines: 4),
-          SizedBox(height: 8.h),
-          Align(
-              alignment: Alignment.centerRight,
-              child: Text('الوصف', style: StyleText.fontSize14Weight400.copyWith(color: AppColors.text))),
-          SizedBox(height: 6.h),
-          _readOnlyBox(item.description.ar, maxLines: 4, textDirection: ui.TextDirection.rtl),
-          SizedBox(height: 8.h),
-          Divider(color: _C.border),
-        ]),
-      )),
+      ...m.mockups.items.asMap().entries.map(
+        (entry) => Padding(
+          padding: EdgeInsets.only(bottom: 14.h),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  _readOnlyLabel('SVG'),
+                  const Spacer(),
+                  _layoutChips(entry.value.layout),
+                ],
+              ),
+              SizedBox(height: 6.h),
+              _readOnlyImageCircle(entry.value.svgUrl),
+              SizedBox(height: 10.h),
+              _readOnlyBiRow(
+                'Title',
+                'العنوان',
+                entry.value.title.en,
+                entry.value.title.ar,
+              ),
+              SizedBox(height: 8.h),
+              _readOnlyLabel('Description'),
+              SizedBox(height: 6.h),
+              _readOnlyBox(entry.value.description.en, maxLines: 4),
+              SizedBox(height: 8.h),
+              Align(
+                alignment: Alignment.centerRight,
+                child: Text(
+                  'الوصف',
+                  style: StyleText.fontSize14Weight400.copyWith(
+                    color: AppColors.text,
+                  ),
+                ),
+              ),
+              SizedBox(height: 6.h),
+              _readOnlyBox(
+                entry.value.description.ar,
+                maxLines: 4,
+                textDirection: ui.TextDirection.rtl,
+              ),
+              SizedBox(height: 8.h),
+              Divider(color: _C.border),
+            ],
+          ),
+        ),
+      ),
     ],
   );
 
+  // Updated _layoutChips using CustomSegmentedTabs
   Widget _layoutChips(MockupLayout layout) {
-    return Row(mainAxisSize: MainAxisSize.min, children: [
-      for (final l in MockupLayout.values)
-        Container(
-          margin: EdgeInsets.only(left: 4.w),
-          padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
-          decoration: BoxDecoration(
-            color: layout == l ? _C.primary : Colors.white,
-            borderRadius: BorderRadius.circular(4.r),
-            border: Border.all(color: layout == l ? _C.primary : _C.border),
-          ),
-          child: Text(l.name[0].toUpperCase() + l.name.substring(1),
-              style: StyleText.fontSize11Weight400
-                  .copyWith(color: layout == l ? Colors.white : _C.labelText)),
-        ),
-    ]);
+    // Define all layout options
+    const options = ['left', 'centered', 'right'];
+
+    // Convert MockupLayout to string for comparison
+    String currentLayout = layout.name.toLowerCase();
+
+    // Find the index of current layout in options
+    int selectedIndex = options.indexOf(currentLayout).clamp(0, 2);
+
+    return CustomSegmentedTabs(
+      tabs: const ['Left', 'Centered', 'Right'],
+      selectedIndex: selectedIndex,
+      onTabSelected: (index) {
+        // This is a read-only view, so we don't update state
+        // For edit mode, you would update the layout here
+        // final newLayoutStr = options[index];
+        // final newLayout = MockupLayout.values.firstWhere(
+        //   (l) => l.name.toLowerCase() == newLayoutStr,
+        //   orElse: () => layout,
+        // );
+        // setState(() => /* update layout */);
+      },
+      selectedColor: _C.primary,
+      unselectedColor: Colors.white,
+      selectedTextColor: Colors.white,
+      unselectedTextColor: _C.labelText,
+      equalWidth: false,
+      containerPadding: EdgeInsets.symmetric(horizontal: 8.sp, vertical: 4.sp),
+      containerColor: Colors.white,
+    );
   }
 
   // ── Shared helpers ─────────────────────────────────────────────────────────
-  Widget _readOnlyLabel(String t) =>
-      Text(t, style: StyleText.fontSize12Weight500.copyWith(color: _C.labelText));
+  Widget _readOnlyLabel(String t) => Text(
+    t,
+    style: StyleText.fontSize12Weight500.copyWith(color: _C.labelText),
+  );
 
-  Widget _readOnlyBiRow(String enL, String arL, String enV, String arV) =>
-      Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Text(enL, style: StyleText.fontSize14Weight400.copyWith(color: AppColors.text)),
-          SizedBox(height: 6.h),
-          _readOnlyBox(enV),
-        ])),
-        SizedBox(width: 16.w),
-        Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.end, children: [
-          Text(arL, style: StyleText.fontSize14Weight400.copyWith(color: AppColors.text)),
-          SizedBox(height: 6.h),
-          _readOnlyBox(arV, textDirection: ui.TextDirection.rtl),
-        ])),
-      ]);
+  Widget _readOnlyBiRow(String enL, String arL, String enV, String arV) => Row(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      Expanded(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              enL,
+              style: StyleText.fontSize14Weight400.copyWith(
+                color: AppColors.text,
+              ),
+            ),
+            SizedBox(height: 6.h),
+            _readOnlyBox(enV),
+          ],
+        ),
+      ),
+      SizedBox(width: 16.w),
+      Expanded(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: [
+            Text(
+              arL,
+              style: StyleText.fontSize14Weight400.copyWith(
+                color: AppColors.text,
+              ),
+            ),
+            SizedBox(height: 6.h),
+            _readOnlyBox(arV, textDirection: ui.TextDirection.rtl),
+          ],
+        ),
+      ),
+    ],
+  );
 
-  Widget _readOnlyBox(String text,
-      {int maxLines = 1, ui.TextDirection textDirection = ui.TextDirection.ltr}) {
+  Widget _readOnlyBox(
+    String text, {
+    int maxLines = 1,
+    ui.TextDirection textDirection = ui.TextDirection.ltr,
+  }) {
     return Container(
       width: double.infinity,
       padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 10.h),
       constraints: maxLines > 1 ? BoxConstraints(minHeight: 80.h) : null,
-      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(4.r)),
-      child: Text(text.isEmpty ? 'Text Here' : text,
-          textDirection: textDirection,
-          style: StyleText.fontSize12Weight400
-              .copyWith(color: text.isEmpty ? _C.hintText : _C.labelText),
-          maxLines: maxLines,
-          overflow: TextOverflow.ellipsis),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(4.r),
+      ),
+      child: Text(
+        text.isEmpty ? 'Text Here' : text,
+        textDirection: textDirection,
+        style: StyleText.fontSize12Weight400.copyWith(
+          color: text.isEmpty ? _C.hintText : _C.labelText,
+        ),
+        maxLines: maxLines,
+        overflow: TextOverflow.ellipsis,
+      ),
     );
   }
 

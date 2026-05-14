@@ -1,7 +1,7 @@
 // ******************* FILE INFO *******************
 // File Name: about_cubit.dart  (3 cubits in one file)
 // Created by: Amr Mesbah
-// UPDATED: Added headings/svg upload path handling in AboutCubit.save()
+// UPDATED: Multi-device support for Strategic House images (Desktop, Tablet, Mobile)
 
 import 'dart:typed_data';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -30,6 +30,14 @@ class AboutCubit extends Cubit<AboutState> {
       : _repo = repo ?? AboutRepoImpl(),
         super(AboutInitial());
 
+  // Add current getter
+  AboutPageModel get current {
+    final state = this.state;
+    if (state is AboutLoaded) return state.data;
+    if (state is AboutSaved) return state.data;
+    return AboutPageModel.empty();
+  }
+
   Future<void> load() async {
     print('🟡 [AboutCubit] load()');
     safeEmit(AboutLoading());
@@ -53,35 +61,26 @@ class AboutCubit extends Cubit<AboutState> {
           final url = await _repo.uploadImage(
               bytes: entry.value, storagePath: entry.key);
 
-          // ✅ NEW: headings SVG
           if (entry.key.contains('headings/svg')) {
             updated = updated.copyWith(svgUrl: url);
-          }
-          // ✅ Navigation Label icon
-          else if (entry.key.contains('navLabel/icon')) {
+          } else if (entry.key.contains('navLabel/icon')) {
             updated = updated.copyWith(
                 navigationLabel:
                 updated.navigationLabel.copyWith(iconUrl: url));
-          }
-          // Vision
-          else if (entry.key.contains('vision/icon')) {
+          } else if (entry.key.contains('vision/icon')) {
             updated = updated.copyWith(
                 vision: updated.vision.copyWith(iconUrl: url));
           } else if (entry.key.contains('vision/svg')) {
             updated = updated.copyWith(
                 vision: updated.vision.copyWith(svgUrl: url));
-          }
-          // Mission
-          else if (entry.key.contains('mission/icon')) {
+          } else if (entry.key.contains('mission/icon')) {
             updated = updated.copyWith(
                 mission: updated.mission.copyWith(iconUrl: url));
           } else if (entry.key.contains('mission/svg')) {
             updated = updated.copyWith(
                 mission: updated.mission.copyWith(svgUrl: url));
-          }
-          // Values
-          else if (entry.key.contains('values/')) {
-            final parts  = entry.key.split('/');
+          } else if (entry.key.contains('values/')) {
+            final parts = entry.key.split('/');
             final itemId = parts.length >= 3 ? parts[2] : null;
             if (itemId != null) {
               final newValues = updated.values.map((v) {
@@ -121,8 +120,12 @@ class StrategyCubit extends Cubit<StrategyState> {
     try {
       final data = await _repo.fetchStrategy();
       print('🟢 [StrategyCubit] load OK');
-      print('  - Strategic House EN URL: ${data.strategicHouseEnUrl}');
-      print('  - Strategic House AR URL: ${data.strategicHouseArUrl}');
+      print('  - EN Desktop: ${data.strategicHouseEnDesktopUrl}');
+      print('  - EN Tablet: ${data.strategicHouseEnTabletUrl}');
+      print('  - EN Mobile: ${data.strategicHouseEnMobileUrl}');
+      print('  - AR Desktop: ${data.strategicHouseArDesktopUrl}');
+      print('  - AR Tablet: ${data.strategicHouseArTabletUrl}');
+      print('  - AR Mobile: ${data.strategicHouseArMobileUrl}');
       safeEmit(StrategyLoaded(data));
     } catch (e) {
       print('🔴 [StrategyCubit] load ERROR: $e');
@@ -136,8 +139,6 @@ class StrategyCubit extends Cubit<StrategyState> {
   }) async {
     print('🟡 [StrategyCubit] save()');
     print('  - Image uploads: ${imageUploads?.keys}');
-    print('  - Current Strategic House EN URL: ${model.strategicHouseEnUrl}');
-    print('  - Current Strategic House AR URL: ${model.strategicHouseArUrl}');
 
     try {
       var updated = model;
@@ -160,13 +161,35 @@ class StrategyCubit extends Cubit<StrategyState> {
                 updated.navigationLabel.copyWith(iconUrl: url));
             print('  ✓ Updated navLabel icon URL');
           }
-          else if (path.contains('strategicHouse/en')) {
-            updated = updated.copyWith(strategicHouseEnUrl: url);
-            print('  ✓ Updated strategicHouse EN URL');
+          // Strategic House EN - Desktop
+          else if (path.contains('strategicHouse/en/desktop')) {
+            updated = updated.copyWith(strategicHouseEnDesktopUrl: url);
+            print('  ✓ Updated strategicHouse EN Desktop URL');
           }
-          else if (path.contains('strategicHouse/ar')) {
-            updated = updated.copyWith(strategicHouseArUrl: url);
-            print('  ✓ Updated strategicHouse AR URL');
+          // Strategic House EN - Tablet
+          else if (path.contains('strategicHouse/en/tablet')) {
+            updated = updated.copyWith(strategicHouseEnTabletUrl: url);
+            print('  ✓ Updated strategicHouse EN Tablet URL');
+          }
+          // Strategic House EN - Mobile
+          else if (path.contains('strategicHouse/en/mobile')) {
+            updated = updated.copyWith(strategicHouseEnMobileUrl: url);
+            print('  ✓ Updated strategicHouse EN Mobile URL');
+          }
+          // Strategic House AR - Desktop
+          else if (path.contains('strategicHouse/ar/desktop')) {
+            updated = updated.copyWith(strategicHouseArDesktopUrl: url);
+            print('  ✓ Updated strategicHouse AR Desktop URL');
+          }
+          // Strategic House AR - Tablet
+          else if (path.contains('strategicHouse/ar/tablet')) {
+            updated = updated.copyWith(strategicHouseArTabletUrl: url);
+            print('  ✓ Updated strategicHouse AR Tablet URL');
+          }
+          // Strategic House AR - Mobile
+          else if (path.contains('strategicHouse/ar/mobile')) {
+            updated = updated.copyWith(strategicHouseArMobileUrl: url);
+            print('  ✓ Updated strategicHouse AR Mobile URL');
           }
           else if (path.contains('vision/svg')) {
             // updated = updated.copyWith(
@@ -177,8 +200,12 @@ class StrategyCubit extends Cubit<StrategyState> {
       }
 
       print('🔵 [StrategyCubit] Saving to Firestore...');
-      print('  - Final Strategic House EN URL: ${updated.strategicHouseEnUrl}');
-      print('  - Final Strategic House AR URL: ${updated.strategicHouseArUrl}');
+      print('  - EN Desktop: ${updated.strategicHouseEnDesktopUrl}');
+      print('  - EN Tablet: ${updated.strategicHouseEnTabletUrl}');
+      print('  - EN Mobile: ${updated.strategicHouseEnMobileUrl}');
+      print('  - AR Desktop: ${updated.strategicHouseArDesktopUrl}');
+      print('  - AR Tablet: ${updated.strategicHouseArTabletUrl}');
+      print('  - AR Mobile: ${updated.strategicHouseArMobileUrl}');
 
       await _repo.saveStrategy(updated);
       print('🟢 [StrategyCubit] save OK');
@@ -213,8 +240,8 @@ class TermsCubit extends Cubit<TermsState> {
 
   Future<void> save({
     required TermsOfServiceModel model,
-    Map<String, Uint8List>?      imageUploads,
-    Map<String, DocUpload>?      docUploads,
+    Map<String, Uint8List>? imageUploads,
+    Map<String, DocUpload>? docUploads,
   }) async {
     print('🟡 [TermsCubit] save()');
     try {
@@ -246,9 +273,9 @@ class TermsCubit extends Cubit<TermsState> {
       if (docUploads != null && docUploads.isNotEmpty) {
         for (final entry in docUploads.entries) {
           final url = await _repo.uploadDocument(
-            bytes:       entry.value.bytes,
+            bytes: entry.value.bytes,
             storagePath: entry.key,
-            fileName:    entry.value.fileName,
+            fileName: entry.value.fileName,
           );
           if (entry.key.contains('terms/en')) {
             updated = updated.copyWith(

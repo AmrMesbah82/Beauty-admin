@@ -1,9 +1,8 @@
 // ******************* FILE INFO *******************
 // File Name: about_page.dart
 // Contains: Tab 0 (About Us) and Tab 1 (Our Strategy)
-// UPDATED: Split from original about_page.dart — UI unchanged
-// UPDATED: Added headings SVG hero banner display from model.svgUrl
-// UPDATED: Fixed Row layout — SVG + title now render side by side correctly
+// UPDATED: Multi-device support for Strategic House images (Desktop, Tablet, Mobile)
+// UPDATED: Responsive image selection based on screen width
 
 // ignore_for_file: avoid_web_libraries_in_flutter
 import 'dart:html' as html;
@@ -79,6 +78,23 @@ Color _parseColor(String hex, {required Color fallback}) {
   }
 }
 
+// Helper to get responsive strategic house URL based on screen width
+String _getResponsiveStrategicHouseUrl({
+  required String desktopUrl,
+  required String tabletUrl,
+  required String mobileUrl,
+  required BuildContext context,
+}) {
+  final double width = MediaQuery.of(context).size.width;
+  if (width < 600) {
+    return mobileUrl.isNotEmpty ? mobileUrl : tabletUrl.isNotEmpty ? tabletUrl : desktopUrl;
+  } else if (width < 1024) {
+    return tabletUrl.isNotEmpty ? tabletUrl : desktopUrl;
+  } else {
+    return desktopUrl;
+  }
+}
+
 // ══════════════════════════════════════════════════════════════════════════════
 // XHR Image Cache
 // ══════════════════════════════════════════════════════════════════════════════
@@ -129,8 +145,7 @@ Widget _netImg({
   ColorFilter? colorFilter,
   Widget? placeholder,
   Widget? errorWidget,
-})
-{
+}) {
   if (url.isEmpty) return errorWidget ?? const SizedBox.shrink();
   final bool hintSvg = _isSvgUrl(url);
   Widget inner = FutureBuilder<Uint8List>(
@@ -174,15 +189,12 @@ Widget _netImg({
 Future<void> _preloadImages(List<String> urls) async {
   final valid = urls
       .where(
-        (u) =>
-    u.isNotEmpty &&
-        (u.startsWith('http://') || u.startsWith('https://')),
+        (u) => u.isNotEmpty && (u.startsWith('http://') || u.startsWith('https://')),
   )
       .toSet();
   await Future.wait(
     valid.map(
-          (url) =>
-          _xhrLoad(url, isSvg: _isSvgUrl(url)).catchError((_) => Uint8List(0)),
+          (url) => _xhrLoad(url, isSvg: _isSvgUrl(url)).catchError((_) => Uint8List(0)),
     ),
   );
 }
@@ -603,10 +615,7 @@ class _AboutPageViewState extends State<_AboutPageView> {
                                     crossAxisAlignment:
                                     CrossAxisAlignment.center,
                                     children: [
-
                                       SizedBox(width: 220.w),
-
-
                                       // Left: illustration SVG
                                       if (model!.svgUrl.isNotEmpty)
                                         _Reveal(
@@ -621,7 +630,6 @@ class _AboutPageViewState extends State<_AboutPageView> {
                                               : _HeadingsSvgDesktop(
                                               svgUrl: model.svgUrl),
                                         ),
-
                                       // Right: page title — must be Expanded to avoid overflow
                                       Expanded(
                                         child: _Reveal(
@@ -646,7 +654,6 @@ class _AboutPageViewState extends State<_AboutPageView> {
                                       ),
                                     ],
                                   ),
-
                                   w < _BP.mobile
                                       ? _AboutBodyMobile(
                                     model: model,
@@ -680,7 +687,6 @@ class _AboutPageViewState extends State<_AboutPageView> {
                               ),
                             ),
                           ),
-
                           // ✅ Footer — always visible at bottom
                           _Reveal(
                             delay: const Duration(milliseconds: 100),
@@ -715,7 +721,7 @@ class _HeadingsSvgDesktop extends StatelessWidget {
   Widget build(BuildContext context) {
     return _netImg(
       url: svgUrl,
-      width: 340.w,  // fixed width — mirrors the Figma ~344px illustration
+      width: 340.w,
       height: 280.h,
       fit: BoxFit.contain,
     );
@@ -735,7 +741,7 @@ class _HeadingsSvgMobile extends StatelessWidget {
   Widget build(BuildContext context) {
     return _netImg(
       url: svgUrl,
-      width: 160.w,  // fixed width for mobile
+      width: 160.w,
       height: 160.h,
       fit: BoxFit.contain,
     );
@@ -977,7 +983,7 @@ class _AboutBodyDesktopState extends State<_AboutBodyDesktop> {
               ),
             ),
 
-          // ── Tab 1: Our Strategy ──
+          // ── Tab 1: Our Strategy (UPDATED with multi-device support) ──
           if (_selectedTopTab == 1)
             _Reveal(
               key: const ValueKey('top_1'),
@@ -990,22 +996,50 @@ class _AboutBodyDesktopState extends State<_AboutBodyDesktop> {
                     StrategySaved(:final data) => data.vision.svgUrl,
                     _ => '',
                   };
-                  final String strategicHouseEnUrl = switch (strategyState) {
-                    StrategyLoaded(:final data) => data.strategicHouseEnUrl,
-                    StrategySaved(:final data) => data.strategicHouseEnUrl,
+
+                  // Get multi-device URLs
+                  final String enDesktopUrl = switch (strategyState) {
+                    StrategyLoaded(:final data) => data.strategicHouseEnDesktopUrl,
+                    StrategySaved(:final data) => data.strategicHouseEnDesktopUrl,
                     _ => '',
                   };
-                  final String strategicHouseArUrl = switch (strategyState) {
-                    StrategyLoaded(:final data) => data.strategicHouseArUrl,
-                    StrategySaved(:final data) => data.strategicHouseArUrl,
+                  final String enTabletUrl = switch (strategyState) {
+                    StrategyLoaded(:final data) => data.strategicHouseEnTabletUrl,
+                    StrategySaved(:final data) => data.strategicHouseEnTabletUrl,
+                    _ => '',
+                  };
+                  final String enMobileUrl = switch (strategyState) {
+                    StrategyLoaded(:final data) => data.strategicHouseEnMobileUrl,
+                    StrategySaved(:final data) => data.strategicHouseEnMobileUrl,
+                    _ => '',
+                  };
+                  final String arDesktopUrl = switch (strategyState) {
+                    StrategyLoaded(:final data) => data.strategicHouseArDesktopUrl,
+                    StrategySaved(:final data) => data.strategicHouseArDesktopUrl,
+                    _ => '',
+                  };
+                  final String arTabletUrl = switch (strategyState) {
+                    StrategyLoaded(:final data) => data.strategicHouseArTabletUrl,
+                    StrategySaved(:final data) => data.strategicHouseArTabletUrl,
+                    _ => '',
+                  };
+                  final String arMobileUrl = switch (strategyState) {
+                    StrategyLoaded(:final data) => data.strategicHouseArMobileUrl,
+                    StrategySaved(:final data) => data.strategicHouseArMobileUrl,
                     _ => '',
                   };
 
                   return BlocBuilder<LanguageCubit, LanguageState>(
                     builder: (context, langState) {
                       final bool isRtl = langState.isArabic;
-                      final String strategicHouseUrl =
-                      isRtl ? strategicHouseArUrl : strategicHouseEnUrl;
+
+                      // Get responsive URL based on screen width
+                      final String strategicHouseUrl = _getResponsiveStrategicHouseUrl(
+                        desktopUrl: isRtl ? arDesktopUrl : enDesktopUrl,
+                        tabletUrl: isRtl ? arTabletUrl : enTabletUrl,
+                        mobileUrl: isRtl ? arMobileUrl : enMobileUrl,
+                        context: context,
+                      );
 
                       return Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1045,6 +1079,7 @@ class _AboutBodyDesktopState extends State<_AboutBodyDesktop> {
                                     color: widget.primaryColor,
                                   ),
                                 ),
+                                SizedBox(height: 12.h),
                                 Container(
                                   width: double.infinity,
                                   padding: EdgeInsets.all(0.r),
@@ -1055,8 +1090,8 @@ class _AboutBodyDesktopState extends State<_AboutBodyDesktop> {
                                     child: _netImg(
                                       url: strategicHouseUrl,
                                       width: double.infinity,
-                                      height: 640.h,
-                                      fit: BoxFit.fill,
+                                      height: 540.h,
+                                      fit: BoxFit.contain,
                                     ),
                                   ),
                                 ),
@@ -1729,7 +1764,6 @@ class _AboutBodyMobileState extends State<_AboutBodyMobile> {
   ];
   @override
   Widget build(BuildContext context) {
-
     final String aboutIconUrl = widget.model.navigationLabel.iconUrl;
     final String strategyIconUrl = switch (context.read<StrategyCubit>().state) {
       StrategyLoaded(:final data) => data.navigationLabel.iconUrl,
@@ -1779,7 +1813,7 @@ class _AboutBodyMobileState extends State<_AboutBodyMobile> {
               ),
             ),
 
-          // ── Tab 1: Our Strategy ──
+          // ── Tab 1: Our Strategy (UPDATED with multi-device support) ──
           if (_selectedTopTab == 1)
             _Reveal(
               key: const ValueKey('mob_top_1'),
@@ -1792,22 +1826,50 @@ class _AboutBodyMobileState extends State<_AboutBodyMobile> {
                     StrategySaved(:final data) => data.vision.svgUrl,
                     _ => '',
                   };
-                  final String strategicHouseEnUrl = switch (strategyState) {
-                    StrategyLoaded(:final data) => data.strategicHouseEnUrl,
-                    StrategySaved(:final data) => data.strategicHouseEnUrl,
+
+                  // Get multi-device URLs
+                  final String enDesktopUrl = switch (strategyState) {
+                    StrategyLoaded(:final data) => data.strategicHouseEnDesktopUrl,
+                    StrategySaved(:final data) => data.strategicHouseEnDesktopUrl,
                     _ => '',
                   };
-                  final String strategicHouseArUrl = switch (strategyState) {
-                    StrategyLoaded(:final data) => data.strategicHouseArUrl,
-                    StrategySaved(:final data) => data.strategicHouseArUrl,
+                  final String enTabletUrl = switch (strategyState) {
+                    StrategyLoaded(:final data) => data.strategicHouseEnTabletUrl,
+                    StrategySaved(:final data) => data.strategicHouseEnTabletUrl,
+                    _ => '',
+                  };
+                  final String enMobileUrl = switch (strategyState) {
+                    StrategyLoaded(:final data) => data.strategicHouseEnMobileUrl,
+                    StrategySaved(:final data) => data.strategicHouseEnMobileUrl,
+                    _ => '',
+                  };
+                  final String arDesktopUrl = switch (strategyState) {
+                    StrategyLoaded(:final data) => data.strategicHouseArDesktopUrl,
+                    StrategySaved(:final data) => data.strategicHouseArDesktopUrl,
+                    _ => '',
+                  };
+                  final String arTabletUrl = switch (strategyState) {
+                    StrategyLoaded(:final data) => data.strategicHouseArTabletUrl,
+                    StrategySaved(:final data) => data.strategicHouseArTabletUrl,
+                    _ => '',
+                  };
+                  final String arMobileUrl = switch (strategyState) {
+                    StrategyLoaded(:final data) => data.strategicHouseArMobileUrl,
+                    StrategySaved(:final data) => data.strategicHouseArMobileUrl,
                     _ => '',
                   };
 
                   return BlocBuilder<LanguageCubit, LanguageState>(
                     builder: (context, langState) {
                       final bool isRtl = langState.isArabic;
-                      final String strategicHouseUrl =
-                      isRtl ? strategicHouseArUrl : strategicHouseEnUrl;
+
+                      // Get responsive URL based on screen width
+                      final String strategicHouseUrl = _getResponsiveStrategicHouseUrl(
+                        desktopUrl: isRtl ? arDesktopUrl : enDesktopUrl,
+                        tabletUrl: isRtl ? arTabletUrl : enTabletUrl,
+                        mobileUrl: isRtl ? arMobileUrl : enMobileUrl,
+                        context: context,
+                      );
 
                       return Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1859,7 +1921,7 @@ class _AboutBodyMobileState extends State<_AboutBodyMobile> {
                                     child: _netImg(
                                       url: strategicHouseUrl,
                                       width: double.infinity,
-                                      height: 180.h,
+                                      height: 200.h,
                                       fit: BoxFit.contain,
                                     ),
                                   ),

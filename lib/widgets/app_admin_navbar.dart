@@ -197,7 +197,7 @@ class _AdminNavbarDesktop extends StatelessWidget {
         margin:  EdgeInsets.symmetric(vertical: 16.h),
         padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 8.h),
         decoration: BoxDecoration(
-          color:        navbarBg,
+          color:        Colors.white,
           borderRadius: BorderRadius.circular(4.r),
         ),
         child: Row(
@@ -215,11 +215,11 @@ class _AdminNavbarDesktop extends StatelessWidget {
                     page:        item.page,
                     pageBuilder: item.pageBuilder,
                     activeLabel: activeLabel,
-                    primary:     primary,
+                    primary:     Color(0xFFD16F9A),
                   )),
                 SizedBox(width: 12.w),
                 _WebPageButton(
-                  primary:  primary,
+                  primary:  Color(0xFFD16F9A),
                   isActive: activeLabel == 'Web Page',
                   onTap:    () => _pushPage(context, webPage),
                 ),

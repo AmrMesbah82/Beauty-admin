@@ -1,15 +1,9 @@
 // ******************* FILE INFO *******************
 // File Name: strategy_edit_page.dart
 // Screen 2 of 3 — Our Strategy CMS: Edit page
-// UPDATED: Added Strategic House - ENG and Strategic House - ARB accordions
-// UPDATED: Added device preview tabs (Large Screen / Tablet / Mobile)
-// UPDATED: SVG-only validation with publish restrictions
-// UPDATED: Fixed SVG reload on text input
-// UPDATED: Added publish confirmation dialog with validation
-// UPDATED: Fixed text input causing SVG reload - optimized rebuilds
-// UPDATED: Removed white backgrounds, changed padding to symmetric
-// UPDATED: Dual-document draft system with validation-based publish button
-// UPDATED: Added showPublishConfirmDialog and navigation to StrategyMainView
+// UPDATED: Multi-device image support (Desktop, Tablet, Mobile) for both EN and AR
+// UPDATED: Each device has separate upload button and preview
+// UPDATED: Validation requires all 3 device images for each language on publish
 // Created by: Amr Mesbah
 // Last Update: 21/04/2026
 
@@ -20,6 +14,7 @@ import 'dart:typed_data';
 import 'dart:ui' as ui;
 
 import 'package:beauty_admin/dashboard/about_page/strategy_page/strategy_main_page.dart';
+import 'package:beauty_admin/theme/appcolors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -47,8 +42,37 @@ const Color _kRed        = Color(0xFFD32F2F);
 const Color _kBg         = Color(0xFFF2F2F2);
 const Color _kDraftBadge = Color(0xFFF59E0B);
 
-// ── Device preview tab enum ─────────────────────────────────────────────────
-enum DeviceTab { largeScreen, tablet, mobile }
+// ── Device type enum for image uploads ────────────────────────────────────────
+enum DeviceType { desktop, tablet, mobile }
+
+extension DeviceTypeExtension on DeviceType {
+  String get displayName {
+    switch (this) {
+      case DeviceType.desktop: return 'Desktop';
+      case DeviceType.tablet: return 'Tablet';
+      case DeviceType.mobile: return 'Mobile';
+    }
+  }
+
+  String get storagePathSuffix {
+    switch (this) {
+      case DeviceType.desktop: return 'desktop';
+      case DeviceType.tablet: return 'tablet';
+      case DeviceType.mobile: return 'mobile';
+    }
+  }
+
+  double get previewWidth {
+    switch (this) {
+      case DeviceType.desktop: return double.infinity;
+      case DeviceType.tablet: return 600;
+      case DeviceType.mobile: return 320;
+    }
+  }
+}
+
+// ── Device preview tab enum for display ───────────────────────────────────────
+enum DisplayDeviceTab { largeScreen, tablet, mobile }
 
 // ═══════════════════════════════════════════════════════════════════════════════
 
@@ -67,15 +91,37 @@ class _StrategyEditPageState extends State<StrategyEditPage> {
   String _navIconUrl = '';
   bool _navIconIsSvg = false;
 
-  // ── Strategic House — ENG ──
-  Uint8List? _strategicHouseEnBytes;
-  String _strategicHouseEnUrl = '';
-  bool _strategicHouseEnIsSvg = false;
+  // ── Strategic House — ENG (3 devices) ──
+  // Desktop
+  Uint8List? _strategicHouseEnDesktopBytes;
+  String _strategicHouseEnDesktopUrl = '';
+  bool _strategicHouseEnDesktopIsSvg = false;
 
-  // ── Strategic House — ARB ──
-  Uint8List? _strategicHouseArBytes;
-  String _strategicHouseArUrl = '';
-  bool _strategicHouseArIsSvg = false;
+  // Tablet
+  Uint8List? _strategicHouseEnTabletBytes;
+  String _strategicHouseEnTabletUrl = '';
+  bool _strategicHouseEnTabletIsSvg = false;
+
+  // Mobile
+  Uint8List? _strategicHouseEnMobileBytes;
+  String _strategicHouseEnMobileUrl = '';
+  bool _strategicHouseEnMobileIsSvg = false;
+
+  // ── Strategic House — ARB (3 devices) ──
+  // Desktop
+  Uint8List? _strategicHouseArDesktopBytes;
+  String _strategicHouseArDesktopUrl = '';
+  bool _strategicHouseArDesktopIsSvg = false;
+
+  // Tablet
+  Uint8List? _strategicHouseArTabletBytes;
+  String _strategicHouseArTabletUrl = '';
+  bool _strategicHouseArTabletIsSvg = false;
+
+  // Mobile
+  Uint8List? _strategicHouseArMobileBytes;
+  String _strategicHouseArMobileUrl = '';
+  bool _strategicHouseArMobileIsSvg = false;
 
   bool _navLabelOpen        = true;
   bool _strategicHouseEnOpen = true;
@@ -88,14 +134,22 @@ class _StrategyEditPageState extends State<StrategyEditPage> {
   /// Whether the data currently loaded came from a draft document.
   bool _isEditingDraft = false;
 
-  // ── Validation errors ──
+  // ── Validation errors per device ──
   String? _navIconError;
-  String? _strategicHouseEnError;
-  String? _strategicHouseArError;
 
-  // ── Device preview tabs ──
-  DeviceTab _strategicHouseEnTab = DeviceTab.largeScreen;
-  DeviceTab _strategicHouseArTab = DeviceTab.largeScreen;
+  // EN device errors
+  String? _strategicHouseEnDesktopError;
+  String? _strategicHouseEnTabletError;
+  String? _strategicHouseEnMobileError;
+
+  // AR device errors
+  String? _strategicHouseArDesktopError;
+  String? _strategicHouseArTabletError;
+  String? _strategicHouseArMobileError;
+
+  // ── Display preview tabs for each section ──
+  DisplayDeviceTab _strategicHouseEnDisplayTab = DisplayDeviceTab.largeScreen;
+  DisplayDeviceTab _strategicHouseArDisplayTab = DisplayDeviceTab.largeScreen;
 
   // ── Cache for loaded SVG URLs to prevent reloading ──
   final Map<String, Uint8List> _svgCache = {};
@@ -231,8 +285,12 @@ class _StrategyEditPageState extends State<StrategyEditPage> {
 
     print('🔵 Seeding strategy data:');
     print('  - Nav icon URL: ${m.navigationLabel.iconUrl}');
-    print('  - Strategic House EN URL: ${m.strategicHouseEnUrl}');
-    print('  - Strategic House AR URL: ${m.strategicHouseArUrl}');
+    print('  - EN Desktop URL: ${m.strategicHouseEnDesktopUrl}');
+    print('  - EN Tablet URL: ${m.strategicHouseEnTabletUrl}');
+    print('  - EN Mobile URL: ${m.strategicHouseEnMobileUrl}');
+    print('  - AR Desktop URL: ${m.strategicHouseArDesktopUrl}');
+    print('  - AR Tablet URL: ${m.strategicHouseArTabletUrl}');
+    print('  - AR Mobile URL: ${m.strategicHouseArMobileUrl}');
     print('  - Is from draft: $isFromDraft');
 
     // Remove listeners temporarily
@@ -245,11 +303,25 @@ class _StrategyEditPageState extends State<StrategyEditPage> {
     _navIconUrl = m.navigationLabel.iconUrl;
     _navIconIsSvg = _isSvgUrl(m.navigationLabel.iconUrl);
 
-    _strategicHouseEnUrl = m.strategicHouseEnUrl;
-    _strategicHouseEnIsSvg = _isSvgUrl(m.strategicHouseEnUrl);
+    // EN device URLs
+    _strategicHouseEnDesktopUrl = m.strategicHouseEnDesktopUrl;
+    _strategicHouseEnDesktopIsSvg = _isSvgUrl(m.strategicHouseEnDesktopUrl);
 
-    _strategicHouseArUrl = m.strategicHouseArUrl;
-    _strategicHouseArIsSvg = _isSvgUrl(m.strategicHouseArUrl);
+    _strategicHouseEnTabletUrl = m.strategicHouseEnTabletUrl;
+    _strategicHouseEnTabletIsSvg = _isSvgUrl(m.strategicHouseEnTabletUrl);
+
+    _strategicHouseEnMobileUrl = m.strategicHouseEnMobileUrl;
+    _strategicHouseEnMobileIsSvg = _isSvgUrl(m.strategicHouseEnMobileUrl);
+
+    // AR device URLs
+    _strategicHouseArDesktopUrl = m.strategicHouseArDesktopUrl;
+    _strategicHouseArDesktopIsSvg = _isSvgUrl(m.strategicHouseArDesktopUrl);
+
+    _strategicHouseArTabletUrl = m.strategicHouseArTabletUrl;
+    _strategicHouseArTabletIsSvg = _isSvgUrl(m.strategicHouseArTabletUrl);
+
+    _strategicHouseArMobileUrl = m.strategicHouseArMobileUrl;
+    _strategicHouseArMobileIsSvg = _isSvgUrl(m.strategicHouseArMobileUrl);
 
     // Re-add listeners
     for (final ctrl in _allControllers) {
@@ -269,19 +341,87 @@ class _StrategyEditPageState extends State<StrategyEditPage> {
         ar: _navTitleArCtrl.text.trim(),
       ),
     ),
-    strategicHouseEnUrl: _strategicHouseEnUrl,
-    strategicHouseArUrl: _strategicHouseArUrl,
+    strategicHouseEnDesktopUrl: _strategicHouseEnDesktopUrl,
+    strategicHouseEnTabletUrl: _strategicHouseEnTabletUrl,
+    strategicHouseEnMobileUrl: _strategicHouseEnMobileUrl,
+    strategicHouseArDesktopUrl: _strategicHouseArDesktopUrl,
+    strategicHouseArTabletUrl: _strategicHouseArTabletUrl,
+    strategicHouseArMobileUrl: _strategicHouseArMobileUrl,
   );
 
   Map<String, Uint8List> _collectUploads() {
     final uploads = <String, Uint8List>{};
+
+    // Navigation icon
     if (_navIconBytes != null && _navIconIsSvg)
       uploads['strategy_cms/navLabel/icon'] = _navIconBytes!;
-    if (_strategicHouseEnBytes != null && _strategicHouseEnIsSvg)
-      uploads['strategy_cms/strategicHouse/en'] = _strategicHouseEnBytes!;
-    if (_strategicHouseArBytes != null && _strategicHouseArIsSvg)
-      uploads['strategy_cms/strategicHouse/ar'] = _strategicHouseArBytes!;
+
+    // EN device uploads
+    if (_strategicHouseEnDesktopBytes != null && _strategicHouseEnDesktopIsSvg)
+      uploads['strategy_cms/strategicHouse/en/desktop'] = _strategicHouseEnDesktopBytes!;
+
+    if (_strategicHouseEnTabletBytes != null && _strategicHouseEnTabletIsSvg)
+      uploads['strategy_cms/strategicHouse/en/tablet'] = _strategicHouseEnTabletBytes!;
+
+    if (_strategicHouseEnMobileBytes != null && _strategicHouseEnMobileIsSvg)
+      uploads['strategy_cms/strategicHouse/en/mobile'] = _strategicHouseEnMobileBytes!;
+
+    // AR device uploads
+    if (_strategicHouseArDesktopBytes != null && _strategicHouseArDesktopIsSvg)
+      uploads['strategy_cms/strategicHouse/ar/desktop'] = _strategicHouseArDesktopBytes!;
+
+    if (_strategicHouseArTabletBytes != null && _strategicHouseArTabletIsSvg)
+      uploads['strategy_cms/strategicHouse/ar/tablet'] = _strategicHouseArTabletBytes!;
+
+    if (_strategicHouseArMobileBytes != null && _strategicHouseArMobileIsSvg)
+      uploads['strategy_cms/strategicHouse/ar/mobile'] = _strategicHouseArMobileBytes!;
+
     return uploads;
+  }
+
+  // ── Check if a device image is present ─────────────────────────────────────
+  bool _hasEnDeviceImage(DeviceType device) {
+    switch (device) {
+      case DeviceType.desktop:
+        return _strategicHouseEnDesktopBytes != null || _strategicHouseEnDesktopUrl.isNotEmpty;
+      case DeviceType.tablet:
+        return _strategicHouseEnTabletBytes != null || _strategicHouseEnTabletUrl.isNotEmpty;
+      case DeviceType.mobile:
+        return _strategicHouseEnMobileBytes != null || _strategicHouseEnMobileUrl.isNotEmpty;
+    }
+  }
+
+  bool _hasArDeviceImage(DeviceType device) {
+    switch (device) {
+      case DeviceType.desktop:
+        return _strategicHouseArDesktopBytes != null || _strategicHouseArDesktopUrl.isNotEmpty;
+      case DeviceType.tablet:
+        return _strategicHouseArTabletBytes != null || _strategicHouseArTabletUrl.isNotEmpty;
+      case DeviceType.mobile:
+        return _strategicHouseArMobileBytes != null || _strategicHouseArMobileUrl.isNotEmpty;
+    }
+  }
+
+  bool _isEnDeviceImageSvg(DeviceType device) {
+    switch (device) {
+      case DeviceType.desktop:
+        return _strategicHouseEnDesktopBytes != null ? _strategicHouseEnDesktopIsSvg : _isSvgUrl(_strategicHouseEnDesktopUrl);
+      case DeviceType.tablet:
+        return _strategicHouseEnTabletBytes != null ? _strategicHouseEnTabletIsSvg : _isSvgUrl(_strategicHouseEnTabletUrl);
+      case DeviceType.mobile:
+        return _strategicHouseEnMobileBytes != null ? _strategicHouseEnMobileIsSvg : _isSvgUrl(_strategicHouseEnMobileUrl);
+    }
+  }
+
+  bool _isArDeviceImageSvg(DeviceType device) {
+    switch (device) {
+      case DeviceType.desktop:
+        return _strategicHouseArDesktopBytes != null ? _strategicHouseArDesktopIsSvg : _isSvgUrl(_strategicHouseArDesktopUrl);
+      case DeviceType.tablet:
+        return _strategicHouseArTabletBytes != null ? _strategicHouseArTabletIsSvg : _isSvgUrl(_strategicHouseArTabletUrl);
+      case DeviceType.mobile:
+        return _strategicHouseArMobileBytes != null ? _strategicHouseArMobileIsSvg : _isSvgUrl(_strategicHouseArMobileUrl);
+    }
   }
 
   // ── Validation ────────────────────────────────────────────────────────────
@@ -291,8 +431,12 @@ class _StrategyEditPageState extends State<StrategyEditPage> {
     // Clear previous errors
     setState(() {
       _navIconError = null;
-      _strategicHouseEnError = null;
-      _strategicHouseArError = null;
+      _strategicHouseEnDesktopError = null;
+      _strategicHouseEnTabletError = null;
+      _strategicHouseEnMobileError = null;
+      _strategicHouseArDesktopError = null;
+      _strategicHouseArTabletError = null;
+      _strategicHouseArMobileError = null;
     });
 
     // Validate text fields
@@ -316,32 +460,60 @@ class _StrategyEditPageState extends State<StrategyEditPage> {
       }
     }
 
-    // For publish, Strategic House images are REQUIRED
+    // For publish, ALL 6 Strategic House images are REQUIRED (EN & AR x 3 devices)
     if (forPublish) {
-      // Validate Strategic House EN
-      final hasEnImage = _strategicHouseEnBytes != null || _strategicHouseEnUrl.isNotEmpty;
-      if (!hasEnImage) {
-        setState(() => _strategicHouseEnError = 'Strategic House (ENG) image is required for publishing');
+      // Validate EN Desktop
+      if (!_hasEnDeviceImage(DeviceType.desktop)) {
+        setState(() => _strategicHouseEnDesktopError = 'Strategic House (ENG) Desktop image is required for publishing');
         isValid = false;
-      } else {
-        final isSvg = _strategicHouseEnBytes != null ? _strategicHouseEnIsSvg : _isSvgUrl(_strategicHouseEnUrl);
-        if (!isSvg) {
-          setState(() => _strategicHouseEnError = 'Strategic House (ENG) must be an SVG file');
-          isValid = false;
-        }
+      } else if (!_isEnDeviceImageSvg(DeviceType.desktop)) {
+        setState(() => _strategicHouseEnDesktopError = 'Strategic House (ENG) Desktop must be an SVG file');
+        isValid = false;
       }
 
-      // Validate Strategic House AR
-      final hasArImage = _strategicHouseArBytes != null || _strategicHouseArUrl.isNotEmpty;
-      if (!hasArImage) {
-        setState(() => _strategicHouseArError = 'Strategic House (ARB) image is required for publishing');
+      // Validate EN Tablet
+      if (!_hasEnDeviceImage(DeviceType.tablet)) {
+        setState(() => _strategicHouseEnTabletError = 'Strategic House (ENG) Tablet image is required for publishing');
         isValid = false;
-      } else {
-        final isSvg = _strategicHouseArBytes != null ? _strategicHouseArIsSvg : _isSvgUrl(_strategicHouseArUrl);
-        if (!isSvg) {
-          setState(() => _strategicHouseArError = 'Strategic House (ARB) must be an SVG file');
-          isValid = false;
-        }
+      } else if (!_isEnDeviceImageSvg(DeviceType.tablet)) {
+        setState(() => _strategicHouseEnTabletError = 'Strategic House (ENG) Tablet must be an SVG file');
+        isValid = false;
+      }
+
+      // Validate EN Mobile
+      if (!_hasEnDeviceImage(DeviceType.mobile)) {
+        setState(() => _strategicHouseEnMobileError = 'Strategic House (ENG) Mobile image is required for publishing');
+        isValid = false;
+      } else if (!_isEnDeviceImageSvg(DeviceType.mobile)) {
+        setState(() => _strategicHouseEnMobileError = 'Strategic House (ENG) Mobile must be an SVG file');
+        isValid = false;
+      }
+
+      // Validate AR Desktop
+      if (!_hasArDeviceImage(DeviceType.desktop)) {
+        setState(() => _strategicHouseArDesktopError = 'Strategic House (ARB) Desktop image is required for publishing');
+        isValid = false;
+      } else if (!_isArDeviceImageSvg(DeviceType.desktop)) {
+        setState(() => _strategicHouseArDesktopError = 'Strategic House (ARB) Desktop must be an SVG file');
+        isValid = false;
+      }
+
+      // Validate AR Tablet
+      if (!_hasArDeviceImage(DeviceType.tablet)) {
+        setState(() => _strategicHouseArTabletError = 'Strategic House (ARB) Tablet image is required for publishing');
+        isValid = false;
+      } else if (!_isArDeviceImageSvg(DeviceType.tablet)) {
+        setState(() => _strategicHouseArTabletError = 'Strategic House (ARB) Tablet must be an SVG file');
+        isValid = false;
+      }
+
+      // Validate AR Mobile
+      if (!_hasArDeviceImage(DeviceType.mobile)) {
+        setState(() => _strategicHouseArMobileError = 'Strategic House (ARB) Mobile image is required for publishing');
+        isValid = false;
+      } else if (!_isArDeviceImageSvg(DeviceType.mobile)) {
+        setState(() => _strategicHouseArMobileError = 'Strategic House (ARB) Mobile must be an SVG file');
+        isValid = false;
       }
     }
 
@@ -360,22 +532,35 @@ class _StrategyEditPageState extends State<StrategyEditPage> {
     final navIconSvg = _navIconBytes != null ? _navIconIsSvg : _isSvgUrl(_navIconUrl);
     if (!navIconSvg) return false;
 
-    // Check strategic house EN
-    final hasEnImage = _strategicHouseEnBytes != null || _strategicHouseEnUrl.isNotEmpty;
-    if (!hasEnImage) return false;
-    final enSvg = _strategicHouseEnBytes != null ? _strategicHouseEnIsSvg : _isSvgUrl(_strategicHouseEnUrl);
-    if (!enSvg) return false;
+    // Check all 6 strategic house images
+    // EN
+    if (!_hasEnDeviceImage(DeviceType.desktop)) return false;
+    if (!_isEnDeviceImageSvg(DeviceType.desktop)) return false;
 
-    // Check strategic house AR
-    final hasArImage = _strategicHouseArBytes != null || _strategicHouseArUrl.isNotEmpty;
-    if (!hasArImage) return false;
-    final arSvg = _strategicHouseArBytes != null ? _strategicHouseArIsSvg : _isSvgUrl(_strategicHouseArUrl);
-    if (!arSvg) return false;
+    if (!_hasEnDeviceImage(DeviceType.tablet)) return false;
+    if (!_isEnDeviceImageSvg(DeviceType.tablet)) return false;
+
+    if (!_hasEnDeviceImage(DeviceType.mobile)) return false;
+    if (!_isEnDeviceImageSvg(DeviceType.mobile)) return false;
+
+    // AR
+    if (!_hasArDeviceImage(DeviceType.desktop)) return false;
+    if (!_isArDeviceImageSvg(DeviceType.desktop)) return false;
+
+    if (!_hasArDeviceImage(DeviceType.tablet)) return false;
+    if (!_isArDeviceImageSvg(DeviceType.tablet)) return false;
+
+    if (!_hasArDeviceImage(DeviceType.mobile)) return false;
+    if (!_isArDeviceImageSvg(DeviceType.mobile)) return false;
 
     // Check for validation errors
     if (_navIconError != null) return false;
-    if (_strategicHouseEnError != null) return false;
-    if (_strategicHouseArError != null) return false;
+    if (_strategicHouseEnDesktopError != null) return false;
+    if (_strategicHouseEnTabletError != null) return false;
+    if (_strategicHouseEnMobileError != null) return false;
+    if (_strategicHouseArDesktopError != null) return false;
+    if (_strategicHouseArTabletError != null) return false;
+    if (_strategicHouseArMobileError != null) return false;
 
     return true;
   }
@@ -405,24 +590,42 @@ class _StrategyEditPageState extends State<StrategyEditPage> {
       }
     }
 
-    final hasEnImage = _strategicHouseEnBytes != null || _strategicHouseEnUrl.isNotEmpty;
-    if (!hasEnImage) {
-      missing.add('Strategic House (ENG) image (SVG required)');
-    } else {
-      final isSvg = _strategicHouseEnBytes != null ? _strategicHouseEnIsSvg : _isSvgUrl(_strategicHouseEnUrl);
-      if (!isSvg) {
-        missing.add('Strategic House (ENG) must be SVG format');
-      }
+    // EN devices
+    if (!_hasEnDeviceImage(DeviceType.desktop)) {
+      missing.add('Strategic House (ENG) Desktop image (SVG required)');
+    } else if (!_isEnDeviceImageSvg(DeviceType.desktop)) {
+      missing.add('Strategic House (ENG) Desktop must be SVG format');
     }
 
-    final hasArImage = _strategicHouseArBytes != null || _strategicHouseArUrl.isNotEmpty;
-    if (!hasArImage) {
-      missing.add('Strategic House (ARB) image (SVG required)');
-    } else {
-      final isSvg = _strategicHouseArBytes != null ? _strategicHouseArIsSvg : _isSvgUrl(_strategicHouseArUrl);
-      if (!isSvg) {
-        missing.add('Strategic House (ARB) must be SVG format');
-      }
+    if (!_hasEnDeviceImage(DeviceType.tablet)) {
+      missing.add('Strategic House (ENG) Tablet image (SVG required)');
+    } else if (!_isEnDeviceImageSvg(DeviceType.tablet)) {
+      missing.add('Strategic House (ENG) Tablet must be SVG format');
+    }
+
+    if (!_hasEnDeviceImage(DeviceType.mobile)) {
+      missing.add('Strategic House (ENG) Mobile image (SVG required)');
+    } else if (!_isEnDeviceImageSvg(DeviceType.mobile)) {
+      missing.add('Strategic House (ENG) Mobile must be SVG format');
+    }
+
+    // AR devices
+    if (!_hasArDeviceImage(DeviceType.desktop)) {
+      missing.add('Strategic House (ARB) Desktop image (SVG required)');
+    } else if (!_isArDeviceImageSvg(DeviceType.desktop)) {
+      missing.add('Strategic House (ARB) Desktop must be SVG format');
+    }
+
+    if (!_hasArDeviceImage(DeviceType.tablet)) {
+      missing.add('Strategic House (ARB) Tablet image (SVG required)');
+    } else if (!_isArDeviceImageSvg(DeviceType.tablet)) {
+      missing.add('Strategic House (ARB) Tablet must be SVG format');
+    }
+
+    if (!_hasArDeviceImage(DeviceType.mobile)) {
+      missing.add('Strategic House (ARB) Mobile image (SVG required)');
+    } else if (!_isArDeviceImageSvg(DeviceType.mobile)) {
+      missing.add('Strategic House (ARB) Mobile must be SVG format');
     }
 
     return missing;
@@ -493,7 +696,7 @@ class _StrategyEditPageState extends State<StrategyEditPage> {
 
   // ── Save ──────────────────────────────────────────────────────────────────
   Future<void> _save(String status) async {
-    // Only validate fully for 'published' — drafts can be partial
+    // For publish, validate all 6 images are present
     if (status == 'published') {
       setState(() => _submitted = true);
       if (!_validate(forPublish: true)) {
@@ -509,9 +712,12 @@ class _StrategyEditPageState extends State<StrategyEditPage> {
 
     print('🔵 Saving strategy:');
     print('  - Status: $status');
-    print('  - Nav icon SVG: $_navIconIsSvg');
-    print('  - Strategic House EN SVG: $_strategicHouseEnIsSvg');
-    print('  - Strategic House AR SVG: $_strategicHouseArIsSvg');
+    print('  - EN Desktop: ${_strategicHouseEnDesktopIsSvg}');
+    print('  - EN Tablet: ${_strategicHouseEnTabletIsSvg}');
+    print('  - EN Mobile: ${_strategicHouseEnMobileIsSvg}');
+    print('  - AR Desktop: ${_strategicHouseArDesktopIsSvg}');
+    print('  - AR Tablet: ${_strategicHouseArTabletIsSvg}');
+    print('  - AR Mobile: ${_strategicHouseArMobileIsSvg}');
 
     await context.read<StrategyCubit>().save(
       model: model,
@@ -519,21 +725,20 @@ class _StrategyEditPageState extends State<StrategyEditPage> {
     );
   }
 
-  // ── Device preview width helper ───────────────────────────────────────────
-  double _previewWidth(DeviceTab tab) {
+  // ── Get display preview width ─────────────────────────────────────────────
+  double _getDisplayPreviewWidth(DisplayDeviceTab tab) {
     switch (tab) {
-      case DeviceTab.largeScreen:
+      case DisplayDeviceTab.largeScreen:
         return double.infinity;
-      case DeviceTab.tablet:
+      case DisplayDeviceTab.tablet:
         return 600.w;
-      case DeviceTab.mobile:
+      case DisplayDeviceTab.mobile:
         return 320.w;
     }
   }
 
   // ── Load SVG from URL with caching ────────────────────────────────────────
   Future<Uint8List> _loadSvgBytes(String url) async {
-    // Check cache first
     if (_svgCache.containsKey(url)) {
       print('🟢 Using cached SVG: $url');
       return _svgCache[url]!;
@@ -552,7 +757,6 @@ class _StrategyEditPageState extends State<StrategyEditPage> {
       final bytes = (res.response as ByteBuffer).asUint8List();
       print('✅ SVG loaded successfully, size: ${bytes.length} bytes');
 
-      // Store in cache
       _svgCache[url] = bytes;
       return bytes;
     } catch (e) {
@@ -569,10 +773,9 @@ class _StrategyEditPageState extends State<StrategyEditPage> {
         print('[StrategyEditPage] 👂 listener: ${state.runtimeType}');
 
         if (state is StrategyLoaded) {
-          _seed(state.data, );
+          _seed(state.data);
         }
 
-        // ── Published successfully ────────────────────────────────────
         if (state is StrategySaved) {
           setState(() => _isSaving = false);
 
@@ -580,26 +783,43 @@ class _StrategyEditPageState extends State<StrategyEditPage> {
             _navIconUrl = state.data.navigationLabel.iconUrl;
             _navIconIsSvg = _isSvgUrl(state.data.navigationLabel.iconUrl);
 
-            _strategicHouseEnUrl = state.data.strategicHouseEnUrl;
-            _strategicHouseEnIsSvg = _isSvgUrl(state.data.strategicHouseEnUrl);
+            // EN device URLs
+            _strategicHouseEnDesktopUrl = state.data.strategicHouseEnDesktopUrl;
+            _strategicHouseEnDesktopIsSvg = _isSvgUrl(state.data.strategicHouseEnDesktopUrl);
 
-            _strategicHouseArUrl = state.data.strategicHouseArUrl;
-            _strategicHouseArIsSvg = _isSvgUrl(state.data.strategicHouseArUrl);
+            _strategicHouseEnTabletUrl = state.data.strategicHouseEnTabletUrl;
+            _strategicHouseEnTabletIsSvg = _isSvgUrl(state.data.strategicHouseEnTabletUrl);
 
-            print('🟢 URLs updated after save:');
-            print('  - Nav Icon URL: $_navIconUrl (SVG: $_navIconIsSvg)');
-            print('  - EN URL: $_strategicHouseEnUrl (SVG: $_strategicHouseEnIsSvg)');
-            print('  - AR URL: $_strategicHouseArUrl (SVG: $_strategicHouseArIsSvg)');
+            _strategicHouseEnMobileUrl = state.data.strategicHouseEnMobileUrl;
+            _strategicHouseEnMobileIsSvg = _isSvgUrl(state.data.strategicHouseEnMobileUrl);
+
+            // AR device URLs
+            _strategicHouseArDesktopUrl = state.data.strategicHouseArDesktopUrl;
+            _strategicHouseArDesktopIsSvg = _isSvgUrl(state.data.strategicHouseArDesktopUrl);
+
+            _strategicHouseArTabletUrl = state.data.strategicHouseArTabletUrl;
+            _strategicHouseArTabletIsSvg = _isSvgUrl(state.data.strategicHouseArTabletUrl);
+
+            _strategicHouseArMobileUrl = state.data.strategicHouseArMobileUrl;
+            _strategicHouseArMobileIsSvg = _isSvgUrl(state.data.strategicHouseArMobileUrl);
 
             // Clear bytes after successful upload
             _navIconBytes = null;
-            _strategicHouseEnBytes = null;
-            _strategicHouseArBytes = null;
+            _strategicHouseEnDesktopBytes = null;
+            _strategicHouseEnTabletBytes = null;
+            _strategicHouseEnMobileBytes = null;
+            _strategicHouseArDesktopBytes = null;
+            _strategicHouseArTabletBytes = null;
+            _strategicHouseArMobileBytes = null;
 
             // Clear cache for updated URLs
             _svgCache.remove(_navIconUrl);
-            _svgCache.remove(_strategicHouseEnUrl);
-            _svgCache.remove(_strategicHouseArUrl);
+            _svgCache.remove(_strategicHouseEnDesktopUrl);
+            _svgCache.remove(_strategicHouseEnTabletUrl);
+            _svgCache.remove(_strategicHouseEnMobileUrl);
+            _svgCache.remove(_strategicHouseArDesktopUrl);
+            _svgCache.remove(_strategicHouseArTabletUrl);
+            _svgCache.remove(_strategicHouseArMobileUrl);
           });
 
           WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -616,55 +836,6 @@ class _StrategyEditPageState extends State<StrategyEditPage> {
             }
           });
         }
-
-        // // ── Draft saved successfully ──────────────────────────────────
-        // if (state is StrategyDraftSaved) {
-        //   setState(() => _isSaving = false);
-        //
-        //   if (mounted) {
-        //     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        //       content: Text(
-        //         'Draft saved! Published version is still live.',
-        //         style: StyleText.fontSize14Weight400.copyWith(color: Colors.white),
-        //       ),
-        //       backgroundColor: _kDraftBadge,
-        //       behavior: SnackBarBehavior.floating,
-        //     ));
-        //   }
-        //
-        //   WidgetsBinding.instance.addPostFrameCallback((_) {
-        //     if (mounted) {
-        //       Navigator.of(context).pushAndRemoveUntil(
-        //         MaterialPageRoute(
-        //           builder: (context) => BlocProvider.value(
-        //             value: context.read<StrategyCubit>(),
-        //             child: const StrategyMainView(),
-        //           ),
-        //         ),
-        //             (route) => false,
-        //       );
-        //     }
-        //   });
-        // }
-
-        // // ── Draft deleted (discard) ───────────────────────────────────
-        // if (state is StrategyDraftDeleted) {
-        //   setState(() => _isSaving = false);
-        //
-        //   WidgetsBinding.instance.addPostFrameCallback((_) {
-        //     if (mounted) {
-        //       Navigator.of(context).pushAndRemoveUntil(
-        //         MaterialPageRoute(
-        //           builder: (context) => BlocProvider.value(
-        //             value: context.read<StrategyCubit>(),
-        //             child: const StrategyMainView(),
-        //           ),
-        //         ),
-        //             (route) => false,
-        //       );
-        //     }
-        //   });
-        // }
 
         if (state is StrategyError) {
           setState(() => _isSaving = false);
@@ -811,50 +982,118 @@ class _StrategyEditPageState extends State<StrategyEditPage> {
             ],
           ),
         ),
-        SizedBox(height: 16.h),
 
-        // ── Strategic House — ENG ─────────────────────────────────────────
+        // ── Strategic House — ENG (3 devices) ─────────────────────────────────────────
         _accordion(
-          title: 'Strategic House - ENG',
+          title: 'Strategic House - ENG (Desktop, Tablet, Mobile)',
           isOpen: _strategicHouseEnOpen,
           onToggle: () =>
               setState(() => _strategicHouseEnOpen = !_strategicHouseEnOpen),
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // Display preview selector
               Container(
-                width : 300.w,
-                child: _deviceTabBar(
-                  selected: _strategicHouseEnTab,
+                width: 300.w,
+                child: _deviceDisplayTabBar(
+                  selected: _strategicHouseEnDisplayTab,
                   onChanged: (tab) =>
-                      setState(() => _strategicHouseEnTab = tab),
+                      setState(() => _strategicHouseEnDisplayTab = tab),
                 ),
               ),
               SizedBox(height: 16.h),
-              _StrategicHouseImageWidget(
-                key: _strategicHouseEnKey,
-                bytes: _strategicHouseEnBytes,
-                url: _strategicHouseEnUrl,
-                isSvg: _strategicHouseEnIsSvg,
-                errorText: _strategicHouseEnError,
-                previewWidth: _previewWidth(_strategicHouseEnTab),
+
+              // Current display preview
+              _StrategicHouseDisplayWidget(
+                displayTab: _strategicHouseEnDisplayTab,
+                desktopBytes: _strategicHouseEnDesktopBytes,
+                desktopUrl: _strategicHouseEnDesktopUrl,
+                desktopIsSvg: _strategicHouseEnDesktopIsSvg,
+                tabletBytes: _strategicHouseEnTabletBytes,
+                tabletUrl: _strategicHouseEnTabletUrl,
+                tabletIsSvg: _strategicHouseEnTabletIsSvg,
+                mobileBytes: _strategicHouseEnMobileBytes,
+                mobileUrl: _strategicHouseEnMobileUrl,
+                mobileIsSvg: _strategicHouseEnMobileIsSvg,
                 loadSvgBytes: _loadSvgBytes,
-                onTap: () async {
+              ),
+              SizedBox(height: 16.h),
+
+              // Upload buttons for all 3 devices
+              Text('Upload Images for Each Device:',
+                  style: TextStyle(fontSize: 14.sp, fontWeight: FontWeight.w600)),
+              SizedBox(height: 12.h),
+
+              // Desktop upload
+              _DeviceUploadRow(
+                title: 'Desktop',
+                hasImage: _strategicHouseEnDesktopBytes != null || _strategicHouseEnDesktopUrl.isNotEmpty,
+                errorText: _strategicHouseEnDesktopError,
+                onUpload: () async {
                   final b = await _pickSvgImage();
                   if (b != null) {
                     setState(() {
-                      _strategicHouseEnBytes = b;
-                      _strategicHouseEnIsSvg = true;
-                      _strategicHouseEnError = null;
+                      _strategicHouseEnDesktopBytes = b;
+                      _strategicHouseEnDesktopIsSvg = true;
+                      _strategicHouseEnDesktopError = null;
                     });
                   }
                 },
-                onRemove: (_strategicHouseEnBytes != null ||
-                    _strategicHouseEnUrl.isNotEmpty)
+                onRemove: (_strategicHouseEnDesktopBytes != null || _strategicHouseEnDesktopUrl.isNotEmpty)
                     ? () => setState(() {
-                  _strategicHouseEnBytes = null;
-                  _strategicHouseEnUrl   = '';
-                  _strategicHouseEnIsSvg = false;
+                  _strategicHouseEnDesktopBytes = null;
+                  _strategicHouseEnDesktopUrl = '';
+                  _strategicHouseEnDesktopIsSvg = false;
+                })
+                    : null,
+              ),
+              SizedBox(height: 12.h),
+
+              // Tablet upload
+              _DeviceUploadRow(
+                title: 'Tablet',
+                hasImage: _strategicHouseEnTabletBytes != null || _strategicHouseEnTabletUrl.isNotEmpty,
+                errorText: _strategicHouseEnTabletError,
+                onUpload: () async {
+                  final b = await _pickSvgImage();
+                  if (b != null) {
+                    setState(() {
+                      _strategicHouseEnTabletBytes = b;
+                      _strategicHouseEnTabletIsSvg = true;
+                      _strategicHouseEnTabletError = null;
+                    });
+                  }
+                },
+                onRemove: (_strategicHouseEnTabletBytes != null || _strategicHouseEnTabletUrl.isNotEmpty)
+                    ? () => setState(() {
+                  _strategicHouseEnTabletBytes = null;
+                  _strategicHouseEnTabletUrl = '';
+                  _strategicHouseEnTabletIsSvg = false;
+                })
+                    : null,
+              ),
+              SizedBox(height: 12.h),
+
+              // Mobile upload
+              _DeviceUploadRow(
+                title: 'Mobile',
+                hasImage: _strategicHouseEnMobileBytes != null || _strategicHouseEnMobileUrl.isNotEmpty,
+                errorText: _strategicHouseEnMobileError,
+                onUpload: () async {
+                  final b = await _pickSvgImage();
+                  if (b != null) {
+                    setState(() {
+                      _strategicHouseEnMobileBytes = b;
+                      _strategicHouseEnMobileIsSvg = true;
+                      _strategicHouseEnMobileError = null;
+                    });
+                  }
+                },
+                onRemove: (_strategicHouseEnMobileBytes != null || _strategicHouseEnMobileUrl.isNotEmpty)
+                    ? () => setState(() {
+                  _strategicHouseEnMobileBytes = null;
+                  _strategicHouseEnMobileUrl = '';
+                  _strategicHouseEnMobileIsSvg = false;
                 })
                     : null,
               ),
@@ -863,48 +1102,117 @@ class _StrategyEditPageState extends State<StrategyEditPage> {
         ),
         SizedBox(height: 16.h),
 
-        // ── Strategic House — ARB ─────────────────────────────────────────
+        // ── Strategic House — ARB (3 devices) ─────────────────────────────────────────
         _accordion(
-          title: 'Strategic House - ARB',
+          title: 'Strategic House - ARB (Desktop, Tablet, Mobile)',
           isOpen: _strategicHouseArOpen,
           onToggle: () =>
               setState(() => _strategicHouseArOpen = !_strategicHouseArOpen),
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // Display preview selector
               Container(
-                width : 300.w,
-                child: _deviceTabBar(
-                  selected: _strategicHouseArTab,
+                width: 300.w,
+                child: _deviceDisplayTabBar(
+                  selected: _strategicHouseArDisplayTab,
                   onChanged: (tab) =>
-                      setState(() => _strategicHouseArTab = tab),
+                      setState(() => _strategicHouseArDisplayTab = tab),
                 ),
               ),
               SizedBox(height: 16.h),
-              _StrategicHouseImageWidget(
-                key: _strategicHouseArKey,
-                bytes: _strategicHouseArBytes,
-                url: _strategicHouseArUrl,
-                isSvg: _strategicHouseArIsSvg,
-                errorText: _strategicHouseArError,
-                previewWidth: _previewWidth(_strategicHouseArTab),
+
+              // Current display preview
+              _StrategicHouseDisplayWidget(
+                displayTab: _strategicHouseArDisplayTab,
+                desktopBytes: _strategicHouseArDesktopBytes,
+                desktopUrl: _strategicHouseArDesktopUrl,
+                desktopIsSvg: _strategicHouseArDesktopIsSvg,
+                tabletBytes: _strategicHouseArTabletBytes,
+                tabletUrl: _strategicHouseArTabletUrl,
+                tabletIsSvg: _strategicHouseArTabletIsSvg,
+                mobileBytes: _strategicHouseArMobileBytes,
+                mobileUrl: _strategicHouseArMobileUrl,
+                mobileIsSvg: _strategicHouseArMobileIsSvg,
                 loadSvgBytes: _loadSvgBytes,
-                onTap: () async {
+              ),
+              SizedBox(height: 16.h),
+
+              // Upload buttons for all 3 devices
+              Text('Upload Images for Each Device:',
+                  style: TextStyle(fontSize: 14.sp, fontWeight: FontWeight.w600)),
+              SizedBox(height: 12.h),
+
+              // Desktop upload
+              _DeviceUploadRow(
+                title: 'Desktop',
+                hasImage: _strategicHouseArDesktopBytes != null || _strategicHouseArDesktopUrl.isNotEmpty,
+                errorText: _strategicHouseArDesktopError,
+                onUpload: () async {
                   final b = await _pickSvgImage();
                   if (b != null) {
                     setState(() {
-                      _strategicHouseArBytes = b;
-                      _strategicHouseArIsSvg = true;
-                      _strategicHouseArError = null;
+                      _strategicHouseArDesktopBytes = b;
+                      _strategicHouseArDesktopIsSvg = true;
+                      _strategicHouseArDesktopError = null;
                     });
                   }
                 },
-                onRemove: (_strategicHouseArBytes != null ||
-                    _strategicHouseArUrl.isNotEmpty)
+                onRemove: (_strategicHouseArDesktopBytes != null || _strategicHouseArDesktopUrl.isNotEmpty)
                     ? () => setState(() {
-                  _strategicHouseArBytes = null;
-                  _strategicHouseArUrl   = '';
-                  _strategicHouseArIsSvg = false;
+                  _strategicHouseArDesktopBytes = null;
+                  _strategicHouseArDesktopUrl = '';
+                  _strategicHouseArDesktopIsSvg = false;
+                })
+                    : null,
+              ),
+              SizedBox(height: 12.h),
+
+              // Tablet upload
+              _DeviceUploadRow(
+                title: 'Tablet',
+                hasImage: _strategicHouseArTabletBytes != null || _strategicHouseArTabletUrl.isNotEmpty,
+                errorText: _strategicHouseArTabletError,
+                onUpload: () async {
+                  final b = await _pickSvgImage();
+                  if (b != null) {
+                    setState(() {
+                      _strategicHouseArTabletBytes = b;
+                      _strategicHouseArTabletIsSvg = true;
+                      _strategicHouseArTabletError = null;
+                    });
+                  }
+                },
+                onRemove: (_strategicHouseArTabletBytes != null || _strategicHouseArTabletUrl.isNotEmpty)
+                    ? () => setState(() {
+                  _strategicHouseArTabletBytes = null;
+                  _strategicHouseArTabletUrl = '';
+                  _strategicHouseArTabletIsSvg = false;
+                })
+                    : null,
+              ),
+              SizedBox(height: 12.h),
+
+              // Mobile upload
+              _DeviceUploadRow(
+                title: 'Mobile',
+                hasImage: _strategicHouseArMobileBytes != null || _strategicHouseArMobileUrl.isNotEmpty,
+                errorText: _strategicHouseArMobileError,
+                onUpload: () async {
+                  final b = await _pickSvgImage();
+                  if (b != null) {
+                    setState(() {
+                      _strategicHouseArMobileBytes = b;
+                      _strategicHouseArMobileIsSvg = true;
+                      _strategicHouseArMobileError = null;
+                    });
+                  }
+                },
+                onRemove: (_strategicHouseArMobileBytes != null || _strategicHouseArMobileUrl.isNotEmpty)
+                    ? () => setState(() {
+                  _strategicHouseArMobileBytes = null;
+                  _strategicHouseArMobileUrl = '';
+                  _strategicHouseArMobileIsSvg = false;
                 })
                     : null,
               ),
@@ -948,7 +1256,6 @@ class _StrategyEditPageState extends State<StrategyEditPage> {
                   return;
                 }
 
-                // Show publish confirmation dialog
                 showPublishConfirmDialog(
                   context: context,
                   title: 'PUBLISHING STRATEGY',
@@ -966,7 +1273,6 @@ class _StrategyEditPageState extends State<StrategyEditPage> {
   // ── Secondary Buttons Row ─────────────────────────────────────────────────
   Widget _secondaryRow() {
     return Row(children: [
-      // ── Discard button ────────────────────────────────────────────────
       Expanded(
         child: _btn(
           label: 'Discard',
@@ -1000,23 +1306,18 @@ class _StrategyEditPageState extends State<StrategyEditPage> {
         onTap: onToggle,
         child: Container(
           width: double.infinity,
-          padding:
-          EdgeInsets.symmetric(horizontal: 20.w, vertical: 14.h),
+          padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 9.h),
           decoration: BoxDecoration(
             color: _kGreenSolid,
-            borderRadius: isOpen
-                ? BorderRadius.vertical(top: Radius.circular(12.r))
-                : BorderRadius.circular(12.r),
+            borderRadius: BorderRadius.circular(8.r),
           ),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(title,
-                  style: TextStyle(
-                      fontFamily: 'Cairo',
-                      fontSize: 16.sp,
-                      fontWeight: FontWeight.w700,
-                      color: Colors.white)),
+                  style: StyleText.fontSize14Weight500.copyWith(
+                      color: Colors.white
+                  )),
               Icon(
                   isOpen
                       ? Icons.keyboard_arrow_up
@@ -1031,8 +1332,7 @@ class _StrategyEditPageState extends State<StrategyEditPage> {
         Container(
           width: double.infinity,
           decoration: BoxDecoration(
-            borderRadius:
-            BorderRadius.vertical(bottom: Radius.circular(12.r)),
+            borderRadius: BorderRadius.vertical(bottom: Radius.circular(12.r)),
           ),
           padding: EdgeInsets.symmetric(vertical: 16.h),
           child: child,
@@ -1040,12 +1340,12 @@ class _StrategyEditPageState extends State<StrategyEditPage> {
     ]);
   }
 
-  // ── Device Tab Bar ────────────────────────────────────────────────────────
-  Widget _deviceTabBar({
-    required DeviceTab selected,
-    required ValueChanged<DeviceTab> onChanged,
+  // ── Device Display Tab Bar ────────────────────────────────────────────────
+  Widget _deviceDisplayTabBar({
+    required DisplayDeviceTab selected,
+    required ValueChanged<DisplayDeviceTab> onChanged,
   }) {
-    Widget tab(String label, DeviceTab value) {
+    Widget tab(String label, DisplayDeviceTab value) {
       final isActive = selected == value;
       return Expanded(
         child: GestureDetector(
@@ -1081,11 +1381,11 @@ class _StrategyEditPageState extends State<StrategyEditPage> {
       ),
       child: Row(
         children: [
-          tab('Large Screen', DeviceTab.largeScreen),
+          tab('Desktop', DisplayDeviceTab.largeScreen),
           SizedBox(width: 4.w),
-          tab('Tablet', DeviceTab.tablet),
+          tab('Tablet', DisplayDeviceTab.tablet),
           SizedBox(width: 4.w),
-          tab('Mobile', DeviceTab.mobile),
+          tab('Mobile', DisplayDeviceTab.mobile),
         ],
       ),
     );
@@ -1111,9 +1411,7 @@ class _StrategyEditPageState extends State<StrategyEditPage> {
             submitted: _submitted,
             textDirection: ui.TextDirection.ltr,
             textAlign: TextAlign.start,
-            onChanged: (_) {
-              // Validation handled by listener
-            },
+            onChanged: (_) {},
           ),
         ),
         SizedBox(width: 12.w),
@@ -1128,9 +1426,7 @@ class _StrategyEditPageState extends State<StrategyEditPage> {
             submitted: _submitted,
             textDirection: ui.TextDirection.rtl,
             textAlign: TextAlign.right,
-            onChanged: (_) {
-              // Validation handled by listener
-            },
+            onChanged: (_) {},
           ),
         ),
       ],
@@ -1198,7 +1494,7 @@ class _StrategyEditPageState extends State<StrategyEditPage> {
 // SEPARATE WIDGET CLASSES TO PREVENT REBUILDS
 // ═══════════════════════════════════════════════════════════════════════════════
 
-/// Separate widget for Navigation Icon to prevent rebuilds when text fields change
+/// Separate widget for Navigation Icon
 class _NavIconUploadWidget extends StatelessWidget {
   final Uint8List? bytes;
   final String url;
@@ -1227,11 +1523,10 @@ class _NavIconUploadWidget extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text('Icon',
-            style: TextStyle(
-                fontFamily: 'Cairo',
-                fontSize: 13.sp,
-                fontWeight: FontWeight.w600,
-                color: Colors.black87)),
+            style: StyleText.fontSize16Weight500.copyWith(
+                color: AppColors.text
+            )
+        ),
         SizedBox(height: 8.h),
         Row(
           children: [
@@ -1263,7 +1558,6 @@ class _NavIconUploadWidget extends StatelessWidget {
                               ),
                             );
                           }
-
                           if (url.isNotEmpty && isSvg) {
                             return FutureBuilder<Uint8List>(
                               key: ValueKey(url),
@@ -1288,7 +1582,6 @@ class _NavIconUploadWidget extends StatelessWidget {
                               },
                             );
                           }
-
                           return Icon(
                             Icons.broken_image,
                             color: Colors.grey[400],
@@ -1356,169 +1649,251 @@ class _NavIconUploadWidget extends StatelessWidget {
   }
 }
 
-/// Separate widget for Strategic House Images to prevent rebuilds
-class _StrategicHouseImageWidget extends StatelessWidget {
-  final Uint8List? bytes;
-  final String url;
-  final bool isSvg;
-  final String? errorText;
-  final double previewWidth;
+/// Widget for displaying the selected device preview
+class _StrategicHouseDisplayWidget extends StatelessWidget {
+  final DisplayDeviceTab displayTab;
+  final Uint8List? desktopBytes;
+  final String desktopUrl;
+  final bool desktopIsSvg;
+  final Uint8List? tabletBytes;
+  final String tabletUrl;
+  final bool tabletIsSvg;
+  final Uint8List? mobileBytes;
+  final String mobileUrl;
+  final bool mobileIsSvg;
   final Future<Uint8List> Function(String) loadSvgBytes;
-  final VoidCallback onTap;
+
+  const _StrategicHouseDisplayWidget({
+    required this.displayTab,
+    required this.desktopBytes,
+    required this.desktopUrl,
+    required this.desktopIsSvg,
+    required this.tabletBytes,
+    required this.tabletUrl,
+    required this.tabletIsSvg,
+    required this.mobileBytes,
+    required this.mobileUrl,
+    required this.mobileIsSvg,
+    required this.loadSvgBytes,
+  });
+
+  double _getPreviewWidth() {
+    switch (displayTab) {
+      case DisplayDeviceTab.largeScreen:
+        return double.infinity;
+      case DisplayDeviceTab.tablet:
+        return 600;
+      case DisplayDeviceTab.mobile:
+        return 320;
+    }
+  }
+
+  Uint8List? _getCurrentBytes() {
+    switch (displayTab) {
+      case DisplayDeviceTab.largeScreen:
+        return desktopBytes;
+      case DisplayDeviceTab.tablet:
+        return tabletBytes;
+      case DisplayDeviceTab.mobile:
+        return mobileBytes;
+    }
+  }
+
+  String _getCurrentUrl() {
+    switch (displayTab) {
+      case DisplayDeviceTab.largeScreen:
+        return desktopUrl;
+      case DisplayDeviceTab.tablet:
+        return tabletUrl;
+      case DisplayDeviceTab.mobile:
+        return mobileUrl;
+    }
+  }
+
+  bool _getCurrentIsSvg() {
+    switch (displayTab) {
+      case DisplayDeviceTab.largeScreen:
+        return desktopIsSvg;
+      case DisplayDeviceTab.tablet:
+        return tabletIsSvg;
+      case DisplayDeviceTab.mobile:
+        return mobileIsSvg;
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final bytes = _getCurrentBytes();
+    final url = _getCurrentUrl();
+    final isSvg = _getCurrentIsSvg();
+    final hasImage = bytes != null || url.isNotEmpty;
+
+    return Center(
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeInOut,
+        width: _getPreviewWidth(),
+        height: 220.h,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(8.r),
+          color: Colors.grey[100],
+        ),
+        child: hasImage
+            ? ClipRRect(
+          borderRadius: BorderRadius.circular(8.r),
+          child: Builder(
+            builder: (context) {
+              if (bytes != null && isSvg) {
+                return SvgPicture.memory(
+                  bytes,
+                  width: _getPreviewWidth(),
+                  height: 220.h,
+                  fit: BoxFit.contain,
+                  placeholderBuilder: (context) => const Center(
+                    child: CircularProgressIndicator(),
+                  ),
+                );
+              }
+              if (url.isNotEmpty && isSvg) {
+                return FutureBuilder<Uint8List>(
+                  key: ValueKey(url),
+                  future: loadSvgBytes(url),
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return const Center(
+                        child: CircularProgressIndicator(),
+                      );
+                    }
+                    if (snapshot.hasData) {
+                      return SvgPicture.memory(
+                        snapshot.data!,
+                        width: _getPreviewWidth(),
+                        height: 220.h,
+                        fit: BoxFit.contain,
+                      );
+                    }
+                    return Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.broken_image,
+                            color: Colors.grey[400],
+                            size: 48.sp,
+                          ),
+                          SizedBox(height: 8.h),
+                          Text(
+                            'Failed to load SVG',
+                            style: TextStyle(
+                              fontSize: 12.sp,
+                              color: Colors.grey[600],
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  },
+                );
+              }
+              return const SizedBox.shrink();
+            },
+          ),
+        )
+            : Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            CustomSvg(
+              assetPath: "assets/images/upload-image.svg",
+              width: 100.w,
+              height: 100.h,
+              fit: BoxFit.fill,
+            ),
+            SizedBox(height: 8.h),
+            Text(
+              'No image uploaded for ${displayTab == DisplayDeviceTab.largeScreen ? "Desktop" : displayTab == DisplayDeviceTab.tablet ? "Tablet" : "Mobile"}',
+              style: TextStyle(
+                fontFamily: 'Cairo',
+                fontSize: 13.sp,
+                color: Colors.grey[500],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Widget for device upload row
+class _DeviceUploadRow extends StatelessWidget {
+  final String title;
+  final bool hasImage;
+  final String? errorText;
+  final VoidCallback onUpload;
   final VoidCallback? onRemove;
 
-  const _StrategicHouseImageWidget({
-    super.key,
-    required this.bytes,
-    required this.url,
-    required this.isSvg,
+  const _DeviceUploadRow({
+    required this.title,
+    required this.hasImage,
     this.errorText,
-    required this.previewWidth,
-    required this.loadSvgBytes,
-    required this.onTap,
+    required this.onUpload,
     this.onRemove,
   });
 
   @override
   Widget build(BuildContext context) {
-    final hasImage = bytes != null || url.isNotEmpty;
-
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // ── image area ──
-        Center(
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 300),
-            curve: Curves.easeInOut,
-            width: previewWidth,
-            height: 220.h,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(8.r),
-              border: errorText != null
-                  ? Border.all(color: _kRed, width: 2)
-                  : null,
-            ),
-            child: hasImage
-                ? Stack(
-              alignment: Alignment.center,
-              children: [
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(8.r),
-                  child: Builder(
-                    builder: (context) {
-                      if (bytes != null && isSvg) {
-                        return SvgPicture.memory(
-                          bytes!,
-                          width: previewWidth,
-                          height: 220.h,
-                          fit: BoxFit.contain,
-                          placeholderBuilder: (context) => const Center(
-                            child: CircularProgressIndicator(),
-                          ),
-                        );
-                      }
-
-                      if (url.isNotEmpty && isSvg) {
-                        return FutureBuilder<Uint8List>(
-                          key: ValueKey(url),
-                          future: loadSvgBytes(url),
-                          builder: (context, snapshot) {
-                            if (snapshot.connectionState == ConnectionState.waiting) {
-                              return const Center(
-                                child: CircularProgressIndicator(),
-                              );
-                            }
-                            if (snapshot.hasData) {
-                              return SvgPicture.memory(
-                                snapshot.data!,
-                                width: previewWidth,
-                                height: 220.h,
-                                fit: BoxFit.contain,
-                              );
-                            }
-                            if (snapshot.hasError) {
-                              return Center(
-                                child: Column(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Icon(
-                                      Icons.broken_image,
-                                      color: Colors.grey[400],
-                                      size: 48.sp,
-                                    ),
-                                    SizedBox(height: 8.h),
-                                    Text(
-                                      'Failed to load SVG',
-                                      style: TextStyle(
-                                        fontSize: 12.sp,
-                                        color: Colors.grey[600],
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              );
-                            }
-                            return const SizedBox.shrink();
-                          },
-                        );
-                      }
-
-                      return const SizedBox.shrink();
-                    },
-                  ),
-                ),
-              ],
-            )
-                : Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                CustomSvg(
-                  assetPath: "assets/images/upload-image.svg",
-                  width: 100.w,
-                  height: 100.h,
-                  fit: BoxFit.fill,
-                ),
-                SizedBox(height: 8.h),
-                Text(
-                  'Drop your SVG image here',
-                  style: TextStyle(
-                    fontFamily: 'Cairo',
-                    fontSize: 13.sp,
-                    color: errorText != null ? _kRed : Colors.grey[500],
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-        if (errorText != null) ...[
-          SizedBox(height: 8.h),
-          Padding(
-            padding: EdgeInsets.only(left: 12.w),
-            child: Text(
-              errorText!,
-              style: TextStyle(
-                fontFamily: 'Cairo',
-                fontSize: 12.sp,
-                color: _kRed,
+        Row(
+          children: [
+            Container(
+              width: 8.w,
+              height: 8.w,
+              decoration: BoxDecoration(
+                color: hasImage ? Colors.green : Colors.grey,
+                shape: BoxShape.circle,
               ),
             ),
-          ),
-        ],
-        SizedBox(height: 12.h),
+            SizedBox(width: 8.w),
+            Text(
+              title,
+              style: TextStyle(
+                fontSize: 14.sp,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+            if (hasImage) ...[
+              SizedBox(width: 8.w),
+              Container(
+                padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 2.h),
+                decoration: BoxDecoration(
+                  color: Colors.green.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(4.r),
+                ),
+                child: Text(
+                  'Uploaded',
+                  style: TextStyle(
+                    fontSize: 10.sp,
+                    color: Colors.green,
+                  ),
+                ),
+              ),
+            ],
+          ],
+        ),
+        SizedBox(height: 8.h),
         Row(
-          mainAxisAlignment: MainAxisAlignment.center,
           children: [
             customButtonWithImage(
-              title: 'Upload SVG Image',
-              function: onTap,
+              title: hasImage ? 'Replace SVG' : 'Upload SVG',
+              function: onUpload,
               textStyle: StyleText.fontSize14Weight500.copyWith(
                   color: Colors.white
               ),
               height: 38.h,
               space: 8.sp,
-              width: 250.w,
+              width: 160.w,
               radius: 8.r,
               color: _kGreenSolid,
               image: "",
@@ -1526,8 +1901,46 @@ class _StrategicHouseImageWidget extends StatelessWidget {
               heightImage: 16.h,
               colorBorder: Colors.transparent,
             ),
+            if (hasImage && onRemove != null) ...[
+              SizedBox(width: 12.w),
+              GestureDetector(
+                onTap: onRemove,
+                child: Container(
+                  padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
+                  decoration: BoxDecoration(
+                    color: Colors.red.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(8.r),
+                    border: Border.all(color: Colors.red.withOpacity(0.3)),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(Icons.delete_outline, color: _kRed, size: 16.sp),
+                      SizedBox(width: 4.w),
+                      Text(
+                        'Remove',
+                        style: TextStyle(
+                          fontSize: 12.sp,
+                          color: _kRed,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
           ],
-        )
+        ),
+        if (errorText != null) ...[
+          SizedBox(height: 4.h),
+          Text(
+            errorText!,
+            style: TextStyle(
+              fontFamily: 'Cairo',
+              fontSize: 11.sp,
+              color: _kRed,
+            ),
+          ),
+        ],
       ],
     );
   }

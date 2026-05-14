@@ -5,6 +5,7 @@
 // FIXED: Dynamic last-updated date (from model.lastUpdatedAt)
 // FIXED: Tab bar restyled to match ServicesMainPageMaster pattern
 // FIXED: Show empty model on first open instead of "No data found"
+// UPDATED: Added Navigation Label section display
 
 // ignore_for_file: avoid_web_libraries_in_flutter
 import 'dart:html' as html;
@@ -113,7 +114,7 @@ class _AboutMainPageMasterDashboardState
   Future<Uint8List> _cachedLoad(String url, {bool isSvg = false}) {
     return _urlBytesCache.putIfAbsent(
       url,
-      () => isSvg ? _loadSvg(url) : _loadImageBytes(url),
+          () => isSvg ? _loadSvg(url) : _loadImageBytes(url),
     );
   }
 
@@ -159,10 +160,10 @@ class _AboutMainPageMasterDashboardState
   }
 
   Widget _renderBytes(
-    Uint8List b, {
-    bool isSvg = false,
-    BoxFit fit = BoxFit.cover,
-  }) {
+      Uint8List b, {
+        bool isSvg = false,
+        BoxFit fit = BoxFit.cover,
+      }) {
     if (isSvg || _isSvgBytes(b)) {
       return SvgPicture.memory(b, fit: fit);
     }
@@ -206,13 +207,16 @@ class _AboutMainPageMasterDashboardState
           MaterialPageRoute(
             builder: (_) => BlocProvider.value(
               value: cubit,
-              child: AboutPreviewPageLast(
-                model: aboutModel,
-                imageUploads: const {},
+              child: AboutPreviewPage(
+                previewModel: aboutModel,
+                onPublish: () async {
+                  // Optional: handle publish from preview
+                },
               ),
             ),
           ),
         );
+        break;
 
       case 1:
         final strategyState = _strategyCubit.state;
@@ -236,6 +240,7 @@ class _AboutMainPageMasterDashboardState
             ),
           ),
         );
+        break;
 
       case 2:
         final termsState = _termsCubit.state;
@@ -259,6 +264,7 @@ class _AboutMainPageMasterDashboardState
             ),
           ),
         );
+        break;
     }
   }
 
@@ -278,7 +284,7 @@ class _AboutMainPageMasterDashboardState
         final AboutPageModel model = switch (state) {
           AboutLoaded s => s.data,
           AboutSaved s => s.data,
-          _ => AboutPageModel.empty(), // ← FIXED: no more "No data found"
+          _ => AboutPageModel.empty(),
         };
 
         return Scaffold(
@@ -289,8 +295,6 @@ class _AboutMainPageMasterDashboardState
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-
-
                   AppAdminNavbar(
                     activeLabel: 'Web Page',
                     homePage: HomeMainPage(),
@@ -413,7 +417,6 @@ class _AboutMainPageMasterDashboardState
           key: 'headings',
           title: 'Headings',
           children: [
-
             Row(
               children: [
                 Expanded(
@@ -424,6 +427,46 @@ class _AboutMainPageMasterDashboardState
                 ),
                 SizedBox(width: 16.w),
                 Expanded(child: _readFieldRtl('العنوان', model.title.ar)),
+              ],
+            ),
+          ],
+        ),
+        SizedBox(height: 12.h),
+
+        // ── NEW: Navigation Label Section ─────────────────────────────────
+        _accordion(
+          key: 'navigationLabel',
+          title: 'Navigation Label',
+          children: [
+            Row(
+              children: [
+                _iconPreviewCircle(
+                  label: 'Icon',
+                  url: model.navigationLabel.iconUrl,
+                  isSvg: true,
+                ),
+              ],
+            ),
+            SizedBox(height: 16.h),
+            Row(
+              children: [
+                Expanded(
+                  child: _readField(
+                    'Title',
+                    model.navigationLabel.title.en.isEmpty
+                        ? 'Text Here'
+                        : model.navigationLabel.title.en,
+                  ),
+                ),
+                SizedBox(width: 16.w),
+                Expanded(
+                  child: _readFieldRtl(
+                    'العنوان',
+                    model.navigationLabel.title.ar.isEmpty
+                        ? 'أكتب هنا'
+                        : model.navigationLabel.title.ar,
+                  ),
+                ),
               ],
             ),
           ],
@@ -497,7 +540,6 @@ class _AboutMainPageMasterDashboardState
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-
         Row(
           children: [
             _iconPreviewCircle(label: 'Icon', url: iconUrl),
@@ -579,33 +621,33 @@ class _AboutMainPageMasterDashboardState
       children: rows
           .map(
             (row) => Padding(
-              padding: EdgeInsets.only(bottom: 8.h),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-
-                  ...row.map(
+          padding: EdgeInsets.only(bottom: 8.h),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              ...row.map(
                     (item) => Expanded(
-                      child: Padding(
-                        padding: EdgeInsets.only(right: 8.w),
-                        child: _valueMiniCard(item),
-                      ),
-                    ),
+                  child: Padding(
+                    padding: EdgeInsets.only(right: 8.w),
+                    child: _valueMiniCard(item),
                   ),
-                  ...List.generate(
-                    4 - row.length,
-                    (_) => const Expanded(child: SizedBox()),
-                  ),
-                ],
+                ),
               ),
-            ),
-          )
+              ...List.generate(
+                4 - row.length,
+                    (_) => const Expanded(child: SizedBox()),
+              ),
+            ],
+          ),
+        ),
+      )
           .toList(),
     );
   }
 
   Widget _valueMiniCard(AboutValueItem item) {
     return Container(
+      height: 140.h,
       padding: EdgeInsets.all(10.r),
       decoration: BoxDecoration(
         color: Colors.white,
@@ -641,16 +683,18 @@ class _AboutMainPageMasterDashboardState
             overflow: TextOverflow.ellipsis,
           ),
           SizedBox(height: 4.h),
-          Text(
-            item.shortDescription.en.isNotEmpty
-                ? item.shortDescription.en
-                : 'Short Description',
-            style: StyleText.fontSize12Weight400.copyWith(
-              color: AppColors.secondaryBlack,
-              height: 1.5,
+          Expanded(
+            child: Text(
+              item.shortDescription.en.isNotEmpty
+                  ? item.shortDescription.en
+                  : 'Short Description',
+              style: StyleText.fontSize12Weight400.copyWith(
+                color: AppColors.secondaryBlack,
+                height: 1.5,
+              ),
+              maxLines: 3,
+              overflow: TextOverflow.ellipsis,
             ),
-            maxLines: 3,
-            overflow: TextOverflow.ellipsis,
           ),
         ],
       ),
@@ -729,7 +773,7 @@ class _AboutMainPageMasterDashboardState
               padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
               decoration: BoxDecoration(
                 color: _C.primary,
-                borderRadius:  BorderRadius.circular(8.r),
+                borderRadius: BorderRadius.circular(8.r),
               ),
               child: Row(
                 children: [
@@ -753,8 +797,8 @@ class _AboutMainPageMasterDashboardState
             ),
           ),
           if (isOpen)
-            Padding(  // ← add this
-              padding: EdgeInsets.symmetric(vertical: 12.h,),
+            Padding(
+              padding: EdgeInsets.symmetric(vertical: 12.h),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: children,
@@ -796,10 +840,10 @@ class _AboutMainPageMasterDashboardState
   );
 
   Widget _readFieldRtl(
-    String label,
-    String value, {
-    double height = 36,
-  }) => Directionality(
+      String label,
+      String value, {
+        double height = 36,
+      }) => Directionality(
     textDirection: TextDirection.rtl,
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,

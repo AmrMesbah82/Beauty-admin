@@ -1,7 +1,8 @@
 // ******************* FILE INFO *******************
 // File Name: contact_us_cms_repo_impl.dart
 // Created by: Amr Mesbah
-// Last Update: 18/04/2026
+// Last Update: 14/05/2026
+// UPDATED: Client_Is_Required + Owner_Is_Required versioned fields added ✅
 // UPDATED: All field names use Capital_Underscore naming convention ✅
 // UPDATED: All nested maps flattened — no nested maps in Firestore ✅
 // UPDATED: save() versions each flattened field individually ✅
@@ -40,7 +41,7 @@ class ContactUsCmsRepoImpl implements ContactUsCmsRepo {
     }
   }
 
-  // ── Save (ALL fields versioned individually) ───────────────────────────────
+  // ── Save ───────────────────────────────────────────────────────────────────
   @override
   Future<void> save({
     required ContactUsCmsModel model,
@@ -54,16 +55,13 @@ class ContactUsCmsRepoImpl implements ContactUsCmsRepo {
 
       final updatedModel = _updateModelWithUrls(model, uploadedUrls);
 
-      // ── Step 1: read existing raw Firestore data ────────────────────────
       print('🟡 [ContactCmsRepo] save → reading existing doc...');
       final existingSnap = await _docRef
           .get(const GetOptions(source: Source.server));
       final ex = (existingSnap.exists ? existingSnap.data() : null) ?? {};
 
-      // ── Step 2: plain map from model ────────────────────────────────────
       final newMap = updatedModel.toJson();
 
-      // ── Step 3: build versioned map ─────────────────────────────────────
       final versionedMap = <String, dynamic>{
         // ── plain list fields (not versioned) ──────────────────────────
         'Client_Description_Reasons': newMap['Client_Description_Reasons'],
@@ -86,10 +84,12 @@ class ContactUsCmsRepoImpl implements ContactUsCmsRepo {
           ex['Headings_Title_Ar'], newMap['Headings_Title_Ar'],
         ),
         'Headings_Short_Description_En': Versioned.append(
-          ex['Headings_Short_Description_En'], newMap['Headings_Short_Description_En'],
+          ex['Headings_Short_Description_En'],
+          newMap['Headings_Short_Description_En'],
         ),
         'Headings_Short_Description_Ar': Versioned.append(
-          ex['Headings_Short_Description_Ar'], newMap['Headings_Short_Description_Ar'],
+          ex['Headings_Short_Description_Ar'],
+          newMap['Headings_Short_Description_Ar'],
         ),
 
         // ── Client Description (flattened, versioned) ──────────────────
@@ -99,6 +99,10 @@ class ContactUsCmsRepoImpl implements ContactUsCmsRepo {
         'Client_Description_Ar': Versioned.append(
           ex['Client_Description_Ar'], newMap['Client_Description_Ar'],
         ),
+        // ← NEW: section-level isRequired
+        'Client_Is_Required': Versioned.append(
+          ex['Client_Is_Required'], newMap['Client_Is_Required'],
+        ),
 
         // ── Owner Description (flattened, versioned) ───────────────────
         'Owner_Description_En': Versioned.append(
@@ -106,6 +110,10 @@ class ContactUsCmsRepoImpl implements ContactUsCmsRepo {
         ),
         'Owner_Description_Ar': Versioned.append(
           ex['Owner_Description_Ar'], newMap['Owner_Description_Ar'],
+        ),
+        // ← NEW: section-level isRequired
+        'Owner_Is_Required': Versioned.append(
+          ex['Owner_Is_Required'], newMap['Owner_Is_Required'],
         ),
 
         // ── Social Icons (versioned via Map) ───────────────────────────
@@ -115,7 +123,6 @@ class ContactUsCmsRepoImpl implements ContactUsCmsRepo {
         ),
       };
 
-      // ── Step 4: write to Firestore ──────────────────────────────────────
       print('🟡 [ContactCmsRepo] save → writing versioned map...');
       await _docRef.set(versionedMap, SetOptions(merge: true));
       print('✅ ContactUsCmsRepo.save: ALL fields versioned DONE');
@@ -152,8 +159,8 @@ class ContactUsCmsRepoImpl implements ContactUsCmsRepo {
   }
 
   // ── Upload images ─────────────────────────────────────────────────────────
-
-  Future<Map<String, String>> _uploadImages(Map<String, Uint8List> uploads) async {
+  Future<Map<String, String>> _uploadImages(
+      Map<String, Uint8List> uploads) async {
     final Map<String, String> urls = {};
 
     for (final entry in uploads.entries) {
@@ -162,8 +169,8 @@ class ContactUsCmsRepoImpl implements ContactUsCmsRepo {
 
       try {
         final contentType = _detectContentType(bytes);
-        final ref      = _storage.ref().child(path);
-        final metadata = SettableMetadata(contentType: contentType);
+        final ref         = _storage.ref().child(path);
+        final metadata    = SettableMetadata(contentType: contentType);
 
         await ref.putData(bytes, metadata);
         final downloadUrl = await ref.getDownloadURL();
@@ -179,7 +186,6 @@ class ContactUsCmsRepoImpl implements ContactUsCmsRepo {
   }
 
   // ── Update model with uploaded URLs ───────────────────────────────────────
-
   ContactUsCmsModel _updateModelWithUrls(
       ContactUsCmsModel model,
       Map<String, String> uploadedUrls,
@@ -205,7 +211,6 @@ class ContactUsCmsRepoImpl implements ContactUsCmsRepo {
   }
 
   // ── Detect content type ───────────────────────────────────────────────────
-
   String _detectContentType(Uint8List bytes) {
     if (bytes.length < 4) return 'application/octet-stream';
 
@@ -219,7 +224,8 @@ class ContactUsCmsRepoImpl implements ContactUsCmsRepo {
 
     final header = String.fromCharCodes(
         bytes.sublist(0, bytes.length > 100 ? 100 : bytes.length));
-    if (header.trim().startsWith('<svg') || header.trim().startsWith('<?xml')) {
+    if (header.trim().startsWith('<svg') ||
+        header.trim().startsWith('<?xml')) {
       return 'image/svg+xml';
     }
 
@@ -227,32 +233,31 @@ class ContactUsCmsRepoImpl implements ContactUsCmsRepo {
   }
 
   // ── Default model ─────────────────────────────────────────────────────────
-
   ContactUsCmsModel _defaultModel() {
     return ContactUsCmsModel(
       publishStatus: 'draft',
       headings: ContactHeadings(
-        svgUrl: '',
-        title: ContactBilingualText(en: '', ar: ''),
+        svgUrl:           '',
+        title:            ContactBilingualText(en: '', ar: ''),
         shortDescription: ContactBilingualText(en: '', ar: ''),
       ),
       clientDescription: ContactDescriptionSection(
         description: ContactBilingualText(en: '', ar: ''),
+        isRequired:  false,
         reasons: [
           ContactReasonItem(
-            id:         'reason_client_1',
-            label:      ContactBilingualText(en: '', ar: ''),
-            isRequired: true,
+            id:    'reason_client_1',
+            label: ContactBilingualText(en: '', ar: ''),
           ),
         ],
       ),
       ownerDescription: ContactDescriptionSection(
         description: ContactBilingualText(en: '', ar: ''),
+        isRequired:  false,
         reasons: [
           ContactReasonItem(
-            id:         'reason_owner_1',
-            label:      ContactBilingualText(en: '', ar: ''),
-            isRequired: false,
+            id:    'reason_owner_1',
+            label: ContactBilingualText(en: '', ar: ''),
           ),
         ],
       ),

@@ -1083,8 +1083,6 @@ class _OverviewEditPageState extends State<OverviewEditPage> {
                 decoration: BoxDecoration(
                     color: _C.remove, borderRadius: BorderRadius.circular(4.r)),
                 child: Row(mainAxisSize: MainAxisSize.min, children: [
-                  CustomSvg(assetPath: "assets/delete_icon.svg",color: Colors.white,width: 20.w,height: 20.h,),
-                  SizedBox(width: 4.w),
                   Text('Remove',
                       style: StyleText.fontSize10Weight400.copyWith(color: Colors.white)),
                 ]),
@@ -1668,12 +1666,13 @@ class _OverviewEditPageState extends State<OverviewEditPage> {
     width: 70.w,
     height: 70.h,
     decoration: const BoxDecoration(
-        color: Color(0xFFD9D9D9), shape: BoxShape.circle),
+        color: Colors.white, shape: BoxShape.circle),
     child: Center(
         child: CustomSvg(
-            assetPath: 'assets/home_control/image.svg',
-            width: 20.w,
-            height: 20.h,
+            assetPath: 'assets/control/camera.svg',
+            width: 30.w,
+            color: Colors.grey,
+            height: 30.h,
             fit: BoxFit.fill)),
   );
 }

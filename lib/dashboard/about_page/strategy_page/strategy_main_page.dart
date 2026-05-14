@@ -1,7 +1,8 @@
 // ******************* FILE INFO *******************
 // File Name: strategy_main_page.dart
 // Screen 1 of 3 — Our Strategy CMS: Main view (read-only accordions)
-// UPDATED: Added Strategic House ENG + ARB accordions
+// UPDATED: Multi-device support for Strategic House ENG + ARB (Desktop, Tablet, Mobile)
+// UPDATED: Tabs aligned to the right, white background, removed parentheses text
 
 // ignore_for_file: avoid_web_libraries_in_flutter
 import 'dart:html' as html;
@@ -119,6 +120,10 @@ class _StrategyMainViewState extends State<StrategyMainView> {
     'strategicHouseAr': true,
   };
 
+  // Track which device preview is selected for each language
+  int _enSelectedDevice = 0; // 0=Desktop, 1=Tablet, 2=Mobile
+  int _arSelectedDevice = 0;
+
   @override
   void initState() {
     super.initState();
@@ -153,7 +158,7 @@ class _StrategyMainViewState extends State<StrategyMainView> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             _lastUpdatedRow(
-              lastUpdated: model.lastUpdatedAt,    // ← ADD this
+              lastUpdated: model.lastUpdatedAt,
               onEdit: () => navigateTo(
                 context,
                 BlocProvider.value(
@@ -192,30 +197,52 @@ class _StrategyMainViewState extends State<StrategyMainView> {
             ),
             SizedBox(height: 12.h),
 
-            // ② Strategic House — ENG
+            // ② Strategic House — ENG (Multi-device)
             _accordion(
               key: 'strategicHouseEn',
               title: 'Strategic House - ENG',
               children: [
                 SizedBox(height: 20.h),
+                // Device selector tabs - aligned to the right
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    _deviceSelector(
+                      selectedIndex: _enSelectedDevice,
+                      onChanged: (index) => setState(() => _enSelectedDevice = index),
+                    ),
+                  ],
+                ),
+                SizedBox(height: 12.h),
                 _imagePreviewBox(
-                  label: 'Image (English)',
-                  url: model.strategicHouseEnUrl,
+                  label: '',
+                  url: _getEnUrlForDevice(model, _enSelectedDevice),
                 ),
                 SizedBox(height: 16.h),
               ],
             ),
             SizedBox(height: 12.h),
 
-            // ③ Strategic House — ARB
+            // ③ Strategic House — ARB (Multi-device)
             _accordion(
               key: 'strategicHouseAr',
               title: 'Strategic House - ARB',
               children: [
                 SizedBox(height: 20.h),
+                // Device selector tabs - aligned to the right
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    _deviceSelector(
+                      selectedIndex: _arSelectedDevice,
+                      onChanged: (index) => setState(() => _arSelectedDevice = index),
+                    ),
+                  ],
+                ),
+                SizedBox(height: 12.h),
                 _imagePreviewBox(
-                  label: 'Image (Arabic)',
-                  url: model.strategicHouseArUrl,
+                  label: '',
+                  url: _getArUrlForDevice(model, _arSelectedDevice),
                 ),
                 SizedBox(height: 16.h),
               ],
@@ -227,10 +254,71 @@ class _StrategyMainViewState extends State<StrategyMainView> {
     );
   }
 
+  // Helper to get EN URL based on selected device
+  String _getEnUrlForDevice(OurStrategyModel model, int deviceIndex) {
+    switch (deviceIndex) {
+      case 0: return model.strategicHouseEnDesktopUrl;
+      case 1: return model.strategicHouseEnTabletUrl;
+      case 2: return model.strategicHouseEnMobileUrl;
+      default: return model.strategicHouseEnDesktopUrl;
+    }
+  }
+
+  // Helper to get AR URL based on selected device
+  String _getArUrlForDevice(OurStrategyModel model, int deviceIndex) {
+    switch (deviceIndex) {
+      case 0: return model.strategicHouseArDesktopUrl;
+      case 1: return model.strategicHouseArTabletUrl;
+      case 2: return model.strategicHouseArMobileUrl;
+      default: return model.strategicHouseArDesktopUrl;
+    }
+  }
+
+  // ── Device Selector Widget ────────────────────────────────────────────────
+  Widget _deviceSelector({
+    required int selectedIndex,
+    required ValueChanged<int> onChanged,
+  }) {
+    final List<String> devices = ['Desktop', 'Tablet', 'Mobile'];
+
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: 4.w, vertical: 4.h),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(8.r),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: List.generate(devices.length, (index) {
+          final isSelected = selectedIndex == index;
+          return GestureDetector(
+            onTap: () => onChanged(index),
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
+              padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
+              decoration: BoxDecoration(
+                color: isSelected ? _C.primary : Colors.transparent,
+                borderRadius: BorderRadius.circular(6.r),
+              ),
+              child: Text(
+                devices[index],
+                style: TextStyle(
+                  fontSize: 13.sp,
+                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                  color: isSelected ? Colors.white : Colors.black87,
+                ),
+              ),
+            ),
+          );
+        }),
+      ),
+    );
+  }
+
 // ── Last Updated + Edit Details ───────────────────────────────────────────
   Widget _lastUpdatedRow({
     required VoidCallback onEdit,
-    DateTime? lastUpdated,           // ← ADD this parameter
+    DateTime? lastUpdated,
   }) {
     // ── Date formatter ──
     String fmtDate(DateTime? d) {
@@ -250,7 +338,7 @@ class _StrategyMainViewState extends State<StrategyMainView> {
               color: _C.cardBg,
               borderRadius: BorderRadius.circular(4.r)),
           child: Text(
-            'Last Updated On ${fmtDate(lastUpdated)}',   // ← dynamic
+            'Last Updated On ${fmtDate(lastUpdated)}',
             style: StyleText.fontSize13Weight500
                 .copyWith(color: _C.primary),
           ),
@@ -303,11 +391,7 @@ class _StrategyMainViewState extends State<StrategyMainView> {
                   horizontal: 16.w, vertical: 14.h),
               decoration: BoxDecoration(
                 color: _C.primary,
-                borderRadius: isOpen
-                    ? BorderRadius.only(
-                    topLeft: Radius.circular(6.r),
-                    topRight: Radius.circular(6.r))
-                    : BorderRadius.circular(6.r),
+                borderRadius: BorderRadius.circular(8.r),
               ),
               child: Row(children: [
                 Expanded(
@@ -326,10 +410,8 @@ class _StrategyMainViewState extends State<StrategyMainView> {
           if (isOpen)
             Container(
               width: double.infinity,
-              decoration: const BoxDecoration(
-                color: Color(0xFFF9F9F9),
-              ),
-              padding: EdgeInsets.symmetric(horizontal: 16.w),
+              decoration: const BoxDecoration(),
+              padding: EdgeInsets.symmetric(horizontal: 0.w),
               child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: children),
@@ -350,7 +432,7 @@ class _StrategyMainViewState extends State<StrategyMainView> {
         SizedBox(height: 8.h),
         Container(
           width: double.infinity,
-          height: 200.h,
+          height: 220.h,
           decoration: BoxDecoration(
             color: const Color(0xFFEEEEEE),
             borderRadius: BorderRadius.circular(8.r),
@@ -364,7 +446,7 @@ class _StrategyMainViewState extends State<StrategyMainView> {
             child: _netImg(
               url: url,
               width: double.infinity,
-              height: 200.h,
+              height: 220.h,
               fit: BoxFit.contain,
             ),
           ),

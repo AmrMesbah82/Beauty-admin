@@ -1,10 +1,13 @@
 // ******************* FILE INFO *******************
 // File Name: terms_preview_page.dart
 // Screen 3 of 3 — Terms of Service CMS: Preview (Desktop/Tablet/Mobile + ENG/AR)
-// FIXED:
-//   1. Mobile preview now constrained to ~390 px wide (phone frame)
-//   2. Tablet preview now constrained to ~768 px wide (tablet frame)
-//   3. Download PDF links (ENG + ARB) rendered in all three preview layouts
+// Refactored to match overview_preview_page.dart style:
+//   - Proper device frames with Transform.scale + OverflowBox
+//   - Desktop: browser chrome frame (1366×768)
+//   - Tablet:  browser chrome frame centered (768×1024)
+//   - Mobile:  phone shell with notch/indicator (375×812)
+//   - _PreviewContent architecture
+//   - Underline tab switcher + CustomSegmentedTabs EN/AR toggle
 
 import 'dart:typed_data';
 
@@ -19,7 +22,6 @@ import 'package:beauty_admin/controller/about_us/about_us_state.dart';
 import 'package:beauty_admin/theme/appcolors.dart';
 import 'package:beauty_admin/theme/new_theme.dart';
 import 'package:beauty_admin/widgets/admin_sub_navbar.dart';
-import 'package:beauty_admin/widgets/app_navbar.dart';
 
 import '../../../core/custom_dialog.dart';
 import '../../../core/custom_segmant_tab.dart';
@@ -27,27 +29,37 @@ import '../../../model/about_us/about_us.dart';
 import '../../../widgets/app_admin_navbar.dart';
 import '../../main_page/home_main_page.dart';
 
+// ── Design tokens ─────────────────────────────────────────────────────────────
 class _C {
-  static const Color primary   = Color(0xFFD16F9A);
-  static const Color sectionBg = Color(0xFFF5F5F5);
-  static const Color cardBg    = Color(0xFFFFFFFF);
-  static const Color grey      = Color(0xFF9E9E9E);
-  static const Color hintText  = Color(0xFF797979);
+  static const Color primary     = Color(0xFFD16F9A);
+  static const Color back        = Color(0xFFF1F2ED);
+  static const Color sectionBg   = Color(0xFFF5F5F5);
+  static const Color labelText   = Color(0xFF333333);
+  static const Color hintText    = Color(0xFF797979);
+  static const Color border      = Color(0xFFE0E0E0);
+  static const Color grey        = Color(0xFF9E9E9E);
 }
 
-/// Simulated device widths for the preview frames
-const double _kMobileWidth = 390.0;
-const double _kTabletWidth = 768.0;
+// ── Viewport constants ────────────────────────────────────────────────────────
+const double _kDesktopW = 1366.0;
+const double _kDesktopH =  768.0;
+const double _kTabletW  =  768.0;
+const double _kTabletH  = 1024.0;
+const double _kMobileW  =  375.0;
+const double _kMobileH  =  812.0;
 
-enum _PreviewMode { desktop, tablet, mobile }
-enum _PreviewLang { eng, ar }
+double _safeScale(double v) =>
+    (v.isFinite && !v.isNaN && v > 0) ? v : 1.0;
+
+enum _PreviewDevice { desktop, tablet, mobile }
+enum _PreviewLang   { eng, ar }
 
 // ═══════════════════════════════════════════════════════════════════════════════
 
 class TermsPreviewPage extends StatefulWidget {
-  final TermsOfServiceModel      model;
-  final Map<String, Uint8List>   imageUploads;
-  final Map<String, DocUpload>   docUploads;
+  final TermsOfServiceModel    model;
+  final Map<String, Uint8List> imageUploads;
+  final Map<String, DocUpload> docUploads;
 
   const TermsPreviewPage({
     super.key,
@@ -61,62 +73,63 @@ class TermsPreviewPage extends StatefulWidget {
 }
 
 class _TermsPreviewPageState extends State<TermsPreviewPage> {
-  _PreviewMode _mode        = _PreviewMode.desktop;
-  _PreviewLang _lang        = _PreviewLang.eng;
-  bool         _termsOpen   = true;
-  bool         _privacyOpen = true;
+  _PreviewDevice _device       = _PreviewDevice.desktop;
+  _PreviewLang   _lang         = _PreviewLang.eng;
+  bool           _isPublishing = false;
 
-  bool get _isRtl => _lang == _PreviewLang.ar;
+  bool get _isEnglish => _lang == _PreviewLang.eng;
 
   // Convenience getters for in-memory bytes
-  Uint8List? get _termsSvgBytes    => widget.imageUploads['terms_cms/terms/svg'];
-  Uint8List? get _privacySvgBytes  => widget.imageUploads['terms_cms/privacy/svg'];
+  Uint8List? get _termsSvgBytes   => widget.imageUploads['terms_cms/terms/svg'];
+  Uint8List? get _privacySvgBytes => widget.imageUploads['terms_cms/privacy/svg'];
 
   // ── Save ──────────────────────────────────────────────────────────────────
-  void _onSave() async {
+  void _onSave() {
     showPublishConfirmDialog(
       context: context,
-      title: 'EDITING TERMS OF SERVICE DETAILS',
-      subtitle: 'Do you want to save the changes made to Terms of Service?',
+      title: 'PUBLISHING TERMS OF SERVICE',
+      subtitle: 'Do you want to publish the Terms of Service?',
       onConfirm: () async {
-        await context.read<TermsCubit>().save(
-          model:        widget.model,
-          imageUploads: widget.imageUploads.isEmpty ? null : widget.imageUploads,
-          docUploads:   widget.docUploads.isEmpty   ? null : widget.docUploads,
-        );
+        setState(() => _isPublishing = true);
+        try {
+          await context.read<TermsCubit>().save(
+            model:        widget.model,
+            imageUploads: widget.imageUploads.isEmpty ? null : widget.imageUploads,
+            docUploads:   widget.docUploads.isEmpty   ? null : widget.docUploads,
+          );
+        } finally {
+          if (mounted) setState(() => _isPublishing = false);
+        }
       },
     );
   }
 
-  final List<String> _languageTabs = ['ENG', 'AR'];
-
   // ── BUILD ─────────────────────────────────────────────────────────────────
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: _C.sectionBg,
-      body: BlocListener<TermsCubit, TermsState>(
-        listener: (context, state) {
-          if (state is TermsSaved) {
-            ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Terms of Service saved!')));
-            Navigator.popUntil(context, (r) => r.isFirst);
-          }
-          if (state is TermsError) {
-            ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                content: Text('Error: ${state.message}'),
-                backgroundColor: Colors.red));
-          }
-        },
-        child: SingleChildScrollView(
-          child: SizedBox(
-            width: double.infinity,
-            child: Column(
-              children: [
-                SizedBox(
+    return BlocListener<TermsCubit, TermsState>(
+      listener: (context, state) {
+        if (state is TermsSaved) {
+          ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Terms of Service published!')));
+          Navigator.popUntil(context, (r) => r.isFirst);
+        }
+        if (state is TermsError) {
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+              content: Text('Error: ${state.message}'),
+              backgroundColor: Colors.red));
+        }
+      },
+      child: Stack(
+        children: [
+          Scaffold(
+            backgroundColor: _C.back,
+            body: SingleChildScrollView(
+              child: Center(
+                child: SizedBox(
                   width: 1000.w,
                   child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       AppAdminNavbar(
                         activeLabel: 'Web Page',
@@ -126,279 +139,322 @@ class _TermsPreviewPageState extends State<TermsPreviewPage> {
                       ),
                       SizedBox(height: 20.h),
                       AdminSubNavBar(activeIndex: 5),
-                      SizedBox(
-                        width: 1000.w,
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            SizedBox(height: 8.h),
+                      SizedBox(height: 16.h),
 
-                            Text('Preview Terms of Service Details',
-                                style: StyleText.fontSize45Weight600.copyWith(
-                                    color: _C.primary,
-                                    fontWeight: FontWeight.w700)),
-                            SizedBox(height: 16.h),
-
-                            // ── Mode tabs + ENG|AR toggle ──────────────────────────
-                            Row(children: [
-                              ..._PreviewMode.values.map((m) {
-                                final sel   = m == _mode;
-                                final label = switch (m) {
-                                  _PreviewMode.desktop => 'Desktop',
-                                  _PreviewMode.tablet  => 'Tablet',
-                                  _PreviewMode.mobile  => 'Mobile',
-                                };
-                                return GestureDetector(
-                                  onTap: () => setState(() => _mode = m),
-                                  child: Padding(
-                                    padding: EdgeInsets.only(right: 24.w),
-                                    child: Text(label,
-                                        style: sel
-                                            ? StyleText.fontSize14Weight600.copyWith(
-                                            color: _C.primary,
-                                            decoration: TextDecoration.underline,
-                                            decorationColor: _C.primary)
-                                            : StyleText.fontSize14Weight400
-                                            .copyWith(color: _C.hintText)),
-                                  ),
-                                );
-                              }),
-                              const Spacer(),
-                              CustomSegmentedTabs(
-                                tabs: _languageTabs,
-                                selectedIndex: _lang == _PreviewLang.eng ? 0 : 1,
-                                onTabSelected: (index) =>
-                                    setState(() => _lang = index == 0
-                                        ? _PreviewLang.eng
-                                        : _PreviewLang.ar),
-                                selectedColor: _C.primary,
-                                unselectedColor: Colors.white,
-                                selectedTextColor: Colors.white,
-                                unselectedTextColor: _C.hintText,
-                                equalWidth: false,
-                                containerPadding: EdgeInsets.symmetric(
-                                    horizontal: 8.sp, vertical: 4.sp),
-                              ),
-                            ]),
-                            SizedBox(height: 16.h),
-
-                            // ── Terms and Conditions accordion ─────────────────────
-                            _previewAccordion(
-                              title: _isRtl
-                                  ? 'الشروط والأحكام'
-                                  : 'Terms and Conditions',
-                              isOpen: _termsOpen,
-                              onToggle: () =>
-                                  setState(() => _termsOpen = !_termsOpen),
-                              child: _sectionPreview(
-                                section:  widget.model.termsAndConditions,
-                                svgBytes: _termsSvgBytes,
-                                labelEn:  'Download PDF of Terms and Conditions (ENG)',
-                                labelAr:  'Download PDF of Terms and Conditions (ARB)',
-                              ),
-                            ),
-                            SizedBox(height: 12.h),
-
-                            // ── Privacy Policy accordion ───────────────────────────
-                            _previewAccordion(
-                              title: _isRtl
-                                  ? 'سياسة الخصوصية'
-                                  : 'Privacy Policy',
-                              isOpen: _privacyOpen,
-                              onToggle: () =>
-                                  setState(() => _privacyOpen = !_privacyOpen),
-                              child: _sectionPreview(
-                                section:  widget.model.privacyPolicy,
-                                svgBytes: _privacySvgBytes,
-                                labelEn:  'Download PDF of Privacy Policy (ENG)',
-                                labelAr:  'Download PDF of Privacy Policy (ARB)',
-                              ),
-                            ),
-                            SizedBox(height: 24.h),
-
-                            // ── Back | Save ────────────────────────────────────────
-                            Row(children: [
-                              Expanded(child: SizedBox(
-                                  height: 44.h,
-                                  child: ElevatedButton(
-                                    onPressed: () => Navigator.pop(context),
-                                    style: ElevatedButton.styleFrom(
-                                        backgroundColor: _C.grey,
-                                        shape: RoundedRectangleBorder(
-                                            borderRadius:
-                                            BorderRadius.circular(8.r))),
-                                    child: Text('Back',
-                                        style: StyleText.fontSize14Weight600
-                                            .copyWith(color: Colors.white)),
-                                  ))),
-                              SizedBox(width: 12.w),
-                              Expanded(child: SizedBox(
-                                  height: 44.h,
-                                  child: ElevatedButton(
-                                    onPressed: _onSave,
-                                    style: ElevatedButton.styleFrom(
-                                        backgroundColor: _C.primary,
-                                        shape: RoundedRectangleBorder(
-                                            borderRadius:
-                                            BorderRadius.circular(8.r))),
-                                    child: Text('Published',
-                                        style: StyleText.fontSize14Weight600
-                                            .copyWith(color: Colors.white)),
-                                  ))),
-                            ]),
-                            SizedBox(height: 40.h),
-                          ],
+                      // ── Page title ─────────────────────────────────────
+                      Text(
+                        'Preview Terms of Service',
+                        style: StyleText.fontSize45Weight600.copyWith(
+                          color: _C.primary,
+                          fontWeight: FontWeight.w700,
                         ),
                       ),
+                      SizedBox(height: 16.h),
+
+                      // ── Device tabs + EN|AR toggle ─────────────────────
+                      Row(
+                        children: [
+                          _tab('Desktop', _PreviewDevice.desktop),
+                          SizedBox(width: 24.w),
+                          _tab('Tablet',  _PreviewDevice.tablet),
+                          SizedBox(width: 24.w),
+                          _tab('Mobile',  _PreviewDevice.mobile),
+                          const Spacer(),
+                          SizedBox(
+                            width: 95.w,
+                            height: 36.h,
+                            child: CustomSegmentedTabs(
+                              tabs: const ['ENG', 'AR'],
+                              selectedIndex: _isEnglish ? 0 : 1,
+                              onTabSelected: (i) => setState(
+                                      () => _lang = i == 0 ? _PreviewLang.eng : _PreviewLang.ar),
+                              selectedColor:      _C.primary,
+                              unselectedColor:    Colors.white,
+                              selectedTextColor:  Colors.white,
+                              unselectedTextColor: _C.hintText,
+                              equalWidth: false,
+                              containerPadding: EdgeInsets.symmetric(
+                                  horizontal: 8.sp, vertical: 4.sp),
+                            ),
+                          ),
+                        ],
+                      ),
+                      SizedBox(height: 16.h),
+
+                      // ── Preview area ───────────────────────────────────
+                      Container(
+                        width: double.infinity,
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(12.r),
+                        ),
+                        child: LayoutBuilder(
+                          builder: (ctx, box) => _buildFrame(box.maxWidth),
+                        ),
+                      ),
+                      SizedBox(height: 24.h),
+
+                      // ── Back + Publish ─────────────────────────────────
+                      Row(
+                        children: [
+                          Expanded(
+                            child: GestureDetector(
+                              onTap: () => Navigator.of(context).pop(),
+                              child: Container(
+                                height: 44.h,
+                                decoration: BoxDecoration(
+                                  color: _C.grey,
+                                  borderRadius: BorderRadius.circular(6.r),
+                                ),
+                                child: Center(
+                                  child: Text('Back',
+                                      style: StyleText.fontSize14Weight600
+                                          .copyWith(color: Colors.white)),
+                                ),
+                              ),
+                            ),
+                          ),
+                          SizedBox(width: 300.w),
+                          Expanded(
+                            child: GestureDetector(
+                              onTap: _isPublishing ? null : _onSave,
+                              child: AnimatedContainer(
+                                duration: const Duration(milliseconds: 200),
+                                height: 44.h,
+                                decoration: BoxDecoration(
+                                  color: _isPublishing
+                                      ? _C.primary.withOpacity(0.5)
+                                      : _C.primary,
+                                  borderRadius: BorderRadius.circular(6.r),
+                                ),
+                                child: Center(
+                                  child: _isPublishing
+                                      ? SizedBox(
+                                    width: 18.w, height: 18.h,
+                                    child: const CircularProgressIndicator(
+                                        color: Colors.white, strokeWidth: 2),
+                                  )
+                                      : Text('Publish',
+                                      style: StyleText.fontSize14Weight600
+                                          .copyWith(color: Colors.white)),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      SizedBox(height: 40.h),
                     ],
                   ),
                 ),
-              ],
+              ),
             ),
           ),
-        ),
+
+          // ── Full-screen publishing overlay ─────────────────────────────
+          if (_isPublishing)
+            Container(
+              color: Colors.black.withOpacity(0.35),
+              child: const Center(
+                  child: CircularProgressIndicator(color: _C.primary)),
+            ),
+        ],
       ),
     );
   }
 
-  // ── Accordion wrapper ─────────────────────────────────────────────────────
-  Widget _previewAccordion({
-    required String       title,
-    required bool         isOpen,
-    required VoidCallback onToggle,
-    required Widget       child,
-  }) {
-    return Container(
-      decoration: BoxDecoration(
-           borderRadius: BorderRadius.circular(6.r)),
-      child: Column(children: [
-        GestureDetector(
-          onTap: onToggle,
-          child: Container(
-            width: double.infinity,
-            padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
-            decoration: BoxDecoration(
-              color: _C.primary,
-              borderRadius: BorderRadius.circular(6.r),
-            ),
-            child: Row(children: [
-              Expanded(child: Text(title,
-                  style: StyleText.fontSize14Weight600
-                      .copyWith(color: Colors.white))),
-              Icon(
-                  isOpen
-                      ? Icons.keyboard_arrow_up_rounded
-                      : Icons.keyboard_arrow_down_rounded,
-                  color: Colors.white, size: 20.sp),
-            ]),
+  // ── Underline tab ──────────────────────────────────────────────────────────
+  Widget _tab(String label, _PreviewDevice device) {
+    final active = _device == device;
+    return GestureDetector(
+      onTap: () => setState(() => _device = device),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Padding(
+            padding: EdgeInsets.only(bottom: 6.h),
+            child: Text(label,
+                style: TextStyle(
+                  fontSize: 15.sp,
+                  fontWeight: active ? FontWeight.w700 : FontWeight.w500,
+                  color: active ? _C.primary : _C.hintText,
+                )),
           ),
-        ),
-        if (isOpen)
-          Padding(padding: EdgeInsets.all(16.w), child: child),
-      ]),
+          Container(
+            height: 2,
+            width: label.length * 8.0,
+            color: active ? _C.primary : Colors.transparent,
+          ),
+        ],
+      ),
     );
   }
 
-  // ── Section preview — wraps mobile/tablet in a constrained device frame ───
-  Widget _sectionPreview({
-    required TermsSection section,
-    required Uint8List?   svgBytes,
-    required String       labelEn,
-    required String       labelAr,
-  }) {
-    final desc   = _isRtl ? section.description.ar : section.description.en;
-    final svgUrl = section.svgUrl;
-
-    // The actual preview content widget
-    Widget content = Directionality(
-      textDirection: _isRtl ? TextDirection.rtl : TextDirection.ltr,
-      child: switch (_mode) {
-        _PreviewMode.desktop => _TermsDesktopPreview(
-            desc: desc, svgUrl: svgUrl, svgBytes: svgBytes,
-            attachEnUrl: section.attachEnUrl,
-            attachArUrl: section.attachArUrl,
-            labelEn: labelEn, labelAr: labelAr,
-            primaryColor: _C.primary),
-        _PreviewMode.tablet  => _TermsTabletPreview(
-            desc: desc, svgUrl: svgUrl, svgBytes: svgBytes,
-            attachEnUrl: section.attachEnUrl,
-            attachArUrl: section.attachArUrl,
-            labelEn: labelEn, labelAr: labelAr,
-            primaryColor: _C.primary),
-        _PreviewMode.mobile  => _TermsMobilePreview(
-            desc: desc, svgUrl: svgUrl, svgBytes: svgBytes,
-            attachEnUrl: section.attachEnUrl,
-            attachArUrl: section.attachArUrl,
-            labelEn: labelEn, labelAr: labelAr,
-            primaryColor: _C.primary),
-      },
-    );
-
-    // For tablet/mobile wrap in a constrained frame so the preview respects
-    // the simulated device width instead of stretching to full desktop width.
-    if (_mode == _PreviewMode.mobile) {
-      return Center(
-        child: _DeviceFrame(
-          width: _kMobileWidth,
-          label: '',
-          child: content,
-        ),
-      );
+  // ── Frame dispatcher ───────────────────────────────────────────────────────
+  Widget _buildFrame(double containerW) {
+    switch (_device) {
+      case _PreviewDevice.desktop:
+        return _DesktopFrame(
+          containerWidth: containerW,
+          model:          widget.model,
+          termsSvgBytes:  _termsSvgBytes,
+          privacySvgBytes: _privacySvgBytes,
+          isEnglish:      _isEnglish,
+        );
+      case _PreviewDevice.tablet:
+        return _TabletFrame(
+          containerWidth: containerW,
+          model:          widget.model,
+          termsSvgBytes:  _termsSvgBytes,
+          privacySvgBytes: _privacySvgBytes,
+          isEnglish:      _isEnglish,
+        );
+      case _PreviewDevice.mobile:
+        return _MobileFrame(
+          containerWidth: containerW,
+          model:          widget.model,
+          termsSvgBytes:  _termsSvgBytes,
+          privacySvgBytes: _privacySvgBytes,
+          isEnglish:      _isEnglish,
+        );
     }
-    if (_mode == _PreviewMode.tablet) {
-      return Center(
-        child: _DeviceFrame(
-          width: _kTabletWidth,
-          label: '',
-          child: content,
-        ),
-      );
-    }
-
-    return content; // desktop: full width
   }
 }
 
-// ── Device frame — gives mobile/tablet a visible boundary in the preview ─────
-class _DeviceFrame extends StatelessWidget {
-  final double width;
-  final String label;
-  final Widget child;
-  const _DeviceFrame({
-    required this.width,
-    required this.label,
-    required this.child,
+// ═════════════════════════════════════════════════════════════════════════════
+// DESKTOP FRAME  (1366 × 768)
+// ═════════════════════════════════════════════════════════════════════════════
+class _DesktopFrame extends StatelessWidget {
+  final double         containerWidth;
+  final TermsOfServiceModel model;
+  final Uint8List?     termsSvgBytes;
+  final Uint8List?     privacySvgBytes;
+  final bool           isEnglish;
+
+  const _DesktopFrame({
+    required this.containerWidth,
+    required this.model,
+    required this.isEnglish,
+    this.termsSvgBytes,
+    this.privacySvgBytes,
   });
 
   @override
   Widget build(BuildContext context) {
+    final scale  = _safeScale(containerWidth / _kDesktopW);
+    final frameH = _kDesktopH * scale;
+
+    return Container(
+      width:  containerWidth,
+      height: frameH + 28,
+      decoration: BoxDecoration(color: _C.back),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(8),
+        child: Column(
+          children: [
+            const _BrowserChrome(),
+            SizedBox(
+              width:  containerWidth,
+              height: frameH,
+              child: ClipRect(
+                child: OverflowBox(
+                  alignment: Alignment.topLeft,
+                  maxWidth:  _kDesktopW,
+                  maxHeight: _kDesktopH,
+                  child: Transform.scale(
+                    scale:     scale,
+                    alignment: Alignment.topLeft,
+                    child: SizedBox(
+                      width: _kDesktopW,
+                      child: _PreviewContent(
+                        fakeWidth:       _kDesktopW,
+                        fakeHeight:      _kDesktopH,
+                        model:           model,
+                        termsSvgBytes:   termsSvgBytes,
+                        privacySvgBytes: privacySvgBytes,
+                        isEnglish:       isEnglish,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ═════════════════════════════════════════════════════════════════════════════
+// TABLET FRAME  (768 × 1024)
+// ═════════════════════════════════════════════════════════════════════════════
+class _TabletFrame extends StatelessWidget {
+  final double         containerWidth;
+  final TermsOfServiceModel model;
+  final Uint8List?     termsSvgBytes;
+  final Uint8List?     privacySvgBytes;
+  final bool           isEnglish;
+
+  const _TabletFrame({
+    required this.containerWidth,
+    required this.model,
+    required this.isEnglish,
+    this.termsSvgBytes,
+    this.privacySvgBytes,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final double displayW = (containerWidth * 0.55).clamp(280, 500);
+    final double scale    = _safeScale(displayW / _kTabletW);
+    final double displayH = _kTabletH * scale;
+
     return Column(
       children: [
-        // Small label at top
-        Padding(
-          padding: const EdgeInsets.only(bottom: 6),
-          child: Text(label,
-              style: TextStyle(
-                  fontSize: 11.sp,
-                  color: _C.hintText,
-                  fontWeight: FontWeight.w500)),
-        ),
-        Container(
-          width: width,
-          decoration: BoxDecoration(
-
-            borderRadius: BorderRadius.circular(12.r),
-            // border: Border.all(color: const Color(0xFFDDDDDD), width: 1.5),
-            // boxShadow: [
-            //   BoxShadow(
-            //       color: Colors.black.withOpacity(0.07),
-            //       blurRadius: 12,
-            //       offset: const Offset(0, 4))
-            // ],
-          ),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(12.r),
-            child: child,
+        Center(
+          child: Container(
+            width:  displayW + 4,
+            height: displayH + 28 + 4,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: _C.border, width: 2),
+              color: Colors.white,
+              boxShadow: [
+                BoxShadow(
+                    color: Colors.black.withOpacity(0.08),
+                    blurRadius: 16,
+                    offset: const Offset(0, 4))
+              ],
+            ),
+            clipBehavior: Clip.antiAlias,
+            child: Column(
+              children: [
+                const _BrowserChrome(compact: true),
+                SizedBox(
+                  width:  displayW,
+                  height: displayH,
+                  child: ClipRect(
+                    child: OverflowBox(
+                      alignment: Alignment.topLeft,
+                      maxWidth:  _kTabletW,
+                      maxHeight: _kTabletH,
+                      child: Transform.scale(
+                        scale:     scale,
+                        alignment: Alignment.topLeft,
+                        child: _PreviewContent(
+                          fakeWidth:       _kTabletW,
+                          fakeHeight:      _kTabletH,
+                          model:           model,
+                          termsSvgBytes:   termsSvgBytes,
+                          privacySvgBytes: privacySvgBytes,
+                          isEnglish:       isEnglish,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ],
@@ -406,7 +462,446 @@ class _DeviceFrame extends StatelessWidget {
   }
 }
 
-// ── Shared SVG renderer — bytes take priority over url ────────────────────────
+// ═════════════════════════════════════════════════════════════════════════════
+// MOBILE FRAME  (375 × 812)
+// ═════════════════════════════════════════════════════════════════════════════
+class _MobileFrame extends StatelessWidget {
+  final double         containerWidth;
+  final TermsOfServiceModel model;
+  final Uint8List?     termsSvgBytes;
+  final Uint8List?     privacySvgBytes;
+  final bool           isEnglish;
+
+  const _MobileFrame({
+    required this.containerWidth,
+    required this.model,
+    required this.isEnglish,
+    this.termsSvgBytes,
+    this.privacySvgBytes,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final double displayW = (containerWidth * 0.35).clamp(200, 280);
+    final double scale    = _safeScale(displayW / _kMobileW);
+    final double displayH = _kMobileH * scale;
+    final double shellH   = displayH + 24 + 12 + 4;
+    final double shellW   = displayW + 4;
+
+    return Column(
+      children: [
+        Center(
+          child: Container(
+            width:        shellW,
+            height:       shellH,
+            decoration:   BoxDecoration(
+              borderRadius: BorderRadius.circular(28),
+            ),
+            clipBehavior: Clip.antiAlias,
+            child: Column(
+              children: [
+                // ── Notch ────────────────────────────────────────────────
+                Container(
+                  color: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 6),
+                  child: Center(
+                    child: Container(
+                      width:  displayW * 0.3,
+                      height: 12,
+                      decoration: BoxDecoration(
+                        color:        _C.border,
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                    ),
+                  ),
+                ),
+
+                // ── Content ───────────────────────────────────────────────
+                SizedBox(
+                  width:  displayW,
+                  height: displayH,
+                  child: ClipRect(
+                    child: OverflowBox(
+                      alignment: Alignment.topLeft,
+                      maxWidth:  _kMobileW,
+                      maxHeight: _kMobileH,
+                      child: Transform.scale(
+                        scale:     scale,
+                        alignment: Alignment.topLeft,
+                        child: _PreviewContent(
+                          fakeWidth:       _kMobileW,
+                          fakeHeight:      _kMobileH,
+                          model:           model,
+                          termsSvgBytes:   termsSvgBytes,
+                          privacySvgBytes: privacySvgBytes,
+                          isEnglish:       isEnglish,
+                          isMobile:        true,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+
+                // ── Home indicator ────────────────────────────────────────
+                Container(
+                  color: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 6),
+                  child: Center(
+                    child: Container(
+                      width:  displayW * 0.3,
+                      height: 4,
+                      decoration: BoxDecoration(
+                        color:        _C.border,
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+// ═════════════════════════════════════════════════════════════════════════════
+// PREVIEW CONTENT
+// ═════════════════════════════════════════════════════════════════════════════
+class _PreviewContent extends StatefulWidget {
+  final double              fakeWidth;
+  final double              fakeHeight;
+  final TermsOfServiceModel model;
+  final Uint8List?          termsSvgBytes;
+  final Uint8List?          privacySvgBytes;
+  final bool                isEnglish;
+  final bool                isMobile;
+
+  const _PreviewContent({
+    required this.fakeWidth,
+    required this.fakeHeight,
+    required this.model,
+    required this.isEnglish,
+    this.termsSvgBytes,
+    this.privacySvgBytes,
+    this.isMobile = false,
+  });
+
+  @override
+  State<_PreviewContent> createState() => _PreviewContentState();
+}
+
+class _PreviewContentState extends State<_PreviewContent> {
+  bool _termsOpen   = true;
+  bool _privacyOpen = true;
+
+  bool get _isMobileView => widget.fakeWidth < 600;
+
+  @override
+  Widget build(BuildContext context) {
+    return MediaQuery(
+      data: MediaQuery.of(context).copyWith(
+        size:        Size(widget.fakeWidth, widget.fakeHeight),
+        padding:     EdgeInsets.zero,
+        viewInsets:  EdgeInsets.zero,
+        viewPadding: EdgeInsets.zero,
+      ),
+      child: Material(
+        color: Colors.white,
+        child: Container(
+          color:  _C.back,
+          width:  widget.fakeWidth,
+          height: widget.fakeHeight,
+          child: SingleChildScrollView(
+            child: Directionality(
+              textDirection: widget.isEnglish
+                  ? TextDirection.ltr
+                  : TextDirection.rtl,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  // const SizedBox(height: 24),
+                  // _buildHero(),
+                  const SizedBox(height: 32),
+                  _buildAccordion(
+                    title:    widget.isEnglish ? 'Terms and Conditions' : 'الشروط والأحكام',
+                    isOpen:   _termsOpen,
+                    onToggle: () => setState(() => _termsOpen = !_termsOpen),
+                    child:    _buildSection(
+                      section:  widget.model.termsAndConditions,
+                      svgBytes: widget.termsSvgBytes,
+                      labelEn:  'Download PDF of Terms and Conditions (ENG)',
+                      labelAr:  'تحميل PDF للشروط والأحكام (عربي)',
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  _buildAccordion(
+                    title:    widget.isEnglish ? 'Privacy Policy' : 'سياسة الخصوصية',
+                    isOpen:   _privacyOpen,
+                    onToggle: () => setState(() => _privacyOpen = !_privacyOpen),
+                    child:    _buildSection(
+                      section:  widget.model.privacyPolicy,
+                      svgBytes: widget.privacySvgBytes,
+                      labelEn:  'Download PDF of Privacy Policy (ENG)',
+                      labelAr:  'تحميل PDF لسياسة الخصوصية (عربي)',
+                    ),
+                  ),
+                  const SizedBox(height: 40),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  // ── Hero banner ────────────────────────────────────────────────────────────
+  Widget _buildHero() {
+    final h = _isMobileView ? 100.0 : 140.0;
+    return Container(
+      width:  double.infinity,
+      height: h,
+      margin: EdgeInsets.symmetric(horizontal: widget.isMobile ? 16 : 40),
+      decoration: BoxDecoration(
+        color:        _C.primary,
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              widget.isEnglish ? 'Legal' : 'قانوني',
+              style: TextStyle(
+                color:      Colors.white.withOpacity(0.65),
+                fontSize:   _isMobileView ? 11 : 13,
+                fontWeight: FontWeight.w500,
+                letterSpacing: 1.5,
+              ),
+            ),
+            const SizedBox(height: 6),
+            Text(
+              widget.isEnglish
+                  ? 'Terms & Privacy'
+                  : 'الشروط والخصوصية',
+              style: TextStyle(
+                color:      Colors.white,
+                fontSize:   _isMobileView ? 20 : 28,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ── Accordion ──────────────────────────────────────────────────────────────
+  Widget _buildAccordion({
+    required String       title,
+    required bool         isOpen,
+    required VoidCallback onToggle,
+    required Widget       child,
+  }) {
+    final hPad = widget.isMobile ? 16.0 : 40.0;
+    return Container(
+      decoration: BoxDecoration(
+        color:        Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+              color:      Colors.black.withOpacity(0.05),
+              blurRadius: 10,
+              offset:     const Offset(0, 2))
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // ── Header ──────────────────────────────────────────────────
+          GestureDetector(
+            onTap: onToggle,
+            child: Container(
+              width:   double.infinity,
+              padding: const EdgeInsets.symmetric(
+                  horizontal: 20, vertical: 16),
+              decoration: BoxDecoration(
+                color:        _C.primary,
+                borderRadius: isOpen
+                    ? const BorderRadius.vertical(top: Radius.circular(12))
+                    : BorderRadius.circular(12),
+              ),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      title,
+                      style: const TextStyle(
+                        color:      Colors.white,
+                        fontSize:   15,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                  Icon(
+                    isOpen
+                        ? Icons.keyboard_arrow_up_rounded
+                        : Icons.keyboard_arrow_down_rounded,
+                    color: Colors.white,
+                    size:  20,
+                  ),
+                ],
+              ),
+            ),
+          ),
+
+          // ── Body ────────────────────────────────────────────────────
+          if (isOpen)
+            Padding(
+              padding: const EdgeInsets.all(20),
+              child: child,
+            ),
+        ],
+      ),
+    );
+  }
+
+  // ── Section body ───────────────────────────────────────────────────────────
+  Widget _buildSection({
+    required TermsSection section,
+    required Uint8List?   svgBytes,
+    required String       labelEn,
+    required String       labelAr,
+  }) {
+    final desc   = widget.isEnglish
+        ? section.description.en
+        : section.description.ar;
+    final svgUrl = section.svgUrl;
+    final hasSvg = svgBytes != null || svgUrl.isNotEmpty;
+
+    if (_isMobileView) {
+      // ── Mobile / narrow layout: stacked ──────────────────────────────
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (hasSvg) ...[
+            Center(
+              child: _svgWidget(
+                  bytes: svgBytes, url: svgUrl,
+                  width: 100, height: 100),
+            ),
+            const SizedBox(height: 12),
+          ],
+          Text(
+            desc.isEmpty ? 'Description text here…' : desc,
+            textDirection: widget.isEnglish
+                ? TextDirection.ltr
+                : TextDirection.rtl,
+            style: const TextStyle(
+                fontSize: 12, height: 1.75, color: _C.labelText),
+          ),
+          const SizedBox(height: 16),
+          _downloadLinks(
+            section:  section,
+            labelEn:  labelEn,
+            labelAr:  labelAr,
+            stacked:  true,
+          ),
+        ],
+      );
+    }
+
+    // ── Desktop / tablet layout: side-by-side ──────────────────────────
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: Text(
+                desc.isEmpty ? 'Description text here…' : desc,
+                textDirection: widget.isEnglish
+                    ? TextDirection.ltr
+                    : TextDirection.rtl,
+                style: const TextStyle(
+                    fontSize: 13, height: 1.75, color: _C.labelText),
+              ),
+            ),
+            if (hasSvg) ...[
+              const SizedBox(width: 28),
+              _svgWidget(
+                  bytes: svgBytes, url: svgUrl,
+                  width: 160, height: 160),
+            ],
+          ],
+        ),
+        const SizedBox(height: 16),
+        _downloadLinks(
+          section: section,
+          labelEn: labelEn,
+          labelAr: labelAr,
+          stacked: false,
+        ),
+      ],
+    );
+  }
+
+  // ── Download links row/column ───────────────────────────────────────────────
+  Widget _downloadLinks({
+    required TermsSection section,
+    required String       labelEn,
+    required String       labelAr,
+    required bool         stacked,
+  }) {
+    Widget _btn(String label, String url) {
+      if (url.isEmpty) return const SizedBox.shrink();
+      return Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          CustomSvg(
+              assetPath: 'assets/images/export.svg',
+              color:     _C.primary),
+          const SizedBox(width: 5),
+          Flexible(
+            child: Text(
+              label,
+              style: TextStyle(
+                  fontSize:        11,
+                  fontWeight:      FontWeight.w500,
+                  color:           _C.primary,
+                  decoration:      TextDecoration.underline,
+                  decorationColor: _C.primary),
+            ),
+          ),
+        ],
+      );
+    }
+
+    if (stacked) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _btn(labelEn, section.attachEnUrl),
+          if (section.attachArUrl.isNotEmpty) const SizedBox(height: 6),
+          _btn(labelAr, section.attachArUrl),
+        ],
+      );
+    }
+
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        _btn(labelEn, section.attachEnUrl),
+        _btn(labelAr, section.attachArUrl),
+      ],
+    );
+  }
+}
+
+// ── Shared SVG renderer ───────────────────────────────────────────────────────
 Widget _svgWidget({
   required Uint8List? bytes,
   required String     url,
@@ -435,288 +930,46 @@ Widget _svgWidget({
   );
 }
 
-// ── Shared download link row ──────────────────────────────────────────────────
-Widget _downloadRow({
-  required String attachEnUrl,
-  required String attachArUrl,
-  required String labelEn,
-  required String labelAr,
-  required Color  primaryColor,
-  bool isColumn = false,   // stacked layout for narrow views
-}) {
-  Widget btn(String label, String url) {
-    if (url.isEmpty) return const SizedBox.shrink();
-    return GestureDetector(
-      onTap: () {
-        // In admin preview we just show a snackbar; real navigation is on user side
-      },
+// ═════════════════════════════════════════════════════════════════════════════
+// BROWSER CHROME BAR
+// ═════════════════════════════════════════════════════════════════════════════
+class _BrowserChrome extends StatelessWidget {
+  final bool compact;
+  const _BrowserChrome({this.compact = false});
+
+  @override
+  Widget build(BuildContext context) {
+    final double h = compact ? 22 : 28;
+    return Container(
+      height:  h,
+      color:   const Color(0xFFF5F5F5),
+      padding: const EdgeInsets.symmetric(horizontal: 10),
       child: Row(
-        mainAxisSize: MainAxisSize.min,
         children: [
-          CustomSvg(assetPath: "assets/images/export.svg",color: primaryColor,),
+          _dot(const Color(0xFFFF5F57)),
           const SizedBox(width: 4),
-          Flexible(
-            child: Text(label,
-                style: TextStyle(
-                    fontSize: 11.sp,
-                    fontWeight: FontWeight.w500,
-                    color: primaryColor,
-                    decoration: TextDecoration.underline,
-                    decorationColor: primaryColor)),
+          _dot(const Color(0xFFFEBC2E)),
+          const SizedBox(width: 4),
+          _dot(const Color(0xFF28C840)),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Container(
+              height: compact ? 10 : 14,
+              decoration: BoxDecoration(
+                color:        const Color(0xFFE9E9E9),
+                borderRadius: BorderRadius.circular(4),
+              ),
+            ),
           ),
+          const SizedBox(width: 8),
         ],
       ),
     );
   }
 
-  if (isColumn) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        btn(labelEn, attachEnUrl),
-        if (attachArUrl.isNotEmpty) SizedBox(height: 6.h),
-        btn(labelAr, attachArUrl),
-      ],
-    );
-  }
-
-  return Row(
-    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-    children: [
-      btn(labelEn, attachEnUrl),
-      btn(labelAr, attachArUrl),
-    ],
+  Widget _dot(Color color) => Container(
+    width:       8,
+    height:      8,
+    decoration:  BoxDecoration(color: color, shape: BoxShape.circle),
   );
 }
-
-// ─── Desktop ──────────────────────────────────────────────────────────────────
-class _TermsDesktopPreview extends StatelessWidget {
-  final String    desc, svgUrl;
-  final Uint8List? svgBytes;
-  final String    attachEnUrl, attachArUrl, labelEn, labelAr;
-  final Color     primaryColor;
-
-  const _TermsDesktopPreview({
-    required this.desc,
-    required this.svgUrl,
-    this.svgBytes,
-    required this.attachEnUrl,
-    required this.attachArUrl,
-    required this.labelEn,
-    required this.labelAr,
-    required this.primaryColor,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final hasSvg = svgBytes != null || svgUrl.isNotEmpty;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Container(
-          padding: EdgeInsets.all(20.r),
-          decoration: BoxDecoration(
-
-              borderRadius: BorderRadius.circular(12.r)),
-          child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Expanded(
-              child: Text(
-                  desc.isEmpty ? 'Description text here…' : desc,
-                  style: StyleText.fontSize14Weight400
-                      .copyWith(fontSize: 13.sp, height: 1.75)),
-            ),
-            if (hasSvg) ...[
-              SizedBox(width: 24.w),
-              _svgWidget(bytes: svgBytes, url: svgUrl,
-                  width: 200.w, height: 200.h),
-            ],
-          ]),
-        ),
-        SizedBox(height: 12.h),
-        _downloadRow(
-          attachEnUrl:  attachEnUrl,
-          attachArUrl:  attachArUrl,
-          labelEn:      labelEn,
-          labelAr:      labelAr,
-          primaryColor: primaryColor,
-        ),
-      ],
-    );
-  }
-}
-
-// ─── Tablet ───────────────────────────────────────────────────────────────────
-class _TermsTabletPreview extends StatelessWidget {
-  final String    desc, svgUrl;
-  final Uint8List? svgBytes;
-  final String    attachEnUrl, attachArUrl, labelEn, labelAr;
-  final Color     primaryColor;
-
-  const _TermsTabletPreview({
-    required this.desc,
-    required this.svgUrl,
-    this.svgBytes,
-    required this.attachEnUrl,
-    required this.attachArUrl,
-    required this.labelEn,
-    required this.labelAr,
-    required this.primaryColor,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final hasSvg = svgBytes != null || svgUrl.isNotEmpty;
-    return Padding(
-      padding: EdgeInsets.all(16.r),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          if (hasSvg) ...[
-            Center(child: _svgWidget(bytes: svgBytes, url: svgUrl,
-                width: 160.w, height: 160.h)),
-            SizedBox(height: 12.h),
-          ],
-          Container(
-            width: double.infinity,
-            padding: EdgeInsets.all(14.r),
-            decoration: BoxDecoration(
-
-                borderRadius: BorderRadius.circular(12.r)),
-            child: Text(
-                desc.isEmpty ? 'Description text here…' : desc,
-                style: StyleText.fontSize14Weight400
-                    .copyWith(fontSize: 12.sp, height: 1.75)),
-          ),
-          SizedBox(height: 12.h),
-          _downloadRow(
-            attachEnUrl:  attachEnUrl,
-            attachArUrl:  attachArUrl,
-            labelEn:      labelEn,
-            labelAr:      labelAr,
-            primaryColor: primaryColor,
-            isColumn:     true,   // stacked for narrow frame
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-// ─── Mobile ───────────────────────────────────────────────────────────────────
-class _TermsMobilePreview extends StatelessWidget {
-  final String    desc, svgUrl;
-  final Uint8List? svgBytes;
-  final String    attachEnUrl, attachArUrl, labelEn, labelAr;
-  final Color     primaryColor;
-
-  const _TermsMobilePreview({
-    required this.desc,
-    required this.svgUrl,
-    this.svgBytes,
-    required this.attachEnUrl,
-    required this.attachArUrl,
-    required this.labelEn,
-    required this.labelAr,
-    required this.primaryColor,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final hasSvg = svgBytes != null || svgUrl.isNotEmpty;
-    return Padding(
-      padding: EdgeInsets.all(14.r),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          if (hasSvg) ...[
-            Center(child: _svgWidget(bytes: svgBytes, url: svgUrl,
-                width: 120.w, height: 120.h)),
-            SizedBox(height: 10.h),
-          ],
-          Container(
-            width: double.infinity,
-            padding: EdgeInsets.all(12.r),
-            decoration: BoxDecoration(
-
-                borderRadius: BorderRadius.circular(12.r)),
-            child: Text(
-                desc.isEmpty ? 'Description text here…' : desc,
-                style: StyleText.fontSize14Weight400
-                    .copyWith(fontSize: 11.sp, height: 1.7)),
-          ),
-          SizedBox(height: 12.h),
-          _downloadRow(
-            attachEnUrl:  attachEnUrl,
-            attachArUrl:  attachArUrl,
-            labelEn:      labelEn,
-            labelAr:      labelAr,
-            primaryColor: primaryColor,
-            isColumn:     true,   // stacked for narrow frame
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-// ── Confirm dialog ────────────────────────────────────────────────────────────
-Future<bool?> _confirm(BuildContext context) => showDialog<bool>(
-  context: context,
-  builder: (_) => AlertDialog(
-    shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16.r)),
-    contentPadding: EdgeInsets.all(24.r),
-    content: Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Container(
-          width: 80.w, height: 80.w,
-          decoration: BoxDecoration(
-              color: const Color(0xFFE8F5EE),
-              borderRadius: BorderRadius.circular(40.r)),
-          child: Icon(Icons.edit_note,
-              size: 40.sp, color: const Color(0xFF008037)),
-        ),
-        SizedBox(height: 16.h),
-        Text('EDITING TERMS OF SERVICE DETAILS',
-            textAlign: TextAlign.center,
-            style: StyleText.fontSize14Weight600
-                .copyWith(color: const Color(0xFF1A1A1A))),
-        SizedBox(height: 8.h),
-        Text(
-            'Do you want to save the changes made to Terms of Service?',
-            textAlign: TextAlign.center,
-            style: StyleText.fontSize12Weight400
-                .copyWith(color: AppColors.secondaryBlack)),
-        SizedBox(height: 20.h),
-        Row(children: [
-          Expanded(child: SizedBox(
-              height: 40.h,
-              child: ElevatedButton(
-                onPressed: () => Navigator.pop(context, false),
-                style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF9E9E9E),
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8.r))),
-                child: Text('Back',
-                    style: StyleText.fontSize13Weight500
-                        .copyWith(color: Colors.white)),
-              ))),
-          SizedBox(width: 12.w),
-          Expanded(child: SizedBox(
-              height: 40.h,
-              child: ElevatedButton(
-                onPressed: () => Navigator.pop(context, true),
-                style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF008037),
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8.r))),
-                child: Text('Confirm',
-                    style: StyleText.fontSize13Weight500
-                        .copyWith(color: Colors.white)),
-              ))),
-        ]),
-      ],
-    ),
-  ),
-);

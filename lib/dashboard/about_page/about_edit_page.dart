@@ -578,7 +578,6 @@ class _AboutEditPageMasterState extends State<AboutEditPageMaster> {
     return _isFormValid;
   }
 
-  // ── Preview ────────────────────────────────────────────────────────────────
   void _onPreview() {
     if (!_validate()) return;
     final model = _buildModel('draft');
@@ -589,7 +588,10 @@ class _AboutEditPageMasterState extends State<AboutEditPageMaster> {
       MaterialPageRoute(
         builder: (_) => BlocProvider.value(
           value: cubit,
-          child: AboutPreviewPageLast(model: model, imageUploads: uploads),
+          child: AboutPreviewPage(  // Change from AboutPreviewPageLast to AboutPreviewPage
+            previewModel: model,
+            onPublish: () => _save('published'),
+          ),
         ),
       ),
     );
@@ -812,22 +814,19 @@ class _AboutEditPageMasterState extends State<AboutEditPageMaster> {
           onTap: onToggle,
           child: Container(
             width: double.infinity,
-            padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 14.h),
+            padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 10.h),
             decoration: BoxDecoration(
               color: _kGreenSolid,
-              borderRadius: BorderRadius.circular(4.r),
+              borderRadius: BorderRadius.circular(8.r),
             ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
                   title,
-                  style: TextStyle(
-                    fontFamily: 'Cairo',
-                    fontSize: 16.sp,
-                    fontWeight: FontWeight.w700,
-                    color: Colors.white,
-                  ),
+                  style: StyleText.fontSize14Weight400.copyWith(
+                    color: Colors.white
+                  )
                 ),
                 Icon(
                   isOpen
@@ -843,7 +842,7 @@ class _AboutEditPageMasterState extends State<AboutEditPageMaster> {
         if (isOpen)
           Container(
             width: double.infinity,
-            padding: EdgeInsets.symmetric(vertical: 16.h),
+            padding: EdgeInsets.only(top: 10.h),
             decoration: BoxDecoration(
               borderRadius: BorderRadius.vertical(
                 bottom: Radius.circular(12.r),
@@ -864,7 +863,7 @@ class _AboutEditPageMasterState extends State<AboutEditPageMaster> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         _imageUploadCircle(
-          label: 'Image',
+          label: 'Icon',
           bytes: _headingsSvgBytes,
           url: _headingsSvgUrl,
           onTap: () async {
@@ -898,7 +897,7 @@ class _AboutEditPageMasterState extends State<AboutEditPageMaster> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         _imageUploadCircle(
-          label: 'Image',
+          label: 'Icon',
           bytes: _navLabelIconBytes,
           url: _navLabelIconUrl,
           onTap: () async {
@@ -942,14 +941,14 @@ class _AboutEditPageMasterState extends State<AboutEditPageMaster> {
         Row(
           children: [
             _imageUploadCircle(
-              label: 'Image',
+              label: 'Icon',
               bytes: iconBytes,
               url: iconUrl,
               onTap: onPickIcon,
             ),
             SizedBox(width: 24.w),
             _imageUploadCircle(
-              label: 'Image',
+              label: 'Icon',
               bytes: svgBytes,
               url: svgUrl,
               onTap: onPickSvg,
@@ -1052,7 +1051,7 @@ class _AboutEditPageMasterState extends State<AboutEditPageMaster> {
                 Icon(Icons.add, color: Colors.white, size: 16.sp),
                 SizedBox(width: 6.w),
                 Text(
-                  'Point',
+                  'Value',
                   style: TextStyle(
                     fontFamily: 'Cairo',
                     fontSize: 13.sp,
@@ -1069,7 +1068,7 @@ class _AboutEditPageMasterState extends State<AboutEditPageMaster> {
   }
 
   Widget _valueItemWidget(_ValueItem v, {required bool isMain}) {
-    final String itemLabel = isMain ? 'Main Image' : 'Image';
+    final String itemLabel = isMain ? 'Main Icon' : 'Icon';
 
     return Container(
       margin: EdgeInsets.only(bottom: 20.h),
@@ -1101,7 +1100,7 @@ class _AboutEditPageMasterState extends State<AboutEditPageMaster> {
                 child: Container(
                   padding: EdgeInsets.symmetric(
                     horizontal: 14.w,
-                    vertical: 7.h,
+                    vertical: 6.h,
                   ),
                   decoration: BoxDecoration(
                     color: _kRed,
@@ -1109,12 +1108,7 @@ class _AboutEditPageMasterState extends State<AboutEditPageMaster> {
                   ),
                   child: Text(
                     'Remove',
-                    style: TextStyle(
-                      fontFamily: 'Cairo',
-                      fontSize: 12.sp,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.white,
-                    ),
+                    style: StyleText.fontSize12Weight400.copyWith(color: Colors.white)
                   ),
                 ),
               ),
@@ -1122,8 +1116,8 @@ class _AboutEditPageMasterState extends State<AboutEditPageMaster> {
           ),
           SizedBox(height: 16.h),
 
-          _fieldLabel('Title'),
-          SizedBox(height: 8.h),
+          // _fieldLabel('Title'),
+          // SizedBox(height: 8.h),
           _bilingualRow(
             enCtrl: v.titleEnCtrl,
             arCtrl: v.titleArCtrl,
@@ -1280,12 +1274,9 @@ class _AboutEditPageMasterState extends State<AboutEditPageMaster> {
       children: [
         Text(
           label,
-          style: TextStyle(
-            fontFamily: 'Cairo',
-            fontSize: 13.sp,
-            fontWeight: FontWeight.w600,
-            color: Colors.black87,
-          ),
+          style: StyleText.fontSize16Weight400.copyWith(
+            color: AppColors.text
+          )
         ),
         SizedBox(height: 8.h),
         GestureDetector(
@@ -1456,7 +1447,7 @@ class _AboutEditPageMasterState extends State<AboutEditPageMaster> {
         height: 48.h,
         decoration: BoxDecoration(
           color: color,
-          borderRadius: BorderRadius.circular(10.r),
+          borderRadius: BorderRadius.circular(8.r),
         ),
         child: Center(
           child: Text(

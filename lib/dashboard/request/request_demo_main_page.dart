@@ -251,8 +251,8 @@ class _RequestDemoMainPageState extends State<RequestDemoMainPage> {
                                       ),
                                     ],
                                     SizedBox(height: 12.h),
-                                    Divider(color: _C.border),
-                                    SizedBox(height: 8.h),
+
+
                                   ],
                                 )
                                     .toList(),

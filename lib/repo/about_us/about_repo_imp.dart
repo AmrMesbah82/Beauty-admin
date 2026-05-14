@@ -144,7 +144,8 @@ class AboutRepoImpl implements AboutRepo {
     }
   }
 
-  // ── Save Strategy (ALL fields versioned individually) ──────────────────────
+// In about_repo_impl.dart - Update saveStrategy method
+
   @override
   Future<void> saveStrategy(OurStrategyModel model) async {
     try {
@@ -163,11 +164,27 @@ class AboutRepoImpl implements AboutRepo {
         'Publish_Status': Versioned.append(
           ex['Publish_Status'], newMap['Publish_Status'],
         ),
-        'Strategic_House_En_Url': Versioned.append(
-          ex['Strategic_House_En_Url'], newMap['Strategic_House_En_Url'],
+
+        // ── Strategic House EN - 3 devices ─────────────────────────────
+        'Strategic_House_En_Desktop_Url': Versioned.append(
+          ex['Strategic_House_En_Desktop_Url'], newMap['Strategic_House_En_Desktop_Url'],
         ),
-        'Strategic_House_Ar_Url': Versioned.append(
-          ex['Strategic_House_Ar_Url'], newMap['Strategic_House_Ar_Url'],
+        'Strategic_House_En_Tablet_Url': Versioned.append(
+          ex['Strategic_House_En_Tablet_Url'], newMap['Strategic_House_En_Tablet_Url'],
+        ),
+        'Strategic_House_En_Mobile_Url': Versioned.append(
+          ex['Strategic_House_En_Mobile_Url'], newMap['Strategic_House_En_Mobile_Url'],
+        ),
+
+        // ── Strategic House AR - 3 devices ─────────────────────────────
+        'Strategic_House_Ar_Desktop_Url': Versioned.append(
+          ex['Strategic_House_Ar_Desktop_Url'], newMap['Strategic_House_Ar_Desktop_Url'],
+        ),
+        'Strategic_House_Ar_Tablet_Url': Versioned.append(
+          ex['Strategic_House_Ar_Tablet_Url'], newMap['Strategic_House_Ar_Tablet_Url'],
+        ),
+        'Strategic_House_Ar_Mobile_Url': Versioned.append(
+          ex['Strategic_House_Ar_Mobile_Url'], newMap['Strategic_House_Ar_Mobile_Url'],
         ),
 
         // ── Navigation Label (flattened, versioned) ────────────────────
@@ -200,7 +217,6 @@ class AboutRepoImpl implements AboutRepo {
       rethrow;
     }
   }
-
   // ── Fetch Terms ────────────────────────────────────────────────────────────
   @override
   Future<TermsOfServiceModel> fetchTerms() async {

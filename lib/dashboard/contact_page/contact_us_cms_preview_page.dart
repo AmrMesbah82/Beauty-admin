@@ -1,13 +1,11 @@
 // ******************* FILE INFO *******************
 // File Name: contact_us_cms_preview_page.dart
-// UPDATED: Complete rewrite to match new Figma design
-//          - "Preview Contact Us Details" title
-//          - Desktop / Tablet / Mobile preview tabs
-//          - EN / AR language toggle buttons
-//          - Header accordion (illustration + Contact Us title + subtitle)
-//          - Client accordion (left description text + right form with Personal Info)
-//          - Owner accordion (left description text + right form with Personal Info + Salon Info)
-//          - Social icons section removed (not in new design)
+// Updated: Rewritten to match OverviewPreviewPage pattern
+//   - Desktop / Tablet / Mobile device frames with Transform.scale
+//   - CustomSegmentedTabs for EN / AR toggle
+//   - Back + Publish buttons
+//   - _BrowserChrome bar
+//   - All preview content moved into _PreviewContent widget
 
 // ignore_for_file: unused_element
 
@@ -19,6 +17,8 @@ import 'package:flutter_svg/flutter_svg.dart';
 
 import 'package:beauty_admin/controller/contact_us/contacu_us_location_cubit.dart';
 import 'package:beauty_admin/controller/contact_us/contacu_us_location_state.dart';
+import 'package:beauty_admin/core/custom_dialog.dart';
+import 'package:beauty_admin/core/custom_segmant_tab.dart';
 import 'package:beauty_admin/core/widget/custom_dropdwon.dart';
 import 'package:beauty_admin/theme/appcolors.dart';
 import 'package:beauty_admin/theme/new_theme.dart';
@@ -34,19 +34,24 @@ import '../../model/contact_us/contact_model_location.dart';
 
 const Color _kPink = Color(0xFFD16F9A);
 
+class _C {
+  static const Color primary   = Color(0xFFD16F9A);
+  static const Color back      = Color(0xFFF1F2ED);
+  static const Color labelText = Color(0xFF333333);
+  static const Color hintText  = Color(0xFFAAAAAA);
+  static const Color border    = Color(0xFFE0E0E0);
+}
+
 class _PreviewConst {
   static const List<String> preferredLanguages = ['ar', 'en', 'other'];
   static const Map<String, String> preferredLanguageLabelsEn = {
     'ar': 'Arabic', 'en': 'English', 'other': 'Other',
   };
-  static const Map<String, String> preferredLanguageLabelsAr = {
-    'ar': 'العربية', 'en': 'الإنجليزية', 'other': 'أخرى',
-  };
 
   static const List<String> targetAudienceEn = ['Female', 'Male', 'Both'];
-  static const List<String> countriesEn = ['Egypt', 'Saudi Arabia', 'UAE', 'Kuwait', 'Qatar'];
-  static const List<String> noBranchesEn = ['1', '2 To 4', '5 To 10', '+10'];
-  static const List<String> servicesEn = ['Hair', 'Skin', 'Nails', 'Makeup', 'Spa'];
+  static const List<String> countriesEn      = ['Egypt', 'Saudi Arabia', 'UAE', 'Kuwait', 'Qatar'];
+  static const List<String> noBranchesEn     = ['1', '2 To 4', '5 To 10', '+10'];
+  static const List<String> servicesEn       = ['Hair', 'Skin', 'Nails', 'Makeup', 'Spa'];
 }
 
 const List<Map<String, String>> _phoneCodes = [
@@ -58,6 +63,21 @@ const List<Map<String, String>> _phoneCodes = [
   {'key': '+44',  'value': '🇬🇧 +44'},
   {'key': '+1',   'value': '🇺🇸 +1'},
 ];
+
+// ── Viewport constants ────────────────────────────────────────────────────────
+const double _kDesktopW = 1366.0;
+const double _kDesktopH =  900.0;
+
+const double _kTabletW  =  768.0;
+const double _kTabletH  = 1100.0;
+
+const double _kMobileW  =  375.0;
+const double _kMobileH  =  900.0;
+
+double _safeScale(double v) =>
+    (v.isFinite && !v.isNaN && v > 0) ? v : 1.0;
+
+enum _PreviewDevice { desktop, tablet, mobile }
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // ENTRY
@@ -81,7 +101,7 @@ class _PreviewView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: _C.back,
       body: BlocBuilder<ContactUsCmsCubit, ContactUsCmsState>(
         builder: (context, state) {
           if (state is ContactUsCmsLoading || state is ContactUsCmsInitial) {
@@ -125,33 +145,473 @@ class _PreviewBody extends StatefulWidget {
 }
 
 class _PreviewBodyState extends State<_PreviewBody> {
-  // ── Preview mode tabs ──
-  int _previewTab = 0; // 0=Desktop, 1=Tablet, 2=Mobile
-  bool _isEnglish = true;
+  _PreviewDevice _device      = _PreviewDevice.desktop;
+  bool           _isEnglish   = true;
+  bool           _isPublishing = false;
 
+// In _PreviewBodyState class, update the _publish method:
+
+  Future<void> _publish() async {
+    setState(() => _isPublishing = true);
+    try {
+      await context.read<ContactUsCmsCubit>().save(model: widget.data);
+    } finally {
+      if (mounted) setState(() => _isPublishing = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      children: [
+        Scaffold(
+          backgroundColor: _C.back,
+          body: SingleChildScrollView(
+            child: Center(
+              child: SizedBox(
+                width: 1000.w,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    SizedBox(height: 20.h),
+                    AdminSubNavBar(activeIndex: 6),
+                    SizedBox(height: 16.h),
+
+                    Text(
+                      'Preview Contact Us Details',
+                      style: StyleText.fontSize45Weight600.copyWith(
+                        color: _C.primary,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    SizedBox(height: 16.h),
+
+                    // ── Device tabs + Language toggle ──────────────────
+                    Row(
+                      children: [
+                        _tab('Desktop', _PreviewDevice.desktop),
+                        SizedBox(width: 24.w),
+                        _tab('Tablet',  _PreviewDevice.tablet),
+                        SizedBox(width: 24.w),
+                        _tab('Mobile',  _PreviewDevice.mobile),
+                        const Spacer(),
+                        SizedBox(
+                          width: 95.w,
+                          height: 36.h,
+                          child: CustomSegmentedTabs(
+                            tabs: const ['ENG', 'AR'],
+                            selectedIndex: _isEnglish ? 0 : 1,
+                            onTabSelected: (i) =>
+                                setState(() => _isEnglish = i == 0),
+                            selectedColor:      _C.primary,
+                            unselectedColor:    Colors.white,
+                            selectedTextColor:  Colors.white,
+                            unselectedTextColor: _C.labelText,
+                            equalWidth: false,
+                            containerPadding: EdgeInsets.symmetric(
+                                horizontal: 8.sp, vertical: 4.sp),
+                          ),
+                        ),
+                      ],
+                    ),
+                    SizedBox(height: 16.h),
+
+                    // ── Preview frame ──────────────────────────────────
+                    Container(
+                      width: double.infinity,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(12.r),
+                      ),
+                      child: LayoutBuilder(
+                        builder: (ctx, box) => _buildFrame(box.maxWidth),
+                      ),
+                    ),
+                    SizedBox(height: 24.h),
+
+                    // ── Back + Publish ─────────────────────────────────
+                    Row(
+                      children: [
+                        Expanded(
+                          child: GestureDetector(
+                            onTap: () => Navigator.of(context).pop(),
+                            child: Container(
+                              height: 44.h,
+                              decoration: BoxDecoration(
+                                color: const Color(0xFF797979),
+                                borderRadius: BorderRadius.circular(6.r),
+                              ),
+                              child: Center(
+                                child: Text('Back',
+                                    style: StyleText.fontSize14Weight600
+                                        .copyWith(color: Colors.white)),
+                              ),
+                            ),
+                          ),
+                        ),
+                        SizedBox(width: 300.w),
+                        Expanded(
+                          child: GestureDetector(
+                            onTap: _isPublishing
+                                ? null
+                                : () => showPublishConfirmDialog(
+                              title:    'PUBLISHING CONTACT US',
+                              subtitle: 'Do you want to publish this Contact Us page?',
+                              context:  context,
+                              onConfirm: _publish,
+                            ),
+                            child: AnimatedContainer(
+                              duration: const Duration(milliseconds: 200),
+                              height: 44.h,
+                              decoration: BoxDecoration(
+                                color: _isPublishing
+                                    ? _C.primary.withOpacity(0.5)
+                                    : _C.primary,
+                                borderRadius: BorderRadius.circular(6.r),
+                              ),
+                              child: Center(
+                                child: _isPublishing
+                                    ? SizedBox(
+                                  width: 18.w, height: 18.h,
+                                  child: const CircularProgressIndicator(
+                                      color: Colors.white, strokeWidth: 2),
+                                )
+                                    : Text('Publish',
+                                    style: StyleText.fontSize14Weight600
+                                        .copyWith(color: Colors.white)),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    SizedBox(height: 40.h),
+                    const AppFooter(),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+        if (_isPublishing)
+          Container(
+            color: Colors.black.withOpacity(0.35),
+            child: const Center(
+                child: CircularProgressIndicator(color: _C.primary)),
+          ),
+      ],
+    );
+  }
+
+  // ── Tab widget ─────────────────────────────────────────────────────────────
+  Widget _tab(String label, _PreviewDevice device) {
+    final active = _device == device;
+    return GestureDetector(
+      onTap: () => setState(() => _device = device),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Padding(
+            padding: EdgeInsets.only(bottom: 6.h),
+            child: Text(label,
+                style: TextStyle(
+                  fontSize: 15.sp,
+                  fontWeight: active ? FontWeight.w700 : FontWeight.w500,
+                  color: active ? _C.primary : _C.hintText,
+                )),
+          ),
+          Container(
+            height: 2,
+            width: label.length * 8.0,
+            color: active ? _C.primary : Colors.transparent,
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ── Frame dispatcher ───────────────────────────────────────────────────────
+  Widget _buildFrame(double containerW) {
+    switch (_device) {
+      case _PreviewDevice.desktop:
+        return _DesktopFrame(
+            containerWidth: containerW,
+            data: widget.data,
+            isEnglish: _isEnglish);
+      case _PreviewDevice.tablet:
+        return _TabletFrame(
+            containerWidth: containerW,
+            data: widget.data,
+            isEnglish: _isEnglish);
+      case _PreviewDevice.mobile:
+        return _MobileFrame(
+            containerWidth: containerW,
+            data: widget.data,
+            isEnglish: _isEnglish);
+    }
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// DESKTOP FRAME
+// ═══════════════════════════════════════════════════════════════════════════════
+
+class _DesktopFrame extends StatelessWidget {
+  final double           containerWidth;
+  final ContactUsCmsModel data;
+  final bool             isEnglish;
+  const _DesktopFrame({required this.containerWidth, required this.data, required this.isEnglish});
+
+  @override
+  Widget build(BuildContext context) {
+    final scale  = _safeScale(containerWidth / _kDesktopW);
+    final frameH = _kDesktopH * scale;
+
+    return Container(
+      width: containerWidth,
+      height: frameH + 28,
+      decoration: BoxDecoration(color: _C.back),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(8),
+        child: Column(
+          children: [
+            const _BrowserChrome(),
+            SizedBox(
+              width: containerWidth,
+              height: frameH,
+              child: ClipRect(
+                child: OverflowBox(
+                  alignment: Alignment.topLeft,
+                  maxWidth: _kDesktopW,
+                  maxHeight: _kDesktopH,
+                  child: Transform.scale(
+                    scale: scale,
+                    alignment: Alignment.topLeft,
+                    child: SizedBox(
+                      width: _kDesktopW,
+                      child: _PreviewContent(
+                        fakeWidth: _kDesktopW,
+                        fakeHeight: _kDesktopH,
+                        data: data,
+                        isEnglish: isEnglish,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// TABLET FRAME
+// ═══════════════════════════════════════════════════════════════════════════════
+
+class _TabletFrame extends StatelessWidget {
+  final double           containerWidth;
+  final ContactUsCmsModel data;
+  final bool             isEnglish;
+  const _TabletFrame({required this.containerWidth, required this.data, required this.isEnglish});
+
+  @override
+  Widget build(BuildContext context) {
+    final double displayW = (containerWidth * 0.55).clamp(280, 500);
+    final double scale    = _safeScale(displayW / _kTabletW);
+    final double displayH = _kTabletH * scale;
+
+    return Column(
+      children: [
+        Center(
+          child: Container(
+            width:  displayW + 4,
+            height: displayH + 28 + 4,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: _C.border, width: 2),
+              color: Colors.white,
+              boxShadow: [
+                BoxShadow(
+                    color: Colors.black.withOpacity(0.08),
+                    blurRadius: 16,
+                    offset: const Offset(0, 4))
+              ],
+            ),
+            clipBehavior: Clip.antiAlias,
+            child: Column(
+              children: [
+                const _BrowserChrome(compact: true),
+                SizedBox(
+                  width:  displayW,
+                  height: displayH,
+                  child: ClipRect(
+                    child: OverflowBox(
+                      alignment: Alignment.topLeft,
+                      maxWidth:  _kTabletW,
+                      maxHeight: _kTabletH,
+                      child: Transform.scale(
+                        scale: scale,
+                        alignment: Alignment.topLeft,
+                        child: _PreviewContent(
+                          fakeWidth:  _kTabletW,
+                          fakeHeight: _kTabletH,
+                          data:       data,
+                          isEnglish:  isEnglish,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// MOBILE FRAME
+// ═══════════════════════════════════════════════════════════════════════════════
+
+class _MobileFrame extends StatelessWidget {
+  final double           containerWidth;
+  final ContactUsCmsModel data;
+  final bool             isEnglish;
+  const _MobileFrame({required this.containerWidth, required this.data, required this.isEnglish});
+
+  @override
+  Widget build(BuildContext context) {
+    final double displayW = (containerWidth * 0.35).clamp(200, 280);
+    final double scale    = _safeScale(displayW / _kMobileW);
+    final double displayH = _kMobileH * scale;
+
+    return Column(
+      children: [
+        Center(
+          child: Container(
+            width:  displayW + 4,
+            height: displayH + 24 + 12 + 4,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(28),
+            ),
+            clipBehavior: Clip.antiAlias,
+            child: Column(
+              children: [
+                // ── Notch ────────────────────────────────────────────
+                Container(
+                  color: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 6),
+                  child: Center(
+                    child: Container(
+                      width: displayW * 0.3,
+                      height: 12,
+                      decoration: BoxDecoration(
+                        color: _C.border,
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                    ),
+                  ),
+                ),
+
+                // ── Content ──────────────────────────────────────────
+                SizedBox(
+                  width:  displayW,
+                  height: displayH,
+                  child: ClipRect(
+                    child: OverflowBox(
+                      alignment: Alignment.topLeft,
+                      maxWidth:  _kMobileW,
+                      maxHeight: _kMobileH,
+                      child: Transform.scale(
+                        scale: scale,
+                        alignment: Alignment.topLeft,
+                        child: _PreviewContent(
+                          fakeWidth:  _kMobileW,
+                          fakeHeight: _kMobileH,
+                          data:       data,
+                          isEnglish:  isEnglish,
+                          isMobile:   true,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+
+                // ── Home indicator ────────────────────────────────────
+                Container(
+                  color: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 6),
+                  child: Center(
+                    child: Container(
+                      width: displayW * 0.3,
+                      height: 4,
+                      decoration: BoxDecoration(
+                        color: _C.border,
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// PREVIEW CONTENT
+// ═══════════════════════════════════════════════════════════════════════════════
+
+class _PreviewContent extends StatefulWidget {
+  final double           fakeWidth;
+  final double           fakeHeight;
+  final ContactUsCmsModel data;
+  final bool             isEnglish;
+  final bool             isMobile;
+
+  const _PreviewContent({
+    required this.fakeWidth,
+    required this.fakeHeight,
+    required this.data,
+    required this.isEnglish,
+    this.isMobile = false,
+  });
+
+  @override
+  State<_PreviewContent> createState() => _PreviewContentState();
+}
+
+class _PreviewContentState extends State<_PreviewContent> {
   // ── Accordion open/close ──
   bool _headerOpen = true;
   bool _clientOpen = true;
   bool _ownerOpen  = true;
 
-  // ── Form controllers (preview only) ──
-  final _firstNameCtrl  = TextEditingController();
-  final _lastNameCtrl   = TextEditingController();
-  final _emailCtrl      = TextEditingController();
-  final _phoneCtrl      = TextEditingController();
-  final _salonNameCtrl  = TextEditingController();
+  // ── Form controllers ──
+  final _firstNameCtrl   = TextEditingController();
+  final _lastNameCtrl    = TextEditingController();
+  final _emailCtrl       = TextEditingController();
+  final _phoneCtrl       = TextEditingController();
+  final _salonNameCtrl   = TextEditingController();
   final _salonNameArCtrl = TextEditingController();
-  final _subjectCtrl    = TextEditingController();
-  final _messageCtrl    = TextEditingController();
+  final _subjectCtrl     = TextEditingController();
+  final _messageCtrl     = TextEditingController();
 
-  String _phoneCode          = '+20';
-  String _preferredLanguage  = 'ar';
+  String  _phoneCode         = '+20';
+  String  _preferredLanguage = 'ar';
   String? _selectedTargetAudience;
   String? _selectedSalonCountry;
-  String? _selectedSalonCity;
   String? _selectedNoBranches;
   String? _selectedServices;
-  String? _selectedReason;
+  String? _selectedClientReason;
+  String? _selectedOwnerReason;
 
   @override
   void dispose() {
@@ -166,118 +626,38 @@ class _PreviewBodyState extends State<_PreviewBody> {
     super.dispose();
   }
 
+  double get _hPad => widget.isMobile ? 16.0 : 30.0;
+
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      child: Column(
-        children: [
-          SizedBox(height: 20.h),
-          AdminSubNavBar(activeIndex: 6),
-          SizedBox(height: 20.h),
-
-          // ── Title + controls ──
-          Container(
-            width: 1000.w,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text('Preview Contact Us Details',
-                    style: StyleText.fontSize45Weight600.copyWith(
-                        fontSize: 32.sp, color: _kPink,
-                        fontWeight: FontWeight.w900)),
-                SizedBox(height: 16.h),
-
-                // ── Preview tabs + language toggle ──
-                Row(
-                  children: [
-                    _previewTabButton('Desktop', 0),
-                    SizedBox(width: 12.w),
-                    _previewTabButton('Tablet', 1),
-                    SizedBox(width: 12.w),
-                    _previewTabButton('Mobile', 2),
-                    const Spacer(),
-                    _langToggle('En', true),
-                    SizedBox(width: 8.w),
-                    _langToggle('Ar', false),
-                  ],
-                ),
-                SizedBox(height: 24.h),
-              ],
-            ),
-          ),
-
-          // ── Preview content ──
-          Container(
-            width: 1000.w,
-            child: Column(
-              children: [
-                // ── Header Accordion ──
-                _accordion(
-                  title:  'Header',
-                  isOpen: _headerOpen,
-                  onToggle: () => setState(() => _headerOpen = !_headerOpen),
-                  child: _headerSection(),
-                ),
-                SizedBox(height: 20.h),
-
-                // ── Client Accordion ──
-                _accordion(
-                  title:  'Client',
-                  isOpen: _clientOpen,
-                  onToggle: () => setState(() => _clientOpen = !_clientOpen),
-                  child: _clientSection(),
-                ),
-                SizedBox(height: 20.h),
-
-                // ── Owner Accordion ──
-                _accordion(
-                  title:  'Owner',
-                  isOpen: _ownerOpen,
-                  onToggle: () => setState(() => _ownerOpen = !_ownerOpen),
-                  child: _ownerSection(),
-                ),
-                SizedBox(height: 40.h),
-              ],
-            ),
-          ),
-
-          const AppFooter(),
-        ],
+    return MediaQuery(
+      data: MediaQuery.of(context).copyWith(
+        size:        Size(widget.fakeWidth, widget.fakeHeight),
+        padding:     EdgeInsets.zero,
+        viewInsets:  EdgeInsets.zero,
+        viewPadding: EdgeInsets.zero,
       ),
-    );
-  }
-
-  // ── Preview Tab Button ────────────────────────────────────────────────────
-
-  Widget _previewTabButton(String label, int index) {
-    final isSelected = _previewTab == index;
-    return GestureDetector(
-      onTap: () => setState(() => _previewTab = index),
-      child: Text(label,
-          style: StyleText.fontSize14Weight500.copyWith(
-            color: isSelected ? _kPink : Colors.grey.shade500,
-            decoration: isSelected ? TextDecoration.underline : TextDecoration.none,
-            decorationColor: _kPink,
-          )),
-    );
-  }
-
-  Widget _langToggle(String label, bool isEn) {
-    final isSelected = _isEnglish == isEn;
-    return GestureDetector(
-      onTap: () => setState(() => _isEnglish = isEn),
-      child: Container(
-        padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 6.h),
-        decoration: BoxDecoration(
-          color: isSelected ? _kPink : Colors.white,
-          borderRadius: BorderRadius.circular(6.r),
+      child: Material(
+        color: Colors.white,
+        child: Container(
+          color: _C.back,
+          width: widget.fakeWidth,
+          height: widget.fakeHeight,
+          child: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                const SizedBox(height: 20),
+                _headerSection(),
+                const SizedBox(height: 16),
+                _clientSection(),
+                const SizedBox(height: 16),
+                _ownerSection(),
+                const SizedBox(height: 40),
+              ],
+            ),
+          ),
         ),
-        child: Text(label,
-            style: TextStyle(
-              fontFamily: 'Cairo', fontSize: 13.sp,
-              fontWeight: FontWeight.w600,
-              color: isSelected ? Colors.white : Colors.grey.shade600,
-            )),
       ),
     );
   }
@@ -296,24 +676,21 @@ class _PreviewBodyState extends State<_PreviewBody> {
           onTap: onToggle,
           child: Container(
             width: double.infinity,
-            padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 14.h),
+            padding: EdgeInsets.symmetric(horizontal: _hPad, vertical: 12),
             decoration: BoxDecoration(
               color: _kPink,
-              borderRadius: isOpen
-                  ? BorderRadius.vertical(top: Radius.circular(8.r))
-                  : BorderRadius.circular(8.r),
+              borderRadius: BorderRadius.circular(8),
             ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(title,
-                    style: TextStyle(
-                      fontFamily: 'Cairo', fontSize: 16.sp,
-                      fontWeight: FontWeight.w700, color: Colors.white,
-                    )),
+                    style: const TextStyle(
+                        fontFamily: 'Cairo', fontSize: 15,
+                        fontWeight: FontWeight.w700, color: Colors.white)),
                 Icon(
                   isOpen ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down,
-                  color: Colors.white, size: 22.sp,
+                  color: Colors.white, size: 20,
                 ),
               ],
             ),
@@ -324,462 +701,399 @@ class _PreviewBodyState extends State<_PreviewBody> {
     );
   }
 
-  // ── Header Section ────────────────────────────────────────────────────────
+  // ── Header Section ─────────────────────────────────────────────────────────
 
   Widget _headerSection() {
-    final data = widget.data;
-    final title = _isEnglish
+    final data     = widget.data;
+    final isEn     = widget.isEnglish;
+    final title    = isEn
         ? (data.headings.title.en.isNotEmpty ? data.headings.title.en : 'Contact Us')
         : (data.headings.title.ar.isNotEmpty ? data.headings.title.ar : 'تواصل معنا');
-    final subtitle = _isEnglish
+    final subtitle = isEn
         ? (data.headings.shortDescription.en.isNotEmpty
         ? data.headings.shortDescription.en
-        : 'Your Feedback Shapes Our Success: Join Us in Building a Better Experience!')
+        : 'Your Feedback Shapes Our Success!')
         : (data.headings.shortDescription.ar.isNotEmpty
         ? data.headings.shortDescription.ar
-        : 'ملاحظاتك تشكل نجاحنا: انضم إلينا في بناء تجربة أفضل!');
+        : 'ملاحظاتك تشكل نجاحنا!');
 
-    return Container(
-      width: double.infinity,
-      padding: EdgeInsets.symmetric(horizontal: 30.w, vertical: 30.h),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.vertical(bottom: Radius.circular(8.r)),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          // Left illustration
-          SizedBox(
-            width: 200.w,
-            child: data.headings.svgUrl.isNotEmpty
-                ? SvgPicture.network(data.headings.svgUrl,
-                width: 200.w, height: 180.h, fit: BoxFit.contain,
-                placeholderBuilder: (_) =>
-                    Icon(Icons.image_outlined, size: 80.w, color: _kPink))
-                : SvgPicture.asset('assets/spa_core.svg',
-                width: 200.w, height: 180.h, fit: BoxFit.contain,
-                placeholderBuilder: (_) =>
-                    Icon(Icons.image_outlined, size: 80.w, color: _kPink)),
-          ),
-          SizedBox(width: 30.w),
+    return _accordion(
+      title:    'Header',
+      isOpen:   _headerOpen,
+      onToggle: () => setState(() => _headerOpen = !_headerOpen),
+      child: Container(
+        width: double.infinity,
+        padding: EdgeInsets.symmetric(horizontal: _hPad, vertical: 24),
+        decoration: const BoxDecoration(
 
-          // Right text
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(title,
-                    style: StyleText.fontSize45Weight600.copyWith(
-                        fontSize: 28.sp, color: _kPink,
-                        fontWeight: FontWeight.w900)),
-                SizedBox(height: 8.h),
-                Text(subtitle,
-                    style: StyleText.fontSize16Weight600.copyWith(
-                        fontSize: 14.sp, color: Colors.black87,
-                        fontWeight: FontWeight.w400)),
-              ],
+          borderRadius: BorderRadius.vertical(bottom: Radius.circular(8)),
+        ),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            SizedBox(
+              width: widget.isMobile ? 80 : 160,
+              child: data.headings.svgUrl.isNotEmpty
+                  ? SvgPicture.network(data.headings.svgUrl,
+                  width: widget.isMobile ? 80 : 160,
+                  height: widget.isMobile ? 70 : 140,
+                  fit: BoxFit.contain,
+                  placeholderBuilder: (_) =>
+                      Icon(Icons.image_outlined, size: 60, color: _kPink))
+                  : SvgPicture.asset('assets/spa_core.svg',
+                  width: widget.isMobile ? 80 : 160,
+                  height: widget.isMobile ? 70 : 140,
+                  fit: BoxFit.contain),
             ),
-          ),
-        ],
+            const SizedBox(width: 20),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(title,
+                      style: TextStyle(
+                          fontFamily: 'Cairo',
+                          fontSize: widget.isMobile ? 18 : 24,
+                          fontWeight: FontWeight.w900,
+                          color: _kPink)),
+                  const SizedBox(height: 6),
+                  Text(subtitle,
+                      style: TextStyle(
+                          fontFamily: 'Cairo',
+                          fontSize: widget.isMobile ? 11 : 13,
+                          color: Colors.black87,
+                          height: 1.5)),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
 
-  // ── Client Section ────────────────────────────────────────────────────────
+  // ── Client Section ─────────────────────────────────────────────────────────
 
   Widget _clientSection() {
-    final data = widget.data;
-    final desc = _isEnglish
+    final data      = widget.data;
+    final isEn      = widget.isEnglish;
+    final desc      = isEn
         ? data.clientDescription.description.en
         : data.clientDescription.description.ar;
-    final defaultDesc = _isEnglish
-        ? 'At Beauty, we firmly believe that feedback is the lifeblood of our success. '
-        'We value your thoughts, opinions, and suggestions as they shape our products, '
-        'services, and overall customer experience. Your voice matters, and we are committed '
-        'to creating a platform that truly meets your needs.'
-        : '';
-
-    // Build reason items for dropdown
-    final reasons = data.clientDescription.reasons
+    final reasons   = data.clientDescription.reasons
         .where((r) => r.label.en.isNotEmpty || r.label.ar.isNotEmpty)
-        .map((r) => {
-      'key':   r.id,
-      'value': _isEnglish ? r.label.en : r.label.ar,
-    }).toList();
+        .map((r) => {'key': r.id, 'value': isEn ? r.label.en : r.label.ar})
+        .toList();
 
-    return Container(
-      width: double.infinity,
-      padding: EdgeInsets.symmetric(horizontal: 30.w, vertical: 30.h),
-      decoration: BoxDecoration(
-        color: const Color(0xFFF8F8F8),
-        borderRadius: BorderRadius.vertical(bottom: Radius.circular(8.r)),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Left description text
-          Expanded(
-            flex: 2,
-            child: Text(
-              desc.isNotEmpty ? desc : defaultDesc,
-              style: StyleText.fontSize13Weight400.copyWith(
-                  fontSize: 12.sp, color: Colors.black87, height: 1.7),
+    return _accordion(
+      title:    'Client',
+      isOpen:   _clientOpen,
+      onToggle: () => setState(() => _clientOpen = !_clientOpen),
+      child: Container(
+        width: double.infinity,
+        padding: EdgeInsets.symmetric( vertical: 24),
+        decoration: const BoxDecoration(
+
+          borderRadius: BorderRadius.vertical(bottom: Radius.circular(8)),
+        ),
+        child: widget.isMobile
+            ? Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            if (desc.isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 16),
+                child: Text(desc,
+                    style: const TextStyle(
+                        fontSize: 12, color: Colors.black87, height: 1.7)),
+              ),
+            _clientFormCard(reasons),
+          ],
+        )
+            : Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              flex: 2,
+              child: Text(
+                desc.isNotEmpty ? desc :
+                'At Beauty, we firmly believe that feedback is the lifeblood of our success.',
+                style: const TextStyle(
+                    fontSize: 12, color: Colors.black87, height: 1.7),
+              ),
             ),
-          ),
-          SizedBox(width: 24.w),
-
-          // Right form card
-          Expanded(
-            flex: 3,
-            child: _clientFormCard(reasons),
-          ),
-        ],
+            const SizedBox(width: 24),
+            Expanded(flex: 3, child: _clientFormCard(reasons)),
+          ],
+        ),
       ),
     );
   }
 
   Widget _clientFormCard(List<Map<String, String>> reasons) {
     return Container(
-      padding: EdgeInsets.all(16.w),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(12.r),
+        borderRadius: BorderRadius.circular(12),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Preferred Language
-          _SectionHeader(title: _isEnglish ? 'Preferred Language' : 'اللغة المفضلة'),
-          SizedBox(height: 6.h),
-          Row(
-            children: _PreviewConst.preferredLanguages.map((lang) {
-              final bool selected = _preferredLanguage == lang;
-              final lbl = _PreviewConst.preferredLanguageLabelsEn[lang] ?? lang;
-              return Padding(
-                padding: EdgeInsetsDirectional.only(end: 20.w),
-                child: GestureDetector(
-                  onTap: () => setState(() => _preferredLanguage = lang),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Container(
-                        width: 18.w, height: 18.w,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          border: Border.all(
-                            color: selected ? _kPink : Colors.grey.shade400,
-                            width: 2,
-                          ),
-                        ),
-                        child: selected
-                            ? Center(child: Container(
-                          width: 10.w, height: 10.w,
-                          decoration: const BoxDecoration(
-                              shape: BoxShape.circle, color: _kPink),
-                        ))
-                            : null,
-                      ),
-                      SizedBox(width: 6.w),
-                      Text(lbl,
-                          style: StyleText.fontSize13Weight400.copyWith(
-                              color: selected ? Colors.black87 : Colors.black54,
-                              fontSize: 13.sp)),
-                    ],
-                  ),
-                ),
-              );
-            }).toList(),
-          ),
-          SizedBox(height: 12.h),
-
-          // First + Last name
+          _SectionHeader(title: widget.isEnglish ? 'Preferred Language' : 'اللغة المفضلة'),
+          const SizedBox(height: 6),
+          _langRadioRow(),
+          const SizedBox(height: 12),
           Row(
             children: [
-              Expanded(child: _previewField('First Name *', _firstNameCtrl,
-                  iconPath: 'assets/contact/name.svg')),
-              SizedBox(width: 12.w),
-              Expanded(child: _previewField('Last Name *', _lastNameCtrl,
-                  iconPath: 'assets/contact/name.svg')),
+              Expanded(child: _previewField('First Name *', _firstNameCtrl, iconPath: 'assets/contact/name.svg')),
+              const SizedBox(width: 12),
+              Expanded(child: _previewField('Last Name *',  _lastNameCtrl,  iconPath: 'assets/contact/name.svg')),
             ],
           ),
-
-          // Email + Phone
           Row(
             children: [
-              Expanded(child: _previewField('Enter Your Email *', _emailCtrl,
-                  iconPath: 'assets/contact/sms.svg')),
-              SizedBox(width: 12.w),
+              Expanded(child: _previewField('Enter Your Email *', _emailCtrl, iconPath: 'assets/contact/sms.svg')),
+              const SizedBox(width: 12),
               Expanded(child: _previewPhoneField()),
             ],
           ),
-
-          // Gender + Country (client has these simpler fields)
           Row(
             children: [
               Expanded(child: _previewDropdown('Gender',
                   _PreviewConst.targetAudienceEn.map((t) => {'key': t, 'value': t}).toList(),
-                  null, (_) {},
-                  iconPath: 'assets/contact/Target audience of salon .svg')),
-              SizedBox(width: 12.w),
+                  null, (_) {}, iconPath: 'assets/contact/Target audience of salon .svg')),
+              const SizedBox(width: 12),
               Expanded(child: _previewDropdown('Country',
                   _PreviewConst.countriesEn.map((c) => {'key': c, 'value': c}).toList(),
-                  null, (_) {},
-                  iconPath: 'assets/contact/Country of salon.svg')),
+                  null, (_) {}, iconPath: 'assets/contact/Country of salon.svg')),
             ],
           ),
-
-          // Subject
-          _previewField('Subject *', _subjectCtrl,
-              iconPath: 'assets/contact/Subject .svg'),
-
-          // Reason
+          _previewField('Subject *', _subjectCtrl, iconPath: 'assets/contact/Subject .svg'),
           if (reasons.isNotEmpty)
-            _previewDropdown('Reason', reasons, _selectedReason,
-                    (v) => setState(() => _selectedReason = v),
+            _previewDropdown('Reason', reasons, _selectedClientReason,
+                    (v) => setState(() => _selectedClientReason = v),
                 iconPath: 'assets/contact/Reason.svg'),
-
-          // Message
           _previewField('Message *', _messageCtrl,
-              iconPath: 'assets/contact/Message.svg',
-              maxLines: 3, fieldHeight: 72),
-
-          SizedBox(height: 8.h),
+              iconPath: 'assets/contact/Message.svg', maxLines: 3, fieldHeight: 72),
+          const SizedBox(height: 8),
           _sendButton(),
         ],
       ),
     );
   }
 
-  // ── Owner Section ─────────────────────────────────────────────────────────
+  // ── Owner Section ──────────────────────────────────────────────────────────
 
   Widget _ownerSection() {
-    final data = widget.data;
-    final desc = _isEnglish
+    final data    = widget.data;
+    final isEn    = widget.isEnglish;
+    final desc    = isEn
         ? data.ownerDescription.description.en
         : data.ownerDescription.description.ar;
-    final defaultDesc = _isEnglish
-        ? 'At Beauty, we firmly believe that feedback is the lifeblood of our success. '
-        'We value your thoughts, opinions, and suggestions as they shape our products, '
-        'services, and overall customer experience. Your voice matters, and we are committed '
-        'to creating a platform that truly meets your needs.'
-        : '';
-
     final reasons = data.ownerDescription.reasons
         .where((r) => r.label.en.isNotEmpty || r.label.ar.isNotEmpty)
-        .map((r) => {
-      'key':   r.id,
-      'value': _isEnglish ? r.label.en : r.label.ar,
-    }).toList();
+        .map((r) => {'key': r.id, 'value': isEn ? r.label.en : r.label.ar})
+        .toList();
 
-    return Container(
-      width: double.infinity,
-      padding: EdgeInsets.symmetric(horizontal: 30.w, vertical: 30.h),
-      decoration: BoxDecoration(
-        color: const Color(0xFFF8F8F8),
-        borderRadius: BorderRadius.vertical(bottom: Radius.circular(8.r)),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Left description text
-          Expanded(
-            flex: 2,
-            child: Text(
-              desc.isNotEmpty ? desc : defaultDesc,
-              style: StyleText.fontSize13Weight400.copyWith(
-                  fontSize: 12.sp, color: Colors.black87, height: 1.7),
-            ),
-          ),
-          SizedBox(width: 24.w),
+    return Padding(
+      padding: EdgeInsets.symmetric(horizontal: _hPad),
+      child: _accordion(
+        title:    'Owner',
+        isOpen:   _ownerOpen,
+        onToggle: () => setState(() => _ownerOpen = !_ownerOpen),
+        child: Container(
+          width: double.infinity,
+          padding: EdgeInsets.symmetric( vertical: 24),
+          decoration: const BoxDecoration(
 
-          // Right form card
-          Expanded(
-            flex: 3,
-            child: _ownerFormCard(reasons),
+            borderRadius: BorderRadius.vertical(bottom: Radius.circular(8)),
           ),
-        ],
+          child: widget.isMobile
+              ? Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              if (desc.isNotEmpty)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 16),
+                  child: Text(desc,
+                      style: const TextStyle(
+                          fontSize: 12, color: Colors.black87, height: 1.7)),
+                ),
+              _ownerFormCard(reasons),
+            ],
+          )
+              : Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                flex: 2,
+                child: Text(
+                  desc.isNotEmpty ? desc :
+                  'At Beauty, we firmly believe that feedback is the lifeblood of our success.',
+                  style: const TextStyle(
+                      fontSize: 12, color: Colors.black87, height: 1.7),
+                ),
+              ),
+              const SizedBox(width: 24),
+              Expanded(flex: 3, child: _ownerFormCard(reasons)),
+            ],
+          ),
+        ),
       ),
     );
   }
 
   Widget _ownerFormCard(List<Map<String, String>> reasons) {
-    final targetItems = _PreviewConst.targetAudienceEn
-        .map((t) => {'key': t, 'value': t}).toList();
-    final countryItems = _PreviewConst.countriesEn
-        .map((c) => {'key': c, 'value': c}).toList();
-    final branchItems = _PreviewConst.noBranchesEn
-        .map((b) => {'key': b, 'value': b}).toList();
-    final serviceItems = _PreviewConst.servicesEn
-        .map((s) => {'key': s, 'value': s}).toList();
+    final targetItems  = _PreviewConst.targetAudienceEn.map((t) => {'key': t, 'value': t}).toList();
+    final countryItems = _PreviewConst.countriesEn.map((c) => {'key': c, 'value': c}).toList();
+    final branchItems  = _PreviewConst.noBranchesEn.map((b) => {'key': b, 'value': b}).toList();
+    final serviceItems = _PreviewConst.servicesEn.map((s) => {'key': s, 'value': s}).toList();
 
     return Container(
-      padding: EdgeInsets.all(16.w),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(12.r),
+        borderRadius: BorderRadius.circular(12),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _SectionHeader(title: 'Personal Info'),
-          SizedBox(height: 6.h),
-
-          // Preferred Language
-          _FormLabel('Preferred Language'),
-          SizedBox(height: 6.h),
-          Row(
-            children: _PreviewConst.preferredLanguages.map((lang) {
-              final bool selected = _preferredLanguage == lang;
-              final lbl = _PreviewConst.preferredLanguageLabelsEn[lang] ?? lang;
-              return Padding(
-                padding: EdgeInsetsDirectional.only(end: 20.w),
-                child: GestureDetector(
-                  onTap: () => setState(() => _preferredLanguage = lang),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Container(
-                        width: 18.w, height: 18.w,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          border: Border.all(
-                            color: selected ? _kPink : Colors.grey.shade400,
-                            width: 2,
-                          ),
-                        ),
-                        child: selected
-                            ? Center(child: Container(
-                          width: 10.w, height: 10.w,
-                          decoration: const BoxDecoration(
-                              shape: BoxShape.circle, color: _kPink),
-                        ))
-                            : null,
-                      ),
-                      SizedBox(width: 6.w),
-                      Text(lbl,
-                          style: StyleText.fontSize13Weight400.copyWith(
-                              color: selected ? Colors.black87 : Colors.black54,
-                              fontSize: 13.sp)),
-                    ],
-                  ),
-                ),
-              );
-            }).toList(),
-          ),
-          SizedBox(height: 12.h),
-
-          // First + Last name
+          const _SectionHeader(title: 'Personal Info'),
+          const SizedBox(height: 6),
+          const _FormLabel('Preferred Language'),
+          const SizedBox(height: 6),
+          _langRadioRow(),
+          const SizedBox(height: 12),
           Row(
             children: [
-              Expanded(child: _previewField('First Name *', _firstNameCtrl,
-                  iconPath: 'assets/contact/name.svg')),
-              SizedBox(width: 12.w),
-              Expanded(child: _previewField('Last Name *', _lastNameCtrl,
-                  iconPath: 'assets/contact/name.svg')),
+              Expanded(child: _previewField('First Name *', _firstNameCtrl, iconPath: 'assets/contact/name.svg')),
+              const SizedBox(width: 12),
+              Expanded(child: _previewField('Last Name *',  _lastNameCtrl,  iconPath: 'assets/contact/name.svg')),
             ],
           ),
-
-          // Email + Phone
           Row(
             children: [
-              Expanded(child: _previewField('Enter Your Email *', _emailCtrl,
-                  iconPath: 'assets/contact/sms.svg')),
-              SizedBox(width: 12.w),
+              Expanded(child: _previewField('Enter Your Email *', _emailCtrl, iconPath: 'assets/contact/sms.svg')),
+              const SizedBox(width: 12),
               Expanded(child: _previewPhoneField()),
             ],
           ),
-
-          SizedBox(height: 16.h),
-          _SectionHeader(title: 'Salon Info'),
-          SizedBox(height: 8.h),
-
-          // Salon Name EN + AR
+          const SizedBox(height: 16),
+          const _SectionHeader(title: 'Salon Info'),
+          const SizedBox(height: 8),
           Row(
             children: [
-              Expanded(child: _previewField('Salon Name *', _salonNameCtrl,
-                  iconPath: 'assets/contact/salon_name.svg')),
-              SizedBox(width: 12.w),
-              Expanded(child: _previewField('اسم الصالون *', _salonNameArCtrl,
-                  iconPath: 'assets/contact/salon_name.svg',
-                  textDirection: TextDirection.rtl,
-                  textAlign: TextAlign.right)),
+              Expanded(child: _previewField('Salon Name *',    _salonNameCtrl,   iconPath: 'assets/contact/salon_name.svg')),
+              const SizedBox(width: 12),
+              Expanded(child: _previewField('اسم الصالون *',   _salonNameArCtrl, iconPath: 'assets/contact/salon_name.svg',
+                  textDirection: TextDirection.rtl, textAlign: TextAlign.right)),
             ],
           ),
-
-          // Target audience
           _previewDropdown('Target audience of salon *', targetItems,
               _selectedTargetAudience, (v) => setState(() => _selectedTargetAudience = v),
               iconPath: 'assets/contact/Target audience of salon .svg'),
-
-          // Country + City
           Row(
             children: [
               Expanded(child: _previewDropdown('Country of salon', countryItems,
                   _selectedSalonCountry, (v) => setState(() => _selectedSalonCountry = v),
                   iconPath: 'assets/contact/Country of salon.svg')),
-              SizedBox(width: 12.w),
+              const SizedBox(width: 12),
               Expanded(child: _previewField('City of salon', TextEditingController(),
                   iconPath: 'assets/contact/City of salon.svg')),
             ],
           ),
-
-          // Branches + Services
           Row(
             children: [
               Expanded(child: _previewDropdown('No.Branches', branchItems,
                   _selectedNoBranches, (v) => setState(() => _selectedNoBranches = v),
                   iconPath: 'assets/contact/No.Branches.svg')),
-              SizedBox(width: 12.w),
+              const SizedBox(width: 12),
               Expanded(child: _previewDropdown('Services', serviceItems,
                   _selectedServices, (v) => setState(() => _selectedServices = v),
                   iconPath: 'assets/contact/Services.svg')),
             ],
           ),
-
-          // Subject
-          _previewField('Subject *', _subjectCtrl,
-              iconPath: 'assets/contact/Subject .svg'),
-
-          // Reason
+          _previewField('Subject *', _subjectCtrl, iconPath: 'assets/contact/Subject .svg'),
           if (reasons.isNotEmpty)
-            _previewDropdown('Reason', reasons, _selectedReason,
-                    (v) => setState(() => _selectedReason = v),
+            _previewDropdown('Reason', reasons, _selectedOwnerReason,
+                    (v) => setState(() => _selectedOwnerReason = v),
                 iconPath: 'assets/contact/Reason.svg'),
-
-          // Message
           _previewField('Message *', _messageCtrl,
-              iconPath: 'assets/contact/Message.svg',
-              maxLines: 3, fieldHeight: 72),
-
-          SizedBox(height: 8.h),
+              iconPath: 'assets/contact/Message.svg', maxLines: 3, fieldHeight: 72),
+          const SizedBox(height: 8),
           _sendButton(),
         ],
       ),
     );
   }
 
-  // ── Shared preview form widgets ───────────────────────────────────────────
+  // ── Shared widgets ─────────────────────────────────────────────────────────
+
+  Widget _langRadioRow() {
+    return Row(
+      children: _PreviewConst.preferredLanguages.map((lang) {
+        final bool selected = _preferredLanguage == lang;
+        final lbl = _PreviewConst.preferredLanguageLabelsEn[lang] ?? lang;
+        return Padding(
+          padding: const EdgeInsetsDirectional.only(end: 20),
+          child: GestureDetector(
+            onTap: () => setState(() => _preferredLanguage = lang),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 16, height: 16,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: selected ? _kPink : Colors.grey.shade400,
+                      width: 2,
+                    ),
+                  ),
+                  child: selected
+                      ? Center(
+                    child: Container(
+                      width: 8, height: 8,
+                      decoration: const BoxDecoration(
+                          shape: BoxShape.circle, color: _kPink),
+                    ),
+                  )
+                      : null,
+                ),
+                const SizedBox(width: 5),
+                Text(lbl,
+                    style: TextStyle(
+                        fontSize: 12,
+                        color: selected ? Colors.black87 : Colors.black54)),
+              ],
+            ),
+          ),
+        );
+      }).toList(),
+    );
+  }
 
   Widget _previewField(String label, TextEditingController controller, {
     String? iconPath,
     TextDirection textDirection = TextDirection.ltr,
-    TextAlign textAlign = TextAlign.start,
-    int maxLines = 1,
-    double fieldHeight = 32,
+    TextAlign textAlign         = TextAlign.start,
+    int maxLines                = 1,
+    double fieldHeight          = 32,
   }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(label,
-            style: StyleText.fontSize14Weight400
-                .copyWith(color: AppColors.text, fontSize: 14.sp)),
-        SizedBox(height: 3.h),
+            style: const TextStyle(
+                fontFamily: 'Cairo', fontSize: 12,
+                fontWeight: FontWeight.w500, color: Color(0xFF333333))),
+        const SizedBox(height: 3),
         Container(
-          height: fieldHeight.h,
+          height: fieldHeight,
           decoration: BoxDecoration(
             color: const Color(0xFFF5F5F5),
-            borderRadius: BorderRadius.circular(4.r),
+            borderRadius: BorderRadius.circular(4),
           ),
           child: Row(
             crossAxisAlignment: maxLines > 1
@@ -788,39 +1102,36 @@ class _PreviewBodyState extends State<_PreviewBody> {
             children: [
               if (iconPath != null)
                 Padding(
-                  padding: EdgeInsets.only(left: 10.w, top: maxLines > 1 ? 10.h : 0),
+                  padding: EdgeInsets.only(left: 8, top: maxLines > 1 ? 8 : 0),
                   child: SvgPicture.asset(iconPath,
-                      width: 16.w, height: 16.w,
+                      width: 14, height: 14,
                       colorFilter: ColorFilter.mode(
                           Colors.grey.shade400, BlendMode.srcIn),
                       placeholderBuilder: (_) =>
-                          Icon(Icons.edit_outlined, size: 16.w, color: Colors.grey.shade400)),
+                          Icon(Icons.edit_outlined, size: 14, color: Colors.grey.shade400)),
                 ),
               Expanded(
                 child: TextField(
                   controller: controller,
-                  maxLines: maxLines,
+                  maxLines:   maxLines,
                   textDirection: textDirection,
-                  textAlign: textAlign,
+                  textAlign:  textAlign,
                   cursorColor: _kPink,
-                  style: StyleText.fontSize13Weight400.copyWith(
-                      color: Colors.black87, fontSize: 13.sp),
+                  style: const TextStyle(color: Colors.black87, fontSize: 12),
                   decoration: InputDecoration(
                     hintText: 'Text Here',
-                    hintStyle: StyleText.fontSize12Weight400.copyWith(
-                        color: AppColors.secondaryBlack, fontSize: 12.sp),
+                    hintStyle: TextStyle(color: Colors.grey.shade400, fontSize: 11),
                     border: InputBorder.none,
                     isDense: true,
                     contentPadding: EdgeInsets.symmetric(
-                        horizontal: 8.w,
-                        vertical: maxLines > 1 ? 10.h : 0),
+                        horizontal: 6, vertical: maxLines > 1 ? 8 : 0),
                   ),
                 ),
               ),
             ],
           ),
         ),
-        SizedBox(height: 4.h),
+        const SizedBox(height: 4),
       ],
     );
   }
@@ -831,7 +1142,7 @@ class _PreviewBodyState extends State<_PreviewBody> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         _FormLabel(label),
-        SizedBox(height: 3.h),
+        const SizedBox(height: 3),
         CustomDropdownFormFieldInvMaster(
           selectedValue: value,
           items:         items,
@@ -839,15 +1150,16 @@ class _PreviewBodyState extends State<_PreviewBody> {
           width:         double.infinity,
           height:        32,
           borderRadius:  4,
-          widthIcon:     16,
-          heightIcon:    16,
+          widthIcon:     14,
+          heightIcon:    14,
           iconPath:      iconPath,
           primaryColor:  _kPink,
           hint: Text('Select',
-              style: StyleText.fontSize12Weight400
-                  .copyWith(color: AppColors.secondaryBlack)),
+              style: TextStyle(
+                  fontFamily: 'Cairo', fontSize: 11,
+                  color: Colors.grey.shade400)),
         ),
-        SizedBox(height: 4.h),
+        const SizedBox(height: 4),
       ],
     );
   }
@@ -856,20 +1168,21 @@ class _PreviewBodyState extends State<_PreviewBody> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Phone Number *',
-            style: StyleText.fontSize14Weight400
-                .copyWith(color: AppColors.text, fontSize: 14.sp)),
-        SizedBox(height: 3.h),
+        const Text('Phone Number *',
+            style: TextStyle(
+                fontFamily: 'Cairo', fontSize: 12,
+                fontWeight: FontWeight.w500, color: Color(0xFF333333))),
+        const SizedBox(height: 3),
         Container(
-          height: 32.h,
+          height: 32,
           decoration: BoxDecoration(
             color: const Color(0xFFF5F5F5),
-            borderRadius: BorderRadius.circular(4.r),
+            borderRadius: BorderRadius.circular(4),
           ),
           child: Row(
             children: [
               Container(
-                height: 32.h,
+                height: 32,
                 decoration: BoxDecoration(
                   border: BorderDirectional(
                     end: BorderSide(color: Colors.grey.shade300, width: 1),
@@ -879,15 +1192,15 @@ class _PreviewBodyState extends State<_PreviewBody> {
                   selectedValue: _phoneCode,
                   items:         _phoneCodes,
                   onChanged:     (v) => setState(() => _phoneCode = v ?? _phoneCode),
-                  widthIcon:     16,
-                  heightIcon:    16,
-                  width:         110.w,
+                  widthIcon:     14,
+                  heightIcon:    14,
+                  width:         100,
                   height:        32,
                   borderRadius:  0,
                   primaryColor:  _kPink,
                   hint: Text('Code',
-                      style: StyleText.fontSize12Weight400
-                          .copyWith(color: AppColors.secondaryBlack)),
+                      style: TextStyle(
+                          fontSize: 11, color: Colors.grey.shade400)),
                 ),
               ),
               Expanded(
@@ -896,22 +1209,21 @@ class _PreviewBodyState extends State<_PreviewBody> {
                   keyboardType:    TextInputType.phone,
                   inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                   cursorColor:     _kPink,
-                  style: StyleText.fontSize13Weight400.copyWith(
-                      color: Colors.black87, fontSize: 13.sp),
+                  style: const TextStyle(color: Colors.black87, fontSize: 12),
                   decoration: InputDecoration(
                     hintText:  'Phone Number',
-                    hintStyle: StyleText.fontSize12Weight400.copyWith(
-                        color: AppColors.secondaryBlack, fontSize: 12.sp),
+                    hintStyle: TextStyle(
+                        fontSize: 11, color: Colors.grey.shade400),
                     border: InputBorder.none,
                     isDense: true,
-                    contentPadding: EdgeInsets.symmetric(horizontal: 10.w),
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 8),
                   ),
                 ),
               ),
             ],
           ),
         ),
-        SizedBox(height: 4.h),
+        const SizedBox(height: 4),
       ],
     );
   }
@@ -919,18 +1231,18 @@ class _PreviewBodyState extends State<_PreviewBody> {
   Widget _sendButton() {
     return SizedBox(
       width: double.infinity,
-      height: 38.h,
+      height: 36,
       child: ElevatedButton(
         onPressed: () {},
         style: ElevatedButton.styleFrom(
             backgroundColor: _kPink,
             shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8.r)),
+                borderRadius: BorderRadius.circular(8)),
             elevation: 0),
-        child: Text('SEND',
-            style: StyleText.fontSize16Weight600.copyWith(
-                color: Colors.white, fontSize: 14.sp,
-                letterSpacing: 1.2)),
+        child: const Text('SEND',
+            style: TextStyle(
+                color: Colors.white, fontSize: 13,
+                fontWeight: FontWeight.w600, letterSpacing: 1.2)),
       ),
     );
   }
@@ -946,8 +1258,9 @@ class _SectionHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Text(title,
-      style: StyleText.fontSize16Weight600.copyWith(
-          color: _kPink, fontSize: 14.sp));
+      style: const TextStyle(
+          fontFamily: 'Cairo', fontSize: 13,
+          fontWeight: FontWeight.w700, color: _kPink));
 }
 
 class _FormLabel extends StatelessWidget {
@@ -956,6 +1269,51 @@ class _FormLabel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Text(label,
-      style: StyleText.fontSize14Weight400
-          .copyWith(color: AppColors.text, fontSize: 14.sp));
+      style: const TextStyle(
+          fontFamily: 'Cairo', fontSize: 12,
+          fontWeight: FontWeight.w500, color: Color(0xFF333333)));
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// BROWSER CHROME BAR
+// ═══════════════════════════════════════════════════════════════════════════════
+
+class _BrowserChrome extends StatelessWidget {
+  final bool compact;
+  const _BrowserChrome({this.compact = false});
+
+  @override
+  Widget build(BuildContext context) {
+    final double h = compact ? 22 : 28;
+    return Container(
+      height: h,
+      color: const Color(0xFFF5F5F5),
+      padding: const EdgeInsets.symmetric(horizontal: 10),
+      child: Row(
+        children: [
+          _dot(const Color(0xFFFF5F57)),
+          const SizedBox(width: 4),
+          _dot(const Color(0xFFFEBC2E)),
+          const SizedBox(width: 4),
+          _dot(const Color(0xFF28C840)),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Container(
+              height: compact ? 10 : 14,
+              decoration: BoxDecoration(
+                color: const Color(0xFFE9E9E9),
+                borderRadius: BorderRadius.circular(4),
+              ),
+            ),
+          ),
+          const SizedBox(width: 8),
+        ],
+      ),
+    );
+  }
+
+  Widget _dot(Color color) => Container(
+    width: 8, height: 8,
+    decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+  );
 }

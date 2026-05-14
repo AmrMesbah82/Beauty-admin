@@ -1,6 +1,7 @@
 // ******************* FILE INFO *******************
 // File Name: contact_us_model.dart
 // Created by: Amr Mesbah
+// UPDATED: reason field changed from String → List<String> (multi-select)
 // UPDATED: All field names use Capital_Underscore naming convention ✅
 
 class ContactSubmission {
@@ -28,13 +29,13 @@ class ContactSubmission {
   final String atLocation;
 
   // ── Message info ──
-  final String subject;
-  final String reason;
-  final String message;
+  final String        subject;
+  final List<String>  reason;   // ← was String, now List<String>
+  final String        message;
 
   // ── Admin fields ──
-  final String note;
-  final String status;
+  final String   note;
+  final String   status;
   final DateTime submissionDate;
 
   const ContactSubmission({
@@ -55,20 +56,18 @@ class ContactSubmission {
     this.services          = '',
     this.atLocation        = '',
     required this.subject,
-    this.reason            = '',
+    this.reason            = const [],   // ← default empty list
     required this.message,
     this.note              = '',
     this.status            = 'New',
     required this.submissionDate,
   });
 
-  /// Helper to get full name
   String get fullName => '$firstName $lastName'.trim();
 
   // ── Firestore ──────────────────────────────────────────────────────────────
 
   factory ContactSubmission.fromMap(String id, Map<String, dynamic> map) {
-    // ── Backward compatibility: handle old docs that have 'Full_Name' ──
     String firstName = (map['First_Name'] as String?) ?? '';
     String lastName  = (map['Last_Name']  as String?) ?? '';
 
@@ -81,10 +80,19 @@ class ContactSubmission {
       }
     }
 
-    // ── Backward compat: old entity fields → new salon fields ──
     String salonNameEn = (map['Salon_Name_En'] as String?) ?? '';
     if (salonNameEn.isEmpty) {
       salonNameEn = (map['Entity_Name'] as String?) ?? '';
+    }
+
+    // ── reason: support both old String and new List<String> ────────────
+    List<String> reason = const [];
+    final rawReason = map['Reason'];
+    if (rawReason is List) {
+      reason = rawReason.map((e) => e.toString()).toList();
+    } else if (rawReason is String && rawReason.isNotEmpty) {
+      // backward compat: old single-string value
+      reason = [rawReason];
     }
 
     return ContactSubmission(
@@ -105,7 +113,7 @@ class ContactSubmission {
       services:          (map['Services']           as String?) ?? '',
       atLocation:        (map['At_Location']        as String?) ?? '',
       subject:           (map['Subject']            as String?) ?? '',
-      reason:            (map['Reason']             as String?) ?? '',
+      reason:            reason,
       message:           (map['Message']            as String?) ?? '',
       note:              (map['Note']               as String?) ?? '',
       status:            (map['Status']             as String?) ?? 'New',
@@ -133,7 +141,7 @@ class ContactSubmission {
     'Services':           services,
     'At_Location':        atLocation,
     'Subject':            subject,
-    'Reason':             reason,
+    'Reason':             reason,           // ← stored as Firestore array
     'Message':            message,
     'Note':               note,
     'Status':             status,
@@ -143,28 +151,28 @@ class ContactSubmission {
   };
 
   ContactSubmission copyWith({
-    String?   id,
-    String?   userType,
-    String?   firstName,
-    String?   lastName,
-    String?   email,
-    String?   countryCode,
-    String?   phoneNumber,
-    String?   preferredLanguage,
-    String?   salonNameEn,
-    String?   salonNameAr,
-    String?   targetAudience,
-    String?   salonCountry,
-    String?   salonCity,
-    String?   noBranches,
-    String?   services,
-    String?   atLocation,
-    String?   subject,
-    String?   reason,
-    String?   message,
-    String?   note,
-    String?   status,
-    DateTime? submissionDate,
+    String?        id,
+    String?        userType,
+    String?        firstName,
+    String?        lastName,
+    String?        email,
+    String?        countryCode,
+    String?        phoneNumber,
+    String?        preferredLanguage,
+    String?        salonNameEn,
+    String?        salonNameAr,
+    String?        targetAudience,
+    String?        salonCountry,
+    String?        salonCity,
+    String?        noBranches,
+    String?        services,
+    String?        atLocation,
+    String?        subject,
+    List<String>?  reason,
+    String?        message,
+    String?        note,
+    String?        status,
+    DateTime?      submissionDate,
   }) =>
       ContactSubmission(
         id:                id                ?? this.id,

@@ -518,7 +518,9 @@ class _ContactPageViewState extends State<_ContactPageView> {
       services:          _selectedServices ?? '',
       atLocation:        _selectedAtLocation ?? '',
       subject:           _subjectCtrl.text.trim(),
-      reason:            _selectedReason ?? '',
+      reason:            _selectedReason != null && _selectedReason!.isNotEmpty
+          ? [_selectedReason!]
+          : [],
       message:           _messageCtrl.text.trim(),
       submissionDate:    DateTime.now(),
     );

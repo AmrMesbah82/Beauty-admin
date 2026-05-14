@@ -131,12 +131,12 @@ class _HomeMainPageState extends State<HomeMainPage> {
                                   ),
                                 ),
                                 const Spacer(),
-                                GestureDetector(
-                                  onTap: () => Navigator.of(context).push(
-                                    MaterialPageRoute(
-                                      builder: (_) => const HomePreviewPage(),
-                                    ),
-                                  ),
+                        GestureDetector(
+                            onTap: () => Navigator.of(context).push(
+                              MaterialPageRoute(
+                                builder: (_) => const HomePreviewPage(showPublish: false), // ← ADD
+                              ),
+                            ),
                                   child: Container(
                                     padding: EdgeInsets.symmetric(
                                       horizontal: 20.w,
@@ -532,7 +532,7 @@ class _HomeMainPageState extends State<HomeMainPage> {
             ],
             Text(
               '${i + 1}${_ord(i + 1)} Column',
-              style: StyleText.fontSize13Weight600.copyWith(
+              style: StyleText.fontSize16Weight600.copyWith(
                 color: _C.labelText,
               ),
             ),

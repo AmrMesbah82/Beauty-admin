@@ -1,13 +1,9 @@
 // ******************* FILE INFO *******************
 // File Name: contact_model_location.dart
 // Created by: Amr Mesbah
-// Last Update: 18/04/2026
-// UPDATED: All field names use Capital_Underscore naming convention ✅
-// UPDATED: All nested maps (ContactBilingualText, ContactHeadings,
-//          ContactDescriptionSection) flattened ✅
-// UPDATED: ALL fields versioned — fromJson() uses Versioned.read() ✅
-// FIX: socialIcons versioned via Map { v0: [...], v1: [...] } to avoid
-//      Firestore nested array error ✅
+// Last Update: 14/05/2026
+// UPDATED: isRequired moved from ContactReasonItem → ContactDescriptionSection
+// UPDATED: ContactSubmission.reason is now List<String>
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 
@@ -53,7 +49,7 @@ class Versioned {
   }
 }
 
-// ── Bilingual text — no toMap/fromMap, parent flattens ────────────────────────
+// ── Bilingual text ────────────────────────────────────────────────────────────
 
 class ContactBilingualText {
   final String en;
@@ -65,7 +61,7 @@ class ContactBilingualText {
       ContactBilingualText(en: en ?? this.en, ar: ar ?? this.ar);
 }
 
-// ── Headings — flattened into root ────────────────────────────────────────────
+// ── Headings ──────────────────────────────────────────────────────────────────
 
 class ContactHeadings {
   final String svgUrl;
@@ -84,76 +80,74 @@ class ContactHeadings {
     ContactBilingualText? shortDescription,
   }) =>
       ContactHeadings(
-        svgUrl: svgUrl ?? this.svgUrl,
-        title: title ?? this.title,
+        svgUrl:           svgUrl           ?? this.svgUrl,
+        title:            title            ?? this.title,
         shortDescription: shortDescription ?? this.shortDescription,
       );
 }
 
-// ── Reason Item (inside list — has its own toMap/fromMap) ─────────────────────
+// ── Reason Item — isRequired REMOVED (moved to section level) ─────────────────
 
 class ContactReasonItem {
   final String id;
   final ContactBilingualText label;
-  final bool isRequired;
 
   const ContactReasonItem({
-    this.id = '',
+    this.id    = '',
     this.label = const ContactBilingualText(),
-    this.isRequired = false,
   });
 
   factory ContactReasonItem.fromMap(Map<String, dynamic> map) =>
       ContactReasonItem(
-        id:         map['Id'] ?? '',
-        label:      ContactBilingualText(
+        id:    map['Id']       ?? '',
+        label: ContactBilingualText(
           en: map['Label_En'] ?? '',
           ar: map['Label_Ar'] ?? '',
         ),
-        isRequired: map['Is_Required'] ?? false,
       );
 
   Map<String, dynamic> toMap() => {
-    'Id':          id,
-    'Label_En':    label.en,
-    'Label_Ar':    label.ar,
-    'Is_Required': isRequired,
+    'Id':       id,
+    'Label_En': label.en,
+    'Label_Ar': label.ar,
   };
 
   ContactReasonItem copyWith({
-    String? id,
+    String?              id,
     ContactBilingualText? label,
-    bool? isRequired,
   }) =>
       ContactReasonItem(
-        id: id ?? this.id,
+        id:    id    ?? this.id,
         label: label ?? this.label,
-        isRequired: isRequired ?? this.isRequired,
       );
 }
 
-// ── Description Section — flattened into root ────────────────────────────────
+// ── Description Section — isRequired lives HERE now ───────────────────────────
 
 class ContactDescriptionSection {
-  final ContactBilingualText description;
+  final ContactBilingualText    description;
   final List<ContactReasonItem> reasons;
+  final bool                    isRequired; // ← moved from per-reason to section
 
   const ContactDescriptionSection({
     this.description = const ContactBilingualText(),
-    this.reasons = const [],
+    this.reasons     = const [],
+    this.isRequired  = false,
   });
 
   ContactDescriptionSection copyWith({
-    ContactBilingualText? description,
+    ContactBilingualText?    description,
     List<ContactReasonItem>? reasons,
+    bool?                    isRequired,
   }) =>
       ContactDescriptionSection(
         description: description ?? this.description,
-        reasons: reasons ?? this.reasons,
+        reasons:     reasons     ?? this.reasons,
+        isRequired:  isRequired  ?? this.isRequired,
       );
 }
 
-// ── Social Icon (inside list — has its own toMap/fromMap) ─────────────────────
+// ── Social Icon ───────────────────────────────────────────────────────────────
 
 class ContactSocialIcon {
   final String id;
@@ -161,16 +155,16 @@ class ContactSocialIcon {
   final String link;
 
   const ContactSocialIcon({
-    this.id = '',
+    this.id      = '',
     this.iconUrl = '',
-    this.link = '',
+    this.link    = '',
   });
 
   factory ContactSocialIcon.fromMap(Map<String, dynamic> map) =>
       ContactSocialIcon(
-        id:      map['Id'] ?? '',
+        id:      map['Id']       ?? '',
         iconUrl: map['Icon_Url'] ?? '',
-        link:    map['Link'] ?? '',
+        link:    map['Link']     ?? '',
       );
 
   Map<String, dynamic> toMap() => {
@@ -185,19 +179,14 @@ class ContactSocialIcon {
     String? link,
   }) =>
       ContactSocialIcon(
-        id: id ?? this.id,
+        id:      id      ?? this.id,
         iconUrl: iconUrl ?? this.iconUrl,
-        link: link ?? this.link,
+        link:    link    ?? this.link,
       );
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
 // socialIcons versioned-list reader
-//
-// Supports three storage formats:
-//   1. Versioned-map  { "v0": [...], "v1": [...] }  ← new format
-//   2. Plain list     [ {...}, {...} ]               ← legacy
-//   3. Versioned list [ [...], [...] ]               ← legacy bug
 // ─────────────────────────────────────────────────────────────────────────────
 
 List<ContactSocialIcon> _readVersionedListField(dynamic raw) {
@@ -231,42 +220,43 @@ List<ContactSocialIcon> _readVersionedListField(dynamic raw) {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// ROOT MODEL — ALL fields flattened & versioned
+// ROOT MODEL
 // ═══════════════════════════════════════════════════════════════════════════════
 
 class ContactUsCmsModel {
-  final String publishStatus;
-  final ContactHeadings headings;
-  final ContactDescriptionSection clientDescription;
-  final ContactDescriptionSection ownerDescription;
-  final List<ContactSocialIcon> socialIcons;
-  final DateTime? lastUpdatedAt;
+  final String                     publishStatus;
+  final ContactHeadings            headings;
+  final ContactDescriptionSection  clientDescription;
+  final ContactDescriptionSection  ownerDescription;
+  final List<ContactSocialIcon>    socialIcons;
+  final DateTime?                  lastUpdatedAt;
 
   const ContactUsCmsModel({
-    this.publishStatus = 'draft',
-    this.headings = const ContactHeadings(),
+    this.publishStatus     = 'draft',
+    this.headings          = const ContactHeadings(),
     this.clientDescription = const ContactDescriptionSection(),
-    this.ownerDescription = const ContactDescriptionSection(),
-    this.socialIcons = const [],
+    this.ownerDescription  = const ContactDescriptionSection(),
+    this.socialIcons       = const [],
     this.lastUpdatedAt,
   });
 
-  // ── fromJson — ALL fields flattened, Capital_Underscore keys ─────────────
   factory ContactUsCmsModel.fromJson(Map<String, dynamic> map) {
 
-    // ── Client Reasons (plain list) ─────────────────────────────────────
-    final rawClientReasons = map['Client_Description_Reasons'] as List<dynamic>? ?? [];
+    // ── Client Reasons ──────────────────────────────────────────────────
+    final rawClientReasons =
+        map['Client_Description_Reasons'] as List<dynamic>? ?? [];
     final clientReasons = rawClientReasons
         .map((e) => ContactReasonItem.fromMap(e as Map<String, dynamic>))
         .toList();
 
-    // ── Owner Reasons (plain list) ──────────────────────────────────────
-    final rawOwnerReasons = map['Owner_Description_Reasons'] as List<dynamic>? ?? [];
+    // ── Owner Reasons ───────────────────────────────────────────────────
+    final rawOwnerReasons =
+        map['Owner_Description_Reasons'] as List<dynamic>? ?? [];
     final ownerReasons = rawOwnerReasons
         .map((e) => ContactReasonItem.fromMap(e as Map<String, dynamic>))
         .toList();
 
-    // ── Last Updated (not versioned) ────────────────────────────────────
+    // ── Last Updated ────────────────────────────────────────────────────
     DateTime? lastUpdatedAt;
     if (map['Last_Updated_At'] != null) {
       if (map['Last_Updated_At'] is Timestamp) {
@@ -281,7 +271,6 @@ class ContactUsCmsModel {
         map['Publish_Status'], (v) => v?.toString() ?? 'draft',
       ),
 
-      // ── Headings (flattened, versioned) ───────────────────────────────
       headings: ContactHeadings(
         svgUrl: Versioned.read<String>(
           map['Headings_Svg_Url'], (v) => v?.toString() ?? '',
@@ -304,7 +293,6 @@ class ContactUsCmsModel {
         ),
       ),
 
-      // ── Client Description (flattened, versioned) ─────────────────────
       clientDescription: ContactDescriptionSection(
         description: ContactBilingualText(
           en: Versioned.read<String>(
@@ -314,10 +302,13 @@ class ContactUsCmsModel {
             map['Client_Description_Ar'], (v) => v?.toString() ?? '',
           ),
         ),
-        reasons: clientReasons,
+        reasons:    clientReasons,
+        // ── section-level isRequired ─────────────────────────────────
+        isRequired: Versioned.read<bool>(
+          map['Client_Is_Required'], (v) => v == true,
+        ),
       ),
 
-      // ── Owner Description (flattened, versioned) ──────────────────────
       ownerDescription: ContactDescriptionSection(
         description: ContactBilingualText(
           en: Versioned.read<String>(
@@ -327,55 +318,56 @@ class ContactUsCmsModel {
             map['Owner_Description_Ar'], (v) => v?.toString() ?? '',
           ),
         ),
-        reasons: ownerReasons,
+        reasons:    ownerReasons,
+        // ── section-level isRequired ─────────────────────────────────
+        isRequired: Versioned.read<bool>(
+          map['Owner_Is_Required'], (v) => v == true,
+        ),
       ),
 
-      // ── Social Icons (versioned via Map) ──────────────────────────────
-      socialIcons: _readVersionedListField(map['Social_Icons']),
-
+      socialIcons:   _readVersionedListField(map['Social_Icons']),
       lastUpdatedAt: lastUpdatedAt,
     );
   }
 
-  // ── toJson — ALL fields flattened, Capital_Underscore naming ─────────────
   Map<String, dynamic> toJson() => {
     'Publish_Status': publishStatus,
 
-    // ── Headings (flattened) ─────────────────────────────────────────
     'Headings_Svg_Url':              headings.svgUrl,
     'Headings_Title_En':             headings.title.en,
     'Headings_Title_Ar':             headings.title.ar,
     'Headings_Short_Description_En': headings.shortDescription.en,
     'Headings_Short_Description_Ar': headings.shortDescription.ar,
 
-    // ── Client Description (flattened) ───────────────────────────────
     'Client_Description_En':      clientDescription.description.en,
     'Client_Description_Ar':      clientDescription.description.ar,
-    'Client_Description_Reasons': clientDescription.reasons.map((r) => r.toMap()).toList(),
+    'Client_Description_Reasons': clientDescription.reasons
+        .map((r) => r.toMap()).toList(),
+    'Client_Is_Required':         clientDescription.isRequired, // ← new
 
-    // ── Owner Description (flattened) ────────────────────────────────
     'Owner_Description_En':      ownerDescription.description.en,
     'Owner_Description_Ar':      ownerDescription.description.ar,
-    'Owner_Description_Reasons': ownerDescription.reasons.map((r) => r.toMap()).toList(),
+    'Owner_Description_Reasons': ownerDescription.reasons
+        .map((r) => r.toMap()).toList(),
+    'Owner_Is_Required':         ownerDescription.isRequired, // ← new
 
-    // ── Social Icons (list) ──────────────────────────────────────────
     'Social_Icons': socialIcons.map((s) => s.toMap()).toList(),
   };
 
   ContactUsCmsModel copyWith({
-    String? publishStatus,
-    ContactHeadings? headings,
+    String?                    publishStatus,
+    ContactHeadings?           headings,
     ContactDescriptionSection? clientDescription,
     ContactDescriptionSection? ownerDescription,
-    List<ContactSocialIcon>? socialIcons,
-    DateTime? lastUpdatedAt,
+    List<ContactSocialIcon>?   socialIcons,
+    DateTime?                  lastUpdatedAt,
   }) =>
       ContactUsCmsModel(
-        publishStatus: publishStatus ?? this.publishStatus,
-        headings: headings ?? this.headings,
+        publishStatus:     publishStatus     ?? this.publishStatus,
+        headings:          headings          ?? this.headings,
         clientDescription: clientDescription ?? this.clientDescription,
-        ownerDescription: ownerDescription ?? this.ownerDescription,
-        socialIcons: socialIcons ?? this.socialIcons,
-        lastUpdatedAt: lastUpdatedAt ?? this.lastUpdatedAt,
+        ownerDescription:  ownerDescription  ?? this.ownerDescription,
+        socialIcons:       socialIcons       ?? this.socialIcons,
+        lastUpdatedAt:     lastUpdatedAt     ?? this.lastUpdatedAt,
       );
 }

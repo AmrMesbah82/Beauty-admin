@@ -231,7 +231,7 @@ class _TermsMainViewState extends State<TermsMainView> {
               child: Row(mainAxisSize: MainAxisSize.min, children: [
                 Text('Edit Details',
                     style: StyleText.fontSize14Weight500
-                        .copyWith(color: _C.primary)),
+                        .copyWith(color: Colors.black)),
                 SizedBox(width: 6.w),
                 CustomSvg(assetPath: "assets/control/edit_icon_pick.svg",
                     width: 20.w, height: 20.h,
@@ -265,11 +265,7 @@ class _TermsMainViewState extends State<TermsMainView> {
               EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
               decoration: BoxDecoration(
                 color: _C.primary,
-                borderRadius: isOpen
-                    ? BorderRadius.only(
-                    topLeft: Radius.circular(6.r),
-                    topRight: Radius.circular(6.r))
-                    : BorderRadius.circular(6.r),
+                borderRadius: BorderRadius.circular(6.r),
               ),
               child: Row(children: [
                 Expanded(
@@ -308,10 +304,10 @@ class _TermsMainViewState extends State<TermsMainView> {
             StyleText.fontSize12Weight500.copyWith(color: _C.labelText)),
         SizedBox(height: 6.h),
         Container(
-          width: 56.w, height: 56.w,
+          width: 70.w, height: 70.w,
           decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: const Color(0xFFEEEEEE),
+              color:  Colors.white
           ),
           child: url.isEmpty
               ? Icon(
@@ -367,10 +363,7 @@ class _TermsMainViewState extends State<TermsMainView> {
             padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 10.h),
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(8.r),
-              border: Border.all(
-                color: hasFile ? _C.primary : const Color(0xFFDDDDDD),
-                width: 1,
-              ),
+              color: Colors.white
             ),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.center,

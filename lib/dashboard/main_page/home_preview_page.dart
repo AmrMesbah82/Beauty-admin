@@ -47,7 +47,10 @@ double _safeScale(double v) =>
     (v.isFinite && !v.isNaN && v > 0) ? v : 1.0;
 
 class HomePreviewPage extends StatefulWidget {
-  const HomePreviewPage({super.key});
+  final bool showPublish; // ← ADD
+
+  const HomePreviewPage({super.key, this.showPublish = true}); // ← ADD
+
   @override
   State<HomePreviewPage> createState() => _HomePreviewPageState();
 }
@@ -132,6 +135,7 @@ class _HomePreviewPageState extends State<HomePreviewPage> {
                         SizedBox(height: 24.h),
 
                         // ── Back + Publish ───────────────────────────────
+                        // ── Back + Publish ───────────────────────────────
                         Row(
                           children: [
                             Expanded(
@@ -151,38 +155,45 @@ class _HomePreviewPageState extends State<HomePreviewPage> {
                                 ),
                               ),
                             ),
-                            SizedBox(width: 16.w),
-                            Expanded(
-                              child: GestureDetector(
-                                onTap: _isSaving
-                                    ? null
-                                    : () => showPublishConfirmDialog(
-                                  context: context,
-                                  onConfirm: () => _publish(cubit),
-                                ),
-                                child: AnimatedContainer(
-                                  duration: const Duration(milliseconds: 200),
-                                  height: 44.h,
-                                  decoration: BoxDecoration(
-                                    color: _isSaving
-                                        ? _C.primary.withOpacity(0.5)
-                                        : _C.primary,
-                                    borderRadius: BorderRadius.circular(6.r),
+                            SizedBox(width: 300.w),
+                            if (!widget.showPublish) ...[   // ← WRAP with condition
+
+                              Expanded(child: Container())
+                            ],
+                            if (widget.showPublish) ...[   // ← WRAP with condition
+
+                              Expanded(
+                                child: GestureDetector(
+                                  onTap: _isSaving
+                                      ? null
+                                      : () => showPublishConfirmDialog(
+                                    context: context,
+                                    onConfirm: () => _publish(cubit),
                                   ),
-                                  child: Center(
-                                    child: _isSaving
-                                        ? SizedBox(
-                                      width: 18.w, height: 18.h,
-                                      child: const CircularProgressIndicator(
-                                          color: Colors.white, strokeWidth: 2),
-                                    )
-                                        : Text('Publish',
-                                        style: StyleText.fontSize14Weight600
-                                            .copyWith(color: Colors.white)),
+                                  child: AnimatedContainer(
+                                    duration: const Duration(milliseconds: 200),
+                                    height: 44.h,
+                                    decoration: BoxDecoration(
+                                      color: _isSaving
+                                          ? _C.primary.withOpacity(0.5)
+                                          : _C.primary,
+                                      borderRadius: BorderRadius.circular(6.r),
+                                    ),
+                                    child: Center(
+                                      child: _isSaving
+                                          ? SizedBox(
+                                        width: 18.w, height: 18.h,
+                                        child: const CircularProgressIndicator(
+                                            color: Colors.white, strokeWidth: 2),
+                                      )
+                                          : Text('Publish',
+                                          style: StyleText.fontSize14Weight600
+                                              .copyWith(color: Colors.white)),
+                                    ),
                                   ),
                                 ),
                               ),
-                            ),
+                            ],
                           ],
                         ),
                         SizedBox(height: 40.h),

@@ -39,6 +39,7 @@ import '../../model/client_services/client_services_model.dart';
 import '../../widgets/admin_sub_navbar.dart';
 import '../../widgets/app_admin_navbar.dart';
 import '../main_page/home_main_page.dart';
+import '../master_page/master_main_page.dart' show CustomSegmentedTabs;
 import 'client_services_preview_page.dart';
 import 'dart:html' as html;
 import 'dart:ui_web' as ui_web;
@@ -437,7 +438,7 @@ class _ClientServicesEditPageState extends State<ClientServicesEditPage> {
                               Expanded(
                                 child: _btn(
                                   'Preview',
-                                  _C.primary.withOpacity(0.5),
+                                  Color(0xFF8A5C70),
                                   () => Navigator.push(
                                     context,
                                     MaterialPageRoute(
@@ -447,7 +448,7 @@ class _ClientServicesEditPageState extends State<ClientServicesEditPage> {
                                   ),
                                 ),
                               ),
-                              SizedBox(width: 16.w),
+                              SizedBox(width: 300.w),
                               Expanded(
                                 child: _btn('Publish', _C.primary, () {
                                   // ✅ VALIDATION: Check all required fields before showing confirm dialog
@@ -474,9 +475,9 @@ class _ClientServicesEditPageState extends State<ClientServicesEditPage> {
                                   () => Navigator.pop(context),
                                 ),
                               ),
-                              SizedBox(width: 16.w),
+                              SizedBox(width: 300.w),
                               Expanded(
-                                child: _btn('Save For Later', _C.addBtn, () {
+                                child: _btn('Save For Later', Color(0xFF525252), () {
                                   // ✅ VALIDATION: Check required fields before saving as draft too
                                   if (!_validate()) {
                                     return;
@@ -536,12 +537,7 @@ class _ClientServicesEditPageState extends State<ClientServicesEditPage> {
             padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
             decoration: BoxDecoration(
               color: _C.primary,
-              borderRadius: isOpen
-                  ? BorderRadius.only(
-                      topLeft: Radius.circular(6.r),
-                      topRight: Radius.circular(6.r),
-                    )
-                  : BorderRadius.circular(6.r),
+              borderRadius: BorderRadius.circular(8.r),
             ),
             child: Row(
               children: [
@@ -602,7 +598,7 @@ class _ClientServicesEditPageState extends State<ClientServicesEditPage> {
       ),
       SizedBox(height: 14.h),
       _biRow('Title', 'العنوان', _hdrTitleEn, _hdrTitleAr, useRow: true),
-      SizedBox(height: 10.h),
+
       _descFields(_hdrDescEn, _hdrDescAr),
     ],
   );
@@ -653,7 +649,8 @@ class _ClientServicesEditPageState extends State<ClientServicesEditPage> {
     children: [
       ...List.generate(_mockups.length, (i) => _mockupRow(i)),
       SizedBox(height: 8.h),
-      _addButton('Mockup', () {
+      _addButton(
+          'Mockup', () {
         setState(
           () => _mockups.add(
             _MockupLocal(id: 'mock_${DateTime.now().millisecondsSinceEpoch}'),
@@ -701,7 +698,7 @@ class _ClientServicesEditPageState extends State<ClientServicesEditPage> {
           ),
           SizedBox(height: 10.h),
           _biRow('Title', 'العنوان', m.titleEn, m.titleAr, useRow: true),
-          SizedBox(height: 10.h),
+
           _descFields(m.descEn, m.descAr),
           SizedBox(height: 8.h),
           Divider(color: _C.border),
@@ -711,31 +708,20 @@ class _ClientServicesEditPageState extends State<ClientServicesEditPage> {
   }
 
   Widget _layoutChipsEdit(_MockupLocal m) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        for (final l in MockupLayout.values)
-          GestureDetector(
-            onTap: () => setState(() => m.layout = l),
-            child: Container(
-              margin: EdgeInsets.only(left: 4.w),
-              padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
-              decoration: BoxDecoration(
-                color: m.layout == l ? _C.primary : Colors.white,
-                borderRadius: BorderRadius.circular(4.r),
-                border: Border.all(
-                  color: m.layout == l ? _C.primary : _C.border,
-                ),
-              ),
-              child: Text(
-                l.name[0].toUpperCase() + l.name.substring(1),
-                style: StyleText.fontSize11Weight400.copyWith(
-                  color: m.layout == l ? Colors.white : _C.labelText,
-                ),
-              ),
-            ),
-          ),
-      ],
+    const options = ['left', 'centered', 'right'];
+    final currentLayout = m.layout.name.toLowerCase();
+
+    return CustomSegmentedTabs(
+      tabs: const ['Left', 'Centered', 'Right'],
+      selectedIndex: options.indexOf(currentLayout).clamp(0, 2),
+      onTabSelected: (index) => setState(() => m.layout = MockupLayout.values[index]),
+      selectedColor: _C.primary,
+      unselectedColor: Colors.white,
+      selectedTextColor: Colors.white,
+      unselectedTextColor: _C.labelText,
+      equalWidth: false,
+      containerPadding: EdgeInsets.symmetric(horizontal: 8.sp, vertical: 4.sp),
+      containerColor: Colors.white,
     );
   }
 
@@ -771,22 +757,22 @@ class _ClientServicesEditPageState extends State<ClientServicesEditPage> {
             hint: 'Text Here',
             controller: en,
             maxLines: 4,
-            showCharCount: true,
-            maxLength: 500,
+            showCharCount: false,
+            maxLength: 10000,
             height: 100,
             submitted: _submitted,
             fillColor: Colors.white,
             primaryColor: _prim,
           ),
-          SizedBox(height: 10.h),
+
           Directionality(
             textDirection: ui.TextDirection.rtl,
             child: CustomValidatedTextFieldMaster(
               label: 'الوصف',
               hint: 'أدخل النص هنا',
               controller: ar,
-              showCharCount: true,
-              maxLength: 500,
+              showCharCount: false,
+              maxLength: 10000,
               maxLines: 4,
               height: 100,
               submitted: _submitted,
@@ -854,7 +840,7 @@ class _ClientServicesEditPageState extends State<ClientServicesEditPage> {
     child: Container(
       padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 7.h),
       decoration: BoxDecoration(
-        color: _C.primary,
+        color: Color(0xFF797979),
         borderRadius: BorderRadius.circular(4.r),
       ),
       child: Row(
@@ -987,15 +973,16 @@ class _ClientServicesEditPageState extends State<ClientServicesEditPage> {
   );
 
   Widget _placeholderCircle() => Container(
-    width: 50.w,
-    height: 50.h,
+    width: 70.w,
+    height: 70.h,
     decoration: const BoxDecoration(
-        color: Color(0xFFD9D9D9), shape: BoxShape.circle),
+        color: Colors.white, shape: BoxShape.circle),
     child: Center(
         child: CustomSvg(
-            assetPath: 'assets/home_control/image.svg',
-            width: 20.w,
-            height: 20.h,
+            assetPath: 'assets/control/camera.svg',
+            width: 30.w,
+            height: 30.h,
+            color: Colors.grey,
             fit: BoxFit.fill)),
   );
 }
