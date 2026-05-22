@@ -16,7 +16,9 @@ import 'package:beauty_admin/core/widget/button.dart';
 import 'package:beauty_admin/core/widget/search.dart';
 import 'package:beauty_admin/core/widget/textfield.dart';
 
+import '../../../../../core/constant/color.dart';
 import '../../../../../core/main_widgets/app_admin_navbar.dart';
+import '../../../../../core/theme/appcolors.dart';
 import '../../../../../core/theme/new_theme.dart';
 import '../../../../home/presentation/ui/pages/home_main.dart';
 import '../../../../request/data/model/request_model.dart';
@@ -108,17 +110,17 @@ class _RequestDemoMainPageState extends State<RequestDemoMainPage> {
               Row(children: [
                 Container(
                   width: 30.sp, height: 30.sp,
-                  decoration: const BoxDecoration(shape: BoxShape.circle, color: _C.primary),
+                  decoration: const BoxDecoration(shape: BoxShape.circle, color: ColorPick.primary),
                   child: Icon(Icons.file_download_outlined, size: 16.sp, color: Colors.white),
                 ),
                 SizedBox(width: 8.sp),
-                Text('Export', style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.w600, color: _C.labelText)),
+                Text('Export', style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.w600, color: AppColors.text)),
               ]),
               SizedBox(height: 20.sp),
               CustomValidatedTextFieldMaster(
                 label: 'File Name', hint: 'Enter file name',
                 controller: fileNameCtrl, height: 36, submitted: false,
-                primaryColor: _C.primary, fillColor: const Color(0xFFF1F2ED),
+                primaryColor: ColorPick.primary, fillColor: const Color(0xFFF1F2ED),
               ),
               SizedBox(height: 20.sp),
               Row(children: [
@@ -127,7 +129,7 @@ class _RequestDemoMainPageState extends State<RequestDemoMainPage> {
                   child: Container(
                     height: 38.h,
                     decoration: BoxDecoration(color: Colors.grey.shade300, borderRadius: BorderRadius.circular(8.r)),
-                    child: Center(child: Text('Discard', style: TextStyle(fontSize: 14.sp, color: _C.labelText))),
+                    child: Center(child: Text('Discard', style: TextStyle(fontSize: 14.sp, color: AppColors.text))),
                   ),
                 )),
                 SizedBox(width: 15.sp),
@@ -146,7 +148,7 @@ class _RequestDemoMainPageState extends State<RequestDemoMainPage> {
                   child: Container(
                     height: 38.h,
                     decoration: BoxDecoration(
-                      color: isExporting ? Colors.grey : _C.primary,
+                      color: isExporting ? Colors.grey : ColorPick.primary,
                       borderRadius: BorderRadius.circular(8.r),
                     ),
                     child: Center(child: isExporting
@@ -214,22 +216,22 @@ class _RequestDemoMainPageState extends State<RequestDemoMainPage> {
           child: Column(mainAxisSize: MainAxisSize.min, children: [
             Container(
               width: 64.sp, height: 64.sp,
-              decoration: BoxDecoration(color: _C.primary.withOpacity(0.1), shape: BoxShape.circle),
-              child: Icon(Icons.check_circle, color: _C.primary, size: 40.sp),
+              decoration: BoxDecoration(color: ColorPick.primary.withOpacity(0.1), shape: BoxShape.circle),
+              child: Icon(Icons.check_circle, color: ColorPick.primary, size: 40.sp),
             ),
             SizedBox(height: 16.h),
             Text('Export Successful', textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.w700, color: _C.labelText)),
+                style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.w700, color: AppColors.text)),
             SizedBox(height: 8.h),
             Text('$fileName\ndownloaded successfully', textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 13.sp, color: _C.hintText, height: 1.4)),
+                style: TextStyle(fontSize: 13.sp, color: AppColors.secondaryText, height: 1.4)),
             SizedBox(height: 20.h),
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
                 onPressed: () => Navigator.of(ctx).pop(),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: _C.primary,
+                  backgroundColor: ColorPick.primary,
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.r)),
                   padding: EdgeInsets.symmetric(vertical: 12.h),
                 ),
@@ -262,8 +264,8 @@ class _RequestDemoMainPageState extends State<RequestDemoMainPage> {
             builder: (context, state) {
               if (state is RequestDemoInitial || state is RequestDemoLoading) {
                 return const Scaffold(
-                  backgroundColor: _C.back,
-                  body: Center(child: CircularProgressIndicator(color: _C.primary)),
+                  backgroundColor: ColorPick.background,
+                  body: Center(child: CircularProgressIndicator(color: ColorPick.primary)),
                 );
               }
 
@@ -318,7 +320,7 @@ class _RequestDemoMainPageState extends State<RequestDemoMainPage> {
               final howHearTotal   = howDidYouHearCounts.values.fold(0, (a, b) => a + b);
 
               return Scaffold(
-                backgroundColor: _C.back,
+                backgroundColor: ColorPick.background,
                 body: SingleChildScrollView(
                   child: Center(
                     child: SizedBox(
@@ -339,7 +341,7 @@ class _RequestDemoMainPageState extends State<RequestDemoMainPage> {
                           // ── Title ───────────────────────────────────
                           Text("Demo's",
                               style: StyleText.fontSize45Weight600.copyWith(
-                                  color: _C.primary, fontWeight: FontWeight.w700)),
+                                  color: ColorPick.primary, fontWeight: FontWeight.w700)),
                           SizedBox(height: 16.h),
 
                           // ── Search + Filter row ──────────────────────
@@ -357,7 +359,7 @@ class _RequestDemoMainPageState extends State<RequestDemoMainPage> {
                                 height: 36.h,
                                 padding: EdgeInsets.symmetric(horizontal: 25.w),
                                 decoration: BoxDecoration(
-                                  color: _C.primary,
+                                  color: ColorPick.primary,
                                   borderRadius: BorderRadius.circular(6.r),
                                 ),
                                 child: Row(mainAxisSize: MainAxisSize.min, children: [
@@ -397,7 +399,7 @@ class _RequestDemoMainPageState extends State<RequestDemoMainPage> {
                           // ── Dashboard heading ───────────────────────
                           Text('Dashboard',
                               style: StyleText.fontSize24Weight600.copyWith(
-                                  color: _C.primary, fontWeight: FontWeight.w700)),
+                                  color: ColorPick.primary, fontWeight: FontWeight.w700)),
                           SizedBox(height: 16.h),
 
                           // ── ROW 1: Submission Received | No.Branches ─
@@ -414,8 +416,8 @@ class _RequestDemoMainPageState extends State<RequestDemoMainPage> {
                                 colors: [
                                   Colors.grey.shade400,
                                   Colors.grey.shade300,
-                                  _C.primary,
-                                  _C.primary.withOpacity(0.7),
+                                  ColorPick.primary,
+                                  ColorPick.primary.withOpacity(0.7),
                                 ],
                               ),
                             ),
@@ -446,9 +448,9 @@ class _RequestDemoMainPageState extends State<RequestDemoMainPage> {
                               _buildSegmentedBarChart(
                                 counts: noEmployeesCounts,
                                 colors: [
-                                  _C.primary,
-                                  _C.primary.withOpacity(0.7),
-                                  _C.primary.withOpacity(0.5),
+                                  ColorPick.primary,
+                                  ColorPick.primary.withOpacity(0.7),
+                                  ColorPick.primary.withOpacity(0.5),
                                   Colors.grey.shade400,
                                   Colors.grey.shade300,
                                 ],
@@ -522,7 +524,7 @@ class _RequestDemoMainPageState extends State<RequestDemoMainPage> {
       children: [
         Expanded(child: _summaryCard('Total Submission', total,  Colors.grey)),
         SizedBox(width: 10.w),
-        Expanded(child: _summaryCard('New',     newC,    _C.primary)),
+        Expanded(child: _summaryCard('New',     newC,    ColorPick.primary)),
         SizedBox(width: 10.w),
         Expanded(child: _summaryCard('Replied', replied, const Color(0xFFFF9800))),
         SizedBox(width: 10.w),
@@ -555,8 +557,8 @@ class _RequestDemoMainPageState extends State<RequestDemoMainPage> {
               selectedValue: activeStatus,
               items: _kAllStatuses.map((s) => {'key': s, 'value': s}).toList(),
               widthIcon: 14, heightIcon: 14, height: 32,
-              dropdownColor: _C.cardBg, primaryColor: _C.primary,
-              hint: Text('Status', style: TextStyle(fontSize: 11.sp, color: _C.hintText)),
+              dropdownColor: ColorPick.white, primaryColor: ColorPick.primary,
+              hint: Text('Status', style: TextStyle(fontSize: 11.sp, color: AppColors.secondaryText)),
               onChanged: cubit.setStatusFilter,
             ),
           ),
@@ -566,8 +568,8 @@ class _RequestDemoMainPageState extends State<RequestDemoMainPage> {
               selectedValue: activeEntityType,
               items: _kAllEntityTypes.map((s) => {'key': s, 'value': s}).toList(),
               widthIcon: 14, heightIcon: 14, height: 32,
-              dropdownColor: _C.cardBg, primaryColor: _C.primary,
-              hint: Text('Entity Type', style: TextStyle(fontSize: 11.sp, color: _C.hintText)),
+              dropdownColor: ColorPick.white, primaryColor: ColorPick.primary,
+              hint: Text('Entity Type', style: TextStyle(fontSize: 11.sp, color: AppColors.secondaryText)),
               onChanged: cubit.setEntityTypeFilter,
             ),
           ),
@@ -577,8 +579,8 @@ class _RequestDemoMainPageState extends State<RequestDemoMainPage> {
               selectedValue: activeCountry,
               items: _kAllCountries.map((s) => {'key': s, 'value': s}).toList(),
               widthIcon: 14, heightIcon: 14, height: 32,
-              dropdownColor: _C.cardBg, primaryColor: _C.primary,
-              hint: Text('Location', style: TextStyle(fontSize: 11.sp, color: _C.hintText)),
+              dropdownColor: ColorPick.white, primaryColor: ColorPick.primary,
+              hint: Text('Location', style: TextStyle(fontSize: 11.sp, color: AppColors.secondaryText)),
               onChanged: cubit.setCountryFilter,
             ),
           ),
@@ -591,8 +593,8 @@ class _RequestDemoMainPageState extends State<RequestDemoMainPage> {
                 'value': _kMonthNames[m - 1],
               }).toList(),
               widthIcon: 14, heightIcon: 14, height: 32,
-              dropdownColor: _C.cardBg, primaryColor: _C.primary,
-              hint: Text('Calendar', style: TextStyle(fontSize: 11.sp, color: _C.hintText)),
+              dropdownColor: ColorPick.white, primaryColor: ColorPick.primary,
+              hint: Text('Calendar', style: TextStyle(fontSize: 11.sp, color: AppColors.secondaryText)),
               onChanged: (v) => cubit.setMonthFilter(v != null ? int.tryParse(v) : null),
             ),
           ),
@@ -602,10 +604,10 @@ class _RequestDemoMainPageState extends State<RequestDemoMainPage> {
           title: 'Export',
           function: () => _showExportDialog(demos, dynamicQuestions),
           textStyle: TextStyle(fontSize: 12.sp, fontWeight: FontWeight.w600, color: Colors.white),
-          height: 32.h, space: 4.w, radius: 6, color: _C.primary,
+          height: 32.h, space: 4.w, radius: 6, color: ColorPick.primary,
           image: 'assets/images/export.svg',
           widthImage: 14.sp, heightImage: 14.sp,
-          colorBorder: _C.primary, svgColor: Colors.white,
+          colorBorder: ColorPick.primary, svgColor: Colors.white,
           padding: EdgeInsets.symmetric(horizontal: 10.w),
         ),
       ],
@@ -618,7 +620,7 @@ class _RequestDemoMainPageState extends State<RequestDemoMainPage> {
 
   Widget _summaryCard(String title, int count, Color topColor) {
     return Container(
-      decoration: BoxDecoration(color: _C.cardBg, borderRadius: BorderRadius.circular(8.r)),
+      decoration: BoxDecoration(color: ColorPick.white, borderRadius: BorderRadius.circular(8.r)),
       child: Column(mainAxisSize: MainAxisSize.min, children: [
         Container(
           height: 4.h,
@@ -633,9 +635,9 @@ class _RequestDemoMainPageState extends State<RequestDemoMainPage> {
           padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 10.h),
           child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
             Flexible(child: Text(title,
-                style: TextStyle(fontSize: 12.sp, fontWeight: FontWeight.w500, color: _C.labelText))),
+                style: TextStyle(fontSize: 12.sp, fontWeight: FontWeight.w500, color: AppColors.text))),
             Text('$count',
-                style: TextStyle(fontSize: 14.sp, fontWeight: FontWeight.w700, color: _C.labelText)),
+                style: TextStyle(fontSize: 14.sp, fontWeight: FontWeight.w700, color: AppColors.text)),
           ]),
         ),
       ]),
@@ -675,7 +677,7 @@ class _RequestDemoMainPageState extends State<RequestDemoMainPage> {
     return widths;
   }
 
-  TextStyle get _cellStyle => TextStyle(fontSize: 11.sp, color: _C.labelText);
+  TextStyle get _cellStyle => TextStyle(fontSize: 11.sp, color: AppColors.text);
 
   Widget _cell(Widget child) => Container(
     padding: EdgeInsets.symmetric(horizontal: 8.sp, vertical: 8.sp),
@@ -703,7 +705,7 @@ class _RequestDemoMainPageState extends State<RequestDemoMainPage> {
           columnWidths: columnWidths,
           children: [
             TableRow(
-              decoration: const BoxDecoration(color: _C.primary),
+              decoration: const BoxDecoration(color: ColorPick.primary),
               children: headers.map((h) => Padding(
                 padding: EdgeInsets.all(8.sp),
                 child: Text(h, maxLines: 2,
@@ -760,13 +762,13 @@ class _RequestDemoMainPageState extends State<RequestDemoMainPage> {
   }
 
   Widget _priorityChip(DemoPriority? p) {
-    if (p == null) return Text('-', style: TextStyle(fontSize: 11.sp, color: _C.hintText));
+    if (p == null) return Text('-', style: TextStyle(fontSize: 11.sp, color: AppColors.secondaryText));
     return Row(mainAxisSize: MainAxisSize.min, children: [
       Container(width: 8.sp, height: 8.sp,
           decoration: BoxDecoration(color: p.color, shape: BoxShape.circle)),
       SizedBox(width: 4.w),
       Flexible(child: Text(p.label,
-          style: TextStyle(fontSize: 11.sp, color: _C.labelText),
+          style: TextStyle(fontSize: 11.sp, color: AppColors.text),
           overflow: TextOverflow.ellipsis)),
     ]);
   }
@@ -779,16 +781,16 @@ class _RequestDemoMainPageState extends State<RequestDemoMainPage> {
     return Container(
       width: double.infinity,
       padding: EdgeInsets.all(15.sp),
-      decoration: BoxDecoration(color: _C.cardBg, borderRadius: BorderRadius.circular(8.r)),
+      decoration: BoxDecoration(color: ColorPick.white, borderRadius: BorderRadius.circular(8.r)),
       child: Column(
         mainAxisSize: MainAxisSize.max,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(title,
-              style: TextStyle(fontSize: 14.sp, fontWeight: FontWeight.w700, color: _C.primary)),
+              style: TextStyle(fontSize: 14.sp, fontWeight: FontWeight.w700, color: ColorPick.primary)),
           if (subtitle.isNotEmpty) ...[
             SizedBox(height: 4.h),
-            Text(subtitle, style: TextStyle(fontSize: 11.sp, color: _C.labelText)),
+            Text(subtitle, style: TextStyle(fontSize: 11.sp, color: AppColors.text)),
           ],
           SizedBox(height: 12.h),
           chart,
@@ -825,21 +827,21 @@ class _RequestDemoMainPageState extends State<RequestDemoMainPage> {
                         ? Align(
                       alignment: Alignment.bottomCenter,
                       child: Text('$val',
-                          style: TextStyle(fontSize: 7.sp, color: _C.labelText, fontWeight: FontWeight.w600)),
+                          style: TextStyle(fontSize: 7.sp, color: AppColors.text, fontWeight: FontWeight.w600)),
                     )
                         : const SizedBox(),
                   ),
                   Container(
                     height: val > 0 ? barH.h : 4.h,
                     decoration: BoxDecoration(
-                      color: val > 0 ? _C.primary : _C.border,
+                      color: val > 0 ? ColorPick.primary : ColorPick.white,
                       borderRadius: BorderRadius.only(
                           topLeft: Radius.circular(3.r),
                           topRight: Radius.circular(3.r)),
                     ),
                   ),
                   SizedBox(height: 6.h),
-                  Text(_kMonthNames[i], style: TextStyle(fontSize: 8.sp, color: _C.hintText)),
+                  Text(_kMonthNames[i], style: TextStyle(fontSize: 8.sp, color: AppColors.secondaryText)),
                 ],
               ),
             ),
@@ -865,9 +867,9 @@ class _RequestDemoMainPageState extends State<RequestDemoMainPage> {
           ClipRRect(
             borderRadius: BorderRadius.circular(4.r),
             child: Container(
-              height: 28.h, color: _C.border,
+              height: 28.h, color: ColorPick.white,
               child: Center(child: Text('No data',
-                  style: TextStyle(fontSize: 10.sp, color: _C.hintText))),
+                  style: TextStyle(fontSize: 10.sp, color: AppColors.secondaryText))),
             ),
           ),
           SizedBox(height: 8.h),
@@ -887,18 +889,18 @@ class _RequestDemoMainPageState extends State<RequestDemoMainPage> {
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: List.generate(entries.length, (i) {
             return Column(mainAxisSize: MainAxisSize.min, children: [
-              Text(entries[i].key, style: TextStyle(fontSize: 9.sp, color: _C.hintText)),
+              Text(entries[i].key, style: TextStyle(fontSize: 9.sp, color: AppColors.secondaryText)),
               SizedBox(height: 3.h),
               Row(mainAxisSize: MainAxisSize.min, children: [
                 Container(
                   width: 8.sp, height: 8.sp,
                   decoration: BoxDecoration(
-                      color: isAllZero ? _C.border : colors[i % colors.length],
+                      color: isAllZero ? ColorPick.white : colors[i % colors.length],
                       shape: BoxShape.circle),
                 ),
                 SizedBox(width: 3.w),
                 Text('${entries[i].value}',
-                    style: TextStyle(fontSize: 10.sp, fontWeight: FontWeight.w700, color: _C.labelText)),
+                    style: TextStyle(fontSize: 10.sp, fontWeight: FontWeight.w700, color: AppColors.text)),
               ]),
             ]);
           }),
@@ -908,7 +910,7 @@ class _RequestDemoMainPageState extends State<RequestDemoMainPage> {
           borderRadius: BorderRadius.circular(4.r),
           child: isAllZero
               ? Row(children: List.generate(entries.length, (i) =>
-              Expanded(child: Container(height: 28.h, color: _C.border))))
+              Expanded(child: Container(height: 28.h, color: ColorPick.white))))
               : Row(
             children: List.generate(entries.length, (i) {
               final pct = entries[i].value / total;
@@ -932,7 +934,7 @@ class _RequestDemoMainPageState extends State<RequestDemoMainPage> {
     if (counts.isEmpty) {
       return SizedBox(
         height: 100.h,
-        child: Center(child: Text('No data', style: TextStyle(fontSize: 11.sp, color: _C.hintText))),
+        child: Center(child: Text('No data', style: TextStyle(fontSize: 11.sp, color: AppColors.secondaryText))),
       );
     }
 
@@ -949,7 +951,7 @@ class _RequestDemoMainPageState extends State<RequestDemoMainPage> {
         padding: EdgeInsets.only(bottom: 10.h),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           Text(e.key,
-              style: TextStyle(fontSize: 9.sp, color: _C.labelText),
+              style: TextStyle(fontSize: 9.sp, color: AppColors.text),
               maxLines: 2, overflow: TextOverflow.ellipsis),
           SizedBox(height: 3.h),
           Row(children: [
@@ -957,11 +959,11 @@ class _RequestDemoMainPageState extends State<RequestDemoMainPage> {
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(3.r),
                 child: Stack(children: [
-                  Container(height: 12.h, color: _C.border),
+                  Container(height: 12.h, color: ColorPick.white),
                   if (fill > 0)
                     FractionallySizedBox(
                       widthFactor: fill.clamp(0.0, 1.0),
-                      child: Container(height: 12.h, color: _C.primary),
+                      child: Container(height: 12.h, color: ColorPick.primary),
                     ),
                 ]),
               ),
@@ -970,7 +972,7 @@ class _RequestDemoMainPageState extends State<RequestDemoMainPage> {
             SizedBox(
               width: 26.w,
               child: Text('$pct%',
-                  style: TextStyle(fontSize: 9.sp, fontWeight: FontWeight.w600, color: _C.labelText)),
+                  style: TextStyle(fontSize: 9.sp, fontWeight: FontWeight.w600, color: AppColors.text)),
             ),
           ]),
         ]),
@@ -1001,7 +1003,7 @@ class _RequestDemoMainPageState extends State<RequestDemoMainPage> {
       return Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          Expanded(child: Text('No data', style: TextStyle(fontSize: 11.sp, color: _C.hintText))),
+          Expanded(child: Text('No data', style: TextStyle(fontSize: 11.sp, color: AppColors.secondaryText))),
           SizedBox(width: 16.w),
           SizedBox(
             width: 110.w, height: 110.w,
@@ -1023,7 +1025,7 @@ class _RequestDemoMainPageState extends State<RequestDemoMainPage> {
 
     final dotColors = List.generate(entries.length, (i) {
       if (usePriorityColors) return _priorityColorForLabel(entries[i].key);
-      if (colors.isEmpty) return _C.border;
+      if (colors.isEmpty) return ColorPick.white;
       return colors[i % colors.length];
     });
 
@@ -1031,7 +1033,7 @@ class _RequestDemoMainPageState extends State<RequestDemoMainPage> {
         ? List<double>.filled(entries.length, 1.0)
         : entries.map((e) => e.value.toDouble()).toList();
     final paintColors = total == 0
-        ? List<Color>.filled(entries.length, _C.border)
+        ? List<Color>.filled(entries.length, ColorPick.white)
         : dotColors;
 
     return Row(
@@ -1050,10 +1052,10 @@ class _RequestDemoMainPageState extends State<RequestDemoMainPage> {
                       decoration: BoxDecoration(color: dotColors[i], shape: BoxShape.circle)),
                   SizedBox(width: 6.w),
                   Expanded(child: Text(entries[i].key,
-                      style: TextStyle(fontSize: 10.sp, color: _C.labelText),
+                      style: TextStyle(fontSize: 10.sp, color: AppColors.text),
                       overflow: TextOverflow.ellipsis)),
                   Text('$pct%',
-                      style: TextStyle(fontSize: 10.sp, color: _C.hintText, fontWeight: FontWeight.w600)),
+                      style: TextStyle(fontSize: 10.sp, color: AppColors.secondaryText, fontWeight: FontWeight.w600)),
                 ]),
               );
             }),
@@ -1083,7 +1085,7 @@ class _RequestDemoMainPageState extends State<RequestDemoMainPage> {
     if (n == 0) return [];
     return List.generate(n, (i) {
       final opacity = 1.0 - (i * 0.15).clamp(0.0, 0.6);
-      return _C.primary.withOpacity(opacity);
+      return ColorPick.primary.withOpacity(opacity);
     });
   }
 

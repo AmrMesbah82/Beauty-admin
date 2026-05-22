@@ -15,6 +15,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 
 import 'package:beauty_admin/core/widget/navigator.dart';
 
+import '../../../../../../core/constant/color.dart';
 import '../../../../../../core/custom_svg.dart';
 import '../../../../../../core/theme/appcolors.dart';
 import '../../../../../../core/theme/new_theme.dart';
@@ -58,7 +59,7 @@ class _StrategyMainViewState extends State<StrategyMainView> {
       builder: (context, state) {
         if (state is StrategyLoading || state is StrategyInitial) {
           return const Center(
-              child: CircularProgressIndicator(color: _C.primary));
+              child: CircularProgressIndicator(color: ColorPick.primary));
         }
 
         final OurStrategyModel? model = switch (state) {
@@ -71,7 +72,7 @@ class _StrategyMainViewState extends State<StrategyMainView> {
           return Center(
               child: Text('No data found',
                   style: StyleText.fontSize13Weight400
-                      .copyWith(color: _C.hintText)));
+                      .copyWith(color: AppColors.secondaryText)));
         }
 
         return Column(
@@ -217,7 +218,7 @@ class _StrategyMainViewState extends State<StrategyMainView> {
               duration: const Duration(milliseconds: 200),
               padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
               decoration: BoxDecoration(
-                color: isSelected ? _C.primary : Colors.transparent,
+                color: isSelected ? ColorPick.primary : Colors.transparent,
                 borderRadius: BorderRadius.circular(6.r),
               ),
               child: Text(
@@ -255,12 +256,12 @@ class _StrategyMainViewState extends State<StrategyMainView> {
         Container(
           padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 8.h),
           decoration: BoxDecoration(
-              color: _C.cardBg,
+              color: ColorPick.white,
               borderRadius: BorderRadius.circular(4.r)),
           child: Text(
             'Last Updated On ${fmtDate(lastUpdated)}',
             style: StyleText.fontSize13Weight500
-                .copyWith(color: _C.primary),
+                .copyWith(color: ColorPick.primary),
           ),
         ),
         const Spacer(),
@@ -276,12 +277,12 @@ class _StrategyMainViewState extends State<StrategyMainView> {
               child: Row(mainAxisSize: MainAxisSize.min, children: [
                 Text('Edit Details',
                     style: StyleText.fontSize14Weight500
-                        .copyWith(color: _C.primary)),
+                        .copyWith(color: ColorPick.primary)),
                 SizedBox(width: 6.w),
                 CustomSvg(
                     assetPath: "assets/control/edit_icon_pick.svg",
                     width: 20.w, height: 20.h,
-                    fit: BoxFit.scaleDown, color: _C.primary),
+                    fit: BoxFit.scaleDown, color: ColorPick.primary),
               ]),
             ),
           ),
@@ -310,7 +311,7 @@ class _StrategyMainViewState extends State<StrategyMainView> {
               padding: EdgeInsets.symmetric(
                   horizontal: 16.w, vertical: 14.h),
               decoration: BoxDecoration(
-                color: _C.primary,
+                color: ColorPick.primary,
                 borderRadius: BorderRadius.circular(8.r),
               ),
               child: Row(children: [
@@ -348,7 +349,7 @@ class _StrategyMainViewState extends State<StrategyMainView> {
       children: [
         Text(label,
             style: StyleText.fontSize12Weight500
-                .copyWith(color: _C.labelText)),
+                .copyWith(color: AppColors.text)),
         SizedBox(height: 8.h),
         Container(
           width: double.infinity,
@@ -386,7 +387,7 @@ class _StrategyMainViewState extends State<StrategyMainView> {
       children: [
         Text(label,
             style: StyleText.fontSize12Weight500
-                .copyWith(color: _C.labelText)),
+                .copyWith(color: AppColors.text)),
         SizedBox(height: 6.h),
         Container(
           width: 56.w,
@@ -425,7 +426,7 @@ class _StrategyMainViewState extends State<StrategyMainView> {
         children: [
           Text(label,
               style: StyleText.fontSize12Weight500
-                  .copyWith(color: _C.labelText)),
+                  .copyWith(color: AppColors.text)),
           SizedBox(height: 4.h),
           Container(
             width: double.infinity,
@@ -441,7 +442,7 @@ class _StrategyMainViewState extends State<StrategyMainView> {
                 : Alignment.centerLeft,
             child: Text(value,
                 style: StyleText.fontSize12Weight400
-                    .copyWith(color: _C.hintText),
+                    .copyWith(color: AppColors.secondaryText),
                 maxLines: height > 36 ? 8 : 1,
                 overflow: TextOverflow.ellipsis),
           ),
@@ -458,7 +459,7 @@ class _StrategyMainViewState extends State<StrategyMainView> {
           children: [
             Text(label,
                 style: StyleText.fontSize12Weight500
-                    .copyWith(color: _C.labelText)),
+                    .copyWith(color: AppColors.text)),
             SizedBox(height: 4.h),
             Container(
               width: double.infinity,
@@ -475,7 +476,7 @@ class _StrategyMainViewState extends State<StrategyMainView> {
               child: Text(
                   value.isEmpty ? 'أكتب هنا' : value,
                   style: StyleText.fontSize12Weight400
-                      .copyWith(color: _C.hintText),
+                      .copyWith(color: AppColors.secondaryText),
                   textDirection: TextDirection.rtl,
                   maxLines: height > 36 ? 8 : 1,
                   overflow: TextOverflow.ellipsis),

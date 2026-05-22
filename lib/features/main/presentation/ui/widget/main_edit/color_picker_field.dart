@@ -26,7 +26,7 @@ class _ColorPickerFieldState extends State<_ColorPickerField> {
       final hex = widget.controller.text.replaceAll('#', '');
       if (hex.length == 6) return Color(int.parse('FF$hex', radix: 16));
     } catch (_) {}
-    return _C.primary;
+    return ColorPick.primary;
   }
 
   static String _colorToHex(Color c) =>
@@ -66,7 +66,7 @@ class _ColorPickerFieldState extends State<_ColorPickerField> {
       children: [
         if (widget.label != null) ...[
           Text(widget.label!,
-              style: StyleText.fontSize12Weight500.copyWith(color: _C.labelText)),
+              style: StyleText.fontSize12Weight500.copyWith(color: AppColors.text)),
           SizedBox(height: 5.h),
         ],
         CompositedTransformTarget(
@@ -80,7 +80,7 @@ class _ColorPickerFieldState extends State<_ColorPickerField> {
               onTap: _openPicker,
               decoration: InputDecoration(
                 hintText:  widget.hintText,
-                hintStyle: StyleText.fontSize12Weight400.copyWith(color: _C.hintText),
+                hintStyle: StyleText.fontSize12Weight400.copyWith(color: AppColors.secondaryText),
                 filled: true, fillColor: AppColors.card,
                 isDense: true, counterText: '',
                 prefixIcon: Padding(

@@ -16,6 +16,7 @@ import 'package:intl/intl.dart';
 import 'package:beauty_admin/core/custom_svg.dart';
 import 'package:beauty_admin/core/widget/circle_progress.dart';
 
+import '../../../../../core/constant/color.dart';
 import '../../../../../core/main_widgets/admin_sub_navbar.dart';
 import '../../../../../core/main_widgets/app_admin_navbar.dart';
 import '../../../../../core/theme/appcolors.dart';
@@ -74,7 +75,7 @@ class CustomSegmentedTabs extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(borderRadius ?? 8.r),
-        color: containerColor ?? _C.sectionBg,
+        color: containerColor ?? ColorPick.white,
       ),
       padding: containerPadding ?? EdgeInsets.all(8.sp),
       child: Row(
@@ -116,8 +117,8 @@ class CustomSegmentedTabs extends StatelessWidget {
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(4.r),
           color: isSelected
-              ? (selectedColor ?? _C.primary)
-              : (unselectedColor ?? _C.sectionBg),
+              ? (selectedColor ?? ColorPick.primary)
+              : (unselectedColor ?? ColorPick.white),
         ),
         padding: EdgeInsets.symmetric(
           vertical: tabVerticalPadding ?? 6.sp,
@@ -131,7 +132,7 @@ class CustomSegmentedTabs extends StatelessWidget {
                 height: 1,
                 color: isSelected
                     ? (selectedTextColor ?? Colors.white)
-                    : (unselectedTextColor ?? _C.labelText),
+                    : (unselectedTextColor ?? AppColors.text),
               ),
             ),
           ),
@@ -209,8 +210,8 @@ class _ClientServicesMainPageState extends State<ClientServicesMainPage> {
         if (state is ClientServicesCmsInitial ||
             state is ClientServicesCmsLoading) {
           return const Scaffold(
-            backgroundColor: _C.back,
-            body: Center(child: CircularProgressIndicator(color: _C.primary)),
+            backgroundColor: ColorPick.background,
+            body: Center(child: CircularProgressIndicator(color: ColorPick.primary)),
           );
         }
 
@@ -220,7 +221,7 @@ class _ClientServicesMainPageState extends State<ClientServicesMainPage> {
         model ??= context.read<ClientServicesCmsCubit>().current;
 
         return Scaffold(
-          backgroundColor: _C.back,
+          backgroundColor: ColorPick.background,
           body: SizedBox(
             width: double.infinity,
             height: double.infinity,
@@ -256,7 +257,7 @@ class _ClientServicesMainPageState extends State<ClientServicesMainPage> {
                                     'Client Services Details',
                                     style: StyleText.fontSize45Weight600
                                         .copyWith(
-                                          color: _C.primary,
+                                          color: ColorPick.primary,
                                           fontWeight: FontWeight.w700,
                                         ),
                                   ),
@@ -268,7 +269,7 @@ class _ClientServicesMainPageState extends State<ClientServicesMainPage> {
                                         vertical: 8.h,
                                       ),
                                       decoration: BoxDecoration(
-                                        color: _C.primary,
+                                        color: ColorPick.primary,
                                         borderRadius: BorderRadius.circular(
                                           6.r,
                                         ),
@@ -290,10 +291,10 @@ class _ClientServicesMainPageState extends State<ClientServicesMainPage> {
                                 selectedIndex: _statusTab,
                                 onTabSelected: (index) =>
                                     setState(() => _statusTab = index),
-                                selectedColor: _C.tabActive,
-                                unselectedColor: _C.sectionBg,
+                                selectedColor: ColorPick.primary,
+                                unselectedColor: ColorPick.white,
                                 selectedTextColor: Colors.white,
-                                unselectedTextColor: _C.tabInactive,
+                                unselectedTextColor: ColorPick.discard,
                                 containerColor: Colors.white,
                                 equalWidth: false,
                                 spacing: 24,
@@ -315,10 +316,10 @@ class _ClientServicesMainPageState extends State<ClientServicesMainPage> {
                                           .read<ClientServicesCmsCubit>()
                                           .switchGender(g);
                                     },
-                                    selectedColor: _C.primary,
+                                    selectedColor: ColorPick.primary,
                                     unselectedColor: Colors.white,
                                     selectedTextColor: Colors.white,
-                                    unselectedTextColor: _C.labelText,
+                                    unselectedTextColor: AppColors.text,
                                     equalWidth: false,
                                     containerPadding: EdgeInsets.symmetric(
                                       horizontal: 8.sp,
@@ -372,12 +373,12 @@ class _ClientServicesMainPageState extends State<ClientServicesMainPage> {
         Container(
           padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 8.h),
           decoration: BoxDecoration(
-            color: _C.cardBg,
+            color: ColorPick.white,
             borderRadius: BorderRadius.circular(4.r),
           ),
           child: Text(
             'Last Updated On ${_fmtDate(lastUpdated)}',
-            style: StyleText.fontSize13Weight500.copyWith(color: _C.primary),
+            style: StyleText.fontSize13Weight500.copyWith(color: ColorPick.primary),
           ),
         ),
         SizedBox(width: 12.w),
@@ -387,7 +388,7 @@ class _ClientServicesMainPageState extends State<ClientServicesMainPage> {
             width: 130.w,
             height: 36.h,
             decoration: BoxDecoration(
-              color: _C.cardBg,
+              color: ColorPick.white,
               borderRadius: BorderRadius.circular(4.r),
             ),
             child: Center(
@@ -406,7 +407,7 @@ class _ClientServicesMainPageState extends State<ClientServicesMainPage> {
                     width: 20.w,
                     height: 20.h,
                     fit: BoxFit.scaleDown,
-                    color: _C.primary,
+                    color: ColorPick.primary,
                   ),
                 ],
               ),
@@ -432,7 +433,7 @@ class _ClientServicesMainPageState extends State<ClientServicesMainPage> {
             width: double.infinity,
             padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
             decoration: BoxDecoration(
-              color: _C.primary,
+              color: ColorPick.primary,
               borderRadius: BorderRadius.circular(8.r),
             ),
             child: Row(
@@ -601,7 +602,7 @@ class _ClientServicesMainPageState extends State<ClientServicesMainPage> {
                 textDirection: ui.TextDirection.rtl,
               ),
               SizedBox(height: 8.h),
-              Divider(color: _C.border),
+              Divider(color: ColorPick.white),
             ],
           ),
         ),
@@ -633,10 +634,10 @@ class _ClientServicesMainPageState extends State<ClientServicesMainPage> {
         // );
         // setState(() => /* update layout */);
       },
-      selectedColor: _C.primary,
+      selectedColor: ColorPick.primary,
       unselectedColor: Colors.white,
       selectedTextColor: Colors.white,
-      unselectedTextColor: _C.labelText,
+      unselectedTextColor: AppColors.text,
       equalWidth: false,
       containerPadding: EdgeInsets.symmetric(horizontal: 8.sp, vertical: 4.sp),
       containerColor: Colors.white,
@@ -646,7 +647,7 @@ class _ClientServicesMainPageState extends State<ClientServicesMainPage> {
   // ── Shared helpers ─────────────────────────────────────────────────────────
   Widget _readOnlyLabel(String t) => Text(
     t,
-    style: StyleText.fontSize12Weight500.copyWith(color: _C.labelText),
+    style: StyleText.fontSize12Weight500.copyWith(color: AppColors.text),
   );
 
   Widget _readOnlyBiRow(String enL, String arL, String enV, String arV) => Row(
@@ -703,7 +704,7 @@ class _ClientServicesMainPageState extends State<ClientServicesMainPage> {
         text.isEmpty ? 'Text Here' : text,
         textDirection: textDirection,
         style: StyleText.fontSize12Weight400.copyWith(
-          color: text.isEmpty ? _C.hintText : _C.labelText,
+          color: text.isEmpty ? AppColors.secondaryText : AppColors.text,
         ),
         maxLines: maxLines,
         overflow: TextOverflow.ellipsis,

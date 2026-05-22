@@ -25,9 +25,9 @@ class _PreviewContent extends StatelessWidget {
     final placeholder = Container(
       width: width,
       height: height,
-      color: _C.primary.withOpacity(0.08),
+      color: ColorPick.primary.withOpacity(0.08),
       child: Icon(Icons.image_outlined,
-          color: _C.primary.withOpacity(0.35), size: 28),
+          color: ColorPick.primary.withOpacity(0.35), size: 28),
     );
 
     if (url.isEmpty) return placeholder;
@@ -55,7 +55,7 @@ class _PreviewContent extends StatelessWidget {
       child: Material(
         color: Colors.white,
         child: Container(
-          color: _C.back,
+          color: ColorPick.white,
           width: fakeWidth,
           height: fakeHeight,
           child: SingleChildScrollView(
@@ -111,7 +111,7 @@ class _PreviewContent extends StatelessWidget {
                           ? ui.TextDirection.rtl
                           : ui.TextDirection.ltr,
                       style: const TextStyle(
-                        color: _C.primary,
+                        color: ColorPick.primary,
                         fontSize: 26,
                         fontWeight: FontWeight.w700,
                         height: 1.3,
@@ -124,8 +124,8 @@ class _PreviewContent extends StatelessWidget {
                       textDirection: isRtl
                           ? ui.TextDirection.rtl
                           : ui.TextDirection.ltr,
-                      style: const TextStyle(
-                        color: _C.labelText,
+                      style: TextStyle(
+                        color: AppColors.text,
                         fontSize: 14,
                         height: 1.7,
                       ),
@@ -144,7 +144,7 @@ class _PreviewContent extends StatelessWidget {
                           style: const TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.w600,
-                            color: _C.primary,
+                            color: ColorPick.primary,
                           ),
                         ),
                         const SizedBox(width: 6),
@@ -153,14 +153,14 @@ class _PreviewContent extends StatelessWidget {
                           height: 22,
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
-                            color: _C.primary.withOpacity(0.15),
+                            color: ColorPick.primary.withOpacity(0.15),
                           ),
                           child: Icon(
                             isEnglish
                                 ? Icons.arrow_forward
                                 : Icons.arrow_back,
                             size: 13,
-                            color: _C.primary,
+                            color: ColorPick.primary,
                           ),
                         ),
                       ],
@@ -222,7 +222,7 @@ class _PreviewContent extends StatelessWidget {
                     child: Text(
                       titleText,
                       style: const TextStyle(
-                        color: _C.primary,
+                        color: ColorPick.primary,
                         fontSize: 20,
                         fontWeight: FontWeight.w600,
                         height: 1.4,
@@ -259,7 +259,7 @@ class _PreviewContent extends StatelessWidget {
                   titleText,
                   textAlign: TextAlign.center,
                   style: const TextStyle(
-                    color: _C.primary,
+                    color: ColorPick.primary,
                     fontSize: 20,
                     fontWeight: FontWeight.w600,
                     height: 1.4,
@@ -365,10 +365,10 @@ class _PreviewContent extends StatelessWidget {
             if (title.isNotEmpty)
               Text(
                 title,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.w600,
-                  color: _C.labelText,
+                  color: AppColors.text,
                   height: 1.3,
                 ),
               ),
@@ -377,9 +377,9 @@ class _PreviewContent extends StatelessWidget {
             if (desc.isNotEmpty)
               Text(
                 desc,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 13,
-                  color: _C.labelText,
+                  color: AppColors.text,
                   height: 1.7,
                 ),
               ),
@@ -419,7 +419,7 @@ class _PreviewContent extends StatelessWidget {
           width: double.infinity,
           padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
-            color: _C.sectionBg,
+            color: ColorPick.white,
             borderRadius: BorderRadius.circular(12),
           ),
           child: Column(
@@ -438,10 +438,10 @@ class _PreviewContent extends StatelessWidget {
                 Text(
                   title,
                   textAlign: TextAlign.center,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.w600,
-                    color: _C.labelText,
+                    color: AppColors.text,
                   ),
                 ),
               if (title.isNotEmpty && desc.isNotEmpty)
@@ -450,9 +450,9 @@ class _PreviewContent extends StatelessWidget {
                 Text(
                   desc,
                   textAlign: TextAlign.center,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 13,
-                    color: _C.labelText,
+                    color: AppColors.text,
                     height: 1.7,
                   ),
                 ),
@@ -476,7 +476,7 @@ class _PreviewContent extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: _C.sectionBg,
+        color: ColorPick.white,
         borderRadius: BorderRadius.circular(12),
       ),
       child: rowContent,

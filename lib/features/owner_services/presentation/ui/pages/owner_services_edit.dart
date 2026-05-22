@@ -22,11 +22,13 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get_core/src/get_main.dart';
 import 'package:get/get_navigation/src/extension_navigation.dart';
 
+import '../../../../../core/constant/color.dart';
 import '../../../../../core/custom_dialog.dart';
 import '../../../../../core/custom_segmant_tab.dart';
 import '../../../../../core/custom_svg.dart';
 import '../../../../../core/main_widgets/admin_sub_navbar.dart';
 import '../../../../../core/main_widgets/app_admin_navbar.dart';
+import '../../../../../core/theme/appcolors.dart';
 import '../../../../../core/theme/new_theme.dart';
 import '../../../../../core/widget/textfield.dart';
 import '../../../../home/presentation/ui/pages/home_main.dart';
@@ -38,7 +40,6 @@ import 'owner_services_preview.dart';
 import 'dart:html' as html;
 import 'dart:ui_web' as ui_web;
 
-part '../widget/owner_services_edit/c.dart';
 part '../widget/owner_services_edit/picked_image.dart';
 part '../widget/owner_services_edit/mockup_local.dart';
 
@@ -81,7 +82,7 @@ class _OwnerServicesEditPageState extends State<OwnerServicesEditPage> {
     'mockups': true,
   };
 
-  Color get _resolvedPrimary => _C.primary;
+  Color get _resolvedPrimary => ColorPick.primary;
 
   @override
   void initState() {
@@ -350,7 +351,7 @@ class _OwnerServicesEditPageState extends State<OwnerServicesEditPage> {
                   color: Colors.white,
                 ),
               ),
-              backgroundColor: _C.primary,
+              backgroundColor: ColorPick.primary,
               behavior: SnackBarBehavior.floating,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(8.r),
@@ -381,13 +382,13 @@ class _OwnerServicesEditPageState extends State<OwnerServicesEditPage> {
         if (state is OwnerServicesCmsInitial ||
             state is OwnerServicesCmsLoading) {
           return const Scaffold(
-            backgroundColor: _C.back,
-            body: Center(child: CircularProgressIndicator(color: _C.primary)),
+            backgroundColor: ColorPick.background,
+            body: Center(child: CircularProgressIndicator(color: ColorPick.primary)),
           );
         }
 
         return Scaffold(
-          backgroundColor: _C.back,
+          backgroundColor: ColorPick.background,
           body: SizedBox(
             width: double.infinity,
             height: double.infinity,
@@ -417,7 +418,7 @@ class _OwnerServicesEditPageState extends State<OwnerServicesEditPage> {
                           Text(
                             'Editing Owner Services Details',
                             style: StyleText.fontSize45Weight600.copyWith(
-                              color: _C.primary,
+                              color: ColorPick.primary,
                               fontWeight: FontWeight.w700,
                             ),
                           ),
@@ -466,7 +467,7 @@ class _OwnerServicesEditPageState extends State<OwnerServicesEditPage> {
             width: double.infinity,
             padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
             decoration: BoxDecoration(
-              color: _C.primary,
+              color: ColorPick.primary,
               borderRadius: isOpen
                   ? BorderRadius.only(
                       topLeft: Radius.circular(6.r),
@@ -700,7 +701,7 @@ class _OwnerServicesEditPageState extends State<OwnerServicesEditPage> {
             ),
           ),
 
-          if (i < _mockups.length - 1) Divider(height: 24.h, color: _C.border),
+          if (i < _mockups.length - 1) Divider(height: 24.h, color: ColorPick.white),
         ],
       ),
     );
@@ -712,10 +713,10 @@ class _OwnerServicesEditPageState extends State<OwnerServicesEditPage> {
       tabs: const ['Left', 'Centered', 'Right'],
       selectedIndex: options.indexOf(mock.alignment).clamp(0, 2),
       onTabSelected: (index) => setState(() => mock.alignment = options[index]),
-      selectedColor: _C.primary,
+      selectedColor: ColorPick.primary,
       unselectedColor: Colors.white,
       selectedTextColor: Colors.white,
-      unselectedTextColor: _C.labelText,
+      unselectedTextColor: AppColors.text,
       equalWidth: false,
       containerPadding: EdgeInsets.symmetric(horizontal: 8.sp, vertical: 4.sp),
       containerColor: Colors.white,
@@ -760,7 +761,7 @@ class _OwnerServicesEditPageState extends State<OwnerServicesEditPage> {
           child: Container(
             height: 44.h,
             decoration: BoxDecoration(
-              color: _C.primary,
+              color: ColorPick.primary,
               borderRadius: BorderRadius.circular(6.r),
             ),
             child: Center(
@@ -785,7 +786,7 @@ class _OwnerServicesEditPageState extends State<OwnerServicesEditPage> {
           child: Container(
             height: 44.h,
             decoration: BoxDecoration(
-              color: _C.addBtn,
+              color: ColorPick.discard,
               borderRadius: BorderRadius.circular(6.r),
             ),
             child: Center(
@@ -809,7 +810,7 @@ class _OwnerServicesEditPageState extends State<OwnerServicesEditPage> {
   // ═══════════════════════════════════════════════════════════════════════════
   Widget _sectionLabel(String t) => Text(
     t,
-    style: StyleText.fontSize12Weight500.copyWith(color: _C.labelText),
+    style: StyleText.fontSize12Weight500.copyWith(color: AppColors.text),
   );
 
   Widget _biRow(
@@ -872,7 +873,7 @@ class _OwnerServicesEditPageState extends State<OwnerServicesEditPage> {
     child: Container(
       padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 7.h),
       decoration: BoxDecoration(
-        color: _C.primary,
+        color: ColorPick.primary,
         borderRadius: BorderRadius.circular(4.r),
       ),
       child: Row(
@@ -894,7 +895,7 @@ class _OwnerServicesEditPageState extends State<OwnerServicesEditPage> {
     child: Container(
       padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
       decoration: BoxDecoration(
-        color: _C.remove,
+        color: ColorPick.red,
         borderRadius: BorderRadius.circular(4.r),
       ),
       child: Row(
@@ -987,7 +988,7 @@ class _OwnerServicesEditPageState extends State<OwnerServicesEditPage> {
             width: 24.w,
             height: 24.h,
             decoration: BoxDecoration(
-              color: _C.primary,
+              color: ColorPick.primary,
               shape: BoxShape.circle,
             ),
             child: Center(

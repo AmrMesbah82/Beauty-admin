@@ -10,6 +10,7 @@ import 'package:intl/intl.dart';
 import 'package:beauty_admin/core/custom_svg.dart';
 import 'package:beauty_admin/core/widget/circle_progress.dart';
 
+import '../../../../../core/constant/color.dart';
 import '../../../../../core/custom_segmant_tab.dart';
 import '../../../../../core/main_widgets/admin_sub_navbar.dart';
 import '../../../../../core/main_widgets/app_admin_navbar.dart';
@@ -80,8 +81,8 @@ class _RequestDemoMainPageState extends State<RequestDemoMainPage> {
       builder: (ctx, state) {
         if (state is RequestDemoCmsInitial || state is RequestDemoCmsLoading)
           return const Scaffold(
-            backgroundColor: _C.back,
-            body: Center(child: CircularProgressIndicator(color: _C.primary)),
+            backgroundColor: ColorPick.background,
+            body: Center(child: CircularProgressIndicator(color: ColorPick.primary)),
           );
 
         RequestDemoPageModel? m;
@@ -90,7 +91,7 @@ class _RequestDemoMainPageState extends State<RequestDemoMainPage> {
         m ??= ctx.read<RequestDemoCmsCubit>().current;
 
         return Scaffold(
-          backgroundColor: _C.back,
+          backgroundColor: ColorPick.background,
           body: SizedBox(
             width: double.infinity,
             height: double.infinity,
@@ -128,7 +129,7 @@ class _RequestDemoMainPageState extends State<RequestDemoMainPage> {
                                     'Request Demo',
                                     style: StyleText.fontSize45Weight600
                                         .copyWith(
-                                      color: _C.primary,
+                                      color: ColorPick.primary,
                                       fontWeight: FontWeight.w700,
                                     ),
                                   ),
@@ -140,7 +141,7 @@ class _RequestDemoMainPageState extends State<RequestDemoMainPage> {
                                         vertical: 8.h,
                                       ),
                                       decoration: BoxDecoration(
-                                        color: _C.primary,
+                                        color: ColorPick.primary,
                                         borderRadius: BorderRadius.circular(
                                           6.r,
                                         ),
@@ -169,7 +170,7 @@ class _RequestDemoMainPageState extends State<RequestDemoMainPage> {
                                           .read<RequestDemoCmsCubit>()
                                           .switchGender(g);
                                     },
-                                    selectedColor: _C.primary,
+                                    selectedColor: ColorPick.primary,
                                     unselectedColor: Colors.white,
                                     selectedTextColor: Colors.white,
                                     unselectedTextColor: AppColors.secondaryText,
@@ -311,12 +312,12 @@ class _RequestDemoMainPageState extends State<RequestDemoMainPage> {
         Container(
           padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 8.h),
           decoration: BoxDecoration(
-            color: _C.cardBg,
+            color: ColorPick.white,
             borderRadius: BorderRadius.circular(4.r),
           ),
           child: Text(
             'Last Updated On ${_fmtDate(lastUpdated)}',
-            style: StyleText.fontSize13Weight500.copyWith(color: _C.primary),
+            style: StyleText.fontSize13Weight500.copyWith(color: ColorPick.primary),
           ),
         ),
         SizedBox(width: 12.w),
@@ -326,7 +327,7 @@ class _RequestDemoMainPageState extends State<RequestDemoMainPage> {
             width: 130.w,
             height: 36.h,
             decoration: BoxDecoration(
-              color: _C.cardBg,
+              color: ColorPick.white,
               borderRadius: BorderRadius.circular(4.r),
             ),
             child: Center(
@@ -345,7 +346,7 @@ class _RequestDemoMainPageState extends State<RequestDemoMainPage> {
                     width: 20.w,
                     height: 20.h,
                     fit: BoxFit.scaleDown,
-                    color: _C.primary,
+                    color: ColorPick.primary,
                   ),
                 ],
               ),
@@ -368,7 +369,7 @@ class _RequestDemoMainPageState extends State<RequestDemoMainPage> {
             width: double.infinity,
             padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
             decoration: BoxDecoration(
-              color: _C.primary,
+              color: ColorPick.primary,
               borderRadius: BorderRadius.circular(6.r),
             ),
             child: Row(
@@ -413,7 +414,7 @@ class _RequestDemoMainPageState extends State<RequestDemoMainPage> {
 
   Widget _lbl(String t) => Text(
     t,
-    style: StyleText.fontSize12Weight500.copyWith(color: _C.labelText),
+    style: StyleText.fontSize12Weight500.copyWith(color: AppColors.text),
   );
 
   Widget _biRow(String enL, String arL, String enV, String arV) => Row(
@@ -491,7 +492,7 @@ class _RequestDemoMainPageState extends State<RequestDemoMainPage> {
           t.isEmpty ? 'Text Here' : t,
           textDirection: dir,
           style: StyleText.fontSize12Weight400.copyWith(
-            color: t.isEmpty ? _C.hintText : _C.labelText,
+            color: t.isEmpty ? AppColors.secondaryText : AppColors.text,
           ),
           maxLines: maxLines,
           overflow: TextOverflow.ellipsis,
@@ -538,7 +539,7 @@ class _RequestDemoMainPageState extends State<RequestDemoMainPage> {
         child: Icon(
           Icons.insert_drive_file_outlined,
           size: 24.sp,
-          color: _C.hintText,
+          color: AppColors.secondaryText,
         ),
       ),
     );

@@ -17,8 +17,10 @@ import 'package:beauty_admin/core/widget/circle_progress.dart';
 import 'package:beauty_admin/core/widget/custom_dropdwon.dart';
 import 'package:beauty_admin/core/widget/textfield.dart';
 
+import '../../../../../core/constant/color.dart';
 import '../../../../../core/custom_dialog.dart';
 import '../../../../../core/main_widgets/admin_sub_navbar.dart';
+import '../../../../../core/theme/appcolors.dart';
 import '../../../../../core/theme/new_theme.dart';
 import '../../../data/model/request_model.dart';
 import '../../controller/request_cubit.dart';
@@ -27,7 +29,6 @@ import 'request_preview.dart';
 import 'dart:convert';
 import 'dart:ui_web' as ui_web;
 
-part '../widget/request_edit/c.dart';
 part '../widget/request_edit/img.dart';
 part '../widget/request_edit/q_local.dart';
 part '../widget/request_edit/v_local.dart';
@@ -64,7 +65,7 @@ class _RequestDemoEditPageState extends State<RequestDemoEditPage> {
     'questions': true,
     'confirm': true,
   };
-  Color get _p => _C.primary;
+  Color get _p => ColorPick.primary;
 
   @override
   void dispose() {
@@ -209,14 +210,14 @@ class _RequestDemoEditPageState extends State<RequestDemoEditPage> {
                 title,
                 textAlign: TextAlign.center,
                 style: StyleText.fontSize16Weight600
-                    .copyWith(color: _C.label),
+                    .copyWith(color: AppColors.text),
               ),
               SizedBox(height: 8.h),
               Text(
                 message,
                 textAlign: TextAlign.center,
                 style: StyleText.fontSize12Weight400
-                    .copyWith(color: _C.label.withOpacity(0.6)),
+                    .copyWith(color: AppColors.text.withOpacity(0.6)),
               ),
               SizedBox(height: 20.h),
               GestureDetector(
@@ -225,7 +226,7 @@ class _RequestDemoEditPageState extends State<RequestDemoEditPage> {
                   width: double.infinity,
                   height: 38.h,
                   decoration: BoxDecoration(
-                    color: _C.primary,
+                    color: ColorPick.primary,
                     borderRadius: BorderRadius.circular(6.r),
                   ),
                   child: Center(
@@ -376,7 +377,7 @@ class _RequestDemoEditPageState extends State<RequestDemoEditPage> {
                 'Validation Error',
                 textAlign: TextAlign.center,
                 style: StyleText.fontSize16Weight600
-                    .copyWith(color: _C.label),
+                    .copyWith(color: AppColors.secondaryText),
               ),
               SizedBox(height: 8.h),
               Container(
@@ -386,7 +387,7 @@ class _RequestDemoEditPageState extends State<RequestDemoEditPage> {
                     errorMessage,
                     textAlign: TextAlign.left,
                     style: StyleText.fontSize12Weight400
-                        .copyWith(color: _C.label.withOpacity(0.8)),
+                        .copyWith(color: AppColors.text.withOpacity(0.8)),
                   ),
                 ),
               ),
@@ -397,7 +398,7 @@ class _RequestDemoEditPageState extends State<RequestDemoEditPage> {
                   width: double.infinity,
                   height: 38.h,
                   decoration: BoxDecoration(
-                    color: _C.primary,
+                    color: ColorPick.primary,
                     borderRadius: BorderRadius.circular(6.r),
                   ),
                   child: Center(
@@ -499,14 +500,14 @@ class _RequestDemoEditPageState extends State<RequestDemoEditPage> {
                     'Published Successfully',
                     textAlign: TextAlign.center,
                     style: StyleText.fontSize16Weight600
-                        .copyWith(color: _C.label),
+                        .copyWith(color: AppColors.text),
                   ),
                   SizedBox(height: 8.h),
                   Text(
                     'Your changes have been published successfully',
                     textAlign: TextAlign.center,
                     style: StyleText.fontSize12Weight400
-                        .copyWith(color: _C.label.withOpacity(0.6)),
+                        .copyWith(color: AppColors.text.withOpacity(0.6)),
                   ),
                   SizedBox(height: 20.h),
                   GestureDetector(
@@ -519,7 +520,7 @@ class _RequestDemoEditPageState extends State<RequestDemoEditPage> {
                       width: double.infinity,
                       height: 38.h,
                       decoration: BoxDecoration(
-                        color: _C.primary,
+                        color: ColorPick.primary,
                         borderRadius: BorderRadius.circular(6.r),
                       ),
                       child: Center(
@@ -568,14 +569,14 @@ class _RequestDemoEditPageState extends State<RequestDemoEditPage> {
                     'Error',
                     textAlign: TextAlign.center,
                     style: StyleText.fontSize16Weight600
-                        .copyWith(color: _C.label),
+                        .copyWith(color: AppColors.text),
                   ),
                   SizedBox(height: 8.h),
                   Text(
                     'An error occurred: ${e.toString()}',
                     textAlign: TextAlign.center,
                     style: StyleText.fontSize12Weight400
-                        .copyWith(color: _C.label.withOpacity(0.6)),
+                        .copyWith(color: AppColors.text.withOpacity(0.6)),
                   ),
                   SizedBox(height: 20.h),
                   GestureDetector(
@@ -584,7 +585,7 @@ class _RequestDemoEditPageState extends State<RequestDemoEditPage> {
                       width: double.infinity,
                       height: 38.h,
                       decoration: BoxDecoration(
-                        color: _C.primary,
+                        color: ColorPick.primary,
                         borderRadius: BorderRadius.circular(6.r),
                       ),
                       child: Center(
@@ -613,12 +614,12 @@ class _RequestDemoEditPageState extends State<RequestDemoEditPage> {
         final cubit = ctx.read<RequestDemoCmsCubit>();
         if (state is RequestDemoCmsInitial || state is RequestDemoCmsLoading)
           return const Scaffold(
-            backgroundColor: _C.back,
-            body: Center(child: CircularProgressIndicator(color: _C.primary)),
+            backgroundColor: ColorPick.background,
+            body: Center(child: CircularProgressIndicator(color: ColorPick.primary)),
           );
 
         return Scaffold(
-          backgroundColor: _C.back,
+          backgroundColor: ColorPick.background,
           body: SizedBox(
             width: double.infinity,
             height: double.infinity,
@@ -640,7 +641,7 @@ class _RequestDemoEditPageState extends State<RequestDemoEditPage> {
                           Text(
                             'Editing Request Demo Details',
                             style: StyleText.fontSize45Weight600.copyWith(
-                              color: _C.primary,
+                              color: ColorPick.primary,
                               fontWeight: FontWeight.w700,
                             ),
                           ),
@@ -672,7 +673,7 @@ class _RequestDemoEditPageState extends State<RequestDemoEditPage> {
                               Expanded(
                                 child: _btn(
                                   'Publish',
-                                  _C.primary,
+                                  ColorPick.primary,
                                       () {
                                     if (!_validateAllFields()) {
                                       setState(() => _sub = true);
@@ -697,7 +698,7 @@ class _RequestDemoEditPageState extends State<RequestDemoEditPage> {
                               Expanded(
                                 child: _btn(
                                   'Discard',
-                                  _C.addBtn,
+                                  ColorPick.discard,
                                       () => Navigator.pop(context),
                                 ),
                               ),
@@ -748,7 +749,7 @@ class _RequestDemoEditPageState extends State<RequestDemoEditPage> {
             width: double.infinity,
             padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
             decoration: BoxDecoration(
-              color: _C.primary,
+              color: ColorPick.primary,
               borderRadius: BorderRadius.circular(4.r),
             ),
             child: Row(
@@ -784,7 +785,7 @@ class _RequestDemoEditPageState extends State<RequestDemoEditPage> {
       final hex = _primaryColor.text.replaceAll('#', '');
       if (hex.length == 6) return Color(int.parse('FF$hex', radix: 16));
     } catch (_) {}
-    return _C.primary;
+    return ColorPick.primary;
   }
 
   // ── HEADER ───────────────────────────────────────────────────────────────
@@ -805,7 +806,7 @@ class _RequestDemoEditPageState extends State<RequestDemoEditPage> {
             child: Text(
               'SVG image is required',
               style: StyleText.fontSize10Weight400.copyWith(
-                color: _C.remove,
+                color: ColorPick.red,
               ),
             ),
           ),
@@ -875,7 +876,7 @@ class _RequestDemoEditPageState extends State<RequestDemoEditPage> {
             child: Text(
               'At least one question is required',
               style: StyleText.fontSize10Weight400.copyWith(
-                color: _C.remove,
+                color: ColorPick.red,
               ),
             ),
           ),
@@ -946,7 +947,7 @@ class _RequestDemoEditPageState extends State<RequestDemoEditPage> {
                   hint: Text(
                     'Text',
                     style: StyleText.fontSize12Weight400.copyWith(
-                      color: _C.hint,
+                      color: AppColors.secondaryText,
                     ),
                   ),
                   selectedValue: q.type.toValue(),
@@ -966,7 +967,7 @@ class _RequestDemoEditPageState extends State<RequestDemoEditPage> {
                     Text(
                       'Required',
                       style: StyleText.fontSize14Weight500.copyWith(
-                        color: _C.label,
+                        color: AppColors.text,
                       ),
                     ),
                     Spacer(),
@@ -976,7 +977,7 @@ class _RequestDemoEditPageState extends State<RequestDemoEditPage> {
                       padding: 3.sp,
                       borderRadius: 20.sp,
                       toggleSize: 16.sp,
-                      activeColor: _C.primary,
+                      activeColor: ColorPick.primary,
                       inactiveColor: Colors.grey.withOpacity(.16),
                       value: q.required,
                       onToggle: (v) => setState(() => q.required = v),
@@ -1028,7 +1029,7 @@ class _RequestDemoEditPageState extends State<RequestDemoEditPage> {
                           submitted: _sub,
                           fillColor: Colors.white,
                           primaryColor:
-                          isDuplicate ? _C.remove : _p,
+                          isDuplicate ? ColorPick.red : _p,
                           onChanged: (_) => setState(() {}),
                         ),
                       ),
@@ -1046,7 +1047,7 @@ class _RequestDemoEditPageState extends State<RequestDemoEditPage> {
                             textDirection: ui.TextDirection.rtl,
                             textAlign: TextAlign.right,
                             primaryColor:
-                            isDuplicate ? _C.remove : _p,
+                            isDuplicate ? ColorPick.red : _p,
                             onChanged: (_) => setState(() {}),
                           ),
                         ),
@@ -1058,7 +1059,7 @@ class _RequestDemoEditPageState extends State<RequestDemoEditPage> {
                     Text(
                       'Duplicate value — each option must be unique',
                       style: StyleText.fontSize10Weight400.copyWith(
-                        color: _C.remove,
+                        color: ColorPick.red,
                       ),
                     ),
                 ],
@@ -1070,7 +1071,7 @@ class _RequestDemoEditPageState extends State<RequestDemoEditPage> {
                 child: Text(
                   'At least one value is required for dropdown questions',
                   style: StyleText.fontSize10Weight400.copyWith(
-                    color: _C.remove,
+                    color: ColorPick.red,
                   ),
                 ),
               ),
@@ -1099,7 +1100,7 @@ class _RequestDemoEditPageState extends State<RequestDemoEditPage> {
             child: Text(
               'SVG image is required',
               style: StyleText.fontSize10Weight400.copyWith(
-                color: _C.remove,
+                color: ColorPick.red,
               ),
             ),
           ),
@@ -1140,7 +1141,7 @@ class _RequestDemoEditPageState extends State<RequestDemoEditPage> {
 
   // ── SHARED ───────────────────────────────────────────────────────────────
   Widget _lbl(String t) =>
-      Text(t, style: StyleText.fontSize12Weight500.copyWith(color: _C.label));
+      Text(t, style: StyleText.fontSize12Weight500.copyWith(color: AppColors.text));
 
   Widget _biFields(
       String enL,
@@ -1189,7 +1190,7 @@ class _RequestDemoEditPageState extends State<RequestDemoEditPage> {
       width: 16.w,
       height: 16.h,
       decoration: const BoxDecoration(
-          color: _C.remove, shape: BoxShape.circle),
+          color: ColorPick.red, shape: BoxShape.circle),
       child: Icon(Icons.remove, color: Colors.white, size: 10.sp),
     ),
   );
@@ -1281,7 +1282,7 @@ class _RequestDemoEditPageState extends State<RequestDemoEditPage> {
         height: 50.h,
         decoration: BoxDecoration(
           color: _sub && picked.isEmpty
-              ? _C.remove.withOpacity(0.1)
+              ? ColorPick.red.withOpacity(0.1)
               : const Color(0xFFD9D9D9),
           shape: BoxShape.circle,
         ),
@@ -1289,7 +1290,7 @@ class _RequestDemoEditPageState extends State<RequestDemoEditPage> {
           child: Icon(
             Icons.insert_drive_file_outlined,
             size: 24.sp,
-            color: _sub && picked.isEmpty ? _C.remove : _C.hint,
+            color: _sub && picked.isEmpty ? ColorPick.red : AppColors.secondaryText,
           ),
         ),
       );
@@ -1308,7 +1309,7 @@ class _RequestDemoEditPageState extends State<RequestDemoEditPage> {
               width: 24.w,
               height: 24.h,
               decoration: BoxDecoration(
-                color: _C.primary,
+                color: ColorPick.primary,
                 shape: BoxShape.circle,
               ),
               child: Center(

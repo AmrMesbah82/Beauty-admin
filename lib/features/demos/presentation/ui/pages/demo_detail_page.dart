@@ -27,7 +27,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
+import '../../../../../core/constant/color.dart';
 import '../../../../../core/main_widgets/app_admin_navbar.dart';
+import '../../../../../core/theme/appcolors.dart';
 import '../../../../../core/theme/new_theme.dart';
 import '../../../../../core/widget/custom_dropdwon.dart';
 import '../../../../home/presentation/controller/home_cubit.dart';
@@ -153,13 +155,13 @@ class _RequestDemoDetailPageState extends State<RequestDemoDetailPage> {
                   style: TextStyle(
                       fontSize: 14.sp,
                       fontWeight: FontWeight.w700,
-                      color: _C.labelText)),
+                      color: AppColors.text)),
               SizedBox(height: 8.h),
               Text(body,
                   textAlign: TextAlign.center,
                   style: TextStyle(
                       fontSize: 12.sp,
-                      color: _C.hintText,
+                      color: AppColors.secondaryText,
                       height: 1.5)),
               SizedBox(height: 16.h),
               Row(
@@ -170,7 +172,7 @@ class _RequestDemoDetailPageState extends State<RequestDemoDetailPage> {
                       child: Container(
                         height: 38.h,
                         decoration: BoxDecoration(
-                          color: _C.fieldBg,
+                          color: ColorPick.white,
                           borderRadius: BorderRadius.circular(6.r),
                         ),
                         alignment: Alignment.center,
@@ -178,7 +180,7 @@ class _RequestDemoDetailPageState extends State<RequestDemoDetailPage> {
                             style: TextStyle(
                                 fontSize: 13.sp,
                                 fontWeight: FontWeight.w600,
-                                color: _C.labelText)),
+                                color: AppColors.text)),
                       ),
                     ),
                   ),
@@ -228,8 +230,8 @@ class _RequestDemoDetailPageState extends State<RequestDemoDetailPage> {
 
             if (demo == null) {
               return const Scaffold(
-                backgroundColor: _C.back,
-                body: Center(child: CircularProgressIndicator(color: _C.primary)),
+                backgroundColor: ColorPick.background,
+                body: Center(child: CircularProgressIndicator(color: ColorPick.primary)),
               );
             }
 
@@ -247,7 +249,7 @@ class _RequestDemoDetailPageState extends State<RequestDemoDetailPage> {
             };
 
             return Scaffold(
-              backgroundColor: _C.back,
+              backgroundColor: ColorPick.background,
               body: Stack(
                 children: [
                   SingleChildScrollView(
@@ -280,11 +282,11 @@ class _RequestDemoDetailPageState extends State<RequestDemoDetailPage> {
                                     style: TextStyle(
                                         fontSize: 13.sp,
                                         fontWeight: FontWeight.w500,
-                                        color: _C.labelText)),
+                                        color: AppColors.text)),
                                 Text(dateStr,
                                     style: TextStyle(
                                         fontSize: 13.sp,
-                                        color: _C.hintText)),
+                                        color: AppColors.secondaryText)),
                                 const Spacer(),
                                 SizedBox(
                                   width: 140.w,
@@ -328,7 +330,7 @@ class _RequestDemoDetailPageState extends State<RequestDemoDetailPage> {
                                         style: TextStyle(
                                             fontSize: 14.sp,
                                             fontWeight: FontWeight.w700,
-                                            color: _C.labelText)),
+                                            color: AppColors.text)),
                                     SizedBox(height: 12.h),
 
                                     _readField('Salon Name', demo.salonName),
@@ -357,7 +359,7 @@ class _RequestDemoDetailPageState extends State<RequestDemoDetailPage> {
                                         style: TextStyle(
                                             fontSize: 14.sp,
                                             fontWeight: FontWeight.w700,
-                                            color: _C.labelText)),
+                                            color: AppColors.text)),
                                     SizedBox(height: 12.h),
 
                                     Row(
@@ -383,7 +385,7 @@ class _RequestDemoDetailPageState extends State<RequestDemoDetailPage> {
                                         style: TextStyle(
                                             fontSize: 14.sp,
                                             fontWeight: FontWeight.w700,
-                                            color: _C.labelText)),
+                                            color: AppColors.text)),
                                     SizedBox(height: 12.h),
 
                                     Row(
@@ -404,7 +406,7 @@ class _RequestDemoDetailPageState extends State<RequestDemoDetailPage> {
                                 style: TextStyle(
                                     fontSize: 16.sp,
                                     fontWeight: FontWeight.w700,
-                                    color: _C.labelText)),
+                                    color: AppColors.text)),
                             SizedBox(height: 14.h),
 
                             Container(
@@ -456,20 +458,20 @@ class _RequestDemoDetailPageState extends State<RequestDemoDetailPage> {
                                         style: TextStyle(
                                             fontSize: 12.sp,
                                             fontWeight: FontWeight.w500,
-                                            color: _C.labelText)),
+                                            color: AppColors.text)),
                                     SizedBox(height: 6.h),
                                     SizedBox(
                                       height: 80.h,
                                       child: TextFormField(
                                         controller: _noteCtrl,
                                         maxLines: 4,
-                                        style: TextStyle(fontSize: 12.sp, color: _C.labelText),
+                                        style: TextStyle(fontSize: 12.sp, color: AppColors.text),
                                         decoration: InputDecoration(
                                           hoverColor: Colors.transparent,
                                           hintText: 'Text Here',
-                                          hintStyle: TextStyle(fontSize: 12.sp, color: _C.hintText),
+                                          hintStyle: TextStyle(fontSize: 12.sp, color: AppColors.secondaryText),
                                           filled: true,
-                                          fillColor: _C.fieldBg,
+                                          fillColor: ColorPick.white,
                                           isDense: true,
                                           border: OutlineInputBorder(
                                               borderRadius: BorderRadius.circular(4.r),
@@ -536,7 +538,7 @@ class _RequestDemoDetailPageState extends State<RequestDemoDetailPage> {
                     Container(
                       color: Colors.black26,
                       child: const Center(
-                          child: CircularProgressIndicator(color: _C.primary)),
+                          child: CircularProgressIndicator(color: ColorPick.primary)),
                     ),
                 ],
               ),
@@ -559,7 +561,7 @@ class _RequestDemoDetailPageState extends State<RequestDemoDetailPage> {
             style: TextStyle(
                 fontSize: 12.sp,
                 fontWeight: FontWeight.w500,
-                color: _C.labelText)),
+                color: AppColors.text)),
         SizedBox(height: 4.h),
         Container(
           width: double.infinity,
@@ -567,14 +569,14 @@ class _RequestDemoDetailPageState extends State<RequestDemoDetailPage> {
           padding: EdgeInsets.symmetric(
               horizontal: 10.w, vertical: multiLine ? 8.h : 0),
           decoration: BoxDecoration(
-            color: _C.fieldBg,
+            color: ColorPick.white,
             borderRadius: BorderRadius.circular(4.r),
           ),
           alignment: multiLine ? Alignment.topLeft : Alignment.centerLeft,
           child: Text(
             value.isEmpty ? 'Text Here' : value,
             style: StyleText.fontSize12Weight400.copyWith(
-                color: value.isEmpty ? _C.hintText : _C.labelText),
+                color: value.isEmpty ? AppColors.secondaryText : AppColors.text),
             maxLines: multiLine ? 4 : 1,
             overflow: TextOverflow.ellipsis,
           ),
@@ -602,7 +604,7 @@ class _RequestDemoDetailPageState extends State<RequestDemoDetailPage> {
             style: TextStyle(
                 fontSize: 12.sp,
                 fontWeight: FontWeight.w500,
-                color: _C.labelText)),
+                color: AppColors.text)),
         SizedBox(height: 4.h),
         CustomDropdownFormFieldInvMaster(
           selectedValue: value,
@@ -612,7 +614,7 @@ class _RequestDemoDetailPageState extends State<RequestDemoDetailPage> {
           dropdownColor: Color(0xFFF1F1F1),
           primaryColor: cmsPrimary,
           hint: Text(hint,
-              style: TextStyle(fontSize: 11.sp, color: _C.hintText)),
+              style: TextStyle(fontSize: 11.sp, color: AppColors.secondaryText)),
           onChanged: onChanged,
         ),
       ],

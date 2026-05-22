@@ -30,13 +30,13 @@ class _PreviewContent extends StatelessWidget {
         width: fakeWidth,
         height: fakeHeight,
         child: ColoredBox(
-          color: _C.back,
+          color: ColorPick.white,
           child: model == null
               ? Center(
             child: Text(
               'No data available',
               style: TextStyle(
-                  fontSize: 14, color: _C.hintText),
+                  fontSize: 14, color: AppColors.secondaryText),
             ),
           )
               : SingleChildScrollView(

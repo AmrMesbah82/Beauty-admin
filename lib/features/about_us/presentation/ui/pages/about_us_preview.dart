@@ -22,6 +22,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
+import '../../../../../core/constant/color.dart';
 import '../../../../../core/custom_dialog.dart';
 import '../../../../../core/main_widgets/admin_sub_navbar.dart';
 import '../../../../../core/theme/appcolors.dart';
@@ -136,15 +137,15 @@ class _AboutPreviewPageState extends State<AboutPreviewPage> {
 
         if (state is AboutInitial || state is AboutLoading) {
           return const Scaffold(
-            backgroundColor: _C.sectionBg,
-            body: Center(child: CircularProgressIndicator(color: _C.primary)),
+            backgroundColor: ColorPick.background,
+            body: Center(child: CircularProgressIndicator(color: ColorPick.primary)),
           );
         }
 
         return Stack(
           children: [
             Scaffold(
-              backgroundColor: _C.sectionBg,
+              backgroundColor: ColorPick.background,
               body: SingleChildScrollView(
                 child: Center(
                   child: SizedBox(
@@ -159,7 +160,7 @@ class _AboutPreviewPageState extends State<AboutPreviewPage> {
                         Text(
                           'Preview About Us Details',
                           style: StyleText.fontSize45Weight600.copyWith(
-                            color: _C.primary,
+                            color: ColorPick.primary,
                             fontWeight: FontWeight.w700,
                           ),
                         ),
@@ -229,8 +230,8 @@ class _AboutPreviewPageState extends State<AboutPreviewPage> {
                                   height: 44.h,
                                   decoration: BoxDecoration(
                                     color: _isPublishing
-                                        ? _C.primary.withOpacity(0.5)
-                                        : _C.primary,
+                                        ? ColorPick.primary.withOpacity(0.5)
+                                        : ColorPick.primary,
                                     borderRadius: BorderRadius.circular(6.r),
                                   ),
                                   child: Center(
@@ -263,7 +264,7 @@ class _AboutPreviewPageState extends State<AboutPreviewPage> {
               Container(
                 color: Colors.black.withOpacity(0.35),
                 child: const Center(
-                    child: CircularProgressIndicator(color: _C.primary)),
+                    child: CircularProgressIndicator(color: ColorPick.primary)),
               ),
           ],
         );
@@ -285,13 +286,13 @@ class _AboutPreviewPageState extends State<AboutPreviewPage> {
                 style: TextStyle(
                   fontSize: 15.sp,
                   fontWeight: active ? FontWeight.w700 : FontWeight.w500,
-                  color: active ? _C.primary : _C.hintText,
+                  color: active ? ColorPick.primary : AppColors.secondaryText,
                 )),
           ),
           Container(
             height: 2,
             width: label.length * 8.0,
-            color: active ? _C.primary : Colors.transparent,
+            color: active ? ColorPick.primary : Colors.transparent,
           ),
         ],
       ),
@@ -303,7 +304,7 @@ class _AboutPreviewPageState extends State<AboutPreviewPage> {
     return Container(
       height: 36.h,
       decoration: BoxDecoration(
-        color: _C.cardBg,
+        color: ColorPick.white,
         borderRadius: BorderRadius.circular(8.r),
         border: Border.all(color: _kDivider),
       ),
@@ -326,7 +327,7 @@ class _AboutPreviewPageState extends State<AboutPreviewPage> {
         padding: EdgeInsets.symmetric(horizontal: 18.w),
         height: 34.h,
         decoration: BoxDecoration(
-          color: selected ? _C.primary : Colors.transparent,
+          color: selected ? ColorPick.primary : Colors.transparent,
           borderRadius: BorderRadius.circular(7.r),
         ),
         child: Center(
@@ -335,7 +336,7 @@ class _AboutPreviewPageState extends State<AboutPreviewPage> {
             style: TextStyle(
               fontSize: 13.sp,
               fontWeight: FontWeight.w600,
-              color: selected ? Colors.white : _C.hintText,
+              color: selected ? Colors.white : AppColors.secondaryText,
             ),
           ),
         ),

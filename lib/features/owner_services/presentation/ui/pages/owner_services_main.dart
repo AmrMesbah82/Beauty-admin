@@ -15,9 +15,11 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:intl/intl.dart';
 
+import '../../../../../core/constant/color.dart';
 import '../../../../../core/custom_svg.dart';
 import '../../../../../core/main_widgets/admin_sub_navbar.dart';
 import '../../../../../core/main_widgets/app_admin_navbar.dart';
+import '../../../../../core/theme/appcolors.dart';
 import '../../../../../core/theme/new_theme.dart';
 import '../../../../home/presentation/ui/pages/home_main.dart';
 import '../../../data/model/owner_services_model.dart';
@@ -28,7 +30,6 @@ import 'owner_services_preview.dart';
 import 'dart:html' as html;
 import 'dart:ui_web' as ui_web;
 
-part '../widget/owner_services_main/c.dart';
 
 /// Custom Segmented Tabs Widget (reused from client services)
 
@@ -73,7 +74,7 @@ class CustomSegmentedTabs extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(borderRadius ?? 8.r),
-        color: containerColor ?? _C.sectionBg,
+        color: containerColor ?? ColorPick.white,
       ),
       padding: containerPadding ?? EdgeInsets.all(8.sp),
       child: Row(
@@ -115,8 +116,8 @@ class CustomSegmentedTabs extends StatelessWidget {
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(4.r),
           color: isSelected
-              ? (selectedColor ?? _C.primary)
-              : (unselectedColor ?? _C.sectionBg),
+              ? (selectedColor ?? ColorPick.primary)
+              : (unselectedColor ?? ColorPick.white),
         ),
         padding: EdgeInsets.symmetric(
           vertical: tabVerticalPadding ?? 6.sp,
@@ -130,7 +131,7 @@ class CustomSegmentedTabs extends StatelessWidget {
                 height: 1,
                 color: isSelected
                     ? (selectedTextColor ?? Colors.white)
-                    : (unselectedTextColor ?? _C.labelText),
+                    : (unselectedTextColor ?? AppColors.text),
               ),
             ),
           ),
@@ -206,9 +207,9 @@ class _OwnerServicesMainPageState extends State<OwnerServicesMainPage> {
         if (state is OwnerServicesCmsInitial ||
             state is OwnerServicesCmsLoading) {
           return const Scaffold(
-            backgroundColor: _C.back,
+            backgroundColor: ColorPick.background,
             body: Center(
-                child: CircularProgressIndicator(color: _C.primary)),
+                child: CircularProgressIndicator(color: ColorPick.primary)),
           );
         }
 
@@ -216,7 +217,7 @@ class _OwnerServicesMainPageState extends State<OwnerServicesMainPage> {
         final data = cubit.current;
 
         return Scaffold(
-          backgroundColor: _C.back,
+          backgroundColor: ColorPick.background,
           body: SizedBox(
             width: double.infinity,
             height: double.infinity,
@@ -250,13 +251,13 @@ class _OwnerServicesMainPageState extends State<OwnerServicesMainPage> {
                                 children: [
                                   Text('Owner Services Details',
                                       style: StyleText.fontSize45Weight600
-                                          .copyWith(color: _C.primary, fontWeight: FontWeight.w700)),
+                                          .copyWith(color: ColorPick.primary, fontWeight: FontWeight.w700)),
                                   GestureDetector(
                                     onTap: _navigateToPreview,
                                     child: Container(
                                       padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
                                       decoration: BoxDecoration(
-                                          color: _C.primary, borderRadius: BorderRadius.circular(6.r)),
+                                          color: ColorPick.primary, borderRadius: BorderRadius.circular(6.r)),
                                       child: Text('Preview Screen',
                                           style: StyleText.fontSize12Weight500.copyWith(color: Colors.white)),
                                     ),
@@ -278,10 +279,10 @@ class _OwnerServicesMainPageState extends State<OwnerServicesMainPage> {
                                           .read<OwnerServicesCmsCubit>()
                                           .switchGender(g);
                                     },
-                                    selectedColor: _C.primary,
+                                    selectedColor: ColorPick.primary,
                                     unselectedColor: Colors.white,
                                     selectedTextColor: Colors.white,
-                                    unselectedTextColor: _C.labelText,
+                                    unselectedTextColor: AppColors.text,
                                     equalWidth: false,
                                     containerPadding: EdgeInsets.symmetric(
                                         horizontal: 8.sp, vertical: 4.sp),
@@ -333,10 +334,10 @@ class _OwnerServicesMainPageState extends State<OwnerServicesMainPage> {
         Container(
           padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 8.h),
           decoration: BoxDecoration(
-              color: _C.cardBg, borderRadius: BorderRadius.circular(4.r)),
+              color: ColorPick.white, borderRadius: BorderRadius.circular(4.r)),
           child: Text(
             'Last Updated On ${_fmtDate(lastUpdated)}',
-            style: StyleText.fontSize13Weight500.copyWith(color: _C.primary),
+            style: StyleText.fontSize13Weight500.copyWith(color: ColorPick.primary),
           ),
         ),
         SizedBox(width: 12.w),
@@ -346,7 +347,7 @@ class _OwnerServicesMainPageState extends State<OwnerServicesMainPage> {
             width: 130.w,
             height: 36.h,
             decoration: BoxDecoration(
-              color: _C.cardBg,
+              color: ColorPick.white,
               borderRadius: BorderRadius.circular(4.r),
             ),
             child: Center(
@@ -362,7 +363,7 @@ class _OwnerServicesMainPageState extends State<OwnerServicesMainPage> {
                       width: 20.w,
                       height: 20.h,
                       fit: BoxFit.scaleDown,
-                      color: _C.primary),
+                      color: ColorPick.primary),
                 ],
               ),
             ),
@@ -388,7 +389,7 @@ class _OwnerServicesMainPageState extends State<OwnerServicesMainPage> {
             width: double.infinity,
             padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
             decoration: BoxDecoration(
-              color: _C.primary,
+              color: ColorPick.primary,
               borderRadius: isOpen
                   ? BorderRadius.only(
                   topLeft: Radius.circular(6.r),
@@ -449,7 +450,7 @@ class _OwnerServicesMainPageState extends State<OwnerServicesMainPage> {
           alignment: Alignment.centerRight,
           child: Text('الوصف',
               style: StyleText.fontSize14Weight400
-                  .copyWith(color: _C.labelText))),
+                  .copyWith(color: AppColors.text))),
       SizedBox(height: 6.h),
       _readOnlyBox(data.header.description.ar,
           maxLines: 4, textDirection: ui.TextDirection.rtl),
@@ -473,7 +474,7 @@ class _OwnerServicesMainPageState extends State<OwnerServicesMainPage> {
               children: [
                 Text('Apple Store Link',
                     style: StyleText.fontSize14Weight400
-                        .copyWith(color: _C.labelText)),
+                        .copyWith(color: AppColors.text)),
                 SizedBox(height: 6.h),
                 _readOnlyBox(data.download.appStoreLink),
               ],
@@ -485,7 +486,7 @@ class _OwnerServicesMainPageState extends State<OwnerServicesMainPage> {
               children: [
                 Text('Android Link',
                     style: StyleText.fontSize14Weight400
-                        .copyWith(color: _C.labelText)),
+                        .copyWith(color: AppColors.text)),
                 SizedBox(height: 6.h),
                 _readOnlyBox(data.download.googlePlayLink),
               ],
@@ -528,12 +529,12 @@ class _OwnerServicesMainPageState extends State<OwnerServicesMainPage> {
                   alignment: Alignment.centerRight,
                   child: Text('الوصف',
                       style: StyleText.fontSize14Weight400
-                          .copyWith(color: _C.labelText))),
+                          .copyWith(color: AppColors.text))),
               SizedBox(height: 6.h),
               _readOnlyBox(item.description.ar,
                   maxLines: 4, textDirection: ui.TextDirection.rtl),
               if (i < data.mockups.items.length - 1)
-                Divider(height: 24.h, color: _C.border),
+                Divider(height: 24.h, color: ColorPick.white),
             ],
           ),
         );
@@ -543,7 +544,7 @@ class _OwnerServicesMainPageState extends State<OwnerServicesMainPage> {
           padding: EdgeInsets.symmetric(vertical: 12.h),
           child: Text('No mockups added yet.',
               style: StyleText.fontSize12Weight400
-                  .copyWith(color: _C.hintText)),
+                  .copyWith(color: AppColors.secondaryText)),
         ),
     ],
   );
@@ -555,15 +556,15 @@ class _OwnerServicesMainPageState extends State<OwnerServicesMainPage> {
           margin: EdgeInsets.only(left: 4.w),
           padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
           decoration: BoxDecoration(
-            color: a == alignment ? _C.primary : Colors.white,
+            color: a == alignment ? ColorPick.primary : Colors.white,
             borderRadius: BorderRadius.circular(4.r),
             border: Border.all(
-                color: a == alignment ? _C.primary : _C.border),
+                color: a == alignment ? ColorPick.primary : ColorPick.white),
           ),
           child: Text(
             a[0].toUpperCase() + a.substring(1),
             style: StyleText.fontSize11Weight400.copyWith(
-                color: a == alignment ? Colors.white : _C.labelText),
+                color: a == alignment ? Colors.white : AppColors.text),
           ),
         ),
     ]);
@@ -574,7 +575,7 @@ class _OwnerServicesMainPageState extends State<OwnerServicesMainPage> {
   // ═══════════════════════════════════════════════════════════════════════════
   Widget _readOnlyLabel(String t) => Text(t,
       style:
-      StyleText.fontSize12Weight500.copyWith(color: _C.labelText));
+      StyleText.fontSize12Weight500.copyWith(color: AppColors.text));
 
   Widget _readOnlyBox(String text,
       {int maxLines = 1,
@@ -591,7 +592,7 @@ class _OwnerServicesMainPageState extends State<OwnerServicesMainPage> {
         text.isEmpty ? 'Text Here' : text,
         textDirection: textDirection,
         style: StyleText.fontSize12Weight400.copyWith(
-            color: text.isEmpty ? _C.hintText : _C.labelText),
+            color: text.isEmpty ? AppColors.secondaryText : AppColors.text),
         maxLines: maxLines,
         overflow: TextOverflow.ellipsis,
       ),
@@ -609,7 +610,7 @@ class _OwnerServicesMainPageState extends State<OwnerServicesMainPage> {
             children: [
               Text(enLbl,
                   style: StyleText.fontSize14Weight400
-                      .copyWith(color: _C.labelText)),
+                      .copyWith(color: AppColors.text)),
               SizedBox(height: 6.h),
               _readOnlyBox(enVal),
             ],
@@ -622,7 +623,7 @@ class _OwnerServicesMainPageState extends State<OwnerServicesMainPage> {
             children: [
               Text(arLbl,
                   style: StyleText.fontSize14Weight400
-                      .copyWith(color: _C.labelText)),
+                      .copyWith(color: AppColors.text)),
               SizedBox(height: 6.h),
               _readOnlyBox(arVal, textDirection: ui.TextDirection.rtl),
             ],

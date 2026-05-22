@@ -39,7 +39,7 @@ class _MobileFrame extends StatelessWidget {
                       width: displayW * 0.3,
                       height: 12,
                       decoration: BoxDecoration(
-                        color: _C.border,
+                        color: ColorPick.white,
                         borderRadius: BorderRadius.circular(6),
                       ),
                     ),
@@ -77,7 +77,7 @@ class _MobileFrame extends StatelessWidget {
                       width: displayW * 0.3,
                       height: 4,
                       decoration: BoxDecoration(
-                        color: _C.border,
+                        color: ColorPick.white,
                         borderRadius: BorderRadius.circular(2),
                       ),
                     ),

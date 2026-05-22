@@ -1,3 +1,4 @@
+import 'package:beauty_admin/core/constant/color.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/svg.dart';
@@ -214,11 +215,11 @@ class _AdminNavbarDesktop extends StatelessWidget {
                     page:        item.page,
                     pageBuilder: item.pageBuilder,
                     activeLabel: activeLabel,
-                    primary:     Color(0xFFD16F9A),
+                    primary:     ColorPick.primary,
                   )),
                 SizedBox(width: 12.w),
                 _WebPageButton(
-                  primary:  Color(0xFFD16F9A),
+                  primary:  ColorPick.primary,
                   isActive: activeLabel == 'Web Page',
                   onTap:    () => _pushPage(context, webPage),
                 ),

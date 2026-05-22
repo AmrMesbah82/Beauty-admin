@@ -44,9 +44,11 @@ import 'package:beauty_admin/core/custom_svg.dart';
 import 'package:beauty_admin/core/widget/circle_progress.dart';
 import 'package:beauty_admin/core/widget/textfield.dart';
 
+import '../../../../../core/constant/color.dart';
 import '../../../../../core/custom_dialog.dart';
 import '../../../../../core/main_widgets/admin_sub_navbar.dart';
 import '../../../../../core/main_widgets/app_admin_navbar.dart';
+import '../../../../../core/theme/appcolors.dart';
 import '../../../../../core/theme/new_theme.dart';
 import '../../../../../core/widget/date_pic.dart';
 import '../../../../home/presentation/ui/pages/home_main.dart';
@@ -60,7 +62,6 @@ import 'package:flutter/widgets.dart';
 import 'dart:convert';
 import 'dart:ui_web' as ui_web;  // ← add this
 
-part '../widget/master_edit/c.dart';
 part '../widget/master_edit/picked_image.dart';
 
 String _svgBytesToDataUrl(Uint8List bytes) {
@@ -122,7 +123,7 @@ class _MasterEditPageState extends State<MasterEditPage> {
     'schedule': true,
   };
 
-  Color get _resolvedPrimaryColor => _C.primary;
+  Color get _resolvedPrimaryColor => ColorPick.primary;
 
   // ─────────────────────────────────────────────────────────────────────────
   // ✅ VALIDATION GATE - Returns true ONLY when ALL required fields are filled
@@ -514,7 +515,7 @@ class _MasterEditPageState extends State<MasterEditPage> {
       builder: (context) => AlertDialog(
         title: Row(
           children: [
-            Icon(Icons.error_outline, color: _C.error, size: 24.sp),
+            Icon(Icons.error_outline, color: ColorPick.red, size: 24.sp),
             SizedBox(width: 8.w),
             const Text('Validation Error'),
           ],
@@ -530,7 +531,7 @@ class _MasterEditPageState extends State<MasterEditPage> {
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('• ', style: TextStyle(color: _C.error)),
+                  Text('• ', style: TextStyle(color: ColorPick.red)),
                   Expanded(child: Text(field)),
                 ],
               ),
@@ -686,13 +687,13 @@ class _MasterEditPageState extends State<MasterEditPage> {
 
         if (state is MasterCmsInitial || state is MasterCmsLoading) {
           return const Scaffold(
-            backgroundColor: _C.back,
-            body: Center(child: CircularProgressIndicator(color: _C.primary)),
+            backgroundColor: ColorPick.background,
+            body: Center(child: CircularProgressIndicator(color: ColorPick.primary)),
           );
         }
 
         return Scaffold(
-          backgroundColor: _C.back,
+          backgroundColor: ColorPick.background,
           body: SizedBox(
             width: double.infinity,
             height: double.infinity,
@@ -722,7 +723,7 @@ class _MasterEditPageState extends State<MasterEditPage> {
                               Text(
                                 'Editing Home',
                                 style: StyleText.fontSize45Weight600.copyWith(
-                                  color: _C.primary,
+                                  color: ColorPick.primary,
                                   fontWeight: FontWeight.w700,
                                 ),
                               ),
@@ -732,13 +733,13 @@ class _MasterEditPageState extends State<MasterEditPage> {
                                   padding: EdgeInsets.symmetric(
                                       horizontal: 10.w, vertical: 4.h),
                                   decoration: BoxDecoration(
-                                    color: _C.draftBadge.withOpacity(0.15),
+                                    color: ColorPick.draftColor.withOpacity(0.15),
                                     borderRadius: BorderRadius.circular(4.r),
                                   ),
                                   child: Text(
                                     'EDITING DRAFT',
                                     style: StyleText.fontSize12Weight600.copyWith(
-                                      color: _C.draftBadge,
+                                      color: ColorPick.draftColor,
                                     ),
                                   ),
                                 ),
@@ -751,7 +752,7 @@ class _MasterEditPageState extends State<MasterEditPage> {
                               child: Text(
                                 'You are editing a saved draft. The published version is still live.',
                                 style: StyleText.fontSize12Weight400.copyWith(
-                                  color: _C.hintText,
+                                  color: AppColors.secondaryText,
                                 ),
                               ),
                             ),
@@ -819,7 +820,7 @@ class _MasterEditPageState extends State<MasterEditPage> {
               width: double.infinity,
               padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
               decoration: BoxDecoration(
-                color: _C.primary,
+                color: ColorPick.primary,
                 borderRadius: isOpen
                     ? BorderRadius.only(
                     topLeft:  Radius.circular(6.r),
@@ -864,7 +865,7 @@ class _MasterEditPageState extends State<MasterEditPage> {
               _sectionLabel('Image'),
               Row(children: [
                 Text('Visibility',
-                    style: StyleText.fontSize12Weight500.copyWith(color: _C.labelText)),
+                    style: StyleText.fontSize12Weight500.copyWith(color: AppColors.text)),
                 SizedBox(width: 6.w),
                 FlutterSwitch(
                   width: 38.sp,
@@ -872,7 +873,7 @@ class _MasterEditPageState extends State<MasterEditPage> {
                   padding: 3.sp,
                   borderRadius: 20.sp,
                   toggleSize: 16.sp,
-                  activeColor: _C.primary,
+                  activeColor: ColorPick.primary,
                   inactiveColor: Colors.grey.withOpacity(.16),
                   value: _headerVisibility,
                   onToggle: (val) => setState(() => _headerVisibility = val),
@@ -901,7 +902,7 @@ class _MasterEditPageState extends State<MasterEditPage> {
               padding: EdgeInsets.only(top: 4.h),
               child: Text(
                 'Header SVG image is required',
-                style: StyleText.fontSize12Weight400.copyWith(color: _C.error),
+                style: StyleText.fontSize12Weight400.copyWith(color: ColorPick.red),
               ),
             ),
           SizedBox(height: 14.h),
@@ -997,7 +998,7 @@ class _MasterEditPageState extends State<MasterEditPage> {
               _sectionLabel('Image *'),
               Row(children: [
                 Text('Visibility',
-                    style: StyleText.fontSize12Weight500.copyWith(color: _C.labelText)),
+                    style: StyleText.fontSize12Weight500.copyWith(color: AppColors.text)),
                 SizedBox(width: 6.w),
                 FlutterSwitch(
                   width: 38.sp,
@@ -1005,7 +1006,7 @@ class _MasterEditPageState extends State<MasterEditPage> {
                   padding: 3.sp,
                   borderRadius: 20.sp,
                   toggleSize: 16.sp,
-                  activeColor: _C.primary,
+                  activeColor: ColorPick.primary,
                   inactiveColor: Colors.grey.withOpacity(.16),
                   value: _footerVisibility,
                   onToggle: (val) => setState(() => _footerVisibility = val),
@@ -1026,7 +1027,7 @@ class _MasterEditPageState extends State<MasterEditPage> {
               padding: EdgeInsets.only(top: 4.h),
               child: Text(
                 'Footer SVG image is required',
-                style: StyleText.fontSize12Weight400.copyWith(color: _C.error),
+                style: StyleText.fontSize12Weight400.copyWith(color: ColorPick.red),
               ),
             ),
           SizedBox(height: 14.h),
@@ -1124,7 +1125,7 @@ class _MasterEditPageState extends State<MasterEditPage> {
                                     ? DateFormat('dd MMM yyyy').format(_publishDate!)
                                     : 'Select date',
                                 style: StyleText.fontSize12Weight400.copyWith(
-                                  color: _publishDate != null ? _C.labelText : _C.hintText,
+                                  color: _publishDate != null ? AppColors.text : AppColors.secondaryText,
                                 ),
                               ),
                             ),
@@ -1212,7 +1213,7 @@ class _MasterEditPageState extends State<MasterEditPage> {
                   duration: const Duration(milliseconds: 200),
                   height: 44.h,
                   decoration: BoxDecoration(
-                    color: canPublish ? _C.primary : _C.primary.withOpacity(0.35),
+                    color: canPublish ? ColorPick.primary : ColorPick.primary.withOpacity(0.35),
                     borderRadius: BorderRadius.circular(6.r),
                   ),
                   child: Center(
@@ -1313,7 +1314,7 @@ class _MasterEditPageState extends State<MasterEditPage> {
 
   // ─── Shared helpers ───────────────────────────────────────────────────────
   Widget _sectionLabel(String text) => Text(text,
-      style: StyleText.fontSize12Weight500.copyWith(color: _C.labelText));
+      style: StyleText.fontSize12Weight500.copyWith(color: AppColors.text));
 
   Widget _biRow(
       String enLabel,
@@ -1449,7 +1450,7 @@ class _MasterEditPageState extends State<MasterEditPage> {
             width: 24.w,
             height: 24.h,
             decoration: BoxDecoration(
-              color: _C.primary,
+              color: ColorPick.primary,
               shape: BoxShape.circle,
             ),
             child: Center(

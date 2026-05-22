@@ -39,8 +39,8 @@ class _PreviewContentState extends State<_PreviewContent> {
         : Colors.white;
 
     final Color backgroundColor = homeData != null
-        ? _parseHex(homeData.branding.backgroundColor, fallback: _C.back)
-        : _C.back;
+        ? _parseHex(homeData.branding.backgroundColor, fallback: ColorPick.white)
+        : ColorPick.white;
 
     return MediaQuery(
       data: MediaQuery.of(context).copyWith(
@@ -102,7 +102,7 @@ class _PreviewContentState extends State<_PreviewContent> {
             Text(
               title.isNotEmpty ? title : 'Overview',
               style: TextStyle(
-                color: _C.primary,
+                color: ColorPick.primary,
                 fontSize: 22,
                 fontWeight: FontWeight.w600,
               ),
@@ -113,9 +113,9 @@ class _PreviewContentState extends State<_PreviewContent> {
                   ? desc
                   : 'Welcome to Beauty App, where beauty meets tranquility.',
               textDirection: widget.isEnglish ? TextDirection.ltr : TextDirection.rtl,
-              style: const TextStyle(
+              style: TextStyle(
                 height: 1.7,
-                color: _C.labelText,
+                color: AppColors.text,
                 fontSize: 14,
               ),
             ),
@@ -135,7 +135,7 @@ class _PreviewContentState extends State<_PreviewContent> {
                         style: const TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.w600,
-                          color: _C.primary,
+                          color: ColorPick.primary,
                         ),
                       ),
                       const SizedBox(width: 6),
@@ -144,12 +144,12 @@ class _PreviewContentState extends State<_PreviewContent> {
                         height: 24,
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
-                          color: _C.primary.withOpacity(0.15),
+                          color: ColorPick.primary.withOpacity(0.15),
                         ),
                         child: Icon(
                           widget.isEnglish ? Icons.arrow_forward : Icons.arrow_back,
                           size: 14,
-                          color: _C.primary,
+                          color: ColorPick.primary,
                         ),
                       ),
                     ],
@@ -181,7 +181,7 @@ class _PreviewContentState extends State<_PreviewContent> {
             svcTitle.isNotEmpty ? svcTitle : 'Top Services',
             textDirection: widget.isEnglish ? TextDirection.ltr : TextDirection.rtl,
             style: const TextStyle(
-              color: _C.primary,
+              color: ColorPick.primary,
               fontSize: 22,
               fontWeight: FontWeight.w600,
             ),
@@ -202,7 +202,7 @@ class _PreviewContentState extends State<_PreviewContent> {
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
                           border: Border.all(
-                            color: _C.primary.withOpacity(0.2),
+                            color: ColorPick.primary.withOpacity(0.2),
                             width: 2,
                           ),
                         ),
@@ -216,18 +216,18 @@ class _PreviewContentState extends State<_PreviewContent> {
                               fit: BoxFit.scaleDown,
                               placeholder: Icon(
                                 Icons.spa_outlined,
-                                color: _C.primary.withOpacity(0.4),
+                                color: ColorPick.primary.withOpacity(0.4),
                                 size: 28,
                               ),
                               errorWidget: Icon(
                                 Icons.spa_outlined,
-                                color: _C.primary.withOpacity(0.4),
+                                color: ColorPick.primary.withOpacity(0.4),
                                 size: 28,
                               ),
                             )
                                 : Icon(
                               Icons.spa_outlined,
-                              color: _C.primary.withOpacity(0.4),
+                              color: ColorPick.primary.withOpacity(0.4),
                               size: 28,
                             ),
                           ),
@@ -236,10 +236,10 @@ class _PreviewContentState extends State<_PreviewContent> {
                       const SizedBox(height: 8),
                       Text(
                         name.isNotEmpty ? name : 'Service',
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.w500,
-                          color: _C.labelText,
+                          color: AppColors.text,
                         ),
                       ),
                     ],
@@ -287,7 +287,7 @@ class _PreviewContentState extends State<_PreviewContent> {
             Text(
               widget.isEnglish ? 'Gallery' : 'المعرض',
               style: const TextStyle(
-                color: _C.primary,
+                color: ColorPick.primary,
                 fontSize: 22,
                 fontWeight: FontWeight.w600,
               ),
@@ -323,18 +323,18 @@ class _PreviewContentState extends State<_PreviewContent> {
                               height: size,
                               fit: BoxFit.cover,
                               placeholder: Container(
-                                color: _C.primary.withOpacity(0.12),
+                                color: ColorPick.primary.withOpacity(0.12),
                                 child: Icon(
                                   Icons.image_outlined,
-                                  color: _C.primary.withOpacity(0.4),
+                                  color: ColorPick.primary.withOpacity(0.4),
                                   size: 36,
                                 ),
                               ),
                               errorWidget: Container(
-                                color: _C.primary.withOpacity(0.08),
+                                color: ColorPick.primary.withOpacity(0.08),
                                 child: Icon(
                                   Icons.broken_image_outlined,
-                                  color: _C.primary.withOpacity(0.3),
+                                  color: ColorPick.primary.withOpacity(0.3),
                                 ),
                               ),
                             ),
@@ -360,7 +360,7 @@ class _PreviewContentState extends State<_PreviewContent> {
                     margin: const EdgeInsets.symmetric(horizontal: 3),
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(4),
-                      color: active ? _C.primary : _C.primary.withOpacity(0.3),
+                      color: active ? ColorPick.primary : ColorPick.primary.withOpacity(0.3),
                     ),
                   ),
                 );
@@ -443,20 +443,20 @@ class _PreviewContentState extends State<_PreviewContent> {
                               placeholder: CircleAvatar(
                                 radius: 24,
                                 backgroundColor:
-                                _C.primary.withOpacity(0.15),
+                                ColorPick.primary.withOpacity(0.15),
                                 child: Icon(
                                   Icons.person_outline,
-                                  color: _C.primary,
+                                  color: ColorPick.primary,
                                   size: 22,
                                 ),
                               ),
                               errorWidget: CircleAvatar(
                                 radius: 24,
                                 backgroundColor:
-                                _C.primary.withOpacity(0.15),
+                                ColorPick.primary.withOpacity(0.15),
                                 child: Icon(
                                   Icons.person_outline,
-                                  color: _C.primary,
+                                  color: ColorPick.primary,
                                   size: 22,
                                 ),
                               ),
@@ -464,10 +464,10 @@ class _PreviewContentState extends State<_PreviewContent> {
                                 : CircleAvatar(
                               radius: 24,
                               backgroundColor:
-                              _C.primary.withOpacity(0.15),
+                              ColorPick.primary.withOpacity(0.15),
                               child: Icon(
                                 Icons.person_outline,
-                                color: _C.primary,
+                                color: ColorPick.primary,
                                 size: 22,
                               ),
                             ),
@@ -476,10 +476,10 @@ class _PreviewContentState extends State<_PreviewContent> {
                           Expanded(
                             child: Text(
                               fullName.isNotEmpty ? fullName : 'Client Name',
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontSize: 14,
                                 fontWeight: FontWeight.w600,
-                                color: _C.labelText,
+                                color: AppColors.text,
                               ),
                               overflow: TextOverflow.ellipsis,
                             ),
@@ -497,7 +497,7 @@ class _PreviewContentState extends State<_PreviewContent> {
                         style: TextStyle(
                           fontSize: 12,
                           height: 1.6,
-                          color: _C.labelText.withOpacity(0.75),
+                          color: AppColors.text.withOpacity(0.75),
                         ),
                         maxLines: 6,
                         overflow: TextOverflow.ellipsis,
@@ -518,8 +518,8 @@ class _PreviewContentState extends State<_PreviewContent> {
     if (idx == -1) {
       return Text(
         title,
-        style: const TextStyle(
-          color: _C.labelText,
+        style: TextStyle(
+          color: AppColors.text,
           fontSize: 22,
           fontWeight: FontWeight.w700,
           height: 1.4,
@@ -533,15 +533,15 @@ class _PreviewContentState extends State<_PreviewContent> {
 
     return Text.rich(
       TextSpan(
-        style: const TextStyle(
-          color: _C.labelText,
+        style: TextStyle(
+          color: AppColors.text,
           fontSize: 22,
           fontWeight: FontWeight.w700,
           height: 1.4,
         ),
         children: [
           if (before.isNotEmpty) TextSpan(text: before),
-          TextSpan(text: keyword, style: const TextStyle(color: _C.primary)),
+          TextSpan(text: keyword, style: const TextStyle(color: ColorPick.primary)),
           if (after.isNotEmpty) TextSpan(text: after),
         ],
       ),
@@ -579,7 +579,7 @@ class _PreviewContentState extends State<_PreviewContent> {
                     child: Text(
                       titleText,
                       style: const TextStyle(
-                        color: _C.primary,
+                        color: ColorPick.primary,
                         fontSize: 22,
                         fontWeight: FontWeight.w600,
                       ),
@@ -608,7 +608,7 @@ class _PreviewContentState extends State<_PreviewContent> {
                 Text(
                   titleText,
                   style: const TextStyle(
-                    color: _C.primary,
+                    color: ColorPick.primary,
                     fontSize: 22,
                     fontWeight: FontWeight.w600,
                   ),

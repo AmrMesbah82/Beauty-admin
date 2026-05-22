@@ -1,3 +1,4 @@
+import 'package:beauty_admin/core/constant/color.dart';
 import 'package:beauty_admin/features/request/presentation/controller/request_cubit.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -20,6 +21,7 @@ import '../../features/home/presentation/controller/home_cubit.dart';
 import '../../features/master/presentation/ui/pages/master_main.dart';
 import '../../features/overview/presentation/ui/pages/overview_main.dart';
 import '../../features/owner_services/presentation/ui/pages/owner_services_main.dart';
+import '../theme/appcolors.dart';
 import '../theme/new_theme.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -56,9 +58,7 @@ class AdminSubNavBar extends StatelessWidget {
     this.homeCubit,
   });
 
-  static const Color _primary   = Color(0xFFD16F9A);
-  static const Color _cardBg    = Color(0xFFFFFFFF);
-  static const Color _labelText = Color(0xFF333333);
+
 
   static const List<String> _labels = [
     'Main', 'Home', 'Overview', 'Client Services', 'Owner Services', 'About Us', 'Contact Us', 'Demo',
@@ -124,7 +124,7 @@ class AdminSubNavBar extends StatelessWidget {
     return Container(
       width: 1000.w,
       decoration: BoxDecoration(
-        color: _cardBg,
+        color: ColorPick.white,
         borderRadius: BorderRadius.circular(4.r),
       ),
       child: Row(
@@ -139,13 +139,13 @@ class AdminSubNavBar extends StatelessWidget {
                 margin: EdgeInsets.only(right: 4.w),
                 padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 5.h),
                 decoration: BoxDecoration(
-                  color: active ? _primary : Colors.transparent,
+                  color: active ? ColorPick.primary : Colors.transparent,
                   borderRadius: BorderRadius.circular(4.r),
                 ),
                 child: Text(
                   _labels[i],
                   style: StyleText.fontSize14Weight500.copyWith(
-                    color: active ? Colors.white : _labelText,
+                    color: active ? Colors.white : AppColors.text,
                   ),
                 ),
               ),

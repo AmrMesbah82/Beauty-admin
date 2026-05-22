@@ -21,10 +21,12 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get_core/src/get_main.dart';
 import 'package:get/get_navigation/src/extension_navigation.dart';
 
+import '../../../../../core/constant/color.dart';
 import '../../../../../core/custom_dialog.dart';
 import '../../../../../core/custom_segmant_tab.dart';
 import '../../../../../core/main_widgets/admin_sub_navbar.dart';
 import '../../../../../core/main_widgets/app_admin_navbar.dart';
+import '../../../../../core/theme/appcolors.dart';
 import '../../../../../core/theme/new_theme.dart';
 import '../../../../home/presentation/ui/pages/home_main.dart';
 import '../../../data/model/owner_services_model.dart';
@@ -64,13 +66,13 @@ class _OwnerServicesPreviewPageState extends State<OwnerServicesPreviewPage> {
 
         if (state is OwnerServicesCmsInitial || state is OwnerServicesCmsLoading) {
           return const Scaffold(
-            backgroundColor: _C.back,
-            body: Center(child: CircularProgressIndicator(color: _C.primary)),
+            backgroundColor: ColorPick.background,
+            body: Center(child: CircularProgressIndicator(color: ColorPick.primary)),
           );
         }
 
         return Scaffold(
-          backgroundColor: _C.back,
+          backgroundColor: ColorPick.background,
           body: SizedBox(
             width: double.infinity,
             height: double.infinity,
@@ -97,7 +99,7 @@ class _OwnerServicesPreviewPageState extends State<OwnerServicesPreviewPage> {
                         Text(
                           'Preview Owner Services Details',
                           style: StyleText.fontSize45Weight600.copyWith(
-                            color: _C.primary,
+                            color: ColorPick.primary,
                             fontWeight: FontWeight.w700,
                           ),
                         ),
@@ -120,10 +122,10 @@ class _OwnerServicesPreviewPageState extends State<OwnerServicesPreviewPage> {
                                 selectedIndex: _isEnglish ? 0 : 1,
                                 onTabSelected: (i) =>
                                     setState(() => _isEnglish = i == 0),
-                                selectedColor: _C.primary,
+                                selectedColor: ColorPick.primary,
                                 unselectedColor: Colors.white,
                                 selectedTextColor: Colors.white,
-                                unselectedTextColor: _C.labelText,
+                                unselectedTextColor: AppColors.text,
                                 equalWidth: false,
                                 containerPadding: EdgeInsets.symmetric(
                                     horizontal: 8.sp, vertical: 4.sp),
@@ -178,14 +180,14 @@ class _OwnerServicesPreviewPageState extends State<OwnerServicesPreviewPage> {
               style: TextStyle(
                 fontSize: 15.sp,
                 fontWeight: active ? FontWeight.w700 : FontWeight.w500,
-                color: active ? _C.primary : _C.hintText,
+                color: active ? ColorPick.primary : AppColors.secondaryText,
               ),
             ),
           ),
           Container(
             height: 2,
             width: label.length * 8.0,
-            color: active ? _C.primary : Colors.transparent,
+            color: active ? ColorPick.primary : Colors.transparent,
           ),
         ],
       ),
@@ -204,7 +206,7 @@ class _OwnerServicesPreviewPageState extends State<OwnerServicesPreviewPage> {
             width: double.infinity,
             padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
             decoration: BoxDecoration(
-              color: _C.primary,
+              color: ColorPick.primary,
               borderRadius: isOpen
                   ? BorderRadius.only(
                 topLeft: Radius.circular(6.r),
@@ -274,7 +276,7 @@ class _OwnerServicesPreviewPageState extends State<OwnerServicesPreviewPage> {
           child: Container(
             height: 44.h,
             decoration: BoxDecoration(
-              color: _C.addBtn,
+              color: ColorPick.discard,
               borderRadius: BorderRadius.circular(6.r),
             ),
             child: Center(
@@ -301,7 +303,7 @@ class _OwnerServicesPreviewPageState extends State<OwnerServicesPreviewPage> {
           child: Container(
             height: 44.h,
             decoration: BoxDecoration(
-              color: _C.primary,
+              color: ColorPick.primary,
               borderRadius: BorderRadius.circular(6.r),
             ),
             child: Center(

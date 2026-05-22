@@ -28,7 +28,7 @@ class _HomeViewAccordion extends StatelessWidget {
               width: double.infinity,
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
               decoration: BoxDecoration(
-                color: _C.primary,
+                color: ColorPick.primary,
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Row(children: [

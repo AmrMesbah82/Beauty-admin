@@ -27,7 +27,7 @@ class _PreviewContent extends StatelessWidget {
       child: Material(
         color: Colors.white,
         child: Container(
-          color: _C.back,
+          color: ColorPick.white,
           width: fakeWidth,
           height: fakeHeight,
           child: SingleChildScrollView(
@@ -61,9 +61,9 @@ class _PreviewContent extends StatelessWidget {
         Container(
           width: width,
           height: height,
-          color: _C.primary.withOpacity(0.12),
+          color: ColorPick.primary.withOpacity(0.12),
           child: Icon(Icons.image_outlined,
-              color: _C.primary.withOpacity(0.4), size: 36),
+              color: ColorPick.primary.withOpacity(0.4), size: 36),
         );
 
     if (url.isEmpty) return ph;
@@ -112,7 +112,7 @@ class _PreviewContent extends StatelessWidget {
           title.isNotEmpty ? title : 'Our Services',
           textDirection: dir,
           style: TextStyle(
-            color: _C.primary,
+            color: ColorPick.primary,
             fontSize: isMobile ? 20 : 28,
             fontWeight: FontWeight.w700,
           ),
@@ -126,7 +126,7 @@ class _PreviewContent extends StatelessWidget {
           style: TextStyle(
             fontSize: isMobile ? 13 : 14,
             height: 1.6,
-            color: _C.labelText,
+            color: AppColors.text,
           ),
         ),
       ],
@@ -135,7 +135,7 @@ class _PreviewContent extends StatelessWidget {
     return Container(
       width: double.infinity,
       padding: EdgeInsets.all(isMobile ? 16 : 24),
-      color: _C.sectionBg,
+      color: ColorPick.white,
       child: LayoutBuilder(
         builder: (context, constraints) {
           final isWide = constraints.maxWidth > 600 && !isMobile;
@@ -193,7 +193,7 @@ class _PreviewContent extends StatelessWidget {
                     style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w500,
-                      color: _C.labelText,
+                      color: AppColors.text,
                     ),
                   ),
                 ),
@@ -216,7 +216,7 @@ class _PreviewContent extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w500,
-                  color: _C.labelText,
+                  color: AppColors.text,
                 ),
                 textAlign: TextAlign.center,
               ),
@@ -268,7 +268,7 @@ class _PreviewContent extends StatelessWidget {
         child: Icon(
           Icons.phone_iphone,
           size: isMobile ? 40 : 60,
-          color: _C.primary.withOpacity(0.4),
+          color: ColorPick.primary.withOpacity(0.4),
         ),
       ),
     );
@@ -284,7 +284,7 @@ class _PreviewContent extends StatelessWidget {
           style: TextStyle(
             fontSize: isMobile ? 18 : 20,
             fontWeight: FontWeight.w600,
-            color: _C.labelText,
+            color: AppColors.text,
           ),
         ),
         SizedBox(height: 12.h),
@@ -294,7 +294,7 @@ class _PreviewContent extends StatelessWidget {
           style: TextStyle(
             fontSize: isMobile ? 13 : 14,
             height: 1.6,
-            color: _C.labelText,
+            color: AppColors.text,
           ),
         ),
       ],

@@ -51,10 +51,10 @@ class _PreviewHeaderSection extends StatelessWidget {
                   titleText,
                   textDirection:
                   isEnglish ? TextDirection.ltr : TextDirection.rtl,
-                  style: const TextStyle(
+                  style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
-                      color: _C.labelText),
+                      color: AppColors.text),
                 ),
                 const SizedBox(height: 8),
                 Text(
@@ -64,7 +64,7 @@ class _PreviewHeaderSection extends StatelessWidget {
                   style: const TextStyle(
                       fontSize: 24,
                       fontWeight: FontWeight.w600,
-                      color: _C.primary),
+                      color: ColorPick.primary),
                 ),
               ],
             ),

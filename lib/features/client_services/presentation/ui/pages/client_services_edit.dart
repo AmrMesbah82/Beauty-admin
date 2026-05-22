@@ -30,10 +30,12 @@ import 'package:beauty_admin/core/custom_svg.dart';
 import 'package:beauty_admin/core/widget/circle_progress.dart';
 import 'package:beauty_admin/core/widget/textfield.dart';
 
+import '../../../../../core/constant/color.dart';
 import '../../../../../core/custom_dialog.dart';
 import '../../../../../core/custom_segmant_tab.dart';
 import '../../../../../core/main_widgets/admin_sub_navbar.dart';
 import '../../../../../core/main_widgets/app_admin_navbar.dart';
+import '../../../../../core/theme/appcolors.dart';
 import '../../../../../core/theme/new_theme.dart';
 import '../../../../home/presentation/ui/pages/home_main.dart';
 import '../../../data/model/client_services_model.dart';
@@ -85,7 +87,7 @@ class _ClientServicesEditPageState extends State<ClientServicesEditPage> {
     'mockups': true,
   };
 
-  Color get _prim => _C.primary;
+  Color get _prim => ColorPick.primary;
 
   @override
   void dispose() {
@@ -311,7 +313,7 @@ class _ClientServicesEditPageState extends State<ClientServicesEditPage> {
                   color: Colors.white,
                 ),
               ),
-              backgroundColor: _C.primary,
+              backgroundColor: ColorPick.primary,
               behavior: SnackBarBehavior.floating,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(8.r),
@@ -335,13 +337,13 @@ class _ClientServicesEditPageState extends State<ClientServicesEditPage> {
         if (state is ClientServicesCmsInitial ||
             state is ClientServicesCmsLoading) {
           return const Scaffold(
-            backgroundColor: _C.back,
-            body: Center(child: CircularProgressIndicator(color: _C.primary)),
+            backgroundColor: ColorPick.background,
+            body: Center(child: CircularProgressIndicator(color: ColorPick.primary)),
           );
         }
 
         return Scaffold(
-          backgroundColor: _C.back,
+          backgroundColor: ColorPick.background,
           body: SizedBox(
             width: double.infinity,
             height: double.infinity,
@@ -371,7 +373,7 @@ class _ClientServicesEditPageState extends State<ClientServicesEditPage> {
                           Text(
                             'Editing Client Services Details',
                             style: StyleText.fontSize45Weight600.copyWith(
-                              color: _C.primary,
+                              color: ColorPick.primary,
                               fontWeight: FontWeight.w700,
                             ),
                           ),
@@ -406,7 +408,7 @@ class _ClientServicesEditPageState extends State<ClientServicesEditPage> {
                               ),
                               SizedBox(width: 300.w),
                               Expanded(
-                                child: _btn('Publish', _C.primary, () {
+                                child: _btn('Publish', ColorPick.primary, () {
                                   // ✅ VALIDATION: Check all required fields before showing confirm dialog
                                   if (!_validate()) {
                                     return;
@@ -427,7 +429,7 @@ class _ClientServicesEditPageState extends State<ClientServicesEditPage> {
                               Expanded(
                                 child: _btn(
                                   'Discard',
-                                  _C.addBtn,
+                                  ColorPick.discard,
                                   () => Navigator.pop(context),
                                 ),
                               ),
@@ -492,7 +494,7 @@ class _ClientServicesEditPageState extends State<ClientServicesEditPage> {
             width: double.infinity,
             padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
             decoration: BoxDecoration(
-              color: _C.primary,
+              color: ColorPick.primary,
               borderRadius: BorderRadius.circular(8.r),
             ),
             child: Row(
@@ -657,7 +659,7 @@ class _ClientServicesEditPageState extends State<ClientServicesEditPage> {
 
           _descFields(m.descEn, m.descAr),
           SizedBox(height: 8.h),
-          Divider(color: _C.border),
+          Divider(color: ColorPick.white),
         ],
       ),
     );
@@ -671,10 +673,10 @@ class _ClientServicesEditPageState extends State<ClientServicesEditPage> {
       tabs: const ['Left', 'Centered', 'Right'],
       selectedIndex: options.indexOf(currentLayout).clamp(0, 2),
       onTabSelected: (index) => setState(() => m.layout = MockupLayout.values[index]),
-      selectedColor: _C.primary,
+      selectedColor: ColorPick.primary,
       unselectedColor: Colors.white,
       selectedTextColor: Colors.white,
-      unselectedTextColor: _C.labelText,
+      unselectedTextColor: AppColors.text,
       equalWidth: false,
       containerPadding: EdgeInsets.symmetric(horizontal: 8.sp, vertical: 4.sp),
       containerColor: Colors.white,
@@ -686,7 +688,7 @@ class _ClientServicesEditPageState extends State<ClientServicesEditPage> {
   // ═══════════════════════════════════════════════════════════════════════════
   Widget _label(String t) => Text(
     t,
-    style: StyleText.fontSize12Weight500.copyWith(color: _C.labelText),
+    style: StyleText.fontSize12Weight500.copyWith(color: AppColors.text),
   );
 
   Widget _removeChip(VoidCallback onTap) => GestureDetector(
@@ -694,7 +696,7 @@ class _ClientServicesEditPageState extends State<ClientServicesEditPage> {
     child: Container(
       padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 4.h),
       decoration: BoxDecoration(
-        color: _C.remove,
+        color: ColorPick.red,
         borderRadius: BorderRadius.circular(4.r),
       ),
       child: Text(
@@ -889,7 +891,7 @@ class _ClientServicesEditPageState extends State<ClientServicesEditPage> {
             width: 24.w,
             height: 24.h,
             decoration: BoxDecoration(
-              color: _C.primary,
+              color: ColorPick.primary,
               shape: BoxShape.circle,
             ),
             child: Center(

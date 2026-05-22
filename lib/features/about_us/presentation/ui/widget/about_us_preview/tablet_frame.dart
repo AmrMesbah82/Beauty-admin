@@ -25,7 +25,7 @@ class _TabletFrame extends StatelessWidget {
             height: displayH + 28 + 4,
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: _C.border, width: 2),
+              border: Border.all(color: ColorPick.white, width: 2),
               color: Colors.white,
               boxShadow: [
                 BoxShadow(

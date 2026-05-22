@@ -60,7 +60,7 @@ class _ColorWheelOverlayState extends State<_ColorWheelOverlay> {
                   children: [
                     Text('Select Color',
                         style: StyleText.fontSize16Weight600
-                            .copyWith(color: _C.labelText)),
+                            .copyWith(color: AppColors.text)),
                     SizedBox(height: 16.h),
                     LayoutBuilder(builder: (context, constraints) {
                       final double pickerW =
@@ -96,7 +96,7 @@ class _ColorWheelOverlayState extends State<_ColorWheelOverlay> {
                             ),
                             child: Text('Cancel',
                                 style: StyleText.fontSize14Weight500
-                                    .copyWith(color: _C.labelText)),
+                                    .copyWith(color: AppColors.text)),
                           ),
                         ),
                         SizedBox(width: 12.w),
@@ -106,7 +106,7 @@ class _ColorWheelOverlayState extends State<_ColorWheelOverlay> {
                             padding: EdgeInsets.symmetric(
                                 horizontal: 24.w, vertical: 10.h),
                             decoration: BoxDecoration(
-                                color: _C.primary,
+                                color: ColorPick.primary,
                                 borderRadius: BorderRadius.circular(6.r)),
                             child: Text('Apply',
                                 style: StyleText.fontSize14Weight500

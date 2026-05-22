@@ -6,7 +6,7 @@ class _PreviewView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: _C.back,
+      backgroundColor: ColorPick.background,
       body: BlocBuilder<ContactUsCmsCubit, ContactUsCmsState>(
         builder: (context, state) {
           if (state is ContactUsCmsLoading || state is ContactUsCmsInitial) {

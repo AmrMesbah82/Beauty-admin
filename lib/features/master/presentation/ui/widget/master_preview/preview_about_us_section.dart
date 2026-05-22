@@ -48,9 +48,9 @@ class _PreviewAboutUsSection extends StatelessWidget {
             descText,
             textDirection:
             isEnglish ? TextDirection.ltr : TextDirection.rtl,
-            style: const TextStyle(
+            style: TextStyle(
                 fontSize: 14, fontWeight: FontWeight.w400,
-                color: _C.labelText, height: 1.6),
+                color: AppColors.text, height: 1.6),
           ),
           const SizedBox(height: 12),
           Row(
@@ -63,14 +63,14 @@ class _PreviewAboutUsSection extends StatelessWidget {
                 style: const TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
-                    color: _C.primary),
+                    color: ColorPick.primary),
               ),
               const SizedBox(width: 4),
               Icon(
                 isEnglish
                     ? Icons.arrow_forward_rounded
                     : Icons.arrow_back_rounded,
-                color: _C.primary,
+                color: ColorPick.primary,
                 size: 16,
               ),
             ],

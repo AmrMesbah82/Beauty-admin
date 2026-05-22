@@ -16,8 +16,10 @@ import 'package:beauty_admin/core/custom_svg.dart';
 import 'package:beauty_admin/core/widget/circle_progress.dart';
 import 'package:beauty_admin/core/widget/navigator.dart';
 
+import '../../../../../core/constant/color.dart';
 import '../../../../../core/main_widgets/admin_sub_navbar.dart';
 import '../../../../../core/main_widgets/app_admin_navbar.dart';
+import '../../../../../core/theme/appcolors.dart';
 import '../../../../../core/theme/new_theme.dart';
 import '../../../data/model/home_model.dart';
 import '../../controller/home_cubit.dart';
@@ -63,8 +65,8 @@ class _HomeMainPageState extends State<HomeMainPage> {
       builder: (context, state) {
         if (state is HomeCmsInitial || state is HomeCmsLoading) {
           return const Scaffold(
-            backgroundColor: _C.sectionBg,
-            body: Center(child: CircularProgressIndicator(color: _C.primary)),
+            backgroundColor: ColorPick.background,
+            body: Center(child: CircularProgressIndicator(color: ColorPick.primary)),
           );
         }
 
@@ -73,7 +75,7 @@ class _HomeMainPageState extends State<HomeMainPage> {
         if (state is HomeCmsSaved) data = state.data;
 
         return Scaffold(
-          backgroundColor: _C.back,
+        backgroundColor: ColorPick.background,
           body: SingleChildScrollView(
             child: Center(
               child: ConstrainedBox(
@@ -104,7 +106,7 @@ class _HomeMainPageState extends State<HomeMainPage> {
                                 Text(
                                   'Main',
                                   style: StyleText.fontSize45Weight600.copyWith(
-                                    color: _C.primary,
+                                    color: ColorPick.primary,
                                     fontWeight: FontWeight.w700,
                                   ),
                                 ),
@@ -121,7 +123,7 @@ class _HomeMainPageState extends State<HomeMainPage> {
                                       vertical: 10.h,
                                     ),
                                     decoration: BoxDecoration(
-                                      color: _C.primary,
+                                      color: ColorPick.primary,
                                       borderRadius: BorderRadius.circular(6.r),
                                     ),
                                     child: Text(
@@ -144,7 +146,7 @@ class _HomeMainPageState extends State<HomeMainPage> {
                                     vertical: 8.h,
                                   ),
                                   decoration: BoxDecoration(
-                                    color: _C.cardBg,
+                                    color: ColorPick.white,
                                     borderRadius: BorderRadius.circular(4.r),
                                   ),
                                   child: Text(
@@ -152,7 +154,7 @@ class _HomeMainPageState extends State<HomeMainPage> {
                                         ? 'Last Updated On ${_fmtDate(data!.lastUpdatedAt)}'
                                         : 'Last Updated On —',
                                     style: StyleText.fontSize13Weight500
-                                        .copyWith(color: _C.primary),
+                                        .copyWith(color: ColorPick.primary),
                                   ),
                                 ),
                                 const Spacer(),
@@ -162,7 +164,7 @@ class _HomeMainPageState extends State<HomeMainPage> {
                                     width: 130.w,
                                     height: 36.h,
                                     decoration: BoxDecoration(
-                                      color: _C.cardBg,
+                                      color: ColorPick.white,
                                       borderRadius: BorderRadius.circular(4.r),
                                     ),
                                     child: Center(
@@ -181,7 +183,7 @@ class _HomeMainPageState extends State<HomeMainPage> {
                                             width: 20.w,
                                             height: 20.h,
                                             fit: BoxFit.scaleDown,
-                                            color: _C.primary,
+                                            color: ColorPick.primary,
                                           ),
                                         ],
                                       ),
@@ -226,7 +228,7 @@ class _HomeMainPageState extends State<HomeMainPage> {
                             ] else ...[
                               const Center(
                                 child: CircularProgressIndicator(
-                                  color: _C.primary,
+                                  color: ColorPick.primary,
                                 ),
                               ),
                             ],
@@ -265,7 +267,7 @@ class _HomeMainPageState extends State<HomeMainPage> {
               width: double.infinity,
               padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
               decoration: BoxDecoration(
-                color: _C.primary,
+                color: ColorPick.primary,
                 borderRadius: BorderRadius.circular(6.r),
               ),
               child: Row(
@@ -327,7 +329,7 @@ class _HomeMainPageState extends State<HomeMainPage> {
       children: [
         Text(
           'Logo',
-          style: StyleText.fontSize12Weight500.copyWith(color: _C.labelText),
+          style: StyleText.fontSize12Weight500.copyWith(color: AppColors.text),
         ),
         SizedBox(height: 8.h),
         Container(
@@ -460,7 +462,7 @@ class _HomeMainPageState extends State<HomeMainPage> {
                 Text(
                   'Icon',
                   style: StyleText.fontSize12Weight500.copyWith(
-                    color: _C.labelText,
+                    color: AppColors.text,
                   ),
                 ),
                 SizedBox(height: 6.h),
@@ -471,7 +473,7 @@ class _HomeMainPageState extends State<HomeMainPage> {
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Icon(Icons.menu_rounded, size: 18.sp, color: _C.hintText),
+                    Icon(Icons.menu_rounded, size: 18.sp, color: AppColors.secondaryText),
                     SizedBox(width: 8.w),
                     Expanded(
                       child: _readFieldWithStatus(
@@ -511,7 +513,7 @@ class _HomeMainPageState extends State<HomeMainPage> {
             Text(
               '${i + 1}${_ord(i + 1)} Column',
               style: StyleText.fontSize16Weight600.copyWith(
-                color: _C.labelText,
+                color: AppColors.text,
               ),
             ),
             SizedBox(height: 8.h),
@@ -616,7 +618,7 @@ class _HomeMainPageState extends State<HomeMainPage> {
                   Text(
                     'Icon',
                     style: StyleText.fontSize12Weight500.copyWith(
-                      color: _C.labelText,
+                      color: AppColors.text,
                     ),
                   ),
                   SizedBox(height: 6.h),
@@ -640,7 +642,7 @@ class _HomeMainPageState extends State<HomeMainPage> {
                   Text(
                     'Icon',
                     style: StyleText.fontSize12Weight500.copyWith(
-                      color: _C.labelText,
+                      color: AppColors.text,
                     ),
                   ),
                   SizedBox(height: 6.h),
@@ -699,7 +701,7 @@ class _HomeMainPageState extends State<HomeMainPage> {
             Text(
               'Icon',
               style: StyleText.fontSize12Weight500.copyWith(
-                color: _C.labelText,
+                color: AppColors.text,
               ),
             ),
             Row(
@@ -708,7 +710,7 @@ class _HomeMainPageState extends State<HomeMainPage> {
                 Text(
                   'Visibility',
                   style: StyleText.fontSize12Weight500.copyWith(
-                    color: _C.labelText,
+                    color: AppColors.text,
                   ),
                 ),
                 SizedBox(width: 6.w),
@@ -717,7 +719,7 @@ class _HomeMainPageState extends State<HomeMainPage> {
                   height: 18.h,
                   decoration: BoxDecoration(
                     color: link.visibility
-                        ? _C.primary
+                        ? ColorPick.primary
                         : Colors.grey.withOpacity(0.3),
                     borderRadius: BorderRadius.circular(10.r),
                   ),
@@ -799,7 +801,7 @@ class _HomeMainPageState extends State<HomeMainPage> {
     children: [
       Text(
         label,
-        style: StyleText.fontSize12Weight500.copyWith(color: _C.labelText),
+        style: StyleText.fontSize12Weight500.copyWith(color: AppColors.text),
       ),
       SizedBox(height: 4.h),
       Container(
@@ -813,7 +815,7 @@ class _HomeMainPageState extends State<HomeMainPage> {
         alignment: Alignment.centerLeft,
         child: Text(
           value,
-          style: StyleText.fontSize12Weight400.copyWith(color: _C.hintText),
+          style: StyleText.fontSize12Weight400.copyWith(color: AppColors.secondaryText),
           overflow: TextOverflow.ellipsis,
         ),
       ),
@@ -828,7 +830,7 @@ class _HomeMainPageState extends State<HomeMainPage> {
       children: [
         Text(
           label,
-          style: StyleText.fontSize12Weight500.copyWith(color: _C.labelText),
+          style: StyleText.fontSize12Weight500.copyWith(color: AppColors.text),
         ),
         SizedBox(height: 4.h),
         Container(
@@ -842,7 +844,7 @@ class _HomeMainPageState extends State<HomeMainPage> {
           alignment: Alignment.centerRight,
           child: Text(
             value.isEmpty ? 'أدخل النص هنا' : value,
-            style: StyleText.fontSize12Weight400.copyWith(color: _C.hintText),
+            style: StyleText.fontSize12Weight400.copyWith(color: AppColors.secondaryText),
             overflow: TextOverflow.ellipsis,
             textDirection: ui.TextDirection.rtl,
           ),
@@ -862,7 +864,7 @@ class _HomeMainPageState extends State<HomeMainPage> {
               Text(
                 label,
                 style: StyleText.fontSize12Weight500.copyWith(
-                  color: _C.labelText,
+                  color: AppColors.text,
                 ),
               ),
               Row(
@@ -871,14 +873,14 @@ class _HomeMainPageState extends State<HomeMainPage> {
                   Text(
                     'Status: ',
                     style: StyleText.fontSize11Weight400.copyWith(
-                      color: _C.labelText,
+                      color: AppColors.text,
                     ),
                   ),
                   Container(
                     width: 32.w,
                     height: 18.h,
                     decoration: BoxDecoration(
-                      color: status ? _C.primary : Colors.grey.withOpacity(0.3),
+                      color: status ? ColorPick.primary : Colors.grey.withOpacity(0.3),
                       borderRadius: BorderRadius.circular(10.r),
                     ),
                     child: Align(
@@ -912,7 +914,7 @@ class _HomeMainPageState extends State<HomeMainPage> {
             alignment: Alignment.centerLeft,
             child: Text(
               value.isEmpty ? 'Text Here' : value,
-              style: StyleText.fontSize12Weight400.copyWith(color: _C.hintText),
+              style: StyleText.fontSize12Weight400.copyWith(color: AppColors.secondaryText),
               overflow: TextOverflow.ellipsis,
             ),
           ),
@@ -935,7 +937,7 @@ class _HomeMainPageState extends State<HomeMainPage> {
       children: [
         Text(
           label,
-          style: StyleText.fontSize12Weight500.copyWith(color: _C.labelText),
+          style: StyleText.fontSize12Weight500.copyWith(color: AppColors.text),
         ),
         SizedBox(height: 4.h),
         Container(
@@ -956,7 +958,7 @@ class _HomeMainPageState extends State<HomeMainPage> {
               Text(
                 hex.isEmpty ? '#D9D9D9' : hex,
                 style: StyleText.fontSize12Weight400.copyWith(
-                  color: _C.hintText,
+                  color: AppColors.secondaryText,
                 ),
               ),
             ],

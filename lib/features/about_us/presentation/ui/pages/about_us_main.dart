@@ -21,6 +21,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 
 import 'package:beauty_admin/core/widget/navigator.dart';
 
+import '../../../../../core/constant/color.dart';
 import '../../../../../core/custom_svg.dart';
 import '../../../../../core/main_widgets/admin_sub_navbar.dart';
 import '../../../../../core/main_widgets/app_admin_navbar.dart';
@@ -268,8 +269,8 @@ class _AboutMainPageMasterDashboardState
         // ── Show loading spinner ──────────────────────────────────────────
         if (state is AboutLoading || state is AboutInitial) {
           return const Scaffold(
-            backgroundColor: _C.back,
-            body: Center(child: CircularProgressIndicator(color: _C.primary)),
+            backgroundColor: ColorPick.background,
+            body: Center(child: CircularProgressIndicator(color: ColorPick.primary)),
           );
         }
 
@@ -281,7 +282,7 @@ class _AboutMainPageMasterDashboardState
         };
 
         return Scaffold(
-          backgroundColor: _C.back,
+          backgroundColor: ColorPick.background,
           body: SingleChildScrollView(
             child: Container(
               width: double.infinity,
@@ -317,7 +318,7 @@ class _AboutMainPageMasterDashboardState
             Text(
               'About Us',
               style: StyleText.fontSize45Weight600.copyWith(
-                color: _C.primary,
+                color: ColorPick.primary,
                 fontWeight: FontWeight.w700,
               ),
             ),
@@ -327,7 +328,7 @@ class _AboutMainPageMasterDashboardState
               child: Container(
                 padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 10.h),
                 decoration: BoxDecoration(
-                  color: _C.primary,
+                  color: ColorPick.primary,
                   borderRadius: BorderRadius.circular(6.r),
                 ),
                 child: Text(
@@ -379,13 +380,13 @@ class _AboutMainPageMasterDashboardState
                         fontWeight: isActive
                             ? FontWeight.w700
                             : FontWeight.w500,
-                        color: isActive ? _C.primary : _C.hintText,
+                        color: isActive ? ColorPick.primary : AppColors.secondaryText,
                       ),
                     ),
                   ),
                   Container(
                     height: 2,
-                    color: isActive ? _C.primary : Colors.transparent,
+                    color: isActive ? ColorPick.primary : Colors.transparent,
                   ),
                 ],
               ),
@@ -509,7 +510,7 @@ class _AboutMainPageMasterDashboardState
                   child: Text(
                     'No values yet.',
                     style: StyleText.fontSize13Weight400.copyWith(
-                      color: _C.hintText,
+                      color: AppColors.secondaryText,
                     ),
                   ),
                 ),
@@ -570,7 +571,7 @@ class _AboutMainPageMasterDashboardState
       children: [
         Text(
           label,
-          style: StyleText.fontSize12Weight500.copyWith(color: _C.labelText),
+          style: StyleText.fontSize12Weight500.copyWith(color: AppColors.text),
         ),
         SizedBox(height: 6.h),
         Container(
@@ -703,12 +704,12 @@ class _AboutMainPageMasterDashboardState
         Container(
           padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 8.h),
           decoration: BoxDecoration(
-            color: _C.cardBg,
+            color: ColorPick.white,
             borderRadius: BorderRadius.circular(4.r),
           ),
           child: Text(
             'Last Updated On ${_fmtDate(lastUpdated)}',
-            style: StyleText.fontSize13Weight500.copyWith(color: _C.primary),
+            style: StyleText.fontSize13Weight500.copyWith(color: ColorPick.primary),
           ),
         ),
         const Spacer(),
@@ -737,7 +738,7 @@ class _AboutMainPageMasterDashboardState
                     width: 20.w,
                     height: 20.h,
                     fit: BoxFit.scaleDown,
-                    color: _C.primary,
+                    color: ColorPick.primary,
                   ),
                 ],
               ),
@@ -765,7 +766,7 @@ class _AboutMainPageMasterDashboardState
               width: double.infinity,
               padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
               decoration: BoxDecoration(
-                color: _C.primary,
+                color: ColorPick.primary,
                 borderRadius: BorderRadius.circular(8.r),
               ),
               child: Row(
@@ -807,7 +808,7 @@ class _AboutMainPageMasterDashboardState
     children: [
       Text(
         label,
-        style: StyleText.fontSize12Weight500.copyWith(color: _C.labelText),
+        style: StyleText.fontSize12Weight500.copyWith(color: AppColors.text),
       ),
       SizedBox(height: 4.h),
       Container(
@@ -824,7 +825,7 @@ class _AboutMainPageMasterDashboardState
         alignment: height > 36 ? Alignment.topLeft : Alignment.centerLeft,
         child: Text(
           value,
-          style: StyleText.fontSize12Weight400.copyWith(color: _C.hintText),
+          style: StyleText.fontSize12Weight400.copyWith(color: AppColors.secondaryText),
           maxLines: height > 36 ? 5 : 1,
           overflow: TextOverflow.ellipsis,
         ),
@@ -843,7 +844,7 @@ class _AboutMainPageMasterDashboardState
       children: [
         Text(
           label,
-          style: StyleText.fontSize12Weight500.copyWith(color: _C.labelText),
+          style: StyleText.fontSize12Weight500.copyWith(color: AppColors.text),
         ),
         SizedBox(height: 4.h),
         Container(
@@ -860,7 +861,7 @@ class _AboutMainPageMasterDashboardState
           alignment: height > 36 ? Alignment.topRight : Alignment.centerRight,
           child: Text(
             value.isEmpty ? 'أكتب هنا' : value,
-            style: StyleText.fontSize12Weight400.copyWith(color: _C.hintText),
+            style: StyleText.fontSize12Weight400.copyWith(color: AppColors.secondaryText),
             textDirection: TextDirection.rtl,
             maxLines: height > 36 ? 5 : 1,
             overflow: TextOverflow.ellipsis,

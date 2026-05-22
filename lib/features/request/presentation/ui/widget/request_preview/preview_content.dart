@@ -41,7 +41,7 @@ class _PreviewContent extends StatelessWidget {
         child: Container(
           width: fakeWidth,
           height: fakeHeight,
-          color: _C.back,
+          color: ColorPick.white,
           child: SingleChildScrollView(
             child: Padding(
               padding: EdgeInsets.symmetric(
@@ -55,7 +55,7 @@ class _PreviewContent extends StatelessWidget {
                   ),
                   padding: EdgeInsets.all(isMobile ? 20.r : 32.r),
                   decoration: BoxDecoration(
-                    color: _C.cardBg,
+                    color: ColorPick.white,
                     borderRadius: BorderRadius.circular(16.r),
                     boxShadow: [
                       BoxShadow(
@@ -82,7 +82,7 @@ class _PreviewContent extends StatelessWidget {
                               width: isMobile ? 120.w : 160.w,
                               child: const Center(
                                 child: CircularProgressIndicator(
-                                  color: _C.primary,
+                                  color: ColorPick.primary,
                                   strokeWidth: 2,
                                 ),
                               ),
@@ -91,13 +91,13 @@ class _PreviewContent extends StatelessWidget {
                               height: isMobile ? 120.h : 160.h,
                               width: isMobile ? 120.w : 160.w,
                               decoration: BoxDecoration(
-                                color: _C.sectionBg,
+                                color: ColorPick.white,
                                 borderRadius: BorderRadius.circular(12.r),
                               ),
                               child: Icon(
                                 Icons.image_outlined,
                                 size: isMobile ? 40.sp : 60.sp,
-                                color: _C.hintText,
+                                color: AppColors.secondaryText,
                               ),
                             ),
                           ),
@@ -107,13 +107,13 @@ class _PreviewContent extends StatelessWidget {
                           height: isMobile ? 120.h : 160.h,
                           width: isMobile ? 120.w : 160.w,
                           decoration: BoxDecoration(
-                            color: _C.sectionBg,
+                            color: ColorPick.white,
                             borderRadius: BorderRadius.circular(12.r),
                           ),
                           child: Icon(
                             Icons.image_outlined,
                             size: isMobile ? 40.sp : 60.sp,
-                            color: _C.hintText,
+                            color: AppColors.secondaryText,
                           ),
                         ),
 
@@ -129,7 +129,7 @@ class _PreviewContent extends StatelessWidget {
                         style: TextStyle(
                           fontSize: isMobile ? 16.sp : 18.sp,
                           fontWeight: FontWeight.w700,
-                          color: _C.primary,
+                          color: ColorPick.primary,
                         ),
                       ),
 
@@ -145,7 +145,7 @@ class _PreviewContent extends StatelessWidget {
                         style: TextStyle(
                           fontSize: isMobile ? 13.sp : 14.sp,
                           fontWeight: FontWeight.w400,
-                          color: _C.labelText,
+                          color: AppColors.text,
                           height: 1.6,
                         ),
                       ),

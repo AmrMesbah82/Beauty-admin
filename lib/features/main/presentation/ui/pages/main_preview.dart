@@ -11,10 +11,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
+import '../../../../../core/constant/color.dart';
 import '../../../../../core/custom_dialog.dart';
 import '../../../../../core/main_widgets/admin_sub_navbar.dart';
 import '../../../../../core/main_widgets/app_footer.dart';
 import '../../../../../core/main_widgets/app_navbar.dart';
+import '../../../../../core/theme/appcolors.dart';
 import '../../../../../core/theme/new_theme.dart';
 import '../../../../home/presentation/controller/home_cubit.dart';
 import '../../../../home/presentation/controller/home_state.dart';
@@ -57,15 +59,15 @@ class _HomePreviewPageState extends State<HomePreviewPage> {
 
         if (state is HomeCmsInitial || state is HomeCmsLoading) {
           return const Scaffold(
-            backgroundColor: _C.sectionBg,
-            body: Center(child: CircularProgressIndicator(color: _C.primary)),
+            backgroundColor: ColorPick.background,
+            body: Center(child: CircularProgressIndicator(color: ColorPick.primary)),
           );
         }
 
         return Stack(
           children: [
             Scaffold(
-              backgroundColor: _C.back,
+              backgroundColor: ColorPick.background,
               body: SingleChildScrollView(
                 child: Center(
                   child: SizedBox(
@@ -80,7 +82,7 @@ class _HomePreviewPageState extends State<HomePreviewPage> {
                         Text(
                           'Preview Main Details',
                           style: StyleText.fontSize45Weight600.copyWith(
-                            color: _C.primary,
+                            color: ColorPick.primary,
                             fontWeight: FontWeight.w700,
                           ),
                         ),
@@ -155,8 +157,8 @@ class _HomePreviewPageState extends State<HomePreviewPage> {
                                     height: 44.h,
                                     decoration: BoxDecoration(
                                       color: _isSaving
-                                          ? _C.primary.withOpacity(0.5)
-                                          : _C.primary,
+                                          ? ColorPick.primary.withOpacity(0.5)
+                                          : ColorPick.primary,
                                       borderRadius: BorderRadius.circular(6.r),
                                     ),
                                     child: Center(
@@ -187,7 +189,7 @@ class _HomePreviewPageState extends State<HomePreviewPage> {
               Container(
                 color: Colors.black.withOpacity(0.35),
                 child: const Center(
-                    child: CircularProgressIndicator(color: _C.primary)),
+                    child: CircularProgressIndicator(color: ColorPick.primary)),
               ),
           ],
         );
@@ -209,13 +211,13 @@ class _HomePreviewPageState extends State<HomePreviewPage> {
                 style: TextStyle(
                   fontSize: 15.sp,
                   fontWeight: active ? FontWeight.w700 : FontWeight.w500,
-                  color: active ? _C.primary : _C.hintText,
+                  color: active ? ColorPick.primary : AppColors.secondaryText,
                 )),
           ),
           Container(
             height: 2,
             width: label.length * 8.0,
-            color: active ? _C.primary : Colors.transparent,
+            color: active ? ColorPick.primary : Colors.transparent,
           ),
         ],
       ),

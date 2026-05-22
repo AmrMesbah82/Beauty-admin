@@ -8,7 +8,9 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
+import '../../../../../core/constant/color.dart';
 import '../../../../../core/main_widgets/app_admin_navbar.dart';
+import '../../../../../core/theme/appcolors.dart';
 import '../../../../../core/theme/new_theme.dart';
 import '../../../../../core/widget/custom_dropdwon.dart';
 import '../../../../../core/widget/format.dart';
@@ -133,7 +135,7 @@ class _InquiryDetailPageState extends State<InquiryDetailPage> {
                 style: TextStyle(
                     fontSize: 14.sp,
                     fontWeight: FontWeight.w700,
-                    color: _C.labelText),
+                    color: AppColors.text),
               ),
               SizedBox(height: 8.h),
               Text(
@@ -141,7 +143,7 @@ class _InquiryDetailPageState extends State<InquiryDetailPage> {
                 textAlign: TextAlign.center,
                 style: TextStyle(
                     fontSize: 12.sp,
-                    color: _C.hintText,
+                    color: AppColors.secondaryText,
                     height: 1.5),
               ),
               SizedBox(height: 16.h),
@@ -153,7 +155,7 @@ class _InquiryDetailPageState extends State<InquiryDetailPage> {
                       child: Container(
                         height: 38.h,
                         decoration: BoxDecoration(
-                          color: _C.fieldBg,
+                          color: ColorPick.white,
                           borderRadius: BorderRadius.circular(6.r),
                         ),
                         alignment: Alignment.center,
@@ -162,7 +164,7 @@ class _InquiryDetailPageState extends State<InquiryDetailPage> {
                           style: TextStyle(
                               fontSize: 13.sp,
                               fontWeight: FontWeight.w600,
-                              color: _C.labelText),
+                              color: AppColors.text),
                         ),
                       ),
                     ),
@@ -215,8 +217,8 @@ class _InquiryDetailPageState extends State<InquiryDetailPage> {
 
             if (inq == null) {
               return const Scaffold(
-                backgroundColor: _C.back,
-                body: Center(child: CircularProgressIndicator(color: _C.primary)),
+                backgroundColor: ColorPick.background,
+                body: Center(child: CircularProgressIndicator(color: ColorPick.primary)),
               );
             }
 
@@ -234,7 +236,7 @@ class _InquiryDetailPageState extends State<InquiryDetailPage> {
             };
 
             return Scaffold(
-              backgroundColor: _C.back,
+              backgroundColor: ColorPick.background,
               body: Stack(
                 children: [
                   SingleChildScrollView(
@@ -270,13 +272,13 @@ class _InquiryDetailPageState extends State<InquiryDetailPage> {
                                   style: TextStyle(
                                       fontSize: 13.sp,
                                       fontWeight: FontWeight.w500,
-                                      color: _C.labelText),
+                                      color: AppColors.text),
                                 ),
                                 Text(
                                   FormatHelper.capitalize(dateStr),
                                   style: TextStyle(
                                       fontSize: 13.sp,
-                                      color: _C.hintText),
+                                      color: AppColors.secondaryText),
                                 ),
                                 const Spacer(),
                                 SizedBox(
@@ -373,7 +375,7 @@ class _InquiryDetailPageState extends State<InquiryDetailPage> {
                               style: TextStyle(
                                   fontSize: 16.sp,
                                   fontWeight: FontWeight.w700,
-                                  color: _C.labelText),
+                                  color: AppColors.text),
                             ),
                             SizedBox(height: 14.h),
 
@@ -428,7 +430,7 @@ class _InquiryDetailPageState extends State<InquiryDetailPage> {
                                           style: TextStyle(
                                               fontSize: 12.sp,
                                               fontWeight: FontWeight.w500,
-                                              color: _C.labelText),
+                                              color: AppColors.text),
                                         ),
                                       ],
                                     ),
@@ -438,13 +440,13 @@ class _InquiryDetailPageState extends State<InquiryDetailPage> {
                                       child: TextFormField(
                                         controller: _noteCtrl,
                                         maxLines: 4,
-                                        style: TextStyle(fontSize: 12.sp, color: _C.labelText),
+                                        style: TextStyle(fontSize: 12.sp, color: AppColors.text),
                                         decoration: InputDecoration(
                                           hoverColor: Colors.transparent,
                                           hintText: FormatHelper.capitalize('Text Here'),
-                                          hintStyle: TextStyle(fontSize: 12.sp, color: _C.hintText),
+                                          hintStyle: TextStyle(fontSize: 12.sp, color: AppColors.secondaryText),
                                           filled: true,
-                                          fillColor: _C.fieldBg,
+                                          fillColor: ColorPick.white,
                                           isDense: true,
                                           border: OutlineInputBorder(
                                               borderRadius: BorderRadius.circular(4.r),
@@ -515,7 +517,7 @@ class _InquiryDetailPageState extends State<InquiryDetailPage> {
                     Container(
                       color: Colors.black26,
                       child: const Center(
-                          child: CircularProgressIndicator(color: _C.primary)),
+                          child: CircularProgressIndicator(color: ColorPick.primary)),
                     ),
                 ],
               ),
@@ -539,7 +541,7 @@ class _InquiryDetailPageState extends State<InquiryDetailPage> {
           style: TextStyle(
               fontSize: 12.sp,
               fontWeight: FontWeight.w500,
-              color: _C.labelText),
+              color: AppColors.text),
         ),
         SizedBox(height: 4.h),
         Container(
@@ -548,14 +550,14 @@ class _InquiryDetailPageState extends State<InquiryDetailPage> {
           padding: EdgeInsets.symmetric(
               horizontal: 10.w, vertical: multiLine ? 8.h : 0),
           decoration: BoxDecoration(
-            color: _C.fieldBg,
+            color: ColorPick.white,
             borderRadius: BorderRadius.circular(4.r),
           ),
           alignment: multiLine ? Alignment.topLeft : Alignment.centerLeft,
           child: Text(
             FormatHelper.capitalize(value.isEmpty ? 'Text Here' : value),
             style: StyleText.fontSize12Weight400.copyWith(
-                color: value.isEmpty ? _C.hintText : _C.labelText),
+                color: value.isEmpty ? AppColors.secondaryText : AppColors.text),
             maxLines: multiLine ? 4 : 1,
             overflow: TextOverflow.ellipsis,
           ),
@@ -584,7 +586,7 @@ class _InquiryDetailPageState extends State<InquiryDetailPage> {
           style: TextStyle(
               fontSize: 12.sp,
               fontWeight: FontWeight.w500,
-              color: _C.labelText),
+              color: AppColors.text),
         ),
         SizedBox(height: 4.h),
         CustomDropdownFormFieldInvMaster(
@@ -596,7 +598,7 @@ class _InquiryDetailPageState extends State<InquiryDetailPage> {
           primaryColor: cmsPrimary,
           hint: Text(
             FormatHelper.capitalize(hint),
-            style: TextStyle(fontSize: 11.sp, color: _C.hintText),
+            style: TextStyle(fontSize: 11.sp, color: AppColors.secondaryText),
           ),
           onChanged: onChanged,
         ),
@@ -635,7 +637,7 @@ class _InquiryDetailPageState extends State<InquiryDetailPage> {
           padding: EdgeInsets.symmetric(vertical: 6.h, horizontal: 10.w),
           child: Text(
             FormatHelper.capitalize('High'),
-            style: TextStyle(fontSize: 10.sp, color: _C.labelText),
+            style: TextStyle(fontSize: 10.sp, color: AppColors.text),
           ),
         ),
         Container(
@@ -643,7 +645,7 @@ class _InquiryDetailPageState extends State<InquiryDetailPage> {
           padding: EdgeInsets.symmetric(vertical: 6.h, horizontal: 10.w),
           child: Text(
             FormatHelper.capitalize('Medium'),
-            style: TextStyle(fontSize: 10.sp, color: _C.labelText),
+            style: TextStyle(fontSize: 10.sp, color: AppColors.text),
           ),
         ),
         Container(
@@ -651,7 +653,7 @@ class _InquiryDetailPageState extends State<InquiryDetailPage> {
           padding: EdgeInsets.symmetric(vertical: 6.h, horizontal: 10.w),
           child: Text(
             FormatHelper.capitalize('Low'),
-            style: TextStyle(fontSize: 10.sp, color: _C.labelText),
+            style: TextStyle(fontSize: 10.sp, color: AppColors.text),
           ),
         ),
         Container(
@@ -659,7 +661,7 @@ class _InquiryDetailPageState extends State<InquiryDetailPage> {
           padding: EdgeInsets.symmetric(vertical: 6.h, horizontal: 10.w),
           child: Text(
             FormatHelper.capitalize('Informational Only'),
-            style: TextStyle(fontSize: 10.sp, color: _C.labelText),
+            style: TextStyle(fontSize: 10.sp, color: AppColors.text),
           ),
         ),
       ],
@@ -702,7 +704,7 @@ class _InquiryDetailPageState extends State<InquiryDetailPage> {
           padding: EdgeInsets.symmetric(vertical: 6.h, horizontal: 10.w),
           child: Text(
             FormatHelper.capitalize(item),
-            style: TextStyle(fontSize: 10.sp, color: _C.labelText),
+            style: TextStyle(fontSize: 10.sp, color: AppColors.text),
           ),
         )),
       ],

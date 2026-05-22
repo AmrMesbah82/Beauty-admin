@@ -41,7 +41,7 @@ class _PreviewContentState extends State<_PreviewContent> {
       child: Material(
         color: Colors.white,
         child: Container(
-          color:  _C.back,
+          color:  ColorPick.white,
           width:  widget.fakeWidth,
           height: widget.fakeHeight,
           child: SingleChildScrollView(
@@ -96,7 +96,7 @@ class _PreviewContentState extends State<_PreviewContent> {
       height: h,
       margin: EdgeInsets.symmetric(horizontal: widget.isMobile ? 16 : 40),
       decoration: BoxDecoration(
-        color:        _C.primary,
+        color:        ColorPick.primary,
         borderRadius: BorderRadius.circular(16),
       ),
       child: Center(
@@ -159,7 +159,7 @@ class _PreviewContentState extends State<_PreviewContent> {
               padding: const EdgeInsets.symmetric(
                   horizontal: 20, vertical: 16),
               decoration: BoxDecoration(
-                color:        _C.primary,
+                color:        ColorPick.primary,
                 borderRadius: isOpen
                     ? const BorderRadius.vertical(top: Radius.circular(12))
                     : BorderRadius.circular(12),
@@ -230,8 +230,8 @@ class _PreviewContentState extends State<_PreviewContent> {
             textDirection: widget.isEnglish
                 ? TextDirection.ltr
                 : TextDirection.rtl,
-            style: const TextStyle(
-                fontSize: 12, height: 1.75, color: _C.labelText),
+            style: TextStyle(
+                fontSize: 12, height: 1.75, color: AppColors.text),
           ),
           const SizedBox(height: 16),
           _downloadLinks(
@@ -257,8 +257,8 @@ class _PreviewContentState extends State<_PreviewContent> {
                 textDirection: widget.isEnglish
                     ? TextDirection.ltr
                     : TextDirection.rtl,
-                style: const TextStyle(
-                    fontSize: 13, height: 1.75, color: _C.labelText),
+                style: TextStyle(
+                    fontSize: 13, height: 1.75, color: AppColors.text),
               ),
             ),
             if (hasSvg) ...[
@@ -294,7 +294,7 @@ class _PreviewContentState extends State<_PreviewContent> {
         children: [
           CustomSvg(
               assetPath: 'assets/images/export.svg',
-              color:     _C.primary),
+              color:     ColorPick.primary),
           const SizedBox(width: 5),
           Flexible(
             child: Text(
@@ -302,9 +302,9 @@ class _PreviewContentState extends State<_PreviewContent> {
               style: TextStyle(
                   fontSize:        11,
                   fontWeight:      FontWeight.w500,
-                  color:           _C.primary,
+                  color:           ColorPick.primary,
                   decoration:      TextDecoration.underline,
-                  decorationColor: _C.primary),
+                  decorationColor: ColorPick.primary),
             ),
           ),
         ],

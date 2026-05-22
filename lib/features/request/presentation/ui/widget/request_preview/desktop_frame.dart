@@ -20,7 +20,7 @@ class _DesktopFrame extends StatelessWidget {
       width: containerWidth,
       height: frameH + 28,
       decoration: BoxDecoration(
-        color: _C.back,
+        color: ColorPick.white,
         borderRadius: BorderRadius.circular(8.r),
         boxShadow: [
           BoxShadow(

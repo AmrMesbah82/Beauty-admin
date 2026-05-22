@@ -42,9 +42,11 @@ import 'package:beauty_admin/core/custom_svg.dart';
 import 'package:beauty_admin/core/widget/circle_progress.dart';
 import 'package:beauty_admin/core/widget/textfield.dart';
 
+import '../../../../../core/constant/color.dart';
 import '../../../../../core/custom_dialog.dart';
 import '../../../../../core/main_widgets/admin_sub_navbar.dart';
 import '../../../../../core/main_widgets/app_admin_navbar.dart';
+import '../../../../../core/theme/appcolors.dart';
 import '../../../../../core/theme/new_theme.dart';
 import '../../../../home/presentation/ui/pages/home_main.dart';
 import '../../../data/model/overview_model.dart';
@@ -116,7 +118,7 @@ class _OverviewEditPageState extends State<OverviewEditPage> {
     'schedule': true,
   };
 
-  Color get _resolvedPrimary => _C.primary;
+  Color get _resolvedPrimary => ColorPick.primary;
 
   bool _isValidEnglish(String text) {
     if (text.trim().isEmpty) return false;
@@ -298,7 +300,7 @@ class _OverviewEditPageState extends State<OverviewEditPage> {
       builder: (context) => AlertDialog(
         title: Row(
           children: [
-            Icon(Icons.error_outline, color: _C.error, size: 24.sp),
+            Icon(Icons.error_outline, color: ColorPick.red, size: 24.sp),
             SizedBox(width: 8.w),
             const Text('Validation Error'),
           ],
@@ -314,7 +316,7 @@ class _OverviewEditPageState extends State<OverviewEditPage> {
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('• ', style: TextStyle(color: _C.error)),
+                  Text('• ', style: TextStyle(color: ColorPick.red)),
                   Expanded(child: Text(field)),
                 ],
               ),
@@ -589,7 +591,7 @@ class _OverviewEditPageState extends State<OverviewEditPage> {
       lastDate: DateTime.now().add(const Duration(days: 365)),
       builder: (ctx, child) => Theme(
         data: Theme.of(ctx).copyWith(
-            colorScheme: Theme.of(ctx).colorScheme.copyWith(primary: _C.primary)),
+            colorScheme: Theme.of(ctx).colorScheme.copyWith(primary: ColorPick.primary)),
         child: child!,
       ),
     );
@@ -735,7 +737,7 @@ class _OverviewEditPageState extends State<OverviewEditPage> {
                     : 'Draft saved! Published version is still live.',
                 style: StyleText.fontSize14Weight400.copyWith(color: Colors.white),
               ),
-              backgroundColor: _C.draftBadge,
+              backgroundColor: ColorPick.draftColor,
               behavior: SnackBarBehavior.floating,
             ));
           }
@@ -798,15 +800,15 @@ class _OverviewEditPageState extends State<OverviewEditPage> {
 
         if (state is OverviewCmsInitial || state is OverviewCmsLoading) {
           return const Scaffold(
-            backgroundColor: _C.back,
-            body: Center(child: CircularProgressIndicator(color: _C.primary)),
+            backgroundColor: ColorPick.background,
+            body: Center(child: CircularProgressIndicator(color: ColorPick.primary)),
           );
         }
 
         final bool canPublish = _isFormValid;
 
         return Scaffold(
-          backgroundColor: _C.back,
+          backgroundColor: ColorPick.background,
           body: SizedBox(
             width: double.infinity,
             height: double.infinity,
@@ -835,20 +837,20 @@ class _OverviewEditPageState extends State<OverviewEditPage> {
                             children: [
                               Text('Editing Overview',
                                   style: StyleText.fontSize45Weight600.copyWith(
-                                      color: _C.primary, fontWeight: FontWeight.w700)),
+                                      color: ColorPick.primary, fontWeight: FontWeight.w700)),
                               if (_isEditingDraft) ...[
                                 SizedBox(width: 12.w),
                                 Container(
                                   padding: EdgeInsets.symmetric(
                                       horizontal: 10.w, vertical: 4.h),
                                   decoration: BoxDecoration(
-                                    color: _C.draftBadge.withOpacity(0.15),
+                                    color: ColorPick.draftColor.withOpacity(0.15),
                                     borderRadius: BorderRadius.circular(4.r),
                                   ),
                                   child: Text(
                                     'EDITING DRAFT',
                                     style: StyleText.fontSize12Weight600.copyWith(
-                                      color: _C.draftBadge,
+                                      color: ColorPick.draftColor,
                                     ),
                                   ),
                                 ),
@@ -861,7 +863,7 @@ class _OverviewEditPageState extends State<OverviewEditPage> {
                               child: Text(
                                 'You are editing a saved draft. The published version is still live.',
                                 style: StyleText.fontSize12Weight400.copyWith(
-                                  color: _C.hintText,
+                                  color: AppColors.secondaryText,
                                 ),
                               ),
                             ),
@@ -908,7 +910,7 @@ class _OverviewEditPageState extends State<OverviewEditPage> {
               width: double.infinity,
               padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
               decoration: BoxDecoration(
-                color: _C.primary,
+                color: ColorPick.primary,
                 borderRadius: BorderRadius.circular(8.r),
               ),
               child: Row(children: [
@@ -977,7 +979,7 @@ class _OverviewEditPageState extends State<OverviewEditPage> {
         Padding(
           padding: EdgeInsets.only(top: 4.h),
           child: Text('At least one service item is required',
-              style: StyleText.fontSize12Weight400.copyWith(color: _C.error)),
+              style: StyleText.fontSize12Weight400.copyWith(color: ColorPick.red)),
         ),
       SizedBox(height: 8.h),
       _addButton('Service', () {
@@ -1005,7 +1007,7 @@ class _OverviewEditPageState extends State<OverviewEditPage> {
               child: Container(
                 padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
                 decoration: BoxDecoration(
-                    color: _C.remove, borderRadius: BorderRadius.circular(4.r)),
+                    color: ColorPick.red, borderRadius: BorderRadius.circular(4.r)),
                 child: Row(mainAxisSize: MainAxisSize.min, children: [
                   Text('Remove',
                       style: StyleText.fontSize10Weight400.copyWith(color: Colors.white)),
@@ -1059,7 +1061,7 @@ class _OverviewEditPageState extends State<OverviewEditPage> {
           child: Container(
             width: 14.w,
             height: 14.h,
-            decoration: const BoxDecoration(color: _C.remove, shape: BoxShape.circle),
+            decoration: const BoxDecoration(color: ColorPick.red, shape: BoxShape.circle),
             child: Icon(Icons.close, color: Colors.white, size: 10.sp),
           ),
         ),
@@ -1085,7 +1087,7 @@ class _OverviewEditPageState extends State<OverviewEditPage> {
         Padding(
           padding: EdgeInsets.only(top: 4.h),
           child: Text('At least one client feedback is required',
-              style: StyleText.fontSize12Weight400.copyWith(color: _C.error)),
+              style: StyleText.fontSize12Weight400.copyWith(color: ColorPick.red)),
         ),
       SizedBox(height: 8.h),
       _addButton('Feedback', () {
@@ -1112,7 +1114,7 @@ class _OverviewEditPageState extends State<OverviewEditPage> {
               child: Container(
                 padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
                 decoration: BoxDecoration(
-                    color: _C.remove, borderRadius: BorderRadius.circular(4.r)),
+                    color: ColorPick.red, borderRadius: BorderRadius.circular(4.r)),
                 child: Row(mainAxisSize: MainAxisSize.min, children: [
                   Icon(Icons.delete_outline, color: Colors.white, size: 12.sp),
                   SizedBox(width: 4.w),
@@ -1247,7 +1249,7 @@ class _OverviewEditPageState extends State<OverviewEditPage> {
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(4.r),
                 border: _publishDate == null && _submitted
-                    ? Border.all(color: _C.error, width: 1)
+                    ? Border.all(color: ColorPick.red, width: 1)
                     : null,
               ),
               child: Row(children: [
@@ -1258,8 +1260,8 @@ class _OverviewEditPageState extends State<OverviewEditPage> {
                         : 'Select Date',
                     style: StyleText.fontSize12Weight400.copyWith(
                         color: _publishDate != null
-                            ? _C.labelText
-                            : _C.hintText),
+                            ? AppColors.text
+                            : AppColors.secondaryText),
                   ),
                 ),
                 
@@ -1271,7 +1273,7 @@ class _OverviewEditPageState extends State<OverviewEditPage> {
             Padding(
               padding: EdgeInsets.only(top: 4.h),
               child: Text('Publish date is required',
-                  style: TextStyle(color: _C.error, fontSize: 10.sp)),
+                  style: TextStyle(color: ColorPick.red, fontSize: 10.sp)),
             ),
         ]),
       ),
@@ -1346,7 +1348,7 @@ class _OverviewEditPageState extends State<OverviewEditPage> {
                 child: Container(
                   height: 44.h,
                   decoration: BoxDecoration(
-                      color: canPublish ? _C.primary : _C.primary.withOpacity(0.35),
+                      color: canPublish ? ColorPick.primary : ColorPick.primary.withOpacity(0.35),
                       borderRadius: BorderRadius.circular(6.r)),
                   child: Center(
                       child: Text('Publish',
@@ -1388,7 +1390,7 @@ class _OverviewEditPageState extends State<OverviewEditPage> {
         child: Container(
           height: 44.h,
           decoration: BoxDecoration(
-              color: _C.addBtn,
+              color: ColorPick.discard,
               borderRadius: BorderRadius.circular(6.r)),
           child: Center(
               child: Text('Discard',
@@ -1427,7 +1429,7 @@ class _OverviewEditPageState extends State<OverviewEditPage> {
   ]);
 
   Widget _sectionLabel(String t) =>
-      Text(t, style: StyleText.fontSize16Weight500.copyWith(color: _C.labelText));
+      Text(t, style: StyleText.fontSize16Weight500.copyWith(color: AppColors.text));
 
   Widget _biRow(
       String enLbl,
@@ -1568,7 +1570,7 @@ class _OverviewEditPageState extends State<OverviewEditPage> {
             width: 24.w,
             height: 24.h,
             decoration: BoxDecoration(
-              color: _C.primary,
+              color: ColorPick.primary,
               shape: BoxShape.circle,
             ),
             child: Center(

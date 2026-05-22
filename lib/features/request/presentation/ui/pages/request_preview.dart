@@ -24,9 +24,11 @@ import 'package:get/get_navigation/src/extension_navigation.dart';
 
 import 'package:beauty_admin/core/widget/circle_progress.dart';
 
+import '../../../../../core/constant/color.dart';
 import '../../../../../core/custom_dialog.dart';
 import '../../../../../core/main_widgets/admin_sub_navbar.dart';
 import '../../../../../core/main_widgets/app_admin_navbar.dart';
+import '../../../../../core/theme/appcolors.dart';
 import '../../../../../core/theme/new_theme.dart';
 import '../../../../home/presentation/ui/pages/home_main.dart';
 import '../../../data/model/request_model.dart';
@@ -62,7 +64,7 @@ class _RequestDemoPreviewPageState extends State<RequestDemoPreviewPage> {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
               content: Text('Request Demo saved!'),
-              backgroundColor: _C.primary,
+              backgroundColor: ColorPick.primary,
             ),
           );
           Get.forceAppUpdate();
@@ -87,13 +89,13 @@ class _RequestDemoPreviewPageState extends State<RequestDemoPreviewPage> {
 
         if (state is RequestDemoCmsInitial || state is RequestDemoCmsLoading) {
           return const Scaffold(
-            backgroundColor: _C.back,
-            body: Center(child: CircularProgressIndicator(color: _C.primary)),
+            backgroundColor: ColorPick.background,
+            body: Center(child: CircularProgressIndicator(color: ColorPick.primary)),
           );
         }
 
         return Scaffold(
-          backgroundColor: _C.back,
+          backgroundColor: ColorPick.background,
           body: Stack(
             children: [
               SingleChildScrollView(
@@ -117,7 +119,7 @@ class _RequestDemoPreviewPageState extends State<RequestDemoPreviewPage> {
                             Text(
                               'Preview Request Demo Details',
                               style: StyleText.fontSize45Weight600.copyWith(
-                                color: _C.primary,
+                                color: ColorPick.primary,
                                 fontWeight: FontWeight.w700,
                               ),
                             ),
@@ -161,7 +163,7 @@ class _RequestDemoPreviewPageState extends State<RequestDemoPreviewPage> {
                                 child: Container(
                                   height: 44.h,
                                   decoration: BoxDecoration(
-                                    color: _C.hintText,
+                                    color: AppColors.secondaryText,
                                     borderRadius: BorderRadius.circular(6.r),
                                   ),
                                   child: Center(
@@ -196,8 +198,8 @@ class _RequestDemoPreviewPageState extends State<RequestDemoPreviewPage> {
                                   height: 44.h,
                                   decoration: BoxDecoration(
                                     color: _isSaving
-                                        ? _C.primary.withOpacity(0.5)
-                                        : _C.primary,
+                                        ? ColorPick.primary.withOpacity(0.5)
+                                        : ColorPick.primary,
                                     borderRadius: BorderRadius.circular(6.r),
                                   ),
                                   child: Center(
@@ -228,7 +230,7 @@ class _RequestDemoPreviewPageState extends State<RequestDemoPreviewPage> {
                 Container(
                   color: Colors.black.withOpacity(0.35),
                   child: const Center(
-                      child: CircularProgressIndicator(color: _C.primary)),
+                      child: CircularProgressIndicator(color: ColorPick.primary)),
                 ),
             ],
           ),
@@ -251,13 +253,13 @@ class _RequestDemoPreviewPageState extends State<RequestDemoPreviewPage> {
                 style: TextStyle(
                   fontSize: 15.sp,
                   fontWeight: active ? FontWeight.w700 : FontWeight.w500,
-                  color: active ? _C.primary : _C.hintText,
+                  color: active ? ColorPick.primary : AppColors.secondaryText,
                 )),
           ),
           Container(
             height: 2,
             width: label.length * 8.0,
-            color: active ? _C.primary : Colors.transparent,
+            color: active ? ColorPick.primary : Colors.transparent,
           ),
         ],
       ),
@@ -272,7 +274,7 @@ class _RequestDemoPreviewPageState extends State<RequestDemoPreviewPage> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(8.r),
-        border: Border.all(color: _C.border),
+        border: Border.all(color: ColorPick.white),
       ),
       child: Row(
         children: [
@@ -290,7 +292,7 @@ class _RequestDemoPreviewPageState extends State<RequestDemoPreviewPage> {
         onTap: () => setState(() => _isEnglish = index == 0),
         child: Container(
           decoration: BoxDecoration(
-            color: isSelected ? _C.primary : Colors.white,
+            color: isSelected ? ColorPick.primary : Colors.white,
             borderRadius: BorderRadius.circular(6.r),
           ),
           child: Center(
@@ -299,7 +301,7 @@ class _RequestDemoPreviewPageState extends State<RequestDemoPreviewPage> {
               style: TextStyle(
                 fontSize: 12.sp,
                 fontWeight: FontWeight.w600,
-                color: isSelected ? Colors.white : _C.labelText,
+                color: isSelected ? Colors.white : AppColors.text,
               ),
             ),
           ),

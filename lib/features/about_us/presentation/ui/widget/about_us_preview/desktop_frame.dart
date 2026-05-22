@@ -20,7 +20,7 @@ class _DesktopFrame extends StatelessWidget {
       width: containerWidth,
       height: frameH + 28,
       decoration: BoxDecoration(
-        color: _C.sectionBg,
+        color: ColorPick.white,
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(8),

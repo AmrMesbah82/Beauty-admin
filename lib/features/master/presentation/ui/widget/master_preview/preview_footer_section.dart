@@ -49,19 +49,19 @@ class _PreviewFooterSection extends StatelessWidget {
                   titleText,
                   textDirection:
                   isEnglish ? TextDirection.ltr : TextDirection.rtl,
-                  style: const TextStyle(
+                  style: TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.w600,
-                      color: _C.labelText),
+                      color: AppColors.text),
                 ),
                 const SizedBox(height: 10),
                 Text(
                   descText,
                   textDirection:
                   isEnglish ? TextDirection.ltr : TextDirection.rtl,
-                  style: const TextStyle(
+                  style: TextStyle(
                       fontSize: 14, fontWeight: FontWeight.w400,
-                      color: _C.labelText, height: 1.5),
+                      color: AppColors.text, height: 1.5),
                 ),
                 const SizedBox(height: 16),
                 Row(
@@ -129,7 +129,7 @@ Widget _previewImageBox(
     double width,
     double height, {
       IconData fallbackIcon = Icons.image,
-      Color    fallbackBg   = _C.sectionBg,
+      Color    fallbackBg   = ColorPick.white,
     }) {
   if (imageUrl.isNotEmpty) {
     return SizedBox(
@@ -150,7 +150,7 @@ Widget _previewImageBox(
       borderRadius: BorderRadius.circular(12),
     ),
     child: Center(
-      child: Icon(fallbackIcon, size: 48, color: _C.hintText),
+      child: Icon(fallbackIcon, size: 48, color: AppColors.secondaryText),
     ),
   );
 }

@@ -47,7 +47,7 @@ class _PreviewContent extends StatelessWidget {
         child: Container(
           width: fakeWidth,
           height: fakeHeight,
-          color: _C.back,
+          color: ColorPick.white,
           child: SingleChildScrollView(
             child: Padding(
               padding: EdgeInsets.symmetric(
@@ -100,7 +100,7 @@ class _PreviewContent extends StatelessWidget {
               vertical: isMobile ? 12.h : 16.h,
             ),
             decoration: BoxDecoration(
-              color: _C.primary,
+              color: ColorPick.primary,
               borderRadius: BorderRadius.circular(8.r)
               ),
             child: Text(
@@ -145,9 +145,9 @@ class _PreviewContent extends StatelessWidget {
         height: height,
         width: double.infinity,
         decoration: BoxDecoration(
-          color: _C.cardBg,
+          color: ColorPick.white,
           borderRadius: BorderRadius.circular(8.r),
-          border: Border.all(color: _C.border),
+          border: Border.all(color: ColorPick.white),
         ),
         child: Center(
           child: Column(
@@ -180,7 +180,7 @@ class _PreviewContent extends StatelessWidget {
           fit: BoxFit.contain,
           placeholderBuilder: (context) => Center(
             child: CircularProgressIndicator(
-              color: _C.primary,
+              color: ColorPick.primary,
               strokeWidth: 2,
             ),
           ),
@@ -193,7 +193,7 @@ class _PreviewContent extends StatelessWidget {
           fit: BoxFit.contain,
           errorBuilder: (_, __, ___) => Container(
             height: height,
-            color: _C.cardBg,
+            color: ColorPick.white,
             child: Icon(Icons.broken_image,
                 color: Colors.grey[400], size: 48),
           ),
@@ -213,7 +213,7 @@ class _PreviewContent extends StatelessWidget {
                 height: height,
                 child: Center(
                   child: CircularProgressIndicator(
-                    color: _C.primary,
+                    color: ColorPick.primary,
                     strokeWidth: 2,
                   ),
                 ),
@@ -229,7 +229,7 @@ class _PreviewContent extends StatelessWidget {
             }
             return Container(
               height: height,
-              color: _C.cardBg,
+              color: ColorPick.white,
               child: Center(
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -266,7 +266,7 @@ class _PreviewContent extends StatelessWidget {
                       ? loadingProgress.cumulativeBytesLoaded /
                       loadingProgress.expectedTotalBytes!
                       : null,
-                  color: _C.primary,
+                  color: ColorPick.primary,
                   strokeWidth: 2,
                 ),
               ),
@@ -274,7 +274,7 @@ class _PreviewContent extends StatelessWidget {
           },
           errorBuilder: (_, __, ___) => Container(
             height: height,
-            color: _C.cardBg,
+            color: ColorPick.white,
             child: Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,

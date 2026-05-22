@@ -29,7 +29,7 @@ class _PreviewBodyState extends State<_PreviewBody> {
     return Stack(
       children: [
         Scaffold(
-          backgroundColor: _C.back,
+          backgroundColor: ColorPick.background,
           body: SingleChildScrollView(
             child: Center(
               child: SizedBox(
@@ -44,7 +44,7 @@ class _PreviewBodyState extends State<_PreviewBody> {
                     Text(
                       'Preview Contact Us Details',
                       style: StyleText.fontSize45Weight600.copyWith(
-                        color: _C.primary,
+                        color: ColorPick.primary,
                         fontWeight: FontWeight.w700,
                       ),
                     ),
@@ -67,10 +67,10 @@ class _PreviewBodyState extends State<_PreviewBody> {
                             selectedIndex: _isEnglish ? 0 : 1,
                             onTabSelected: (i) =>
                                 setState(() => _isEnglish = i == 0),
-                            selectedColor:      _C.primary,
+                            selectedColor:      ColorPick.primary,
                             unselectedColor:    Colors.white,
                             selectedTextColor:  Colors.white,
-                            unselectedTextColor: _C.labelText,
+                            unselectedTextColor: AppColors.text,
                             equalWidth: false,
                             containerPadding: EdgeInsets.symmetric(
                                 horizontal: 8.sp, vertical: 4.sp),
@@ -128,8 +128,8 @@ class _PreviewBodyState extends State<_PreviewBody> {
                               height: 44.h,
                               decoration: BoxDecoration(
                                 color: _isPublishing
-                                    ? _C.primary.withOpacity(0.5)
-                                    : _C.primary,
+                                    ? ColorPick.primary.withOpacity(0.5)
+                                    : ColorPick.primary,
                                 borderRadius: BorderRadius.circular(6.r),
                               ),
                               child: Center(
@@ -160,7 +160,7 @@ class _PreviewBodyState extends State<_PreviewBody> {
           Container(
             color: Colors.black.withOpacity(0.35),
             child: const Center(
-                child: CircularProgressIndicator(color: _C.primary)),
+                child: CircularProgressIndicator(color: ColorPick.primary)),
           ),
       ],
     );
@@ -180,13 +180,13 @@ class _PreviewBodyState extends State<_PreviewBody> {
                 style: TextStyle(
                   fontSize: 15.sp,
                   fontWeight: active ? FontWeight.w700 : FontWeight.w500,
-                  color: active ? _C.primary : _C.hintText,
+                  color: active ? ColorPick.primary : AppColors.secondaryText,
                 )),
           ),
           Container(
             height: 2,
             width: label.length * 8.0,
-            color: active ? _C.primary : Colors.transparent,
+            color: active ? ColorPick.primary : Colors.transparent,
           ),
         ],
       ),

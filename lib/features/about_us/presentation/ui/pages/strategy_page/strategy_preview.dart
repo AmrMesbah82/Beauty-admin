@@ -19,6 +19,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
+import '../../../../../../core/constant/color.dart';
 import '../../../../../../core/main_widgets/admin_sub_navbar.dart';
 import '../../../../../../core/main_widgets/app_admin_navbar.dart';
 import '../../../../../../core/theme/appcolors.dart';
@@ -149,7 +150,7 @@ class _StrategyPreviewPageState extends State<StrategyPreviewPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: _C.back,
+      backgroundColor: ColorPick.background,
       body: BlocListener<StrategyCubit, StrategyState>(
         listener: (context, state) {
           if (state is StrategySaved) {
@@ -192,7 +193,7 @@ class _StrategyPreviewPageState extends State<StrategyPreviewPage> {
                           Text(
                             'Preview Our Strategy Details',
                             style: StyleText.fontSize45Weight600.copyWith(
-                              color: _C.primary,
+                              color: ColorPick.primary,
                               fontWeight: FontWeight.w700,
                             ),
                           ),
@@ -256,8 +257,8 @@ class _StrategyPreviewPageState extends State<StrategyPreviewPage> {
                                 height: 44.h,
                                 decoration: BoxDecoration(
                                   color: _isSaving
-                                      ? _C.primary.withOpacity(0.5)
-                                      : _C.primary,
+                                      ? ColorPick.primary.withOpacity(0.5)
+                                      : ColorPick.primary,
                                   borderRadius: BorderRadius.circular(6.r),
                                 ),
                                 child: Center(
@@ -288,7 +289,7 @@ class _StrategyPreviewPageState extends State<StrategyPreviewPage> {
               Container(
                 color: Colors.black.withOpacity(0.35),
                 child: const Center(
-                    child: CircularProgressIndicator(color: _C.primary)),
+                    child: CircularProgressIndicator(color: ColorPick.primary)),
               ),
           ],
         ),
@@ -310,13 +311,13 @@ class _StrategyPreviewPageState extends State<StrategyPreviewPage> {
                 style: TextStyle(
                   fontSize: 15.sp,
                   fontWeight: active ? FontWeight.w700 : FontWeight.w500,
-                  color: active ? _C.primary : _C.hintText,
+                  color: active ? ColorPick.primary : AppColors.secondaryText,
                 )),
           ),
           Container(
             height: 2,
             width: label.length * 8.0,
-            color: active ? _C.primary : Colors.transparent,
+            color: active ? ColorPick.primary : Colors.transparent,
           ),
         ],
       ),
@@ -331,7 +332,7 @@ class _StrategyPreviewPageState extends State<StrategyPreviewPage> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(8.r),
-        border: Border.all(color: _C.border),
+        border: Border.all(color: ColorPick.white),
       ),
       child: Row(
         children: [
@@ -349,7 +350,7 @@ class _StrategyPreviewPageState extends State<StrategyPreviewPage> {
         onTap: () => setState(() => _isEnglish = index == 0),
         child: Container(
           decoration: BoxDecoration(
-            color: isSelected ? _C.primary : Colors.white,
+            color: isSelected ? ColorPick.primary : Colors.white,
             borderRadius: BorderRadius.circular(6.r),
           ),
           child: Center(
@@ -358,7 +359,7 @@ class _StrategyPreviewPageState extends State<StrategyPreviewPage> {
               style: TextStyle(
                 fontSize: 12.sp,
                 fontWeight: FontWeight.w600,
-                color: isSelected ? Colors.white : _C.labelText,
+                color: isSelected ? Colors.white : AppColors.text,
               ),
             ),
           ),

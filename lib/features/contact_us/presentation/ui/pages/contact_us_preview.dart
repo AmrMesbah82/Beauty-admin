@@ -19,8 +19,10 @@ import 'package:beauty_admin/core/custom_dialog.dart';
 import 'package:beauty_admin/core/custom_segmant_tab.dart';
 import 'package:beauty_admin/core/widget/custom_dropdwon.dart';
 
+import '../../../../../core/constant/color.dart';
 import '../../../../../core/main_widgets/admin_sub_navbar.dart';
 import '../../../../../core/main_widgets/app_footer.dart';
+import '../../../../../core/theme/appcolors.dart';
 import '../../../../../core/theme/new_theme.dart';
 import '../../../data/model/contact_us_model_location.dart';
 import '../../controller/contact_us_location_cubit.dart';

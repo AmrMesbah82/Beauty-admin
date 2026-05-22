@@ -1,14 +1,5 @@
 part of '../../pages/demo_main_page.dart';
 
-class _C {
-  static const Color primary      = Color(0xFFD16F9A);
-  static const Color primaryLight = Color(0xFFE8A0BE);
-  static const Color back         = Color(0xFFF5F5F5);
-  static const Color cardBg       = Color(0xFFFFFFFF);
-  static const Color labelText    = Color(0xFF333333);
-  static const Color hintText     = Color(0xFFAAAAAA);
-  static const Color border       = Color(0xFFE0E0E0);
-}
 
 const List<String> _kMonthNames = [
   'Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec',

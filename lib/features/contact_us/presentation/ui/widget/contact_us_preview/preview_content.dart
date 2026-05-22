@@ -71,7 +71,7 @@ class _PreviewContentState extends State<_PreviewContent> {
       child: Material(
         color: Colors.white,
         child: Container(
-          color: _C.back,
+          color: ColorPick.white,
           width: widget.fakeWidth,
           height: widget.fakeHeight,
           child: SingleChildScrollView(

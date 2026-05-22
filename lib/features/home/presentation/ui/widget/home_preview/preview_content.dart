@@ -34,7 +34,7 @@ class _PreviewContent extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             navbar,
-            const Expanded(child: ColoredBox(color: _C.back)),
+            const Expanded(child: ColoredBox(color: ColorPick.white)),
             const AppFooter(),
           ],
         ),

@@ -12,6 +12,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
+import '../../../../../core/constant/color.dart';
 import '../../../../../core/custom_svg.dart';
 import '../../../../../core/main_widgets/admin_sub_navbar.dart';
 import '../../../../../core/main_widgets/app_admin_navbar.dart';
@@ -59,8 +60,8 @@ class _ContactUsMainPageState extends State<ContactUsMainPage> {
       builder: (context, state) {
         if (state is ContactUsCmsInitial || state is ContactUsCmsLoading) {
           return const Scaffold(
-            backgroundColor: _C.back,
-            body: Center(child: CircularProgressIndicator(color: _C.primary)),
+            backgroundColor: ColorPick.background,
+            body: Center(child: CircularProgressIndicator(color: ColorPick.primary)),
           );
         }
 
@@ -69,7 +70,7 @@ class _ContactUsMainPageState extends State<ContactUsMainPage> {
         if (state is ContactUsCmsSaved)  data = state.data;
 
         return Scaffold(
-          backgroundColor: _C.back,
+          backgroundColor: ColorPick.background,
           body: SingleChildScrollView(
             child: Container(
               width: double.infinity,
@@ -90,7 +91,7 @@ class _ContactUsMainPageState extends State<ContactUsMainPage> {
                     width: 1000.w,
                     child: data == null
                         ? const Center(
-                        child: CircularProgressIndicator(color: _C.primary))
+                        child: CircularProgressIndicator(color: ColorPick.primary))
                         : _body(data),
                   ),
                 ],
@@ -113,7 +114,7 @@ class _ContactUsMainPageState extends State<ContactUsMainPage> {
             Text(
               'Contact Us',
               style: StyleText.fontSize45Weight600.copyWith(
-                color: _C.primary, fontWeight: FontWeight.w700,
+                color: ColorPick.primary, fontWeight: FontWeight.w700,
               ),
             ),
             const Spacer(),
@@ -127,7 +128,7 @@ class _ContactUsMainPageState extends State<ContactUsMainPage> {
               child: Container(
                 padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 10.h),
                 decoration: BoxDecoration(
-                  color: _C.primary,
+                  color: ColorPick.primary,
                   borderRadius: BorderRadius.circular(6.r),
                 ),
                 child: Text('Preview Screen',
@@ -145,13 +146,13 @@ class _ContactUsMainPageState extends State<ContactUsMainPage> {
             Container(
               padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 8.h),
               decoration: BoxDecoration(
-                color: _C.cardBg,
+                color: ColorPick.white,
                 borderRadius: BorderRadius.circular(4.r),
               ),
               child: Text(
                 'Last Updated On ${_fmtDate(data.lastUpdatedAt)}',
                 style: StyleText.fontSize13Weight500
-                    .copyWith(color: _C.primary),
+                    .copyWith(color: ColorPick.primary),
               ),
             ),
             const Spacer(),
@@ -177,7 +178,7 @@ class _ContactUsMainPageState extends State<ContactUsMainPage> {
                     CustomSvg(
                         assetPath: "assets/control/edit_icon_pick.svg",
                         width: 20.w, height: 20.h,
-                        fit: BoxFit.scaleDown, color: _C.primary),
+                        fit: BoxFit.scaleDown, color: ColorPick.primary),
                   ]),
                 ),
               ),
@@ -252,7 +253,7 @@ class _ContactUsMainPageState extends State<ContactUsMainPage> {
             if (data.socialIcons.isEmpty)
               Text('No social links added',
                   style: StyleText.fontSize12Weight400
-                      .copyWith(color: _C.hintText))
+                      .copyWith(color: AppColors.secondaryText))
             else
               _socialLinksGrid(data.socialIcons),
           ],
@@ -272,7 +273,7 @@ class _ContactUsMainPageState extends State<ContactUsMainPage> {
         children: [
           Text('Reason',
               style: StyleText.fontSize12Weight500
-                  .copyWith(color: _C.labelText)),
+                  .copyWith(color: AppColors.text)),
           SizedBox(height: 6.h),
           Row(
             children: [
@@ -290,7 +291,7 @@ class _ContactUsMainPageState extends State<ContactUsMainPage> {
     return Container(
       width: 36.w, height: 20.h,
       decoration: BoxDecoration(
-        color: isRequired ? _C.primary : Colors.grey.shade300,
+        color: isRequired ? ColorPick.primary : Colors.grey.shade300,
         borderRadius: BorderRadius.circular(10.r),
       ),
       child: Align(
@@ -338,7 +339,7 @@ class _ContactUsMainPageState extends State<ContactUsMainPage> {
 
   // ── SVG Label ──────────────────────────────────────────────────────────────
   Widget _svgLabel(String text) => Text(text,
-      style: StyleText.fontSize12Weight500.copyWith(color: _C.labelText));
+      style: StyleText.fontSize12Weight500.copyWith(color: AppColors.text));
 
   // ── Image Circle ───────────────────────────────────────────────────────────
   Widget _imgCircle(String url, {bool isSvg = false}) {
@@ -405,7 +406,7 @@ class _ContactUsMainPageState extends State<ContactUsMainPage> {
               width: double.infinity,
               padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
               decoration: BoxDecoration(
-                color: _C.primary,
+                color: ColorPick.primary,
                 borderRadius: BorderRadius.circular(6),
               ),
               child: Row(
@@ -442,7 +443,7 @@ class _ContactUsMainPageState extends State<ContactUsMainPage> {
         children: [
           if (label.isNotEmpty)
             Text(label,
-                style: StyleText.fontSize12Weight500.copyWith(color: _C.labelText)),
+                style: StyleText.fontSize12Weight500.copyWith(color: AppColors.text)),
           if (label.isNotEmpty)
             SizedBox(height: 4.h),
           Container(
@@ -455,7 +456,7 @@ class _ContactUsMainPageState extends State<ContactUsMainPage> {
             alignment: height > 36 ? Alignment.topLeft : Alignment.centerLeft,
             child: Text(
               value.isEmpty ? 'Text Here' : value,
-              style: StyleText.fontSize12Weight400.copyWith(color: _C.hintText),
+              style: StyleText.fontSize12Weight400.copyWith(color: AppColors.secondaryText),
               maxLines: height > 36 ? 4 : 1,
               overflow: TextOverflow.ellipsis,
             ),
@@ -472,7 +473,7 @@ class _ContactUsMainPageState extends State<ContactUsMainPage> {
             if (label.isNotEmpty)
               Text(label,
                   style: StyleText.fontSize12Weight500
-                      .copyWith(color: _C.labelText)),
+                      .copyWith(color: AppColors.text)),
             if (label.isNotEmpty)
               SizedBox(height: 4.h),
             Container(
@@ -486,7 +487,7 @@ class _ContactUsMainPageState extends State<ContactUsMainPage> {
               height > 36 ? Alignment.topRight : Alignment.centerRight,
               child: Text(
                 value.isEmpty ? 'أكتب هنا' : value,
-                style: StyleText.fontSize12Weight400.copyWith(color: _C.hintText),
+                style: StyleText.fontSize12Weight400.copyWith(color: AppColors.secondaryText),
                 textDirection: TextDirection.rtl,
                 maxLines: height > 36 ? 4 : 1,
                 overflow: TextOverflow.ellipsis,

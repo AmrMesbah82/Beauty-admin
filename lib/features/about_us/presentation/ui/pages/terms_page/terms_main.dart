@@ -6,6 +6,7 @@
 import 'dart:async';
 import 'dart:html' as html;
 
+import 'package:beauty_admin/core/constant/color.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -21,7 +22,6 @@ import '../../../controller/about_us_cubit.dart';
 import '../../../controller/about_us_state.dart';
 import 'terms_edit.dart';
 
-part '../../widget/terms_main/c.dart';
 
 class TermsMainView extends StatefulWidget {
   const TermsMainView({super.key});
@@ -51,7 +51,7 @@ class _TermsMainViewState extends State<TermsMainView> {
       builder: (context, state) {
         if (state is TermsLoading || state is TermsInitial) {
           return const Center(
-              child: CircularProgressIndicator(color: _C.primary));
+              child: CircularProgressIndicator(color: ColorPick.primary));
         }
 
         final TermsOfServiceModel? model = switch (state) {
@@ -64,7 +64,7 @@ class _TermsMainViewState extends State<TermsMainView> {
           return Center(
               child: Text('No data found',
                   style: StyleText.fontSize13Weight400
-                      .copyWith(color: _C.hintText)));
+                      .copyWith(color: AppColors.secondaryText)));
         }
 
         return Column(
@@ -203,10 +203,10 @@ class _TermsMainViewState extends State<TermsMainView> {
         Container(
           padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 8.h),
           decoration: BoxDecoration(
-              color: _C.cardBg, borderRadius: BorderRadius.circular(4.r)),
+              color: ColorPick.white, borderRadius: BorderRadius.circular(4.r)),
           child: Text(
             'Last Updated On ${fmtDate(lastUpdated)}',  // ← dynamic
-            style: StyleText.fontSize13Weight500.copyWith(color: _C.primary),
+            style: StyleText.fontSize13Weight500.copyWith(color: ColorPick.primary),
           ),
         ),
         const Spacer(),
@@ -226,7 +226,7 @@ class _TermsMainViewState extends State<TermsMainView> {
                 SizedBox(width: 6.w),
                 CustomSvg(assetPath: "assets/control/edit_icon_pick.svg",
                     width: 20.w, height: 20.h,
-                    fit: BoxFit.scaleDown, color: _C.primary),
+                    fit: BoxFit.scaleDown, color: ColorPick.primary),
               ]),
             ),
           ),
@@ -255,7 +255,7 @@ class _TermsMainViewState extends State<TermsMainView> {
               padding:
               EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
               decoration: BoxDecoration(
-                color: _C.primary,
+                color: ColorPick.primary,
                 borderRadius: BorderRadius.circular(6.r),
               ),
               child: Row(children: [
@@ -292,7 +292,7 @@ class _TermsMainViewState extends State<TermsMainView> {
       children: [
         Text(label,
             style:
-            StyleText.fontSize12Weight500.copyWith(color: _C.labelText)),
+            StyleText.fontSize12Weight500.copyWith(color: AppColors.text)),
         SizedBox(height: 6.h),
         Container(
           width: 70.w, height: 70.w,
@@ -342,7 +342,7 @@ class _TermsMainViewState extends State<TermsMainView> {
       children: [
         Text(
           label,
-          style: StyleText.fontSize12Weight500.copyWith(color: _C.labelText),
+          style: StyleText.fontSize12Weight500.copyWith(color: AppColors.text),
         ),
         SizedBox(height: 6.h),
         GestureDetector(
@@ -377,7 +377,7 @@ class _TermsMainViewState extends State<TermsMainView> {
                       Text(
                         hasFile ? fileName : 'No document attached',
                         style: StyleText.fontSize12Weight500.copyWith(
-                          color: hasFile ? _C.labelText : _C.hintText,
+                          color: hasFile ? AppColors.text : AppColors.secondaryText,
                         ),
                         overflow: TextOverflow.ellipsis,
                         maxLines: 1,
@@ -393,7 +393,7 @@ class _TermsMainViewState extends State<TermsMainView> {
                               sizeLabel,
                               // WITH this:
                               style: StyleText.fontSize12Weight400.copyWith(
-                                color: _C.hintText,
+                                color: AppColors.secondaryText,
                               ),
                             );
                           },
@@ -451,7 +451,7 @@ class _TermsMainViewState extends State<TermsMainView> {
         children: [
           Text(label,
               style: StyleText.fontSize12Weight500
-                  .copyWith(color: _C.labelText)),
+                  .copyWith(color: AppColors.text)),
           SizedBox(height: 4.h),
           Container(
             width: double.infinity,
@@ -465,7 +465,7 @@ class _TermsMainViewState extends State<TermsMainView> {
             height > 36 ? Alignment.topLeft : Alignment.centerLeft,
             child: Text(value,
                 style: StyleText.fontSize12Weight400
-                    .copyWith(color: _C.hintText),
+                    .copyWith(color: AppColors.secondaryText),
                 maxLines: height > 36 ? 8 : 1,
                 overflow: TextOverflow.ellipsis),
           ),
@@ -481,7 +481,7 @@ class _TermsMainViewState extends State<TermsMainView> {
           children: [
             Text(label,
                 style: StyleText.fontSize12Weight500
-                    .copyWith(color: _C.labelText)),
+                    .copyWith(color: AppColors.text)),
             SizedBox(height: 4.h),
             Container(
               width: double.infinity,
@@ -496,7 +496,7 @@ class _TermsMainViewState extends State<TermsMainView> {
               child: Text(
                   value.isEmpty ? 'أكتب هنا' : value,
                   style: StyleText.fontSize12Weight400
-                      .copyWith(color: _C.hintText),
+                      .copyWith(color: AppColors.secondaryText),
                   textDirection: TextDirection.rtl,
                   maxLines: height > 36 ? 8 : 1,
                   overflow: TextOverflow.ellipsis),
