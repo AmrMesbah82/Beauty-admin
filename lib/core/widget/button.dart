@@ -5,7 +5,8 @@ import 'package:beauty_admin/core/widget/svg_image.dart';
 import 'package:get/get.dart';
 import 'package:get/get_core/src/get_main.dart';
 import 'package:flutter/material.dart';
-import 'package:beauty_admin/theme/appcolors.dart';
+
+import '../theme/appcolors.dart';
 
 Widget customButton({
   required String title,

@@ -1,13 +1,4 @@
-import 'package:beauty_admin/repo/demos/request_demo_repo.dart';
-import 'package:beauty_admin/repo/home_repo/home_repository_impl.dart';
-import 'package:beauty_admin/repo/master/master_repo_imp.dart';
-import 'package:beauty_admin/repo/overview/overview_repo_imp.dart';
-import 'package:beauty_admin/repo/client_services/client_services_repo_imp.dart';
-import 'package:beauty_admin/repo/owner_services/owner_services_repo_imp.dart';
-import 'package:beauty_admin/repo/about_us/about_repo_imp.dart';
-import 'package:beauty_admin/repo/contact_us/contact_us_repo_imp.dart';
-import 'package:beauty_admin/repo/inquire/inquiry_repo_imp.dart';
-import 'package:beauty_admin/repo/request/request_demo_repo_imp.dart';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
@@ -15,20 +6,28 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
-import 'controller/about_us/about_us_cubit.dart';
-import 'controller/contact_us/contacu_us_location_cubit.dart';
-import 'controller/contact_us/contatc_us_cubit.dart';
-import 'controller/demos/request_demo_cubit.dart';
-import 'controller/home/home_cubit.dart';
-import 'controller/home/lang_state.dart';
-import 'controller/master/master_cubit.dart';
-import 'controller/overview/overview_cubit.dart';
-import 'controller/client_services/client_services_cubit.dart';
-import 'controller/owner_services/owner_services_cubit.dart';
-import 'controller/inquire/inquiry_cubit.dart';
-import 'controller/request/request_demo_cubit.dart';
-
-import 'dashboard/main_page/home_main_page.dart';
+import 'features/about_us/data/repo_imp/about_us_repo_imp.dart';
+import 'features/about_us/presentation/controller/about_us_cubit.dart';
+import 'features/client_services/data/repo_imp/client_services_repo_imp.dart';
+import 'features/client_services/presentation/controller/client_services_cubit.dart';
+import 'features/contact_us/presentation/controller/contact_us_location_cubit.dart';
+import 'features/contact_us/presentation/controller/contact_us_cubit.dart';
+import 'features/demos/domain/repo/demo_repo.dart';
+import 'features/demos/presentation/controller/demo_cubit.dart';
+import 'features/home/data/repo_imp/home_repo_impl.dart';
+import 'features/home/presentation/controller/home_cubit.dart';
+import 'features/home/presentation/controller/lang_state.dart';
+import 'features/home/presentation/ui/pages/home_main.dart';
+import 'features/inquire/data/repo_imp/inquiry_repo_imp.dart';
+import 'features/inquire/presentation/controller/inquiry_cubit.dart';
+import 'features/master/data/repo_imp/master_repo_imp.dart';
+import 'features/master/presentation/controller/master_cubit.dart';
+import 'features/overview/data/repo_imp/overview_repo_imp.dart';
+import 'features/overview/presentation/controller/overview_cubit.dart';
+import 'features/owner_services/data/repo_imp/owner_services_repo_imp.dart';
+import 'features/owner_services/presentation/controller/owner_services_cubit.dart';
+import 'features/request/data/repo_imp/request_repo_imp.dart';
+import 'features/request/presentation/controller/request_cubit.dart';
 import 'firebase_options.dart';
 
 Size _getDesignSize({

@@ -1,10 +1,11 @@
+import 'package:beauty_admin/core/theme/appcolors.dart';
+import 'package:beauty_admin/core/theme/text.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
 
-import '../theme/appcolors.dart';
-import '../theme/text.dart';
+
 
 
 /// A customizable segmented tabs widget that can be reused throughout the app

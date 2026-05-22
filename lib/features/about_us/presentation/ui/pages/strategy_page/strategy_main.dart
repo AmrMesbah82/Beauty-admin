@@ -1,0 +1,486 @@
+// ******************* FILE INFO *******************
+// File Name: strategy_main.dart
+// Screen 1 of 3 — Our Strategy CMS: Main view (read-only accordions)
+// UPDATED: Multi-device support for Strategic House ENG + ARB (Desktop, Tablet, Mobile)
+// UPDATED: Tabs aligned to the right, white background, removed parentheses text
+
+// ignore_for_file: avoid_web_libraries_in_flutter
+import 'dart:html' as html;
+import 'dart:typed_data';
+
+import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:flutter_svg/flutter_svg.dart';
+
+import 'package:beauty_admin/core/widget/navigator.dart';
+
+import '../../../../../../core/custom_svg.dart';
+import '../../../../../../core/theme/appcolors.dart';
+import '../../../../../../core/theme/new_theme.dart';
+
+import '../../../../data/model/about_us_model.dart';
+import '../../../controller/about_us_cubit.dart';
+import '../../../controller/about_us_state.dart';
+import 'strategy_edit.dart';
+
+part '../../widget/strategy_main/c.dart';
+
+class StrategyMainView extends StatefulWidget {
+  const StrategyMainView({super.key});
+
+  @override
+  State<StrategyMainView> createState() => _StrategyMainViewState();
+}
+
+class _StrategyMainViewState extends State<StrategyMainView> {
+  final Map<String, bool> _open = {
+    'navigationLabel':  true,
+    'strategicHouseEn': true,
+    'strategicHouseAr': true,
+  };
+
+  // Track which device preview is selected for each language
+  int _enSelectedDevice = 0; // 0=Desktop, 1=Tablet, 2=Mobile
+  int _arSelectedDevice = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<StrategyCubit>().load();
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocBuilder<StrategyCubit, StrategyState>(
+      builder: (context, state) {
+        if (state is StrategyLoading || state is StrategyInitial) {
+          return const Center(
+              child: CircularProgressIndicator(color: _C.primary));
+        }
+
+        final OurStrategyModel? model = switch (state) {
+          StrategyLoaded s => s.data,
+          StrategySaved  s => s.data,
+          _                => null,
+        };
+
+        if (model == null) {
+          return Center(
+              child: Text('No data found',
+                  style: StyleText.fontSize13Weight400
+                      .copyWith(color: _C.hintText)));
+        }
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _lastUpdatedRow(
+              lastUpdated: model.lastUpdatedAt,
+              onEdit: () => navigateTo(
+                context,
+                BlocProvider.value(
+                  value: context.read<StrategyCubit>(),
+                  child: const StrategyEditPage(),
+                ),
+              ),
+            ),
+            SizedBox(height: 16.h),
+
+            // ① Navigation Label
+            _accordion(
+              key: 'navigationLabel',
+              title: 'Navigation Label',
+              children: [
+                SizedBox(height: 20.h),
+                _iconPreviewCircle(
+                    label: 'Icon',
+                    url: model.navigationLabel.iconUrl),
+                SizedBox(height: 12.h),
+                Row(children: [
+                  Expanded(
+                      child: _readField(
+                          'Title',
+                          model.navigationLabel.title.en.isEmpty
+                              ? 'Text Here'
+                              : model.navigationLabel.title.en)),
+                  SizedBox(width: 16.w),
+                  Expanded(
+                      child: _readFieldRtl(
+                          'العنوان',
+                          model.navigationLabel.title.ar)),
+                ]),
+                SizedBox(height: 16.h),
+              ],
+            ),
+            SizedBox(height: 12.h),
+
+            // ② Strategic House — ENG (Multi-device)
+            _accordion(
+              key: 'strategicHouseEn',
+              title: 'Strategic House - ENG',
+              children: [
+                SizedBox(height: 20.h),
+                // Device selector tabs - aligned to the right
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    _deviceSelector(
+                      selectedIndex: _enSelectedDevice,
+                      onChanged: (index) => setState(() => _enSelectedDevice = index),
+                    ),
+                  ],
+                ),
+                SizedBox(height: 12.h),
+                _imagePreviewBox(
+                  label: '',
+                  url: _getEnUrlForDevice(model, _enSelectedDevice),
+                ),
+                SizedBox(height: 16.h),
+              ],
+            ),
+            SizedBox(height: 12.h),
+
+            // ③ Strategic House — ARB (Multi-device)
+            _accordion(
+              key: 'strategicHouseAr',
+              title: 'Strategic House - ARB',
+              children: [
+                SizedBox(height: 20.h),
+                // Device selector tabs - aligned to the right
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    _deviceSelector(
+                      selectedIndex: _arSelectedDevice,
+                      onChanged: (index) => setState(() => _arSelectedDevice = index),
+                    ),
+                  ],
+                ),
+                SizedBox(height: 12.h),
+                _imagePreviewBox(
+                  label: '',
+                  url: _getArUrlForDevice(model, _arSelectedDevice),
+                ),
+                SizedBox(height: 16.h),
+              ],
+            ),
+            SizedBox(height: 40.h),
+          ],
+        );
+      },
+    );
+  }
+
+  // Helper to get EN URL based on selected device
+  String _getEnUrlForDevice(OurStrategyModel model, int deviceIndex) {
+    switch (deviceIndex) {
+      case 0: return model.strategicHouseEnDesktopUrl;
+      case 1: return model.strategicHouseEnTabletUrl;
+      case 2: return model.strategicHouseEnMobileUrl;
+      default: return model.strategicHouseEnDesktopUrl;
+    }
+  }
+
+  // Helper to get AR URL based on selected device
+  String _getArUrlForDevice(OurStrategyModel model, int deviceIndex) {
+    switch (deviceIndex) {
+      case 0: return model.strategicHouseArDesktopUrl;
+      case 1: return model.strategicHouseArTabletUrl;
+      case 2: return model.strategicHouseArMobileUrl;
+      default: return model.strategicHouseArDesktopUrl;
+    }
+  }
+
+  // ── Device Selector Widget ────────────────────────────────────────────────
+  Widget _deviceSelector({
+    required int selectedIndex,
+    required ValueChanged<int> onChanged,
+  }) {
+    final List<String> devices = ['Desktop', 'Tablet', 'Mobile'];
+
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: 4.w, vertical: 4.h),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(8.r),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: List.generate(devices.length, (index) {
+          final isSelected = selectedIndex == index;
+          return GestureDetector(
+            onTap: () => onChanged(index),
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
+              padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
+              decoration: BoxDecoration(
+                color: isSelected ? _C.primary : Colors.transparent,
+                borderRadius: BorderRadius.circular(6.r),
+              ),
+              child: Text(
+                devices[index],
+                style: TextStyle(
+                  fontSize: 13.sp,
+                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                  color: isSelected ? Colors.white : Colors.black87,
+                ),
+              ),
+            ),
+          );
+        }),
+      ),
+    );
+  }
+
+// ── Last Updated + Edit Details ───────────────────────────────────────────
+  Widget _lastUpdatedRow({
+    required VoidCallback onEdit,
+    DateTime? lastUpdated,
+  }) {
+    // ── Date formatter ──
+    String fmtDate(DateTime? d) {
+      if (d == null) return '—';
+      const months = [
+        '', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+        'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+      ];
+      return '${d.day} ${months[d.month]} ${d.year}';
+    }
+
+    return Row(
+      children: [
+        Container(
+          padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 8.h),
+          decoration: BoxDecoration(
+              color: _C.cardBg,
+              borderRadius: BorderRadius.circular(4.r)),
+          child: Text(
+            'Last Updated On ${fmtDate(lastUpdated)}',
+            style: StyleText.fontSize13Weight500
+                .copyWith(color: _C.primary),
+          ),
+        ),
+        const Spacer(),
+        GestureDetector(
+          onTap: onEdit,
+          child: Container(
+            width: 130.w, height: 36.h,
+            decoration: BoxDecoration(
+              color: AppColors.card,
+              borderRadius: BorderRadius.circular(4.r),
+            ),
+            child: Center(
+              child: Row(mainAxisSize: MainAxisSize.min, children: [
+                Text('Edit Details',
+                    style: StyleText.fontSize14Weight500
+                        .copyWith(color: _C.primary)),
+                SizedBox(width: 6.w),
+                CustomSvg(
+                    assetPath: "assets/control/edit_icon_pick.svg",
+                    width: 20.w, height: 20.h,
+                    fit: BoxFit.scaleDown, color: _C.primary),
+              ]),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  // ── Accordion ─────────────────────────────────────────────────────────────
+  Widget _accordion({
+    required String key,
+    required String title,
+    required List<Widget> children,
+  }) {
+    final isOpen = _open[key] ?? true;
+    return Container(
+      decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(6.r)),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          GestureDetector(
+            onTap: () => setState(() => _open[key] = !isOpen),
+            child: Container(
+              width: double.infinity,
+              padding: EdgeInsets.symmetric(
+                  horizontal: 16.w, vertical: 14.h),
+              decoration: BoxDecoration(
+                color: _C.primary,
+                borderRadius: BorderRadius.circular(8.r),
+              ),
+              child: Row(children: [
+                Expanded(
+                    child: Text(title,
+                        style: StyleText.fontSize14Weight600
+                            .copyWith(color: Colors.white))),
+                Icon(
+                    isOpen
+                        ? Icons.keyboard_arrow_up_rounded
+                        : Icons.keyboard_arrow_down_rounded,
+                    color: Colors.white,
+                    size: 20.sp),
+              ]),
+            ),
+          ),
+          if (isOpen)
+            Container(
+              width: double.infinity,
+              decoration: const BoxDecoration(),
+              padding: EdgeInsets.symmetric(horizontal: 0.w),
+              child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: children),
+            ),
+        ],
+      ),
+    );
+  }
+
+  // ── Image preview box (for Strategic House sections) ──────────────────────
+  Widget _imagePreviewBox({required String label, required String url}) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(label,
+            style: StyleText.fontSize12Weight500
+                .copyWith(color: _C.labelText)),
+        SizedBox(height: 8.h),
+        Container(
+          width: double.infinity,
+          height: 220.h,
+          decoration: BoxDecoration(
+            color: const Color(0xFFEEEEEE),
+            borderRadius: BorderRadius.circular(8.r),
+          ),
+          child: url.isEmpty
+              ? Center(
+              child: Icon(Icons.image_outlined,
+                  color: Colors.grey[400], size: 48.sp))
+              : ClipRRect(
+            borderRadius: BorderRadius.circular(8.r),
+            child: _netImg(
+              url: url,
+              width: double.infinity,
+              height: 220.h,
+              fit: BoxFit.contain,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  // ── Icon preview circle — XHR safe ───────────────────────────────────────
+  Widget _iconPreviewCircle({
+    required String label,
+    required String url,
+    bool isSvg = false,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(label,
+            style: StyleText.fontSize12Weight500
+                .copyWith(color: _C.labelText)),
+        SizedBox(height: 6.h),
+        Container(
+          width: 56.w,
+          height: 56.w,
+          decoration: const BoxDecoration(
+              shape: BoxShape.circle,
+              color: Color(0xFFEEEEEE)),
+          child: url.isEmpty
+              ? Icon(
+              isSvg
+                  ? Icons.description_outlined
+                  : Icons.image_outlined,
+              color: Colors.grey[500],
+              size: 24.sp)
+              : ClipOval(
+            child: Padding(
+              padding: EdgeInsets.all(14.r),
+              child: _netImg(
+                url: url,
+                width: 28.w,
+                height: 28.w,
+                fit: BoxFit.contain,
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  // ── Read-only LTR ─────────────────────────────────────────────────────────
+  Widget _readField(String label, String value,
+      {double height = 36}) =>
+      Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(label,
+              style: StyleText.fontSize12Weight500
+                  .copyWith(color: _C.labelText)),
+          SizedBox(height: 4.h),
+          Container(
+            width: double.infinity,
+            height: height.h,
+            padding: EdgeInsets.symmetric(
+                horizontal: 10.w,
+                vertical: height > 36 ? 8.h : 0),
+            decoration: BoxDecoration(
+                color: AppColors.card,
+                borderRadius: BorderRadius.circular(4.r)),
+            alignment: height > 36
+                ? Alignment.topLeft
+                : Alignment.centerLeft,
+            child: Text(value,
+                style: StyleText.fontSize12Weight400
+                    .copyWith(color: _C.hintText),
+                maxLines: height > 36 ? 8 : 1,
+                overflow: TextOverflow.ellipsis),
+          ),
+        ],
+      );
+
+  // ── Read-only RTL ─────────────────────────────────────────────────────────
+  Widget _readFieldRtl(String label, String value,
+      {double height = 36}) =>
+      Directionality(
+        textDirection: TextDirection.rtl,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(label,
+                style: StyleText.fontSize12Weight500
+                    .copyWith(color: _C.labelText)),
+            SizedBox(height: 4.h),
+            Container(
+              width: double.infinity,
+              height: height.h,
+              padding: EdgeInsets.symmetric(
+                  horizontal: 10.w,
+                  vertical: height > 36 ? 8.h : 0),
+              decoration: BoxDecoration(
+                  color: AppColors.card,
+                  borderRadius: BorderRadius.circular(4.r)),
+              alignment: height > 36
+                  ? Alignment.topRight
+                  : Alignment.centerRight,
+              child: Text(
+                  value.isEmpty ? 'أكتب هنا' : value,
+                  style: StyleText.fontSize12Weight400
+                      .copyWith(color: _C.hintText),
+                  textDirection: TextDirection.rtl,
+                  maxLines: height > 36 ? 8 : 1,
+                  overflow: TextOverflow.ellipsis),
+            ),
+          ],
+        ),
+      );
+}

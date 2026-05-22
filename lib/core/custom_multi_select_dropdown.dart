@@ -4,8 +4,9 @@
 // Matches visual style of CustomDropdownFormFieldInvMaster
 // Supports checkbox multi-select with List<String> output
 
-import 'package:beauty_admin/theme/appcolors.dart';
-import 'package:beauty_admin/theme/new_theme.dart';
+import 'package:beauty_admin/core/theme/appcolors.dart';
+import 'package:beauty_admin/core/theme/new_theme.dart';
+
 import 'package:dropdown_button2/dropdown_button2.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
