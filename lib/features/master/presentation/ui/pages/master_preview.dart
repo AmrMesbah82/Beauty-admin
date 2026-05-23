@@ -31,7 +31,7 @@ import '../../../../../core/main_widgets/app_admin_navbar.dart';
 import '../../../../../core/theme/appcolors.dart';
 import '../../../../../core/theme/new_theme.dart';
 import '../../../../home/presentation/ui/pages/home_main.dart';
-import '../../../data/model/master_model.dart';
+import '../../../data/models/master_model.dart';
 import '../../controller/master_cubit.dart';
 import '../../controller/master_state.dart';
 

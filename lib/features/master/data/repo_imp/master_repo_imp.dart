@@ -21,9 +21,9 @@ import 'dart:typed_data';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 
-import '../../../about_us/data/model/about_us_model.dart' hide Versioned;
+import '../../../about_us/data/models/about_us_model.dart' hide Versioned;
 import '../../domain/repo/master_repo.dart';
-import '../model/master_model.dart';
+import '../models/master_model.dart';
 
 
 class MasterRepoImp implements MasterRepo {

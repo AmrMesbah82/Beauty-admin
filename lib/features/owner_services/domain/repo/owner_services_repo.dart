@@ -5,7 +5,7 @@
 /// Last Update: 10/04/2026
 
 import 'dart:typed_data';
-import '../../data/model/owner_services_model.dart';
+import '../../data/models/owner_services_model.dart';
 
 abstract class OwnerServicesRepo {
   Future<OwnerServicesPageModel> fetchOwnerServicesPage(

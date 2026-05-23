@@ -8,7 +8,7 @@
 /// UPDATED: Added MasterCmsDraftSaved state ✅
 /// UPDATED: Added MasterCmsDraftDeleted state ✅
 
-import '../../data/model/master_model.dart';
+import '../../data/models/master_model.dart';
 
 abstract class MasterCmsState {}
 

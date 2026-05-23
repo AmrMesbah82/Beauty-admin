@@ -11,7 +11,7 @@ import 'dart:typed_data';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import '../../domain/repo/owner_services_repo.dart';
-import '../model/owner_services_model.dart';
+import '../models/owner_services_model.dart';
 
 class OwnerServicesRepoImp implements OwnerServicesRepo {
   final FirebaseFirestore _firestore;

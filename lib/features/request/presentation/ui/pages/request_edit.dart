@@ -22,7 +22,7 @@ import '../../../../../core/custom_dialog.dart';
 import '../../../../../core/main_widgets/admin_sub_navbar.dart';
 import '../../../../../core/theme/appcolors.dart';
 import '../../../../../core/theme/new_theme.dart';
-import '../../../data/model/request_model.dart';
+import '../../../data/models/request_model.dart';
 import '../../controller/request_cubit.dart';
 import '../../controller/request_state.dart';
 import 'request_preview.dart';

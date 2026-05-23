@@ -11,7 +11,7 @@ import 'dart:typed_data';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import '../../domain/repo/client_services_repo.dart';
-import '../model/client_services_model.dart';
+import '../models/client_services_model.dart';
 
 class ClientServicesRepoImp implements ClientServicesRepo {
   final FirebaseFirestore _firestore;

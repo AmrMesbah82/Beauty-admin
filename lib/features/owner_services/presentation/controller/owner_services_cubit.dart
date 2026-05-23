@@ -11,7 +11,7 @@
 import 'dart:typed_data';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import '../../data/model/owner_services_model.dart';
+import '../../data/models/owner_services_model.dart';
 import '../../domain/repo/owner_services_repo.dart';
 
 import 'owner_services_state.dart';

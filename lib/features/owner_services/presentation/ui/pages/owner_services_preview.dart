@@ -29,7 +29,7 @@ import '../../../../../core/main_widgets/app_admin_navbar.dart';
 import '../../../../../core/theme/appcolors.dart';
 import '../../../../../core/theme/new_theme.dart';
 import '../../../../home/presentation/ui/pages/home_main.dart';
-import '../../../data/model/owner_services_model.dart';
+import '../../../data/models/owner_services_model.dart';
 import '../../controller/owner_services_cubit.dart';
 import '../../controller/owner_services_state.dart';
 

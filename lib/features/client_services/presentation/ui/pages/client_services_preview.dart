@@ -32,7 +32,7 @@ import '../../../../../core/main_widgets/app_admin_navbar.dart';
 import '../../../../../core/theme/appcolors.dart';
 import '../../../../../core/theme/new_theme.dart';
 import '../../../../home/presentation/ui/pages/home_main.dart';
-import '../../../data/model/client_services_model.dart';
+import '../../../data/models/client_services_model.dart';
 import '../../controller/client_services_cubit.dart';
 import '../../controller/client_services_state.dart';
 

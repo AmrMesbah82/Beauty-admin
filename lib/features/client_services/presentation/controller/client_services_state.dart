@@ -4,7 +4,7 @@
 /// Created by: Amr Mesbah
 /// Last Update: 08/04/2026
 
-import '../../data/model/client_services_model.dart';
+import '../../data/models/client_services_model.dart';
 
 abstract class ClientServicesCmsState {}
 

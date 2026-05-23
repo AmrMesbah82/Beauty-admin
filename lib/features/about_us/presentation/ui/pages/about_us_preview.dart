@@ -27,8 +27,8 @@ import '../../../../../core/custom_dialog.dart';
 import '../../../../../core/main_widgets/admin_sub_navbar.dart';
 import '../../../../../core/theme/appcolors.dart';
 import '../../../../../core/theme/new_theme.dart';
-import '../../../../client_services/data/model/client_services_model.dart';
-import '../../../data/model/about_us_model.dart';
+import '../../../../client_services/data/models/client_services_model.dart';
+import '../../../data/models/about_us_model.dart';
 import '../../controller/about_us_cubit.dart';
 import '../../controller/about_us_state.dart';
 

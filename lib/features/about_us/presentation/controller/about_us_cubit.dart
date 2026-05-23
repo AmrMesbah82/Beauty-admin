@@ -8,7 +8,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 
 
-import '../../data/model/about_us_model.dart';
+import '../../data/models/about_us_model.dart';
 import '../../data/repo_imp/about_us_repo_imp.dart';
 import '../../domain/repo/about_us_repo.dart';
 import 'about_us_state.dart';

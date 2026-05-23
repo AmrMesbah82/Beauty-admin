@@ -52,7 +52,7 @@ import '../../../../../core/theme/appcolors.dart';
 import '../../../../../core/theme/new_theme.dart';
 import '../../../../../core/widget/date_pic.dart';
 import '../../../../home/presentation/ui/pages/home_main.dart';
-import '../../../data/model/master_model.dart';
+import '../../../data/models/master_model.dart';
 import '../../controller/master_cubit.dart';
 import '../../controller/master_state.dart';
 import 'master_preview.dart';

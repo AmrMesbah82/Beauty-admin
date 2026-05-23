@@ -2,7 +2,7 @@
 // File Name: contact_us_location_state.dart
 // Created by: Amr Mesbah
 
-import '../../data/model/contact_us_model_location.dart';
+import '../../data/models/contact_us_model_location.dart';
 
 abstract class ContactUsCmsState {}
 

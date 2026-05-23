@@ -13,9 +13,9 @@ import 'dart:typed_data';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 
-import '../../../about_us/data/model/about_us_model.dart' hide Versioned;
+import '../../../about_us/data/models/about_us_model.dart' hide Versioned;
 import '../../domain/repo/contact_us_location.dart';
-import '../model/contact_us_model_location.dart';
+import '../models/contact_us_model_location.dart';
 
 class ContactUsCmsRepoImpl implements ContactUsCmsRepo {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;

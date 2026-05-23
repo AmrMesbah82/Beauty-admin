@@ -5,7 +5,7 @@
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 
-import '../../data/model/demo_model.dart';
+import '../../data/models/demo_model.dart';
 
 class RequestDemoRepo {
   final FirebaseFirestore _db;

@@ -19,7 +19,7 @@ import 'dart:typed_data';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import '../../domain/repo/overview_repo.dart';
-import '../model/overview_model.dart';
+import '../models/overview_model.dart';
 
 class OverviewRepoImp implements OverviewRepo {
   final FirebaseFirestore _firestore;

@@ -21,10 +21,10 @@ import '../../../../../core/main_widgets/app_admin_navbar.dart';
 import '../../../../../core/theme/appcolors.dart';
 import '../../../../../core/theme/new_theme.dart';
 import '../../../../home/presentation/ui/pages/home_main.dart';
-import '../../../../request/data/model/request_model.dart';
+import '../../../../request/data/models/request_model.dart';
 import '../../../../request/presentation/controller/request_cubit.dart';
 import '../../../../request/presentation/controller/request_state.dart';
-import '../../../data/model/demo_model.dart';
+import '../../../data/models/demo_model.dart';
 import '../../controller/demo_cubit.dart';
 import '../../controller/demo_state.dart';
 

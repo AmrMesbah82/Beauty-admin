@@ -8,7 +8,7 @@
 /// UPDATED: Added OverviewCmsDraftSaved state ✅
 /// UPDATED: Added OverviewCmsDraftDeleted state ✅
 
-import '../../data/model/overview_model.dart';
+import '../../data/models/overview_model.dart';
 
 abstract class OverviewCmsState {}
 

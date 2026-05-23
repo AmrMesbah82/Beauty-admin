@@ -25,7 +25,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 
-import '../../features/home/data/model/home_model.dart';
+import '../../features/home/data/models/home_model.dart';
 import '../../features/home/presentation/controller/home_cubit.dart';
 import '../../features/home/presentation/controller/home_state.dart';
 import '../../features/home/presentation/controller/lang_state.dart';

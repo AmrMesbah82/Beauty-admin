@@ -3,7 +3,7 @@
 // Path: lib/controller/request_demo/demo_cubit.dart
 // ═══════════════════════════════════════════════════════════════════
 
-import 'package:beauty_admin/features/demos/data/model/demo_model.dart';
+import 'package:beauty_admin/features/demos/data/models/demo_model.dart';
 import 'package:beauty_admin/features/demos/domain/repo/demo_repo.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 

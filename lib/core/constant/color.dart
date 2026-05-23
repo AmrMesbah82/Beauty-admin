@@ -1,7 +1,7 @@
 import 'dart:ui';
 
 class ColorPick {
-  static const Color primary   = Color(0xFFD16F9A);
+  static const Color primary   = Color(0xFFD16F9A) ;
   static const Color preview   = Color(0xFF8A5C70);
   static const Color saveForLater   = Color(0xFF525252);
   static const Color discard   = Color(0xFF797979);
@@ -15,6 +15,5 @@ class ColorPick {
   static const Color inactiveColor = Color(0xFFFF8C00);
   static const Color draftColor    = Color(0xFF666666);
   static const Color removedColor  = Color(0xFFCC0000);
-
 
 }

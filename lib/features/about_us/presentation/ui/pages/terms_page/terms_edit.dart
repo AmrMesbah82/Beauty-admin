@@ -25,7 +25,7 @@ import '../../../../../../core/theme/appcolors.dart';
 import '../../../../../../core/theme/new_theme.dart';
 import '../../../../../../core/widget/circle_progress.dart';
 import '../../../../../home/presentation/ui/pages/home_main.dart';
-import '../../../../data/model/about_us_model.dart';
+import '../../../../data/models/about_us_model.dart';
 import '../../../controller/about_us_cubit.dart';
 import '../../../controller/about_us_state.dart';
 import 'terms_preview.dart';

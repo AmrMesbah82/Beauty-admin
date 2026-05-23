@@ -17,7 +17,7 @@ import '../../../../../core/widget/format.dart';
 import '../../../../home/presentation/controller/home_cubit.dart';
 import '../../../../home/presentation/controller/home_state.dart';
 import '../../../../home/presentation/ui/pages/home_main.dart';
-import '../../../data/model/inquire_model.dart';
+import '../../../data/models/inquire_model.dart';
 import '../../controller/inquiry_cubit.dart';
 import '../../controller/inquiry_state.dart';
 

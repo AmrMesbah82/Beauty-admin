@@ -4,7 +4,7 @@
 // ═══════════════════════════════════════════════════════════════════
 
 
-import '../../data/model/inquire_model.dart';
+import '../../data/models/inquire_model.dart';
 
 abstract class InquiryRepo {
   Future<List<InquiryModel>> fetchAllInquiries();

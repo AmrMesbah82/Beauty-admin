@@ -5,7 +5,7 @@
 /// Last Update: 08/04/2026
 
 import 'dart:typed_data';
-import '../../data/model/client_services_model.dart';
+import '../../data/models/client_services_model.dart';
 
 abstract class ClientServicesRepo {
   Future<ClientServicesPageModel> fetchPage({required String gender});

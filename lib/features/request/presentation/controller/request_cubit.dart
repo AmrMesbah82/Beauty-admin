@@ -1,7 +1,7 @@
 /// File Name: demo_cubit.dart
 import 'dart:typed_data';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import '../../data/model/request_model.dart';
+import '../../data/models/request_model.dart';
 
 import '../../domain/repo/request_repo.dart';
 import 'request_state.dart';

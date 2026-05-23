@@ -4,7 +4,7 @@
 /// Created by: Amr Mesbah
 /// Last Update: 10/04/2026
 
-import '../../data/model/owner_services_model.dart';
+import '../../data/models/owner_services_model.dart';
 
 abstract class OwnerServicesCmsState {}
 

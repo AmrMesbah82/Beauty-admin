@@ -9,7 +9,7 @@
 /// UPDATED: Added draft lifecycle methods (fetch, save, delete, promote) ✅
 
 import 'dart:typed_data';
-import '../../data/model/overview_model.dart';
+import '../../data/models/overview_model.dart';
 
 abstract class OverviewRepo {
   // ── Published document ───────────────────────────────────────────────────

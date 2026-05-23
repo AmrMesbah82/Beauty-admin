@@ -6,7 +6,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 import '../../domain/repo/inquiry_repo.dart';
-import '../model/inquire_model.dart';
+import '../models/inquire_model.dart';
 
 
 

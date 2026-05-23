@@ -34,7 +34,7 @@ import '../../../../../core/theme/appcolors.dart';
 import '../../../../../core/theme/new_theme.dart';
 import '../../../../home/presentation/controller/home_cubit.dart';
 import '../../../../home/presentation/controller/home_state.dart';
-import '../../../data/model/overview_model.dart';
+import '../../../data/models/overview_model.dart';
 import '../../controller/overview_cubit.dart';
 import '../../controller/overview_state.dart';
 

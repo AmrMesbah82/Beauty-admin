@@ -2,7 +2,7 @@
 // File Name: contact_cubit.dart
 // Created by: Amr Mesbah
 
-import 'package:beauty_admin/features/contact_us/data/model/contact_us_model.dart';
+import 'package:beauty_admin/features/contact_us/data/models/contact_us_model.dart';
 import 'package:beauty_admin/features/contact_us/data/repo_imp/contact_us_repo_imp.dart';
 import 'package:beauty_admin/features/contact_us/presentation/controller/contact_us_state.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';

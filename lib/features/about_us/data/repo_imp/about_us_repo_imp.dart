@@ -11,7 +11,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 
 import '../../domain/repo/about_us_repo.dart';
-import '../model/about_us_model.dart';
+import '../models/about_us_model.dart';
 
 
 class AboutRepoImpl implements AboutRepo {

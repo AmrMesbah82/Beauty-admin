@@ -11,7 +11,7 @@
 import 'dart:typed_data';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
-import '../model/request_model.dart';
+import '../models/request_model.dart';
 
 import '../../domain/repo/request_repo.dart';
 

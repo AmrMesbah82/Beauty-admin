@@ -21,7 +21,7 @@ import '../../../../../core/main_widgets/admin_sub_navbar.dart';
 import '../../../../../core/main_widgets/app_admin_navbar.dart';
 import '../../../../../core/theme/appcolors.dart';
 import '../../../../../core/theme/new_theme.dart';
-import '../../../data/model/home_model.dart';
+import '../../../data/models/home_model.dart';
 import '../../controller/home_cubit.dart';
 import '../../controller/home_state.dart';
 import 'home_edit.dart';

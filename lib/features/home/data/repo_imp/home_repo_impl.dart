@@ -16,7 +16,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 
 import '../../domain/repo/home_repo.dart';
-import '../model/home_model.dart';
+import '../models/home_model.dart';
 
 class HomeRepositoryImpl implements HomeRepository {
   HomeRepositoryImpl({

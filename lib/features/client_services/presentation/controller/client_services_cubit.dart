@@ -9,7 +9,7 @@
 import 'dart:typed_data';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import '../../data/model/client_services_model.dart';
+import '../../data/models/client_services_model.dart';
 import '../../domain/repo/client_services_repo.dart';
 
 import 'client_services_state.dart';

@@ -8,7 +8,7 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 
-import '../../data/model/inquire_model.dart';
+import '../../data/models/inquire_model.dart';
 import '../../domain/repo/inquiry_repo.dart';
 import 'inquiry_state.dart';
 

@@ -1,5 +1,5 @@
 /// File Name: demo_state.dart
-import 'package:beauty_admin/features/request/data/model/request_model.dart';
+import 'package:beauty_admin/features/request/data/models/request_model.dart';
 
 
 abstract class RequestDemoCmsState {}

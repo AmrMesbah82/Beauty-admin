@@ -14,7 +14,7 @@
 import 'dart:typed_data';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import '../../data/model/master_model.dart';
+import '../../data/models/master_model.dart';
 import '../../domain/repo/master_repo.dart';
 
 import 'master_state.dart';

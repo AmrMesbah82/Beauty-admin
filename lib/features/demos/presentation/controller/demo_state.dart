@@ -5,7 +5,7 @@
 
 
 
-import '../../data/model/demo_model.dart';
+import '../../data/models/demo_model.dart';
 
 abstract class RequestDemoState {}
 

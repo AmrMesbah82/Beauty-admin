@@ -35,7 +35,7 @@ import '../../../../../core/widget/custom_dropdwon.dart';
 import '../../../../home/presentation/controller/home_cubit.dart';
 import '../../../../home/presentation/controller/home_state.dart';
 import '../../../../home/presentation/ui/pages/home_main.dart';
-import '../../../data/model/demo_model.dart';
+import '../../../data/models/demo_model.dart';
 import '../../controller/demo_cubit.dart';
 import '../../controller/demo_state.dart';
 

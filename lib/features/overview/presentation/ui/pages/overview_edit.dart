@@ -49,7 +49,7 @@ import '../../../../../core/main_widgets/app_admin_navbar.dart';
 import '../../../../../core/theme/appcolors.dart';
 import '../../../../../core/theme/new_theme.dart';
 import '../../../../home/presentation/ui/pages/home_main.dart';
-import '../../../data/model/overview_model.dart';
+import '../../../data/models/overview_model.dart';
 import '../../controller/overview_cubit.dart';
 import '../../controller/overview_state.dart';
 import 'overview_main.dart';

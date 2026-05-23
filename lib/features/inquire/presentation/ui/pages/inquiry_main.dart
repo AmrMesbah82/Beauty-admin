@@ -26,7 +26,7 @@ import '../../../../../core/main_widgets/app_admin_navbar.dart';
 import '../../../../../core/theme/appcolors.dart';
 import '../../../../../core/theme/new_theme.dart';
 import '../../../../home/presentation/ui/pages/home_main.dart';
-import '../../../data/model/inquire_model.dart';
+import '../../../data/models/inquire_model.dart';
 import '../../controller/inquiry_cubit.dart';
 import '../../controller/inquiry_state.dart';
 import 'inquiry_details.dart';

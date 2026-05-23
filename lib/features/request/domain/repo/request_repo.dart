@@ -1,6 +1,6 @@
 /// File Name: demo_repo.dart
 import 'dart:typed_data';
-import '../../data/model/request_model.dart';
+import '../../data/models/request_model.dart';
 
 abstract class RequestDemoRepo {
   Future<RequestDemoPageModel> fetchPage({required String gender});

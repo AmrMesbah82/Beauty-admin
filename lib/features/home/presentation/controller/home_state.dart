@@ -4,7 +4,7 @@
 // Created by: Amr Mesbah
 
 
-import '../../data/model/home_model.dart';
+import '../../data/models/home_model.dart';
 
 
 abstract class HomeCmsState {}
