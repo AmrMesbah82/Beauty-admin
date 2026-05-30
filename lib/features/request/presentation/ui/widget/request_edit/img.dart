@@ -7,7 +7,4 @@ class _Img {
   bool get isEmpty => bytes == null && (url == null || url!.isEmpty);
 }
 
-const List<Map<String, String>> _kTypes = [
-  {'key': 'text', 'value': 'Text'},
-  {'key': 'dropdown', 'value': 'Dropdown'},
-];
+
