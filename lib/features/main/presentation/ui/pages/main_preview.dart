@@ -1,5 +1,5 @@
 /// ******************* FILE INFO *******************
-/// File Name: home_preview.dart
+/// File Name: main_preview.dart
 /// Page 3 — "Preview Main Details"
 /// UPDATED: Correct viewport sizes per device:
 ///          Desktop  → 1366 × 768  (browser chrome frame)
@@ -11,7 +11,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
-import '../../../../../core/constant/color.dart';
+import '../../../../../core/constants/color.dart';
 import '../../../../../core/custom_dialog.dart';
 import '../../../../../core/main_widgets/admin_sub_navbar.dart';
 import '../../../../../core/main_widgets/app_footer.dart';
@@ -21,12 +21,12 @@ import '../../../../../core/theme/new_theme.dart';
 import '../../../../home/presentation/controller/home_cubit.dart';
 import '../../../../home/presentation/controller/home_state.dart';
 
-part '../widget/main_preview/c.dart';
-part '../widget/main_preview/desktop_frame.dart';
-part '../widget/main_preview/tablet_frame.dart';
-part '../widget/main_preview/mobile_frame.dart';
-part '../widget/main_preview/preview_content.dart';
-part '../widget/main_preview/browser_chrome.dart';
+part '../widgets/main_preview/c.dart';
+part '../widgets/main_preview/desktop_frame.dart';
+part '../widgets/main_preview/tablet_frame.dart';
+part '../widgets/main_preview/mobile_frame.dart';
+part '../widgets/main_preview/preview_content.dart';
+part '../widgets/main_preview/browser_chrome.dart';
 
 class HomePreviewPage extends StatefulWidget {
   final bool showPublish; // ← ADD

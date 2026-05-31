@@ -1,3 +1,11 @@
+// ******************* FILE INFO *******************
+// File Name: demo_model.dart
+// Description: DemoModel data class
+// Created by: Amr Mesbah
+// Last Update: 31/05/2026
+
+/// Module: features › demos › data › models
+
 // ═══════════════════════════════════════════════════════════════════
 // FILE: demo_model.dart
 // Path: lib/model/request_demo/demo_model.dart

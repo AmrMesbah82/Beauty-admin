@@ -20,11 +20,11 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get_core/src/get_main.dart';
 import 'package:get/get_navigation/src/extension_navigation.dart';
 
-import 'package:beauty_admin/core/widget/circle_progress.dart';
+import 'package:beauty_admin/core/widgets/circle_progress.dart';
 
-import '../../../../../core/constant/color.dart';
+import '../../../../../core/constants/color.dart';
 import '../../../../../core/custom_dialog.dart';
-import '../../../../../core/custom_segmant_tab.dart';
+import '../../../../../core/custom_segment_tab.dart';
 import '../../../../../core/custom_svg.dart';
 import '../../../../../core/main_widgets/admin_sub_navbar.dart';
 import '../../../../../core/main_widgets/app_admin_navbar.dart';
@@ -35,16 +35,16 @@ import '../../../data/models/master_model.dart';
 import '../../controller/master_cubit.dart';
 import '../../controller/master_state.dart';
 
-part '../widget/master_preview/c.dart';
-part '../widget/master_preview/desktop_frame.dart';
-part '../widget/master_preview/tablet_frame.dart';
-part '../widget/master_preview/mobile_frame.dart';
-part '../widget/master_preview/preview_content.dart';
-part '../widget/master_preview/home_view_accordion.dart';
-part '../widget/master_preview/preview_header_section.dart';
-part '../widget/master_preview/preview_about_us_section.dart';
-part '../widget/master_preview/preview_footer_section.dart';
-part '../widget/master_preview/browser_chrome.dart';
+part '../widgets/master_preview/c.dart';
+part '../widgets/master_preview/desktop_frame.dart';
+part '../widgets/master_preview/tablet_frame.dart';
+part '../widgets/master_preview/mobile_frame.dart';
+part '../widgets/master_preview/preview_content.dart';
+part '../widgets/master_preview/home_view_accordion.dart';
+part '../widgets/master_preview/preview_header_section.dart';
+part '../widgets/master_preview/preview_about_us_section.dart';
+part '../widgets/master_preview/preview_footer_section.dart';
+part '../widgets/master_preview/browser_chrome.dart';
 
 // ── Color palette ─────────────────────────────────────────────────────────────
 
@@ -61,10 +61,10 @@ class MasterPreviewPage extends StatefulWidget {
 }
 
 class _MasterPreviewPageState extends State<MasterPreviewPage> {
-  _PreviewDevice _device      = _PreviewDevice.desktop;
-  bool           _isEnglish   = true;
+  _PreviewDevice _device       = _PreviewDevice.desktop;
+  bool           _isEnglish    = true;
   bool           _homeViewOpen = true;
-  bool           _isSaving    = false;
+  bool           _isSaving     = false;
 
   final List<String> _languageTabs = ['ENG', 'AR'];
 
@@ -209,31 +209,26 @@ class _MasterPreviewPageState extends State<MasterPreviewPage> {
                                     onConfirm: () => _publish(cubit),
                                   ),
                                   child: AnimatedContainer(
-                                    duration:
-                                    const Duration(milliseconds: 200),
+                                    duration: const Duration(milliseconds: 200),
                                     height: 44.h,
                                     decoration: BoxDecoration(
                                       color: _isSaving
                                           ? ColorPick.primary.withOpacity(0.5)
                                           : ColorPick.primary,
-                                      borderRadius:
-                                      BorderRadius.circular(6.r),
+                                      borderRadius: BorderRadius.circular(6.r),
                                     ),
                                     child: Center(
                                       child: _isSaving
                                           ? SizedBox(
                                         width: 18.w,
                                         height: 18.h,
-                                        child:
-                                        const CircularProgressIndicator(
+                                        child: const CircularProgressIndicator(
                                             color: Colors.white,
                                             strokeWidth: 2),
                                       )
                                           : Text('Publish',
-                                          style: StyleText
-                                              .fontSize14Weight600
-                                              .copyWith(
-                                              color: Colors.white)),
+                                          style: StyleText.fontSize14Weight600
+                                              .copyWith(color: Colors.white)),
                                     ),
                                   ),
                                 ),
@@ -276,8 +271,7 @@ class _MasterPreviewPageState extends State<MasterPreviewPage> {
               label,
               style: TextStyle(
                 fontSize: 15.sp,
-                fontWeight:
-                active ? FontWeight.w700 : FontWeight.w500,
+                fontWeight: active ? FontWeight.w700 : FontWeight.w500,
                 color: active ? ColorPick.primary : AppColors.secondaryText,
               ),
             ),
@@ -296,20 +290,41 @@ class _MasterPreviewPageState extends State<MasterPreviewPage> {
   Widget _buildFrame(double containerW, MasterPageModel? model) {
     switch (_device) {
       case _PreviewDevice.desktop:
-        return _DesktopFrame(
-            containerWidth: containerW, model: model, isEnglish: _isEnglish,
-            homeViewOpen: _homeViewOpen,
-            onToggleHome: () => setState(() => _homeViewOpen = !_homeViewOpen));
+        return Localizations.override(
+          context: context,
+          locale: _isEnglish ? const Locale('en') : const Locale('ar'),
+          child: _DesktopFrame(
+            containerWidth: containerW,
+            model:          model,
+            isEnglish:      _isEnglish,
+            homeViewOpen:   _homeViewOpen,
+            onToggleHome:   () => setState(() => _homeViewOpen = !_homeViewOpen),
+          ),
+        );
       case _PreviewDevice.tablet:
-        return _TabletFrame(
-            containerWidth: containerW, model: model, isEnglish: _isEnglish,
-            homeViewOpen: _homeViewOpen,
-            onToggleHome: () => setState(() => _homeViewOpen = !_homeViewOpen));
+        return Localizations.override(
+          context: context,
+          locale: _isEnglish ? const Locale('en') : const Locale('ar'),
+          child: _TabletFrame(
+            containerWidth: containerW,
+            model:          model,
+            isEnglish:      _isEnglish,
+            homeViewOpen:   _homeViewOpen,
+            onToggleHome:   () => setState(() => _homeViewOpen = !_homeViewOpen),
+          ),
+        );
       case _PreviewDevice.mobile:
-        return _MobileFrame(
-            containerWidth: containerW, model: model, isEnglish: _isEnglish,
-            homeViewOpen: _homeViewOpen,
-            onToggleHome: () => setState(() => _homeViewOpen = !_homeViewOpen));
+        return Localizations.override(
+          context: context,
+          locale: _isEnglish ? const Locale('en') : const Locale('ar'),
+          child: _MobileFrame(
+            containerWidth: containerW,
+            model:          model,
+            isEnglish:      _isEnglish,
+            homeViewOpen:   _homeViewOpen,
+            onToggleHome:   () => setState(() => _homeViewOpen = !_homeViewOpen),
+          ),
+        );
     }
   }
 }

@@ -19,16 +19,16 @@ import 'package:get/get_navigation/src/extension_navigation.dart';
 import 'package:intl/intl.dart';
 
 import 'package:beauty_admin/core/custom_svg.dart';
-import 'package:beauty_admin/core/widget/circle_progress.dart';
-import 'package:beauty_admin/core/widget/textfield.dart';
+import 'package:beauty_admin/core/widgets/circle_progress.dart';
+import 'package:beauty_admin/core/widgets/textfield.dart';
 
-import '../../../../../core/constant/color.dart';
+import '../../../../../core/constants/color.dart';
 import '../../../../../core/custom_dialog.dart';
 import '../../../../../core/main_widgets/admin_sub_navbar.dart';
 import '../../../../../core/main_widgets/app_admin_navbar.dart';
 import '../../../../../core/theme/appcolors.dart';
 import '../../../../../core/theme/new_theme.dart';
-import '../../../../../core/widget/date_pic.dart';
+import '../../../../../core/widgets/date_pic.dart';
 import '../../../../home/presentation/ui/pages/home_main.dart';
 import '../../../data/models/master_model.dart';
 import '../../controller/master_cubit.dart';
@@ -39,10 +39,10 @@ import 'package:flutter/widgets.dart';
 import 'dart:convert';
 import 'dart:ui_web' as ui_web;
 
-part '../widget/master_edit/picked_image.dart';
-part '../widget/master_edit/logic_helpers.dart';
-part '../widget/master_edit/ui_helpers.dart';
-part '../widget/master_edit/sections.dart';
+part '../widgets/master_edit/picked_image.dart';
+part '../widgets/master_edit/logic_helpers.dart';
+part '../widgets/master_edit/ui_helpers.dart';
+part '../widgets/master_edit/sections.dart';
 
 String _svgBytesToDataUrl(Uint8List bytes) {
   final base64 = base64Encode(bytes);
@@ -103,7 +103,6 @@ class _MasterEditPageState extends State<MasterEditPage> {
   @override
   void initState() {
     super.initState();
-    print('[MasterEditPage] ✅ initState');
     _seededModelHash = null;
     for (final ctrl in _allControllers) {
       ctrl.addListener(_onFieldChanged);
@@ -112,7 +111,6 @@ class _MasterEditPageState extends State<MasterEditPage> {
 
   @override
   void dispose() {
-    print('[MasterEditPage] 🔴 dispose');
     for (final ctrl in _allControllers) {
       ctrl.removeListener(_onFieldChanged);
       ctrl.dispose();
@@ -124,7 +122,6 @@ class _MasterEditPageState extends State<MasterEditPage> {
   Widget build(BuildContext context) {
     return BlocConsumer<MasterCmsCubit, MasterCmsState>(
       listener: (context, state) {
-        print('[MasterEditPage] 👂 listener: ${state.runtimeType}');
 
         if (state is MasterCmsSaved) {
           WidgetsBinding.instance.addPostFrameCallback((_) {

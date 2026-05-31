@@ -3,6 +3,7 @@
 // Created by: Amr Mesbah
 // Purpose: Green gradient funnel/pyramid chart for Hiring Stages
 
+import 'package:beauty_admin/core/theme/text.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -85,11 +86,7 @@ class FunnelChartWidget extends StatelessWidget {
               Expanded(
                 child: Text(
                   title,
-                  style: TextStyle(
-                    fontSize: 14.sp,
-                    fontWeight: FontWeight.w700,
-                    color: Colors.black,
-                  ),
+                  style: AppTextStyles.font14BlackSemiBoldCairo,
                 ),
               ),
             ],
@@ -121,10 +118,7 @@ class FunnelChartWidget extends StatelessWidget {
                           Expanded(
                             child: Text(
                               item.label,
-                              style: TextStyle(
-                                fontSize: 11.sp,
-                                color: Colors.black87,
-                              ),
+                              style: AppTextStyles.font11FullBlackCairoRegular,
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                             ),
@@ -212,11 +206,7 @@ class _FunnelPainter extends CustomPainter {
       final textPainter = TextPainter(
         text: TextSpan(
           text: items[i].value.toString(),
-          style: const TextStyle(
-            color: Colors.white,
-            fontSize: 12,
-            fontWeight: FontWeight.w600,
-          ),
+          style: AppTextStyles.font12BlackCairoSemiBold.copyWith(color: Colors.white),
         ),
         textDirection: TextDirection.ltr,
       )..layout();

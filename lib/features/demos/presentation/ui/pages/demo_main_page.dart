@@ -1,3 +1,11 @@
+// ******************* FILE INFO *******************
+// File Name: demo_main_page.dart
+// Description: Demo main page
+// Created by: Amr Mesbah
+// Last Update: 31/05/2026
+
+/// Module: features › demos › presentation › ui › pages
+
 // ═══════════════════════════════════════════════════════════════════
 // FILE: demo_main_page.dart
 // ═══════════════════════════════════════════════════════════════════
@@ -10,12 +18,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
-import 'package:beauty_admin/core/widget/custom_dropdwon.dart';
-import 'package:beauty_admin/core/widget/button.dart';
-import 'package:beauty_admin/core/widget/search.dart';
-import 'package:beauty_admin/core/widget/textfield.dart';
+import 'package:beauty_admin/core/widgets/custom_dropdown.dart';
+import 'package:beauty_admin/core/widgets/button.dart';
+import 'package:beauty_admin/core/widgets/search.dart';
+import 'package:beauty_admin/core/widgets/textfield.dart';
 
-import '../../../../../core/constant/color.dart';
+import '../../../../../core/constants/color.dart';
 import '../../../../../core/main_widgets/app_admin_navbar.dart';
 import '../../../../../core/theme/appcolors.dart';
 import '../../../../../core/theme/new_theme.dart';
@@ -27,9 +35,9 @@ import '../../../data/models/demo_model.dart';
 import '../../controller/demo_cubit.dart';
 import '../../controller/demo_state.dart';
 
-part '../widget/demo_main_page/c.dart';
-part '../widget/demo_main_page/donut_painter.dart';
-part '../widget/demo_main_page/sections.dart';
+part '../widgets/demo_main_page/c.dart';
+part '../widgets/demo_main_page/donut_painter.dart';
+part '../widgets/demo_main_page/sections.dart';
 
 class RequestDemoMainPage extends StatefulWidget {
   const RequestDemoMainPage({super.key});

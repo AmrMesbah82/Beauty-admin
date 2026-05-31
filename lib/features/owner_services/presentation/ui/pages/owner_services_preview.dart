@@ -21,9 +21,9 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get_core/src/get_main.dart';
 import 'package:get/get_navigation/src/extension_navigation.dart';
 
-import '../../../../../core/constant/color.dart';
+import '../../../../../core/constants/color.dart';
 import '../../../../../core/custom_dialog.dart';
-import '../../../../../core/custom_segmant_tab.dart';
+import '../../../../../core/custom_segment_tab.dart';
 import '../../../../../core/main_widgets/admin_sub_navbar.dart';
 import '../../../../../core/main_widgets/app_admin_navbar.dart';
 import '../../../../../core/theme/appcolors.dart';
@@ -33,12 +33,12 @@ import '../../../data/models/owner_services_model.dart';
 import '../../controller/owner_services_cubit.dart';
 import '../../controller/owner_services_state.dart';
 
-part '../widget/owner_services_preview/c.dart';
-part '../widget/owner_services_preview/desktop_frame.dart';
-part '../widget/owner_services_preview/tablet_frame.dart';
-part '../widget/owner_services_preview/mobile_frame.dart';
-part '../widget/owner_services_preview/preview_content.dart';
-part '../widget/owner_services_preview/browser_chrome.dart';
+part '../widgets/owner_services_preview/c.dart';
+part '../widgets/owner_services_preview/desktop_frame.dart';
+part '../widgets/owner_services_preview/tablet_frame.dart';
+part '../widgets/owner_services_preview/mobile_frame.dart';
+part '../widgets/owner_services_preview/preview_content.dart';
+part '../widgets/owner_services_preview/browser_chrome.dart';
 
 // ── Colors ────────────────────────────────────────────────────────────────────
 
@@ -247,22 +247,31 @@ class _OwnerServicesPreviewPageState extends State<OwnerServicesPreviewPage> {
   Widget _buildFrame(double containerW, OwnerServicesPageModel data) {
     switch (_device) {
       case _PreviewDevice.desktop:
-        return _DesktopFrame(
-          containerWidth: containerW,
-          model: data,
-          isEnglish: _isEnglish,
+        return Localizations.override(
+          context: context,
+          locale: _isEnglish ? const Locale('en') : const Locale('ar'),
+          child: _DesktopFrame(
+            containerWidth: containerW,
+            model: data,
+          ),
         );
       case _PreviewDevice.tablet:
-        return _TabletFrame(
-          containerWidth: containerW,
-          model: data,
-          isEnglish: _isEnglish,
+        return Localizations.override(
+          context: context,
+          locale: _isEnglish ? const Locale('en') : const Locale('ar'),
+          child: _TabletFrame(
+            containerWidth: containerW,
+            model: data,
+          ),
         );
       case _PreviewDevice.mobile:
-        return _MobileFrame(
-          containerWidth: containerW,
-          model: data,
-          isEnglish: _isEnglish,
+        return Localizations.override(
+          context: context,
+          locale: _isEnglish ? const Locale('en') : const Locale('ar'),
+          child: _MobileFrame(
+            containerWidth: containerW,
+            model: data,
+          ),
         );
     }
   }

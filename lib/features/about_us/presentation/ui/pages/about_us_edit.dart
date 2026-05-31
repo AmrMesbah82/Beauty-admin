@@ -23,7 +23,7 @@ import 'package:go_router/go_router.dart';
 
 import 'package:beauty_admin/core/custom_dialog.dart';
 import 'package:beauty_admin/core/custom_svg.dart';
-import 'package:beauty_admin/core/widget/textfield.dart';
+import 'package:beauty_admin/core/widgets/textfield.dart';
 
 import '../../../../../core/main_widgets/admin_sub_navbar.dart';
 import '../../../../../core/main_widgets/app_admin_navbar.dart';
@@ -37,12 +37,12 @@ import 'about_us_preview.dart';
 import 'dart:html' as html;
 import 'dart:ui_web' as ui_web;
 
-part '../widget/about_us_edit/value_item.dart';
-part '../widget/about_us_edit/validation.dart';
-part '../widget/about_us_edit/file_helpers.dart';
-part '../widget/about_us_edit/logic_helpers.dart';
-part '../widget/about_us_edit/form_sections.dart';
-part '../widget/about_us_edit/ui_helpers.dart';
+part '../widgets/about_us_edit/value_item.dart';
+part '../widgets/about_us_edit/validation.dart';
+part '../widgets/about_us_edit/file_helpers.dart';
+part '../widgets/about_us_edit/logic_helpers.dart';
+part '../widgets/about_us_edit/form_sections.dart';
+part '../widgets/about_us_edit/ui_helpers.dart';
 
 String _svgBytesToDataUrl(Uint8List bytes) {
   final base64 = base64Encode(bytes);

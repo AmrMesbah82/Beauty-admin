@@ -19,7 +19,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
-import '../../../../../../core/constant/color.dart';
+import '../../../../../../core/constants/color.dart';
 import '../../../../../../core/main_widgets/admin_sub_navbar.dart';
 import '../../../../../../core/main_widgets/app_admin_navbar.dart';
 import '../../../../../../core/theme/appcolors.dart';
@@ -29,12 +29,12 @@ import '../../../../data/models/about_us_model.dart';
 import '../../../controller/about_us_cubit.dart';
 import '../../../controller/about_us_state.dart';
 
-part '../../widget/strategy_preview/c.dart';
-part '../../widget/strategy_preview/desktop_frame.dart';
-part '../../widget/strategy_preview/tablet_frame.dart';
-part '../../widget/strategy_preview/mobile_frame.dart';
-part '../../widget/strategy_preview/preview_content.dart';
-part '../../widget/strategy_preview/browser_chrome.dart';
+part '../../widgets/strategy_preview/c.dart';
+part '../../widgets/strategy_preview/desktop_frame.dart';
+part '../../widgets/strategy_preview/tablet_frame.dart';
+part '../../widgets/strategy_preview/mobile_frame.dart';
+part '../../widgets/strategy_preview/preview_content.dart';
+part '../../widgets/strategy_preview/browser_chrome.dart';
 
 class StrategyPreviewPage extends StatefulWidget {
   final OurStrategyModel model;
@@ -370,12 +370,12 @@ class _StrategyPreviewPageState extends State<StrategyPreviewPage> {
 
   // ── Frame dispatcher ──────────────────────────────────────────────────────────
   Widget _buildFrame(double containerW) {
+    Widget frame;
     switch (_device) {
       case _PreviewDevice.desktop:
-        return _DesktopFrame(
+        frame = _DesktopFrame(
           containerWidth: containerW,
           model: widget.model,
-          isEnglish: _isEnglish,
           enBytes: _getEnBytesForMode(),
           enUrl: _getEnUrlForMode(),
           arBytes: _getArBytesForMode(),
@@ -384,10 +384,9 @@ class _StrategyPreviewPageState extends State<StrategyPreviewPage> {
           hasArImage: _hasArImageForMode(),
         );
       case _PreviewDevice.tablet:
-        return _TabletFrame(
+        frame = _TabletFrame(
           containerWidth: containerW,
           model: widget.model,
-          isEnglish: _isEnglish,
           enBytes: _getEnBytesForMode(),
           enUrl: _getEnUrlForMode(),
           arBytes: _getArBytesForMode(),
@@ -396,10 +395,9 @@ class _StrategyPreviewPageState extends State<StrategyPreviewPage> {
           hasArImage: _hasArImageForMode(),
         );
       case _PreviewDevice.mobile:
-        return _MobileFrame(
+        frame = _MobileFrame(
           containerWidth: containerW,
           model: widget.model,
-          isEnglish: _isEnglish,
           enBytes: _getEnBytesForMode(),
           enUrl: _getEnUrlForMode(),
           arBytes: _getArBytesForMode(),
@@ -408,6 +406,11 @@ class _StrategyPreviewPageState extends State<StrategyPreviewPage> {
           hasArImage: _hasArImageForMode(),
         );
     }
+    return Localizations.override(
+      context: context,
+      locale: _isEnglish ? const Locale('en') : const Locale('ar'),
+      child: frame,
+    );
   }
 }
 

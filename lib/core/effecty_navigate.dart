@@ -1,3 +1,11 @@
+// ******************* FILE INFO *******************
+// File Name: effecty_navigate.dart
+// Description: Navigation effect utilities
+// Created by: Amr Mesbah
+// Last Update: 31/05/2026
+
+/// Module: core
+
 import 'package:flutter/material.dart';
 
 // ═══════════════════════════════════════════════════════════════════════════════

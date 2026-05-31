@@ -12,9 +12,9 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:intl/intl.dart';
 
 import 'package:beauty_admin/core/custom_svg.dart';
-import 'package:beauty_admin/core/widget/circle_progress.dart';
+import 'package:beauty_admin/core/widgets/circle_progress.dart';
 
-import '../../../../../core/constant/color.dart';
+import '../../../../../core/constants/color.dart';
 import '../../../../../core/main_widgets/admin_sub_navbar.dart';
 import '../../../../../core/main_widgets/app_admin_navbar.dart';
 import '../../../../../core/theme/appcolors.dart';
@@ -26,8 +26,8 @@ import '../../controller/overview_state.dart';
 import 'overview_edit.dart';
 import 'overview_preview.dart';
 
-part '../widget/overview_main/c.dart';
-part '../widget/overview_main/sections.dart';
+part '../widgets/overview_main/c.dart';
+part '../widgets/overview_main/sections.dart';
 
 class OverviewMainPage extends StatefulWidget {
   const OverviewMainPage({super.key});

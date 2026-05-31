@@ -1,3 +1,11 @@
+// ******************* FILE INFO *******************
+// File Name: inquire_model.dart
+// Description: InquireModel data class
+// Created by: Amr Mesbah
+// Last Update: 31/05/2026
+
+/// Module: features › inquire › data › models
+
 // ═══════════════════════════════════════════════════════════════════
 // FILE: inquire_model.dart (FULLY UPDATED)
 // Path: lib/model/inquire/inquire_model.dart
@@ -244,18 +252,15 @@ class InquiryModel {
       for (final k in keys) {
         final v = map[k];
         if (v is Timestamp) {
-          print('🗓  [fromMap $id] "$k" is Timestamp → ${v.toDate()}');
           return v.toDate();
         }
         if (v is String && v.isNotEmpty) {
           final parsed = DateTime.tryParse(v);
           if (parsed != null) {
-            print('🗓  [fromMap $id] "$k" is String → $parsed');
             return parsed;
           }
         }
       }
-      print('⚠️  [fromMap $id] No valid date found in keys: $keys');
       return null;
     }
 
@@ -268,7 +273,6 @@ class InquiryModel {
         final parts = legacy.split(' ');
         firstName = parts.first;
         lastName  = parts.length > 1 ? parts.sublist(1).join(' ') : '';
-        print('🔁 [fromMap $id] Used Full_Name fallback → "$firstName" "$lastName"');
       }
     }
 
@@ -277,7 +281,6 @@ class InquiryModel {
     if (gender.isEmpty) {
       gender = str(['Target_Audience', 'targetAudience']);
       if (gender.isNotEmpty) {
-        print('🔁 [fromMap $id] gender fallback → targetAudience = "$gender"');
       }
     }
 
@@ -286,7 +289,6 @@ class InquiryModel {
     if (country.isEmpty) {
       country = str(['Salon_Country', 'salonCountry', 'location', 'Location']);
       if (country.isNotEmpty) {
-        print('🔁 [fromMap $id] country fallback → "$country"');
       }
     }
 
@@ -339,17 +341,6 @@ class InquiryModel {
       ]),
     );
 
-    print(
-      '📦 [fromMap $id] → '
-          'name="${model.firstName} ${model.lastName}" | '
-          'email="${model.email}" | '
-          'phone="${model.phone}" | '
-          'gender="${model.gender}" | '
-          'country="${model.country}" | '
-          'userType="${model.userType}" | '
-          'status="${model.status.label}" | '
-          'date="${model.submissionDate}"',
-    );
 
     return model;
   }

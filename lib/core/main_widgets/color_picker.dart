@@ -1,3 +1,11 @@
+// ******************* FILE INFO *******************
+// File Name: color_picker.dart
+// Description: Color picker widget
+// Created by: Amr Mesbah
+// Last Update: 31/05/2026
+
+/// Module: core › main_widgets
+
 import 'package:flutter/material.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 

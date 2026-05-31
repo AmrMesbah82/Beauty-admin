@@ -13,10 +13,10 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:beauty_admin/core/custom_svg.dart';
-import 'package:beauty_admin/core/widget/circle_progress.dart';
-import 'package:beauty_admin/core/widget/navigator.dart';
+import 'package:beauty_admin/core/widgets/circle_progress.dart';
+import 'package:beauty_admin/core/widgets/navigator.dart';
 
-import '../../../../../core/constant/color.dart';
+import '../../../../../core/constants/color.dart';
 import '../../../../../core/main_widgets/admin_sub_navbar.dart';
 import '../../../../../core/main_widgets/app_admin_navbar.dart';
 import '../../../../../core/theme/appcolors.dart';
@@ -32,8 +32,8 @@ import 'dart:ui_web' as ui_web;
 import 'package:intl/intl.dart';
 import 'dart:ui' as ui;
 
-part '../widget/home_main/c.dart';
-part '../widget/home_main/sections.dart';
+part '../widgets/home_main/c.dart';
+part '../widgets/home_main/sections.dart';
 
 class HomeMainPage extends StatefulWidget {
   const HomeMainPage({super.key});

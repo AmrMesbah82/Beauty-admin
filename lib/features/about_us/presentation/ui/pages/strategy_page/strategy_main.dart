@@ -13,9 +13,9 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
-import 'package:beauty_admin/core/widget/navigator.dart';
+import 'package:beauty_admin/core/widgets/navigator.dart';
 
-import '../../../../../../core/constant/color.dart';
+import '../../../../../../core/constants/color.dart';
 import '../../../../../../core/custom_svg.dart';
 import '../../../../../../core/theme/appcolors.dart';
 import '../../../../../../core/theme/new_theme.dart';
@@ -25,7 +25,7 @@ import '../../../controller/about_us_cubit.dart';
 import '../../../controller/about_us_state.dart';
 import 'strategy_edit.dart';
 
-part '../../widget/strategy_main/c.dart';
+part '../../widgets/strategy_main/c.dart';
 
 class StrategyMainView extends StatefulWidget {
   const StrategyMainView({super.key});

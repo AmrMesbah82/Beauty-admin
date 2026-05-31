@@ -17,10 +17,10 @@ import 'package:get/get_navigation/src/extension_navigation.dart';
 import 'package:intl/intl.dart';
 
 import 'package:beauty_admin/core/custom_svg.dart';
-import 'package:beauty_admin/core/widget/circle_progress.dart';
-import 'package:beauty_admin/core/widget/textfield.dart';
+import 'package:beauty_admin/core/widgets/circle_progress.dart';
+import 'package:beauty_admin/core/widgets/textfield.dart';
 
-import '../../../../../core/constant/color.dart';
+import '../../../../../core/constants/color.dart';
 import '../../../../../core/custom_dialog.dart';
 import '../../../../../core/main_widgets/admin_sub_navbar.dart';
 import '../../../../../core/main_widgets/app_admin_navbar.dart';
@@ -33,14 +33,14 @@ import '../../controller/overview_state.dart';
 import 'overview_main.dart';
 import 'overview_preview.dart';
 
-part '../widget/overview_edit/c.dart';
-part '../widget/overview_edit/picked_image.dart';
-part '../widget/overview_edit/service_local.dart';
-part '../widget/overview_edit/gallery_local.dart';
-part '../widget/overview_edit/comment_local.dart';
-part '../widget/overview_edit/logic_helpers.dart';
-part '../widget/overview_edit/ui_helpers.dart';
-part '../widget/overview_edit/sections.dart';
+part '../widgets/overview_edit/c.dart';
+part '../widgets/overview_edit/picked_image.dart';
+part '../widgets/overview_edit/service_local.dart';
+part '../widgets/overview_edit/gallery_local.dart';
+part '../widgets/overview_edit/comment_local.dart';
+part '../widgets/overview_edit/logic_helpers.dart';
+part '../widgets/overview_edit/ui_helpers.dart';
+part '../widgets/overview_edit/sections.dart';
 
 String _svgBytesToDataUrl(Uint8List bytes) {
   final base64 = base64Encode(bytes);
@@ -115,7 +115,6 @@ class _OverviewEditPageState extends State<OverviewEditPage> {
   Widget build(BuildContext context) {
     return BlocConsumer<OverviewCmsCubit, OverviewCmsState>(
       listener: (context, state) {
-        print('[OverviewEditPage] 👂 listener: ${state.runtimeType}');
 
         if (state is OverviewCmsSaved) {
           WidgetsBinding.instance.addPostFrameCallback((_) {

@@ -27,12 +27,12 @@ import 'package:get/get_navigation/src/extension_navigation.dart';
 import 'package:intl/intl.dart';
 
 import 'package:beauty_admin/core/custom_svg.dart';
-import 'package:beauty_admin/core/widget/circle_progress.dart';
-import 'package:beauty_admin/core/widget/textfield.dart';
+import 'package:beauty_admin/core/widgets/circle_progress.dart';
+import 'package:beauty_admin/core/widgets/textfield.dart';
 
-import '../../../../../core/constant/color.dart';
+import '../../../../../core/constants/color.dart';
 import '../../../../../core/custom_dialog.dart';
-import '../../../../../core/custom_segmant_tab.dart';
+import '../../../../../core/custom_segment_tab.dart';
 import '../../../../../core/main_widgets/admin_sub_navbar.dart';
 import '../../../../../core/main_widgets/app_admin_navbar.dart';
 import '../../../../../core/theme/appcolors.dart';
@@ -45,12 +45,12 @@ import 'client_services_preview.dart';
 import 'dart:html' as html;
 import 'dart:ui_web' as ui_web;
 
-part '../widget/client_services_edit/c.dart';
-part '../widget/client_services_edit/picked_image.dart';
-part '../widget/client_services_edit/mockup_local.dart';
-part '../widget/client_services_edit/logic_helpers.dart';
-part '../widget/client_services_edit/form_sections.dart';
-part '../widget/client_services_edit/ui_helpers.dart';
+part '../widgets/client_services_edit/c.dart';
+part '../widgets/client_services_edit/picked_image.dart';
+part '../widgets/client_services_edit/mockup_local.dart';
+part '../widgets/client_services_edit/logic_helpers.dart';
+part '../widgets/client_services_edit/form_sections.dart';
+part '../widgets/client_services_edit/ui_helpers.dart';
 
 String _svgBytesToDataUrl(Uint8List bytes) {
   final base64 = base64Encode(bytes);

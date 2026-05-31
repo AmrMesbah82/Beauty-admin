@@ -3,6 +3,7 @@
 // Created by: Amr Mesbah
 // Purpose: Segmented horizontal bar for Candidate Score Distribution
 
+import 'package:beauty_admin/core/theme/text.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -84,11 +85,7 @@ class SegmentedScoreBarWidget extends StatelessWidget {
               Expanded(
                 child: Text(
                   title,
-                  style: TextStyle(
-                    fontSize: 14.sp,
-                    fontWeight: FontWeight.w700,
-                    color: Colors.black,
-                  ),
+                  style: AppTextStyles.font14BlackSemiBoldCairo,
                 ),
               ),
             ],
@@ -104,11 +101,7 @@ class SegmentedScoreBarWidget extends StatelessWidget {
                   children: [
                     Text(
                       seg.label,
-                      style: TextStyle(
-                        fontSize: 11.sp,
-                        fontWeight: FontWeight.w500,
-                        color: Colors.black54,
-                      ),
+                      style: AppTextStyles.font11FullBlackCairoRegular.copyWith(color: Colors.black54),
                       textAlign: TextAlign.center,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
@@ -116,11 +109,7 @@ class SegmentedScoreBarWidget extends StatelessWidget {
                     SizedBox(height: 4.sp),
                     Text(
                       seg.value.toString(),
-                      style: TextStyle(
-                        fontSize: 13.sp,
-                        fontWeight: FontWeight.w700,
-                        color: Colors.black87,
-                      ),
+                      style: AppTextStyles.font12BlackCairoBold.copyWith(fontSize: 13.sp),
                       textAlign: TextAlign.center,
                     ),
                   ],

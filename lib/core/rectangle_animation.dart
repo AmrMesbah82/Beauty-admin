@@ -1,3 +1,11 @@
+// ******************* FILE INFO *******************
+// File Name: rectangle_animation.dart
+// Description: Rectangle animation widget
+// Created by: Amr Mesbah
+// Last Update: 31/05/2026
+
+/// Module: core
+
 import 'package:flutter/material.dart';
 
 class AnimatedPageRoute extends PageRouteBuilder {

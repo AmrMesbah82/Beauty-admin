@@ -1,4 +1,12 @@
-import 'package:beauty_admin/core/constant/color.dart';
+// ******************* FILE INFO *******************
+// File Name: admin_sub_navbar.dart
+// Description: Admin sub-navigation bar widget
+// Created by: Amr Mesbah
+// Last Update: 31/05/2026
+
+/// Module: core › main_widgets
+
+import 'package:beauty_admin/core/constants/color.dart';
 import 'package:beauty_admin/features/request/presentation/controller/request_cubit.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -13,8 +21,8 @@ import '../../features/client_services/presentation/ui/pages/client_services_mai
 import '../../features/contact_us/presentation/controller/contact_us_location_cubit.dart';
 import '../../features/contact_us/presentation/ui/pages/contact_us_main.dart';
 import 'package:beauty_admin/features/request/presentation/controller/request_cubit.dart';
-import '../../features/request/data/repo_imp/request_repo_imp.dart';
-import '../../features/request/domain/repo/request_repo.dart';
+import '../../features/request/data/repository/request_repo_imp.dart';
+import '../../features/request/domain/base_repository/request_repo.dart';
 import '../../features/request/presentation/ui/pages/request_main.dart';
 
 import '../../features/home/presentation/controller/home_cubit.dart';

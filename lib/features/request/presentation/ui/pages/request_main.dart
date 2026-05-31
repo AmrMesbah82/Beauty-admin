@@ -1,6 +1,14 @@
-/// File Name: demo_main_page.dart
+// ******************* FILE INFO *******************
+// File Name: request_main.dart
+// Description: Request Demo CMS main page
+// Created by: Amr Mesbah
+// Last Update: 31/05/2026
+
+/// Module: features › request › presentation › ui › pages
+
+/// File Name: request_main.dart
 import 'dart:ui' as ui;
-import 'package:beauty_admin/core/widget/format.dart';
+import 'package:beauty_admin/core/widgets/format.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -8,10 +16,10 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:intl/intl.dart';
 
 import 'package:beauty_admin/core/custom_svg.dart';
-import 'package:beauty_admin/core/widget/circle_progress.dart';
+import 'package:beauty_admin/core/widgets/circle_progress.dart';
 
-import '../../../../../core/constant/color.dart';
-import '../../../../../core/custom_segmant_tab.dart';
+import '../../../../../core/constants/color.dart';
+import '../../../../../core/custom_segment_tab.dart';
 import '../../../../../core/main_widgets/admin_sub_navbar.dart';
 import '../../../../../core/main_widgets/app_admin_navbar.dart';
 import '../../../../../core/theme/appcolors.dart';
@@ -25,7 +33,7 @@ import 'request_preview.dart';
 import 'dart:html' as html;
 import 'dart:ui_web' as ui_web;
 
-part '../widget/request_main/c.dart';
+part '../widgets/request_main/c.dart';
 
 class RequestDemoMainPage extends StatefulWidget {
   const RequestDemoMainPage({super.key});

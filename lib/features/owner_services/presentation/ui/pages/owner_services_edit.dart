@@ -15,15 +15,15 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get_core/src/get_main.dart';
 import 'package:get/get_navigation/src/extension_navigation.dart';
 
-import '../../../../../core/constant/color.dart';
+import '../../../../../core/constants/color.dart';
 import '../../../../../core/custom_dialog.dart';
-import '../../../../../core/custom_segmant_tab.dart';
+import '../../../../../core/custom_segment_tab.dart';
 import '../../../../../core/custom_svg.dart';
 import '../../../../../core/main_widgets/admin_sub_navbar.dart';
 import '../../../../../core/main_widgets/app_admin_navbar.dart';
 import '../../../../../core/theme/appcolors.dart';
 import '../../../../../core/theme/new_theme.dart';
-import '../../../../../core/widget/textfield.dart';
+import '../../../../../core/widgets/textfield.dart';
 import '../../../../home/presentation/ui/pages/home_main.dart';
 import '../../../data/models/owner_services_model.dart';
 import '../../controller/owner_services_cubit.dart';
@@ -33,11 +33,11 @@ import 'owner_services_preview.dart';
 import 'dart:html' as html;
 import 'dart:ui_web' as ui_web;
 
-part '../widget/owner_services_edit/picked_image.dart';
-part '../widget/owner_services_edit/mockup_local.dart';
-part '../widget/owner_services_edit/logic_helpers.dart';
-part '../widget/owner_services_edit/ui_helpers.dart';
-part '../widget/owner_services_edit/sections.dart';
+part '../widgets/owner_services_edit/picked_image.dart';
+part '../widgets/owner_services_edit/mockup_local.dart';
+part '../widgets/owner_services_edit/logic_helpers.dart';
+part '../widgets/owner_services_edit/ui_helpers.dart';
+part '../widgets/owner_services_edit/sections.dart';
 
 String _svgBytesToDataUrl(Uint8List bytes) {
   final base64 = base64Encode(bytes);
@@ -83,12 +83,10 @@ class _OwnerServicesEditPageState extends State<OwnerServicesEditPage> {
   @override
   void initState() {
     super.initState();
-    print('[OwnerServicesEditPage] ✅ initState');
   }
 
   @override
   void dispose() {
-    print('[OwnerServicesEditPage] 🔴 dispose');
     _headerTitleEn.dispose();
     _headerTitleAr.dispose();
     _headerDescEn.dispose();

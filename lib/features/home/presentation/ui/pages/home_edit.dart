@@ -28,7 +28,7 @@ import 'dart:async';
 import 'dart:typed_data';
 import 'dart:html' as html;
 
-import 'package:beauty_admin/core/widget/navigator.dart';
+import 'package:beauty_admin/core/widgets/navigator.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
@@ -40,32 +40,32 @@ import 'package:get/get_navigation/src/extension_navigation.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:beauty_admin/core/custom_svg.dart';
-import 'package:beauty_admin/core/widget/circle_progress.dart';
-import 'package:beauty_admin/core/widget/custom_dropdwon.dart';
+import 'package:beauty_admin/core/widgets/circle_progress.dart';
+import 'package:beauty_admin/core/widgets/custom_dropdown.dart';
 
-import '../../../../../core/constant/color.dart';
+import '../../../../../core/constants/color.dart';
 import '../../../../../core/custom_dialog.dart';
 import '../../../../../core/main_widgets/admin_sub_navbar.dart';
 import '../../../../../core/main_widgets/app_admin_navbar.dart';
 import '../../../../../core/theme/appcolors.dart';
 import '../../../../../core/theme/new_theme.dart';
-import '../../../../../core/widget/textfield.dart';
+import '../../../../../core/widgets/textfield.dart';
 import '../../../data/models/home_model.dart';
 import '../../controller/home_cubit.dart';
 import '../../controller/home_state.dart';
 import 'home_main.dart';
 import 'home_preview.dart';
 
-part '../widget/home_edit/c.dart';
-part '../widget/home_edit/header_item.dart';
-part '../widget/home_edit/picked_image.dart';
-part '../widget/home_edit/link_item.dart';
-part '../widget/home_edit/color_picker_field.dart';
-part '../widget/home_edit/color_wheel_overlay.dart';
-part '../widget/home_edit/logic_helpers.dart';
-part '../widget/home_edit/ui_helpers.dart';
-part '../widget/home_edit/sections.dart';
-part '../widget/home_edit/sections_links.dart';
+part '../widgets/home_edit/c.dart';
+part '../widgets/home_edit/header_item.dart';
+part '../widgets/home_edit/picked_image.dart';
+part '../widgets/home_edit/link_item.dart';
+part '../widgets/home_edit/color_picker_field.dart';
+part '../widgets/home_edit/color_wheel_overlay.dart';
+part '../widgets/home_edit/logic_helpers.dart';
+part '../widgets/home_edit/ui_helpers.dart';
+part '../widgets/home_edit/sections.dart';
+part '../widgets/home_edit/sections_links.dart';
 
 class HomeEditPage extends StatefulWidget {
   const HomeEditPage({super.key});

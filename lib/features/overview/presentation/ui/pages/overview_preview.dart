@@ -24,11 +24,11 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
-import 'package:beauty_admin/core/widget/circle_progress.dart';
+import 'package:beauty_admin/core/widgets/circle_progress.dart';
 
-import '../../../../../core/constant/color.dart';
+import '../../../../../core/constants/color.dart';
 import '../../../../../core/custom_dialog.dart';
-import '../../../../../core/custom_segmant_tab.dart';
+import '../../../../../core/custom_segment_tab.dart';
 import '../../../../../core/main_widgets/admin_sub_navbar.dart';
 import '../../../../../core/theme/appcolors.dart';
 import '../../../../../core/theme/new_theme.dart';
@@ -38,12 +38,12 @@ import '../../../data/models/overview_model.dart';
 import '../../controller/overview_cubit.dart';
 import '../../controller/overview_state.dart';
 
-part '../widget/overview_preview/c.dart';
-part '../widget/overview_preview/desktop_frame.dart';
-part '../widget/overview_preview/tablet_frame.dart';
-part '../widget/overview_preview/mobile_frame.dart';
-part '../widget/overview_preview/preview_content.dart';
-part '../widget/overview_preview/browser_chrome.dart';
+part '../widgets/overview_preview/c.dart';
+part '../widgets/overview_preview/desktop_frame.dart';
+part '../widgets/overview_preview/tablet_frame.dart';
+part '../widgets/overview_preview/mobile_frame.dart';
+part '../widgets/overview_preview/preview_content.dart';
+part '../widgets/overview_preview/browser_chrome.dart';
 
 class OverviewPreviewPage extends StatefulWidget {
   /// The draft model built from the edit-page form (unsaved data).
@@ -277,22 +277,31 @@ class _OverviewPreviewPageState extends State<OverviewPreviewPage> {
   Widget _buildFrame(double containerW) {
     switch (_device) {
       case _PreviewDevice.desktop:
-        return _DesktopFrame(
-          containerWidth: containerW,
-          model: _effectiveModel,
-          isEnglish: _isEnglish,
+        return Localizations.override(
+          context: context,
+          locale: _isEnglish ? const Locale('en') : const Locale('ar'),
+          child: _DesktopFrame(
+            containerWidth: containerW,
+            model: _effectiveModel,
+          ),
         );
       case _PreviewDevice.tablet:
-        return _TabletFrame(
-          containerWidth: containerW,
-          model: _effectiveModel,
-          isEnglish: _isEnglish,
+        return Localizations.override(
+          context: context,
+          locale: _isEnglish ? const Locale('en') : const Locale('ar'),
+          child: _TabletFrame(
+            containerWidth: containerW,
+            model: _effectiveModel,
+          ),
         );
       case _PreviewDevice.mobile:
-        return _MobileFrame(
-          containerWidth: containerW,
-          model: _effectiveModel,
-          isEnglish: _isEnglish,
+        return Localizations.override(
+          context: context,
+          locale: _isEnglish ? const Locale('en') : const Locale('ar'),
+          child: _MobileFrame(
+            containerWidth: containerW,
+            model: _effectiveModel,
+          ),
         );
     }
   }

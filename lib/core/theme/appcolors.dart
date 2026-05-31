@@ -1,3 +1,11 @@
+// ******************* FILE INFO *******************
+// File Name: appcolors.dart
+// Description: AppColors — runtime theme color accessors
+// Created by: Amr Mesbah
+// Last Update: 31/05/2026
+
+/// Module: core › theme
+
 // Date: 29/9/2024
 // By: Youssef Ashraf, Nada Mohammed, Mohammed Ashraf
 // Last update: 29/9/2024

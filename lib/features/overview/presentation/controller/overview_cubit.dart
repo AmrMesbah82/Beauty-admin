@@ -16,7 +16,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../data/models/overview_model.dart';
 
-import '../../domain/repo/overview_repo.dart';
+import '../../domain/base_repository/overview_repo.dart';
 import 'overview_state.dart';
 
 class OverviewCmsCubit extends Cubit<OverviewCmsState> {
@@ -38,14 +38,12 @@ class OverviewCmsCubit extends Cubit<OverviewCmsState> {
   //  LOAD — draft-first strategy
   // ══════════════════════════════════════════════════════════════════════════
   Future<void> load({String gender = 'female'}) async {
-    print('🟡 [OverviewCmsCubit] load: gender=$gender');
     _activeGender = gender;
     emit(OverviewCmsLoading());
     try {
       // 1️⃣ Check if a draft exists
       final draft = await _repo.fetchDraft(gender: gender);
       if (draft != null) {
-        print('🟢 [OverviewCmsCubit] load: ✅ draft found — loading draft');
         _current     = draft;
         _isFromDraft = true;
         emit(OverviewCmsLoaded(_current, isFromDraft: true));
@@ -53,13 +51,10 @@ class OverviewCmsCubit extends Cubit<OverviewCmsState> {
       }
 
       // 2️⃣ No draft — load published
-      print('🟡 [OverviewCmsCubit] load: no draft — loading published');
       _current     = await _repo.fetchOverviewPage(gender: gender);
       _isFromDraft = false;
-      print('🟢 [OverviewCmsCubit] load: ✅');
       emit(OverviewCmsLoaded(_current, isFromDraft: false));
     } catch (e) {
-      print('🔴 [OverviewCmsCubit] load: ERROR $e');
       emit(OverviewCmsError(e.toString()));
     }
   }
@@ -296,7 +291,6 @@ class OverviewCmsCubit extends Cubit<OverviewCmsState> {
   //  SAVE — routes to published or draft based on publishStatus
   // ══════════════════════════════════════════════════════════════════════════
   Future<void> save({String publishStatus = 'published'}) async {
-    print('🟡 [OverviewCmsCubit] save: status=$publishStatus');
     try {
       _current = _current.copyWith(
         status: publishStatus,
@@ -306,40 +300,32 @@ class OverviewCmsCubit extends Cubit<OverviewCmsState> {
       switch (publishStatus) {
       // ── PUBLISH: save to published doc, delete draft ────────────────
         case 'published':
-          print('🟡 [OverviewCmsCubit] save → publishing to live doc');
           await _repo.saveOverviewPage(_current);
           await _repo.deleteDraft(gender: _activeGender);
           _isFromDraft = false;
-          print('🟢 [OverviewCmsCubit] save: ✅ published + draft cleaned');
           emit(OverviewCmsSaved(_current));
           break;
 
       // ── DRAFT: save to draft doc only, do NOT touch published ───────
         case 'draft':
-          print('🟡 [OverviewCmsCubit] save → saving draft only');
           await _repo.saveDraft(_current);
           _isFromDraft = true;
-          print('🟢 [OverviewCmsCubit] save: ✅ draft saved');
           emit(OverviewCmsDraftSaved(_current));
           break;
 
       // ── SCHEDULED: save to draft doc with schedule date ─────────────
         case 'scheduled':
-          print('🟡 [OverviewCmsCubit] save → saving scheduled draft');
           await _repo.saveDraft(_current);
           _isFromDraft = true;
-          print('🟢 [OverviewCmsCubit] save: ✅ scheduled draft saved');
           emit(OverviewCmsDraftSaved(_current));
           break;
 
         default:
-          print('🔴 [OverviewCmsCubit] save: unknown status=$publishStatus');
           await _repo.saveDraft(_current);
           _isFromDraft = true;
           emit(OverviewCmsDraftSaved(_current));
       }
     } catch (e) {
-      print('🔴 [OverviewCmsCubit] save: ERROR $e');
       emit(OverviewCmsError(e.toString()));
     }
   }
@@ -348,14 +334,11 @@ class OverviewCmsCubit extends Cubit<OverviewCmsState> {
   //  DISCARD DRAFT — deletes the draft doc (published stays untouched)
   // ══════════════════════════════════════════════════════════════════════════
   Future<void> discardDraft() async {
-    print('🟡 [OverviewCmsCubit] discardDraft: gender=$_activeGender');
     try {
       await _repo.deleteDraft(gender: _activeGender);
       _isFromDraft = false;
-      print('🟢 [OverviewCmsCubit] discardDraft: ✅ DONE');
       emit(OverviewCmsDraftDeleted());
     } catch (e) {
-      print('🔴 [OverviewCmsCubit] discardDraft: ERROR $e');
       emit(OverviewCmsError(e.toString()));
     }
   }

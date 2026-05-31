@@ -16,10 +16,10 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import 'package:beauty_admin/core/custom_svg.dart';
-import 'package:beauty_admin/core/widget/circle_progress.dart';
-import 'package:beauty_admin/core/widget/textfield.dart';
+import 'package:beauty_admin/core/widgets/circle_progress.dart';
+import 'package:beauty_admin/core/widgets/textfield.dart';
 
-import '../../../../../core/constant/color.dart';
+import '../../../../../core/constants/color.dart';
 import '../../../../../core/main_widgets/admin_sub_navbar.dart';
 import '../../../../../core/main_widgets/app_admin_navbar.dart';
 import '../../../../../core/theme/appcolors.dart';
@@ -33,7 +33,7 @@ import 'master_preview.dart';
 import 'dart:html' as html;
 import 'dart:ui_web' as ui_web;
 
-part '../widget/master_main/c.dart';
+part '../widgets/master_main/c.dart';
 
 /// Custom Segmented Tabs Widget
 
@@ -247,7 +247,6 @@ class _MasterMainPageState extends State<MasterMainPage> {
                                   ),
                                   GestureDetector(
                                     onTap: () {
-                                      print('[MasterMainPage] Preview Screen tapped');
                                       Navigator.push(
                                         context,
                                         MaterialPageRoute(

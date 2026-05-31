@@ -14,9 +14,9 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:intl/intl.dart';
 
 import 'package:beauty_admin/core/custom_svg.dart';
-import 'package:beauty_admin/core/widget/circle_progress.dart';
+import 'package:beauty_admin/core/widgets/circle_progress.dart';
 
-import '../../../../../core/constant/color.dart';
+import '../../../../../core/constants/color.dart';
 import '../../../../../core/main_widgets/admin_sub_navbar.dart';
 import '../../../../../core/main_widgets/app_admin_navbar.dart';
 import '../../../../../core/theme/appcolors.dart';
@@ -30,8 +30,8 @@ import 'client_services_preview.dart';
 import 'dart:html' as html;
 import 'dart:ui_web' as ui_web;
 
-part '../widget/client_services_main/c.dart';
-part '../widget/client_services_main/sections.dart';
+part '../widgets/client_services_main/c.dart';
+part '../widgets/client_services_main/sections.dart';
 
 /// Custom Segmented Tabs Widget (reused from master_main_page)
 

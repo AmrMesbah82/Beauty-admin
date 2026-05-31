@@ -1,3 +1,11 @@
+// ******************* FILE INFO *******************
+// File Name: inquiry_state.dart
+// Description: Inquiry Cubit states
+// Created by: Amr Mesbah
+// Last Update: 31/05/2026
+
+/// Module: features › inquire › presentation › controller
+
 // ═══════════════════════════════════════════════════════════════════
 // FILE: inquiry_state.dart  (UPDATED — Figma-aligned states)
 // Path: lib/controller/inquire/inquiry_state.dart

@@ -1,3 +1,11 @@
+// ******************* FILE INFO *******************
+// File Name: text.dart
+// Description: AppTextStyles — all text style getters
+// Created by: Amr Mesbah
+// Last Update: 31/05/2026
+
+/// Module: core › theme
+
 // Date: 29/9/2024
 // By: Youssef Ashraf, Nada Mohammed, Mohammed Ashraf
 // Last update: 15/3/2026
@@ -11,7 +19,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 
-import 'app_wight.dart';
+import 'app_weight.dart';
 import 'appcolors.dart';
 
 abstract class AppTextStyles {

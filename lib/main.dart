@@ -1,3 +1,11 @@
+// ******************* FILE INFO *******************
+// File Name: main.dart
+// Description: App entry point — initialises Firebase and runs the app
+// Created by: Amr Mesbah
+// Last Update: 31/05/2026
+
+/// Module: app
+
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -6,27 +14,27 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
-import 'features/about_us/data/repo_imp/about_us_repo_imp.dart';
+import 'features/about_us/data/repository/about_us_repo_imp.dart';
 import 'features/about_us/presentation/controller/about_us_cubit.dart';
-import 'features/client_services/data/repo_imp/client_services_repo_imp.dart';
+import 'features/client_services/data/repository/client_services_repo_imp.dart';
 import 'features/client_services/presentation/controller/client_services_cubit.dart';
 import 'features/contact_us/presentation/controller/contact_us_location_cubit.dart';
 import 'features/contact_us/presentation/controller/contact_us_cubit.dart';
-import 'features/demos/domain/repo/demo_repo.dart';
+import 'features/demos/domain/base_repository/demo_repo.dart';
 import 'features/demos/presentation/controller/demo_cubit.dart';
-import 'features/home/data/repo_imp/home_repo_impl.dart';
+import 'features/home/data/repository/home_repo_impl.dart';
 import 'features/home/presentation/controller/home_cubit.dart';
 import 'features/home/presentation/controller/lang_state.dart';
 import 'features/home/presentation/ui/pages/home_main.dart';
-import 'features/inquire/data/repo_imp/inquiry_repo_imp.dart';
+import 'features/inquire/data/repository/inquiry_repo_imp.dart';
 import 'features/inquire/presentation/controller/inquiry_cubit.dart';
-import 'features/master/data/repo_imp/master_repo_imp.dart';
+import 'features/master/data/repository/master_repo_imp.dart';
 import 'features/master/presentation/controller/master_cubit.dart';
-import 'features/overview/data/repo_imp/overview_repo_imp.dart';
+import 'features/overview/data/repository/overview_repo_imp.dart';
 import 'features/overview/presentation/controller/overview_cubit.dart';
-import 'features/owner_services/data/repo_imp/owner_services_repo_imp.dart';
+import 'features/owner_services/data/repository/owner_services_repo_imp.dart';
 import 'features/owner_services/presentation/controller/owner_services_cubit.dart';
-import 'features/request/data/repo_imp/request_repo_imp.dart';
+import 'features/request/data/repository/request_repo_imp.dart';
 import 'features/request/presentation/controller/request_cubit.dart';
 import 'firebase_options.dart';
 

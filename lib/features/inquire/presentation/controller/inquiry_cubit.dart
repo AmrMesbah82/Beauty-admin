@@ -1,3 +1,11 @@
+// ******************* FILE INFO *******************
+// File Name: inquiry_cubit.dart
+// Description: Inquiry Cubit — state management
+// Created by: Amr Mesbah
+// Last Update: 31/05/2026
+
+/// Module: features › inquire › presentation › controller
+
 // ═══════════════════════════════════════════════════════════════════
 // FILE: inquiry_cubit.dart  (UPDATED — Figma-aligned filters)
 // Path: lib/controller/inquire/inquiry_cubit.dart
@@ -9,7 +17,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 
 import '../../data/models/inquire_model.dart';
-import '../../domain/repo/inquiry_repo.dart';
+import '../../domain/base_repository/inquiry_repo.dart';
 import 'inquiry_state.dart';
 
 class InquiryCubit extends Cubit<InquiryState> {

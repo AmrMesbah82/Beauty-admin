@@ -1,3 +1,11 @@
+// ******************* FILE INFO *******************
+// File Name: context.dart
+// Description: Top-level BuildContext extension helpers
+// Created by: Amr Mesbah
+// Last Update: 31/05/2026
+
+/// Module: core
+
 // Date: 4/8/2024
 // By: Youssef Ashraf, Nada Mohammed
 // Last update: 8/8/2024

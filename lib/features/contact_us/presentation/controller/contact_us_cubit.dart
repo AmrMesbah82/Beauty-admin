@@ -3,11 +3,11 @@
 // Created by: Amr Mesbah
 
 import 'package:beauty_admin/features/contact_us/data/models/contact_us_model.dart';
-import 'package:beauty_admin/features/contact_us/data/repo_imp/contact_us_repo_imp.dart';
+import 'package:beauty_admin/features/contact_us/data/repository/contact_us_repo_imp.dart';
 import 'package:beauty_admin/features/contact_us/presentation/controller/contact_us_state.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import '../../domain/repo/contact_us_repo.dart';
+import '../../domain/base_repository/contact_us_repo.dart';
 
 
 
@@ -21,14 +21,11 @@ class ContactCubit extends Cubit<ContactState> {
   // ── Submit (public Contact page) ───────────────────────────────────────────
 
   Future<void> submitContact(ContactSubmission submission) async {
-    print('🟡 [ContactCubit] submitContact()');
     emit(ContactSubmitting());
     try {
       await _repo.submitContact(submission);
-      print('🟢 [ContactCubit] submitContact() → OK');
       emit(ContactSubmitted());
     } catch (e) {
-      print('🔴 [ContactCubit] submitContact() ERROR: $e');
       emit(ContactError(e.toString()));
     }
   }
@@ -36,14 +33,11 @@ class ContactCubit extends Cubit<ContactState> {
   // ── Load all submissions (admin list page) ─────────────────────────────────
 
   Future<void> loadAll() async {
-    print('🟡 [ContactCubit] loadAll()');
     emit(ContactLoading());
     try {
       final list = await _repo.fetchAll();
-      print('🟢 [ContactCubit] loadAll() → ${list.length} items');
       emit(ContactLoaded(all: list, filtered: list));
     } catch (e) {
-      print('🔴 [ContactCubit] loadAll() ERROR: $e');
       emit(ContactError(e.toString()));
     }
   }
@@ -106,14 +100,11 @@ class ContactCubit extends Cubit<ContactState> {
   // ── Save status / note (admin) ────────────────────────────────────────────
 
   Future<void> updateSubmission(ContactSubmission submission) async {
-    print('🟡 [ContactCubit] updateSubmission(${submission.id})');
     emit(ContactLoading());
     try {
       await _repo.updateSubmission(submission);
-      print('🟢 [ContactCubit] updateSubmission() → OK');
       emit(ContactUpdated(submission));
     } catch (e) {
-      print('🔴 [ContactCubit] updateSubmission() ERROR: $e');
       emit(ContactError(e.toString()));
     }
   }

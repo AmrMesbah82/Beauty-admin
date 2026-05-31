@@ -9,8 +9,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 
 import '../../data/models/about_us_model.dart';
-import '../../data/repo_imp/about_us_repo_imp.dart';
-import '../../domain/repo/about_us_repo.dart';
+import '../../data/repository/about_us_repo_imp.dart';
+import '../../domain/base_repository/about_us_repo.dart';
 import 'about_us_state.dart';
 
 // ── Safe emit — never throws "Cannot emit after close" ────────────────────────
@@ -40,7 +40,6 @@ class AboutCubit extends Cubit<AboutState> {
   }
 
   Future<void> load() async {
-    print('🟡 [AboutCubit] load()');
     safeEmit(AboutLoading());
     try {
       safeEmit(AboutLoaded(await _repo.fetchAboutPage()));
@@ -53,7 +52,6 @@ class AboutCubit extends Cubit<AboutState> {
     required AboutPageModel model,
     Map<String, Uint8List>? imageUploads,
   }) async {
-    print('🟡 [AboutCubit] save()');
     try {
       var updated = model;
 
@@ -95,10 +93,8 @@ class AboutCubit extends Cubit<AboutState> {
       }
 
       await _repo.saveAboutPage(updated);
-      print('🟢 [AboutCubit] save OK');
       safeEmit(AboutSaved(updated));
     } catch (e) {
-      print('🔴 [AboutCubit] save ERROR: $e');
       safeEmit(AboutError(e.toString()));
     }
   }
@@ -116,20 +112,11 @@ class StrategyCubit extends Cubit<StrategyState> {
         super(StrategyInitial());
 
   Future<void> load() async {
-    print('🟡 [StrategyCubit] load()');
     safeEmit(StrategyLoading());
     try {
       final data = await _repo.fetchStrategy();
-      print('🟢 [StrategyCubit] load OK');
-      print('  - EN Desktop: ${data.strategicHouseEnDesktopUrl}');
-      print('  - EN Tablet: ${data.strategicHouseEnTabletUrl}');
-      print('  - EN Mobile: ${data.strategicHouseEnMobileUrl}');
-      print('  - AR Desktop: ${data.strategicHouseArDesktopUrl}');
-      print('  - AR Tablet: ${data.strategicHouseArTabletUrl}');
-      print('  - AR Mobile: ${data.strategicHouseArMobileUrl}');
       safeEmit(StrategyLoaded(data));
     } catch (e) {
-      print('🔴 [StrategyCubit] load ERROR: $e');
       safeEmit(StrategyError(e.toString()));
     }
   }
@@ -138,81 +125,59 @@ class StrategyCubit extends Cubit<StrategyState> {
     required OurStrategyModel model,
     Map<String, Uint8List>? imageUploads,
   }) async {
-    print('🟡 [StrategyCubit] save()');
-    print('  - Image uploads: ${imageUploads?.keys}');
 
     try {
       var updated = model;
 
       if (imageUploads != null && imageUploads.isNotEmpty) {
-        print('🔵 [StrategyCubit] Uploading ${imageUploads.length} images...');
 
         for (final entry in imageUploads.entries) {
           final path = entry.key;
           final bytes = entry.value;
 
-          print('  - Uploading: $path');
           final url = await _repo.uploadImage(
               bytes: bytes, storagePath: path);
-          print('  - Uploaded to: $url');
 
           if (path.contains('navLabel/icon')) {
             updated = updated.copyWith(
                 navigationLabel:
                 updated.navigationLabel.copyWith(iconUrl: url));
-            print('  ✓ Updated navLabel icon URL');
           }
           // Strategic House EN - Desktop
           else if (path.contains('strategicHouse/en/desktop')) {
             updated = updated.copyWith(strategicHouseEnDesktopUrl: url);
-            print('  ✓ Updated strategicHouse EN Desktop URL');
           }
           // Strategic House EN - Tablet
           else if (path.contains('strategicHouse/en/tablet')) {
             updated = updated.copyWith(strategicHouseEnTabletUrl: url);
-            print('  ✓ Updated strategicHouse EN Tablet URL');
           }
           // Strategic House EN - Mobile
           else if (path.contains('strategicHouse/en/mobile')) {
             updated = updated.copyWith(strategicHouseEnMobileUrl: url);
-            print('  ✓ Updated strategicHouse EN Mobile URL');
           }
           // Strategic House AR - Desktop
           else if (path.contains('strategicHouse/ar/desktop')) {
             updated = updated.copyWith(strategicHouseArDesktopUrl: url);
-            print('  ✓ Updated strategicHouse AR Desktop URL');
           }
           // Strategic House AR - Tablet
           else if (path.contains('strategicHouse/ar/tablet')) {
             updated = updated.copyWith(strategicHouseArTabletUrl: url);
-            print('  ✓ Updated strategicHouse AR Tablet URL');
           }
           // Strategic House AR - Mobile
           else if (path.contains('strategicHouse/ar/mobile')) {
             updated = updated.copyWith(strategicHouseArMobileUrl: url);
-            print('  ✓ Updated strategicHouse AR Mobile URL');
           }
           else if (path.contains('vision/svg')) {
             // updated = updated.copyWith(
             //     vision: updated.vision.copyWith(svgUrl: url));
-            print('  ✓ Updated vision SVG URL');
           }
         }
       }
 
-      print('🔵 [StrategyCubit] Saving to Firestore...');
-      print('  - EN Desktop: ${updated.strategicHouseEnDesktopUrl}');
-      print('  - EN Tablet: ${updated.strategicHouseEnTabletUrl}');
-      print('  - EN Mobile: ${updated.strategicHouseEnMobileUrl}');
-      print('  - AR Desktop: ${updated.strategicHouseArDesktopUrl}');
-      print('  - AR Tablet: ${updated.strategicHouseArTabletUrl}');
-      print('  - AR Mobile: ${updated.strategicHouseArMobileUrl}');
 
       await _repo.saveStrategy(updated);
-      print('🟢 [StrategyCubit] save OK');
       safeEmit(StrategySaved(updated));
     } catch (e) {
-      print('🔴 [StrategyCubit] save ERROR: $e');
       safeEmit(StrategyError(e.toString()));
     }
   }
@@ -230,7 +195,6 @@ class TermsCubit extends Cubit<TermsState> {
         super(TermsInitial());
 
   Future<void> load() async {
-    print('🟡 [TermsCubit] load()');
     safeEmit(TermsLoading());
     try {
       safeEmit(TermsLoaded(await _repo.fetchTerms()));
@@ -244,7 +208,6 @@ class TermsCubit extends Cubit<TermsState> {
     Map<String, Uint8List>? imageUploads,
     Map<String, DocUpload>? docUploads,
   }) async {
-    print('🟡 [TermsCubit] save()');
     try {
       var updated = model;
 
@@ -299,10 +262,8 @@ class TermsCubit extends Cubit<TermsState> {
       }
 
       await _repo.saveTerms(updated);
-      print('🟢 [TermsCubit] save OK');
       safeEmit(TermsSaved(updated));
     } catch (e) {
-      print('🔴 [TermsCubit] save ERROR: $e');
       safeEmit(TermsError(e.toString()));
     }
   }

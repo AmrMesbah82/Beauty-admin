@@ -1,3 +1,11 @@
+// ******************* FILE INFO *******************
+// File Name: contact_us_otp_state.dart
+// Description: ContactUs OTP Cubit states
+// Created by: Amr Mesbah
+// Last Update: 31/05/2026
+
+/// Module: features › contact_us › presentation › controller
+
 abstract class ContactOtpState {
   const ContactOtpState();
 }

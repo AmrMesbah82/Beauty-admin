@@ -1,5 +1,5 @@
 /// ******************* FILE INFO *******************
-/// File Name: home_edit.dart
+/// File Name: main_edit.dart
 /// Page 2 — "Editing Main Details"
 /// UPDATED: Footer column title is now a dropdown populated from nav items.
 /// UPDATED: Added Male Primary Color + Main Widget Color to branding section
@@ -8,7 +8,7 @@ import 'dart:async';
 import 'dart:typed_data';
 import 'dart:html' as html;
 
-import 'package:beauty_admin/core/widget/navigator.dart';
+import 'package:beauty_admin/core/widgets/navigator.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
@@ -20,11 +20,11 @@ import 'package:get/get_navigation/src/extension_navigation.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:beauty_admin/core/custom_svg.dart';
-import 'package:beauty_admin/core/widget/circle_progress.dart';
-import 'package:beauty_admin/core/widget/custom_dropdwon.dart';
-import 'package:beauty_admin/core/widget/textfield.dart';
+import 'package:beauty_admin/core/widgets/circle_progress.dart';
+import 'package:beauty_admin/core/widgets/custom_dropdown.dart';
+import 'package:beauty_admin/core/widgets/textfield.dart';
 
-import '../../../../../core/constant/color.dart';
+import '../../../../../core/constants/color.dart';
 import '../../../../../core/custom_dialog.dart';
 import '../../../../../core/main_widgets/admin_sub_navbar.dart';
 import '../../../../../core/main_widgets/app_admin_navbar.dart';
@@ -36,17 +36,17 @@ import '../../../../home/presentation/controller/home_state.dart';
 import 'main_main.dart';
 import 'main_preview.dart';
 
-part '../widget/main_edit/c.dart';
-part '../widget/main_edit/header_item.dart';
-part '../widget/main_edit/picked_image.dart';
-part '../widget/main_edit/link_item.dart';
-part '../widget/main_edit/color_picker_field.dart';
-part '../widget/main_edit/color_wheel_overlay.dart';
-part '../widget/main_edit/logic_helpers.dart';
-part '../widget/main_edit/ui_helpers.dart';
-part '../widget/main_edit/sections.dart';
-part '../widget/main_edit/sections_footer.dart';
-part '../widget/main_edit/sections_links.dart';
+part '../widgets/main_edit/c.dart';
+part '../widgets/main_edit/header_item.dart';
+part '../widgets/main_edit/picked_image.dart';
+part '../widgets/main_edit/link_item.dart';
+part '../widgets/main_edit/color_picker_field.dart';
+part '../widgets/main_edit/color_wheel_overlay.dart';
+part '../widgets/main_edit/logic_helpers.dart';
+part '../widgets/main_edit/ui_helpers.dart';
+part '../widgets/main_edit/sections.dart';
+part '../widgets/main_edit/sections_footer.dart';
+part '../widgets/main_edit/sections_links.dart';
 
 class HomeEditPage extends StatefulWidget {
   const HomeEditPage({super.key});

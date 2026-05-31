@@ -15,7 +15,7 @@ import 'dart:typed_data';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../data/models/master_model.dart';
-import '../../domain/repo/master_repo.dart';
+import '../../domain/base_repository/master_repo.dart';
 
 import 'master_state.dart';
 
@@ -44,14 +44,12 @@ class MasterCmsCubit extends Cubit<MasterCmsState> {
   //  LOAD — draft-first strategy
   // ══════════════════════════════════════════════════════════════════════════
   Future<void> load({String gender = 'female'}) async {
-    print('🟡 [MasterCmsCubit] load: gender=$gender');
     _activeGender = gender;
     emit(MasterCmsLoading());
     try {
       // 1️⃣ Check if a draft exists
       final draft = await _repo.fetchDraft(gender: gender);
       if (draft != null) {
-        print('🟢 [MasterCmsCubit] load: ✅ draft found — loading draft');
         _current     = draft;
         _isFromDraft = true;
         emit(MasterCmsLoaded(_current, isFromDraft: true));
@@ -59,13 +57,10 @@ class MasterCmsCubit extends Cubit<MasterCmsState> {
       }
 
       // 2️⃣ No draft — load published
-      print('🟡 [MasterCmsCubit] load: no draft — loading published');
       _current     = await _repo.fetchMasterPage(gender: gender);
       _isFromDraft = false;
-      print('🟢 [MasterCmsCubit] load: ✅ sections=${_current.sections.length}');
       emit(MasterCmsLoaded(_current, isFromDraft: false));
     } catch (e) {
-      print('🔴 [MasterCmsCubit] load: ERROR $e');
       emit(MasterCmsError(e.toString()));
     }
   }
@@ -205,7 +200,6 @@ class MasterCmsCubit extends Cubit<MasterCmsState> {
   //  SAVE — routes to published or draft based on publishStatus
   // ══════════════════════════════════════════════════════════════════════════
   Future<void> save({String publishStatus = 'published'}) async {
-    print('🟡 [MasterCmsCubit] save: status=$publishStatus');
     try {
       _current = _current.copyWith(
         status: publishStatus,
@@ -215,41 +209,33 @@ class MasterCmsCubit extends Cubit<MasterCmsState> {
       switch (publishStatus) {
       // ── PUBLISH: save to published doc, delete draft ────────────────
         case 'published':
-          print('🟡 [MasterCmsCubit] save → publishing to live doc');
           await _repo.saveMasterPage(_current);
           // Clean up any existing draft
           await _repo.deleteDraft(gender: _activeGender);
           _isFromDraft = false;
-          print('🟢 [MasterCmsCubit] save: ✅ published + draft cleaned');
           emit(MasterCmsSaved(_current));
           break;
 
       // ── DRAFT: save to draft doc only, do NOT touch published ───────
         case 'draft':
-          print('🟡 [MasterCmsCubit] save → saving draft only');
           await _repo.saveDraft(_current);
           _isFromDraft = true;
-          print('🟢 [MasterCmsCubit] save: ✅ draft saved');
           emit(MasterCmsDraftSaved(_current));
           break;
 
       // ── SCHEDULED: save to draft doc with schedule date ─────────────
         case 'scheduled':
-          print('🟡 [MasterCmsCubit] save → saving scheduled draft');
           await _repo.saveDraft(_current);
           _isFromDraft = true;
-          print('🟢 [MasterCmsCubit] save: ✅ scheduled draft saved');
           emit(MasterCmsDraftSaved(_current));
           break;
 
         default:
-          print('🔴 [MasterCmsCubit] save: unknown status=$publishStatus');
           await _repo.saveDraft(_current);
           _isFromDraft = true;
           emit(MasterCmsDraftSaved(_current));
       }
     } catch (e) {
-      print('🔴 [MasterCmsCubit] save: ERROR $e');
       emit(MasterCmsError(e.toString()));
     }
   }
@@ -258,14 +244,11 @@ class MasterCmsCubit extends Cubit<MasterCmsState> {
   //  DISCARD DRAFT — deletes the draft doc (published stays untouched)
   // ══════════════════════════════════════════════════════════════════════════
   Future<void> discardDraft() async {
-    print('🟡 [MasterCmsCubit] discardDraft: gender=$_activeGender');
     try {
       await _repo.deleteDraft(gender: _activeGender);
       _isFromDraft = false;
-      print('🟢 [MasterCmsCubit] discardDraft: ✅ DONE');
       emit(MasterCmsDraftDeleted());
     } catch (e) {
-      print('🔴 [MasterCmsCubit] discardDraft: ERROR $e');
       emit(MasterCmsError(e.toString()));
     }
   }

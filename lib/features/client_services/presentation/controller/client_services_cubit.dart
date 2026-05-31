@@ -10,7 +10,7 @@ import 'dart:typed_data';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../data/models/client_services_model.dart';
-import '../../domain/repo/client_services_repo.dart';
+import '../../domain/base_repository/client_services_repo.dart';
 
 import 'client_services_state.dart';
 
@@ -27,15 +27,12 @@ class ClientServicesCmsCubit extends Cubit<ClientServicesCmsState> {
 
   // ── Load ───────────────────────────────────────────────────────────────────
   Future<void> load({String gender = 'female'}) async {
-    print('🟡 [ClientServicesCmsCubit] load: gender=$gender');
     _activeGender = gender;
     emit(ClientServicesCmsLoading());
     try {
       _current = await _repo.fetchPage(gender: gender);
-      print('🟢 [ClientServicesCmsCubit] load: ✅ mockups=${_current.mockups.items.length}');
       emit(ClientServicesCmsLoaded(_current));
     } catch (e) {
-      print('🔴 [ClientServicesCmsCubit] load: ERROR $e');
       emit(ClientServicesCmsError(e.toString()));
     }
   }
@@ -172,17 +169,14 @@ class ClientServicesCmsCubit extends Cubit<ClientServicesCmsState> {
   // SAVE
   // ═══════════════════════════════════════════════════════════════════════════
   Future<void> save({String publishStatus = 'published'}) async {
-    print('🟡 [ClientServicesCmsCubit] save: status=$publishStatus');
     try {
       _current = _current.copyWith(
         status: publishStatus,
         lastUpdated: DateTime.now(),
       );
       await _repo.savePage(_current);
-      print('🟢 [ClientServicesCmsCubit] save: ✅ DONE');
       emit(ClientServicesCmsSaved(_current));
     } catch (e) {
-      print('🔴 [ClientServicesCmsCubit] save: ERROR $e');
       emit(ClientServicesCmsError(e.toString()));
     }
   }

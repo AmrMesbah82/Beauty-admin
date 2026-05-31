@@ -1,3 +1,11 @@
+// ******************* FILE INFO *******************
+// File Name: inquiry_details.dart
+// Description: Inquiry details page
+// Created by: Amr Mesbah
+// Last Update: 31/05/2026
+
+/// Module: features › inquire › presentation › ui › pages
+
 // ═══════════════════════════════════════════════════════════════════
 // FILE: inquiry_details.dart  (UPDATED — 100% Figma-aligned)
 // Path: lib/pages/dashboard/inquiry/inquiry_details.dart
@@ -8,12 +16,12 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
-import '../../../../../core/constant/color.dart';
+import '../../../../../core/constants/color.dart';
 import '../../../../../core/main_widgets/app_admin_navbar.dart';
 import '../../../../../core/theme/appcolors.dart';
 import '../../../../../core/theme/new_theme.dart';
-import '../../../../../core/widget/custom_dropdwon.dart';
-import '../../../../../core/widget/format.dart';
+import '../../../../../core/widgets/custom_dropdown.dart';
+import '../../../../../core/widgets/format.dart';
 import '../../../../home/presentation/controller/home_cubit.dart';
 import '../../../../home/presentation/controller/home_state.dart';
 import '../../../../home/presentation/ui/pages/home_main.dart';
@@ -21,8 +29,8 @@ import '../../../data/models/inquire_model.dart';
 import '../../controller/inquiry_cubit.dart';
 import '../../controller/inquiry_state.dart';
 
-part '../widget/inquiry_details/c.dart';
-part '../widget/inquiry_details/helpers.dart';
+part '../widgets/inquiry_details/c.dart';
+part '../widgets/inquiry_details/helpers.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
 //  COLOURS

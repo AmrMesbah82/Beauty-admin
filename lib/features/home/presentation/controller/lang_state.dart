@@ -1,3 +1,11 @@
+// ******************* FILE INFO *******************
+// File Name: lang_state.dart
+// Description: Language Cubit states
+// Created by: Amr Mesbah
+// Last Update: 31/05/2026
+
+/// Module: features › home › presentation › controller
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:shared_preferences/shared_preferences.dart';

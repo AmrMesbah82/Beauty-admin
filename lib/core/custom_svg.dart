@@ -1,3 +1,11 @@
+// ******************* FILE INFO *******************
+// File Name: custom_svg.dart
+// Description: Custom SVG rendering widget
+// Created by: Amr Mesbah
+// Last Update: 31/05/2026
+
+/// Module: core
+
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/flutter_svg.dart';

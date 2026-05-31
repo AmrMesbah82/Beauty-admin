@@ -1,3 +1,11 @@
+// ******************* FILE INFO *******************
+// File Name: demo_detail_page.dart
+// Description: Demo detail page
+// Created by: Amr Mesbah
+// Last Update: 31/05/2026
+
+/// Module: features › demos › presentation › ui › pages
+
 // ═══════════════════════════════════════════════════════════════════
 // FILE: demo_detail_page.dart
 // Path: lib/pages/dashboard/demos/demo_detail_page.dart
@@ -27,11 +35,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
-import '../../../../../core/constant/color.dart';
+import '../../../../../core/constants/color.dart';
 import '../../../../../core/main_widgets/app_admin_navbar.dart';
 import '../../../../../core/theme/appcolors.dart';
 import '../../../../../core/theme/new_theme.dart';
-import '../../../../../core/widget/custom_dropdwon.dart';
+import '../../../../../core/widgets/custom_dropdown.dart';
 import '../../../../home/presentation/controller/home_cubit.dart';
 import '../../../../home/presentation/controller/home_state.dart';
 import '../../../../home/presentation/ui/pages/home_main.dart';
@@ -39,7 +47,7 @@ import '../../../data/models/demo_model.dart';
 import '../../controller/demo_cubit.dart';
 import '../../controller/demo_state.dart';
 
-part '../widget/demo_detail_page/c.dart';
+part '../widgets/demo_detail_page/c.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
 //  COLOURS

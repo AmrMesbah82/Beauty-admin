@@ -1,4 +1,12 @@
-import 'package:beauty_admin/core/constant/color.dart';
+// ******************* FILE INFO *******************
+// File Name: app_admin_navbar.dart
+// Description: Admin navigation bar widget
+// Created by: Amr Mesbah
+// Last Update: 31/05/2026
+
+/// Module: core › main_widgets
+
+import 'package:beauty_admin/core/constants/color.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/svg.dart';
@@ -10,7 +18,7 @@ import '../../features/demos/presentation/ui/pages/demo_main_page.dart';
 import '../../features/home/presentation/controller/home_cubit.dart';
 import '../../features/home/presentation/controller/home_state.dart';
 import '../../features/inquire/presentation/ui/pages/inquiry_main.dart';
-import '../theme/app_wight.dart';
+import '../theme/app_weight.dart';
 import '../theme/appcolors.dart';
 
 

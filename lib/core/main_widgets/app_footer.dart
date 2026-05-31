@@ -29,7 +29,7 @@ import '../../features/home/data/models/home_model.dart';
 import '../../features/home/presentation/controller/home_cubit.dart';
 import '../../features/home/presentation/controller/home_state.dart';
 import '../../features/home/presentation/controller/lang_state.dart';
-import '../theme/app_wight.dart';
+import '../theme/app_weight.dart';
 import '../theme/appcolors.dart';
 import '../theme/new_theme.dart';
 
@@ -142,18 +142,11 @@ class AppFooter extends StatelessWidget {
     return BlocBuilder<HomeCmsCubit, HomeCmsState>(
       buildWhen: (_, __) => true,
       builder: (context, state) {
-        print('🟣 [AppFooter] BlocBuilder rebuild — state=${state.runtimeType}');
-
         final HomePageModel model = switch (state) {
           HomeCmsLoaded(:final data) => data,
           HomeCmsSaved(:final data)  => data,
           _ => context.read<HomeCmsCubit>().current,
         };
-
-        print('🟣 [AppFooter] socialLinks count=${model.socialLinks.length}');
-        for (var i = 0; i < model.socialLinks.length; i++) {
-          print('🟣 [AppFooter] socialLinks[$i] iconUrl=${model.socialLinks[i].iconUrl}');
-        }
 
         final Color primary = _hexColor(
           model.branding.primaryColor,

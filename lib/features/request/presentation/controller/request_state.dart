@@ -1,4 +1,12 @@
-/// File Name: demo_state.dart
+// ******************* FILE INFO *******************
+// File Name: request_state.dart
+// Description: Request Cubit states
+// Created by: Amr Mesbah
+// Last Update: 31/05/2026
+
+/// Module: features › request › presentation › controller
+
+/// File Name: request_state.dart
 import 'package:beauty_admin/features/request/data/models/request_model.dart';
 
 

@@ -1,9 +1,17 @@
-/// File Name: demo_cubit.dart
+// ******************* FILE INFO *******************
+// File Name: request_cubit.dart
+// Description: Request Cubit — state management for Request Demo CMS
+// Created by: Amr Mesbah
+// Last Update: 31/05/2026
+
+/// Module: features › request › presentation › controller
+
+/// File Name: request_cubit.dart
 import 'dart:typed_data';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../data/models/request_model.dart';
 
-import '../../domain/repo/request_repo.dart';
+import '../../domain/base_repository/request_repo.dart';
 import 'request_state.dart';
 
 class RequestDemoCmsCubit extends Cubit<RequestDemoCmsState> {

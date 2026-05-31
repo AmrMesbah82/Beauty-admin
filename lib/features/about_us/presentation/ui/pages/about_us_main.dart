@@ -19,9 +19,9 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
-import 'package:beauty_admin/core/widget/navigator.dart';
+import 'package:beauty_admin/core/widgets/navigator.dart';
 
-import '../../../../../core/constant/color.dart';
+import '../../../../../core/constants/color.dart';
 import '../../../../../core/custom_svg.dart';
 import '../../../../../core/main_widgets/admin_sub_navbar.dart';
 import '../../../../../core/main_widgets/app_admin_navbar.dart';
@@ -36,8 +36,8 @@ import 'about_us_preview.dart';
 import 'strategy_page/strategy_main.dart';
 import 'strategy_page/strategy_preview.dart';
 
-part '../widget/about_us_main/c.dart';
-part '../widget/about_us_main/widgets.dart';
+part '../widgets/about_us_main/c.dart';
+part '../widgets/about_us_main/widgets.dart';
 
 class AboutMainPageMasterDashboard extends StatefulWidget {
   const AboutMainPageMasterDashboard({super.key});

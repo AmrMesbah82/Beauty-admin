@@ -1,3 +1,11 @@
+// ******************* FILE INFO *******************
+// File Name: demo_state.dart
+// Description: Demo Cubit states
+// Created by: Amr Mesbah
+// Last Update: 31/05/2026
+
+/// Module: features › demos › presentation › controller
+
 // ═══════════════════════════════════════════════════════════════════
 // FILE: demo_state.dart
 // Path: lib/controller/request_demo/demo_state.dart

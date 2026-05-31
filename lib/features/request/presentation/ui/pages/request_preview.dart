@@ -1,3 +1,11 @@
+// ******************* FILE INFO *******************
+// File Name: request_preview.dart
+// Description: Request Demo CMS preview page
+// Created by: Amr Mesbah
+// Last Update: 31/05/2026
+
+/// Module: features › request › presentation › ui › pages
+
 /// File Name: request_preview.dart
 /// Description: Preview page for Request Demo CMS.
 ///              Renders: Confirm Message with SVG, title, description.
@@ -22,9 +30,9 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get_core/src/get_main.dart';
 import 'package:get/get_navigation/src/extension_navigation.dart';
 
-import 'package:beauty_admin/core/widget/circle_progress.dart';
+import 'package:beauty_admin/core/widgets/circle_progress.dart';
 
-import '../../../../../core/constant/color.dart';
+import '../../../../../core/constants/color.dart';
 import '../../../../../core/custom_dialog.dart';
 import '../../../../../core/main_widgets/admin_sub_navbar.dart';
 import '../../../../../core/main_widgets/app_admin_navbar.dart';
@@ -35,12 +43,12 @@ import '../../../data/models/request_model.dart';
 import '../../controller/request_cubit.dart';
 import '../../controller/request_state.dart';
 
-part '../widget/request_preview/c.dart';
-part '../widget/request_preview/desktop_frame.dart';
-part '../widget/request_preview/tablet_frame.dart';
-part '../widget/request_preview/mobile_frame.dart';
-part '../widget/request_preview/preview_content.dart';
-part '../widget/request_preview/browser_chrome.dart';
+part '../widgets/request_preview/c.dart';
+part '../widgets/request_preview/desktop_frame.dart';
+part '../widgets/request_preview/tablet_frame.dart';
+part '../widgets/request_preview/mobile_frame.dart';
+part '../widgets/request_preview/preview_content.dart';
+part '../widgets/request_preview/browser_chrome.dart';
 
 class RequestDemoPreviewPage extends StatefulWidget {
   const RequestDemoPreviewPage({super.key});
@@ -54,6 +62,16 @@ class _RequestDemoPreviewPageState extends State<RequestDemoPreviewPage> {
   _PreviewDevice _device = _PreviewDevice.desktop;
   bool _isEnglish = true;
   bool _isSaving = false;
+
+  @override
+  void initState() {
+    super.initState();
+    final cubit = context.read<RequestDemoCmsCubit>();
+    final s = cubit.state;
+    if (s is! RequestDemoCmsLoaded && s is! RequestDemoCmsSaved) {
+      cubit.load(gender: cubit.activeGender);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -312,26 +330,20 @@ class _RequestDemoPreviewPageState extends State<RequestDemoPreviewPage> {
 
   // ── Frame dispatcher ──────────────────────────────────────────────────────────
   Widget _buildFrame(double containerW, RequestDemoPageModel model) {
+    Widget frame;
     switch (_device) {
       case _PreviewDevice.desktop:
-        return _DesktopFrame(
-          containerWidth: containerW,
-          model: model,
-          isEnglish: _isEnglish,
-        );
+        frame = _DesktopFrame(containerWidth: containerW, model: model);
       case _PreviewDevice.tablet:
-        return _TabletFrame(
-          containerWidth: containerW,
-          model: model,
-          isEnglish: _isEnglish,
-        );
+        frame = _TabletFrame(containerWidth: containerW, model: model);
       case _PreviewDevice.mobile:
-        return _MobileFrame(
-          containerWidth: containerW,
-          model: model,
-          isEnglish: _isEnglish,
-        );
+        frame = _MobileFrame(containerWidth: containerW, model: model);
     }
+    return Localizations.override(
+      context: context,
+      locale: _isEnglish ? const Locale('en') : const Locale('ar'),
+      child: frame,
+    );
   }
 }
 

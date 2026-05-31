@@ -1,3 +1,11 @@
+// ******************* FILE INFO *******************
+// File Name: request_edit.dart
+// Description: Request Demo CMS edit page
+// Created by: Amr Mesbah
+// Last Update: 31/05/2026
+
+/// Module: features › request › presentation › ui › pages
+
 /// File Name: request_edit.dart
 import 'dart:async';
 import 'dart:typed_data';
@@ -13,11 +21,11 @@ import 'package:get/get_core/src/get_main.dart';
 import 'package:get/get_navigation/src/extension_navigation.dart';
 
 import 'package:beauty_admin/core/custom_svg.dart';
-import 'package:beauty_admin/core/widget/circle_progress.dart';
-import 'package:beauty_admin/core/widget/custom_dropdwon.dart';
-import 'package:beauty_admin/core/widget/textfield.dart';
+import 'package:beauty_admin/core/widgets/circle_progress.dart';
+import 'package:beauty_admin/core/widgets/custom_dropdown.dart';
+import 'package:beauty_admin/core/widgets/textfield.dart';
 
-import '../../../../../core/constant/color.dart';
+import '../../../../../core/constants/color.dart';
 import '../../../../../core/custom_dialog.dart';
 import '../../../../../core/main_widgets/admin_sub_navbar.dart';
 import '../../../../../core/theme/appcolors.dart';
@@ -29,12 +37,12 @@ import 'request_preview.dart';
 import 'dart:convert';
 import 'dart:ui_web' as ui_web;
 
-part '../widget/request_edit/img.dart';
-part '../widget/request_edit/q_local.dart';
-part '../widget/request_edit/v_local.dart';
-part '../widget/request_edit/logic_helpers.dart';
-part '../widget/request_edit/ui_helpers.dart';
-part '../widget/request_edit/sections.dart';
+part '../widgets/request_edit/img.dart';
+part '../widgets/request_edit/q_local.dart';
+part '../widgets/request_edit/v_local.dart';
+part '../widgets/request_edit/logic_helpers.dart';
+part '../widgets/request_edit/ui_helpers.dart';
+part '../widgets/request_edit/sections.dart';
 
 String _svgBytesToDataUrl(Uint8List bytes) {
   final base64 = base64Encode(bytes);
@@ -83,6 +91,16 @@ class _RequestDemoEditPageState extends State<RequestDemoEditPage> {
       if (hex.length == 6) return Color(int.parse('FF$hex', radix: 16));
     } catch (_) {}
     return ColorPick.primary;
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    final cubit = context.read<RequestDemoCmsCubit>();
+    final s = cubit.state;
+    if (s is! RequestDemoCmsLoaded && s is! RequestDemoCmsSaved) {
+      cubit.load(gender: cubit.activeGender);
+    }
   }
 
   @override

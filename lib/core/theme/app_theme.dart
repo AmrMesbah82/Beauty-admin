@@ -1,3 +1,11 @@
+// ******************* FILE INFO *******************
+// File Name: app_theme.dart
+// Description: AppTheme — light/dark ThemeData and branding colors
+// Created by: Amr Mesbah
+// Last Update: 31/05/2026
+
+/// Module: core › theme
+
 // Date: 1/8/2024
 // By: Youssef Ashraf, Mohamed Ashraf, Nada Mohammed
 // Last update: 20/8/2024
@@ -355,12 +363,10 @@ abstract class AppTheme {
 
   static void initTheme(
       Color primaryColor, Color secondaryColor, bool isDarkMode) async {
-    print("theme at main core theme controller isDarkMode $isDarkMode");
     isDark = isDarkMode;
     interfaceUpdateBrandingColors(primaryColor, secondaryColor);
     // Get.changeThemeMode(isDarkMode ? ThemeMode.light : ThemeMode.dark);
     setCurrentThemeColors();
-    print("theme at main core theme controller isDarkMode $isDark");
   }
 
   static void interfaceUpdateBrandingColors(

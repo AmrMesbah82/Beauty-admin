@@ -17,13 +17,14 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/svg.dart';
 
+import '../../../../../core/constants/color.dart';
 import '../../../../../core/custom_dialog.dart';
 import '../../../../../core/custom_svg.dart';
 import '../../../../../core/main_widgets/admin_sub_navbar.dart';
 import '../../../../../core/theme/appcolors.dart';
 import '../../../../../core/theme/new_theme.dart';
 import '../../../../../core/theme/text.dart';
-import '../../../../../core/widget/textfield.dart';
+import '../../../../../core/widgets/textfield.dart';
 import '../../../../home/data/models/home_model.dart';
 import '../../../../home/presentation/controller/home_cubit.dart';
 import '../../../../home/presentation/controller/home_state.dart';
@@ -34,19 +35,18 @@ import 'contact_us_preview.dart';
 import 'dart:convert';
 import 'dart:ui_web' as ui_web;
 
-part '../widget/contact_us_edit/social_link_dropdown.dart';
-part '../widget/contact_us_edit/reason_item.dart';
-part '../widget/contact_us_edit/social_link_item.dart';
-part '../widget/contact_us_edit/logic_helpers.dart';
-part '../widget/contact_us_edit/form_sections.dart';
-part '../widget/contact_us_edit/ui_helpers.dart';
+part '../widgets/contact_us_edit/social_link_dropdown.dart';
+part '../widgets/contact_us_edit/reason_item.dart';
+part '../widgets/contact_us_edit/social_link_item.dart';
+part '../widgets/contact_us_edit/logic_helpers.dart';
+part '../widgets/contact_us_edit/form_sections.dart';
+part '../widgets/contact_us_edit/ui_helpers.dart';
 
 String _svgBytesToDataUrl(Uint8List bytes) {
   final base64 = base64Encode(bytes);
   return 'data:image/svg+xml;base64,$base64';
 }
 
-const Color _kPink = Color(0xFFD16F9A);
 const Color _kRed  = Color(0xFFD32F2F);
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -106,7 +106,6 @@ class _ContactUsCmsEditPageState extends State<ContactUsCmsEditPage> {
   @override
   void initState() {
     super.initState();
-    print('🟣 [EditPage] initState — loading cubits');
     context.read<ContactUsCmsCubit>().load();
     context.read<HomeCmsCubit>().load();
   }
@@ -148,7 +147,6 @@ class _ContactUsCmsEditPageState extends State<ContactUsCmsEditPage> {
               _ => <SocialLinkModel>[],
             };
             if (links.isNotEmpty) {
-              print('🏠 [HomeCubit] socialLinks loaded: ${links.length}');
               setState(() => _footerSocialLinks = links);
               _trySeed();
             }
@@ -157,7 +155,6 @@ class _ContactUsCmsEditPageState extends State<ContactUsCmsEditPage> {
         BlocListener<ContactUsCmsCubit, ContactUsCmsState>(
           listener: (context, state) {
             if (state is ContactUsCmsLoaded) {
-              print('📋 [ContactCubit] ContactUsCmsLoaded received');
               _pendingContactModel = state.data;
               _trySeed();
             }
@@ -193,7 +190,7 @@ class _ContactUsCmsEditPageState extends State<ContactUsCmsEditPage> {
                                         EdgeInsets.symmetric(vertical: 100.h),
                                     child: const Center(
                                       child: CircularProgressIndicator(
-                                          color: _kPink),
+                                          color: ColorPick.primary),
                                     ),
                                   )
                                 : _buildForm(),
@@ -223,7 +220,7 @@ class _ContactUsCmsEditPageState extends State<ContactUsCmsEditPage> {
           'Editing Contact Us',
           style: AppTextStyles.font28BlackSemiBoldCairo.copyWith(
             fontSize:   36.sp,
-            color:      _kPink,
+            color:      ColorPick.primary,
             fontWeight: FontWeight.w700,
           ),
         ),

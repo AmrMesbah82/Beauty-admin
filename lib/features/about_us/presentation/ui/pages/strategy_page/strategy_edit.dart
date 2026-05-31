@@ -21,8 +21,8 @@ import 'package:flutter_svg/svg.dart';
 import 'package:intl/intl.dart';
 
 import 'package:beauty_admin/core/custom_svg.dart';
-import 'package:beauty_admin/core/widget/button.dart';
-import 'package:beauty_admin/core/widget/textfield.dart';
+import 'package:beauty_admin/core/widgets/button.dart';
+import 'package:beauty_admin/core/widgets/textfield.dart';
 
 import '../../../../../../core/custom_dialog.dart';
 import '../../../../../../core/main_widgets/admin_sub_navbar.dart';
@@ -35,9 +35,9 @@ import '../../../controller/about_us_cubit.dart';
 import '../../../controller/about_us_state.dart';
 import 'strategy_preview.dart';
 
-part '../../widget/strategy_edit/nav_icon_upload_widget.dart';
-part '../../widget/strategy_edit/strategic_house_display_widget.dart';
-part '../../widget/strategy_edit/device_upload_row.dart';
+part '../../widgets/strategy_edit/nav_icon_upload_widget.dart';
+part '../../widgets/strategy_edit/strategic_house_display_widget.dart';
+part '../../widgets/strategy_edit/device_upload_row.dart';
 
 const Color _kGreen      = Color(0xFFD16F9A);
 const Color _kGreenSolid = Color(0xFFD16F9A);
@@ -263,7 +263,6 @@ class _StrategyEditPageState extends State<StrategyEditPage> {
             return;
           }
 
-          print('✅ Valid SVG file loaded: ${file.name}, size: ${bytes.length} bytes');
           c.complete(bytes);
         } else {
           c.complete(null);
@@ -271,7 +270,6 @@ class _StrategyEditPageState extends State<StrategyEditPage> {
       });
 
       reader.onError.listen((e) {
-        print('Error reading file: $e');
         c.complete(null);
       });
     });
@@ -286,15 +284,6 @@ class _StrategyEditPageState extends State<StrategyEditPage> {
     _seeded = true;
     _isEditingDraft = isFromDraft;
 
-    print('🔵 Seeding strategy data:');
-    print('  - Nav icon URL: ${m.navigationLabel.iconUrl}');
-    print('  - EN Desktop URL: ${m.strategicHouseEnDesktopUrl}');
-    print('  - EN Tablet URL: ${m.strategicHouseEnTabletUrl}');
-    print('  - EN Mobile URL: ${m.strategicHouseEnMobileUrl}');
-    print('  - AR Desktop URL: ${m.strategicHouseArDesktopUrl}');
-    print('  - AR Tablet URL: ${m.strategicHouseArTabletUrl}');
-    print('  - AR Mobile URL: ${m.strategicHouseArMobileUrl}');
-    print('  - Is from draft: $isFromDraft');
 
     // Remove listeners temporarily
     for (final ctrl in _allControllers) {
@@ -713,14 +702,6 @@ class _StrategyEditPageState extends State<StrategyEditPage> {
     final model = _buildModel(status);
     final uploads = _collectUploads();
 
-    print('🔵 Saving strategy:');
-    print('  - Status: $status');
-    print('  - EN Desktop: ${_strategicHouseEnDesktopIsSvg}');
-    print('  - EN Tablet: ${_strategicHouseEnTabletIsSvg}');
-    print('  - EN Mobile: ${_strategicHouseEnMobileIsSvg}');
-    print('  - AR Desktop: ${_strategicHouseArDesktopIsSvg}');
-    print('  - AR Tablet: ${_strategicHouseArTabletIsSvg}');
-    print('  - AR Mobile: ${_strategicHouseArMobileIsSvg}');
 
     await context.read<StrategyCubit>().save(
       model: model,
@@ -743,12 +724,10 @@ class _StrategyEditPageState extends State<StrategyEditPage> {
   // ── Load SVG from URL with caching ────────────────────────────────────────
   Future<Uint8List> _loadSvgBytes(String url) async {
     if (_svgCache.containsKey(url)) {
-      print('🟢 Using cached SVG: $url');
       return _svgCache[url]!;
     }
 
     try {
-      print('🟡 Loading SVG from URL: $url');
       final res = await html.HttpRequest.request(
         url,
         method: 'GET',
@@ -758,12 +737,10 @@ class _StrategyEditPageState extends State<StrategyEditPage> {
         throw Exception('Failed to load SVG: ${res.status}');
       }
       final bytes = (res.response as ByteBuffer).asUint8List();
-      print('✅ SVG loaded successfully, size: ${bytes.length} bytes');
 
       _svgCache[url] = bytes;
       return bytes;
     } catch (e) {
-      print('❌ Error loading SVG: $e');
       rethrow;
     }
   }
@@ -773,7 +750,6 @@ class _StrategyEditPageState extends State<StrategyEditPage> {
   Widget build(BuildContext context) {
     return BlocConsumer<StrategyCubit, StrategyState>(
       listener: (context, state) {
-        print('[StrategyEditPage] 👂 listener: ${state.runtimeType}');
 
         if (state is StrategyLoaded) {
           _seed(state.data);

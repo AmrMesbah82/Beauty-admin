@@ -1,3 +1,11 @@
+// ******************* FILE INFO *******************
+// File Name: app_localization.dart
+// Description: App localisation delegate
+// Created by: Amr Mesbah
+// Last Update: 31/05/2026
+
+/// Module: features › home › presentation › controller
+
 /// App translations for Arabic and English
 class AppLocalizations {
   final String languageCode;

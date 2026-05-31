@@ -11,7 +11,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
-import '../../../../../core/constant/color.dart';
+import '../../../../../core/constants/color.dart';
 import '../../../../../core/custom_dialog.dart';
 import '../../../../../core/main_widgets/admin_sub_navbar.dart';
 import '../../../../../core/main_widgets/app_footer.dart';
@@ -21,12 +21,12 @@ import '../../../../../core/theme/new_theme.dart';
 import '../../controller/home_cubit.dart';
 import '../../controller/home_state.dart';
 
-part '../widget/home_preview/c.dart';
-part '../widget/home_preview/desktop_frame.dart';
-part '../widget/home_preview/tablet_frame.dart';
-part '../widget/home_preview/mobile_frame.dart';
-part '../widget/home_preview/preview_content.dart';
-part '../widget/home_preview/browser_chrome.dart';
+part '../widgets/home_preview/c.dart';
+part '../widgets/home_preview/desktop_frame.dart';
+part '../widgets/home_preview/tablet_frame.dart';
+part '../widgets/home_preview/mobile_frame.dart';
+part '../widgets/home_preview/preview_content.dart';
+part '../widgets/home_preview/browser_chrome.dart';
 
 class HomePreviewPage extends StatefulWidget {
   final bool showPublish; // ← ADD

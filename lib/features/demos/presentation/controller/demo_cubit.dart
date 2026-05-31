@@ -1,10 +1,18 @@
+// ******************* FILE INFO *******************
+// File Name: demo_cubit.dart
+// Description: Demo Cubit — state management
+// Created by: Amr Mesbah
+// Last Update: 31/05/2026
+
+/// Module: features › demos › presentation › controller
+
 // ═══════════════════════════════════════════════════════════════════
 // FILE: demo_cubit.dart
 // Path: lib/controller/request_demo/demo_cubit.dart
 // ═══════════════════════════════════════════════════════════════════
 
 import 'package:beauty_admin/features/demos/data/models/demo_model.dart';
-import 'package:beauty_admin/features/demos/domain/repo/demo_repo.dart';
+import 'package:beauty_admin/features/demos/domain/base_repository/demo_repo.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 
@@ -27,7 +35,6 @@ class RequestDemoCubit extends Cubit<RequestDemoState> {
   RequestDemoCubit({RequestDemoRepo? repo})
       : _repo = repo ?? RequestDemoRepo(),
         super(RequestDemoInitial()) {
-    print('🟢 [CUBIT] RequestDemoCubit created');
   }
 
   // ═══════════════════════════════════════════════════════════════════════════
@@ -35,30 +42,19 @@ class RequestDemoCubit extends Cubit<RequestDemoState> {
   // ═══════════════════════════════════════════════════════════════════════════
 
   Future<void> loadDemos() async {
-    print('🟢 [CUBIT] loadDemos() called');
-    print('🟢 [CUBIT] Current state: ${state.runtimeType}');
 
     emit(RequestDemoLoading());
-    print('🟢 [CUBIT] Emitted RequestDemoLoading state');
 
     try {
-      print('🟢 [CUBIT] Calling repo.fetchAll()...');
       _allItems = await _repo.fetchAll();
-      print('🟢 [CUBIT] Received ${_allItems.length} items from repo');
 
       if (_allItems.isEmpty) {
-        print('⚠️ [CUBIT] WARNING: _allItems is empty!');
       } else {
-        print('✅ [CUBIT] Sample item: ${_allItems.first.salonName}');
       }
 
-      print('🟢 [CUBIT] Calling _emitLoaded()...');
       _emitLoaded();
-      print('✅ [CUBIT] loadDemos() completed successfully');
 
     } catch (e, stackTrace) {
-      print('❌ [CUBIT] ERROR in loadDemos(): $e');
-      print('❌ [CUBIT] StackTrace: $stackTrace');
       emit(RequestDemoError(e.toString()));
     }
   }
@@ -68,20 +64,16 @@ class RequestDemoCubit extends Cubit<RequestDemoState> {
   // ═══════════════════════════════════════════════════════════════════════════
 
   Future<void> loadDetail(String id) async {
-    print('🟢 [CUBIT] loadDetail() called for ID: $id');
     emit(RequestDemoLoading());
 
     try {
       final demo = await _repo.fetchById(id);
       if (demo != null) {
-        print('✅ [CUBIT] Detail loaded successfully');
         emit(RequestDemoDetailLoaded(demo));
       } else {
-        print('⚠️ [CUBIT] Demo not found: $id');
         emit(RequestDemoError('Demo request not found.'));
       }
     } catch (e) {
-      print('❌ [CUBIT] ERROR in loadDetail($id): $e');
       emit(RequestDemoError(e.toString()));
     }
   }
@@ -91,7 +83,6 @@ class RequestDemoCubit extends Cubit<RequestDemoState> {
   // ═══════════════════════════════════════════════════════════════════════════
 
   Future<void> updateStatus(String id, DemoStatus status) async {
-    print('🟢 [CUBIT] updateStatus() - ID: $id, Status: ${status.label}');
 
     try {
       await _repo.updateStatus(id, status);
@@ -99,11 +90,9 @@ class RequestDemoCubit extends Cubit<RequestDemoState> {
       if (updated != null) {
         // Refresh local list
         _allItems = _allItems.map((d) => d.id == id ? updated : d).toList();
-        print('✅ [CUBIT] Status updated, emitting RequestDemoUpdated');
         emit(RequestDemoUpdated(updated));
       }
     } catch (e) {
-      print('❌ [CUBIT] ERROR in updateStatus: $e');
       emit(RequestDemoError(e.toString()));
     }
   }
@@ -119,7 +108,6 @@ class RequestDemoCubit extends Cubit<RequestDemoState> {
     DemoRelevance?      relevance,
     DemoRequiredAction? action,
   }) async {
-    print('🟢 [CUBIT] updateComments() called for ID: $id');
 
     try {
       await _repo.updateComments(
@@ -132,11 +120,9 @@ class RequestDemoCubit extends Cubit<RequestDemoState> {
       final updated = await _repo.fetchById(id);
       if (updated != null) {
         _allItems = _allItems.map((d) => d.id == id ? updated : d).toList();
-        print('✅ [CUBIT] Comments updated, emitting RequestDemoUpdated');
         emit(RequestDemoUpdated(updated));
       }
     } catch (e) {
-      print('❌ [CUBIT] ERROR in updateComments: $e');
       emit(RequestDemoError(e.toString()));
     }
   }
@@ -146,37 +132,31 @@ class RequestDemoCubit extends Cubit<RequestDemoState> {
   // ═══════════════════════════════════════════════════════════════════════════
 
   void setSearch(String query) {
-    print('🟢 [CUBIT] setSearch: "$query"');
     _searchQuery = query;
     _emitLoaded();
   }
 
   void setStatusFilter(String? value) {
-    print('🟢 [CUBIT] setStatusFilter: $value');
     _statusFilter = value;
     _emitLoaded();
   }
 
   void setEntityTypeFilter(String? value) {
-    print('🟢 [CUBIT] setEntityTypeFilter: $value');
     _entityTypeFilter = value;
     _emitLoaded();
   }
 
   void setCountryFilter(String? value) {
-    print('🟢 [CUBIT] setCountryFilter: $value');
     _countryFilter = value;
     _emitLoaded();
   }
 
   void setMonthFilter(int? value) {
-    print('🟢 [CUBIT] setMonthFilter: $value');
     _monthFilter = value;
     _emitLoaded();
   }
 
   void clearAllFilters() {
-    print('🟢 [CUBIT] clearAllFilters() called');
     _statusFilter     = null;
     _entityTypeFilter = null;
     _countryFilter    = null;
@@ -190,8 +170,6 @@ class RequestDemoCubit extends Cubit<RequestDemoState> {
   // ═══════════════════════════════════════════════════════════════════════════
 
   void _emitLoaded() {
-    print('🟢 [CUBIT] _emitLoaded() started');
-    print('🟢 [CUBIT] _allItems count: ${_allItems.length}');
 
     final all = _allItems;
 
@@ -201,7 +179,6 @@ class RequestDemoCubit extends Cubit<RequestDemoState> {
     final repliedCount = all.where((d) => d.status == DemoStatus.replied).length;
     final closedCount  = all.where((d) => d.status == DemoStatus.closed).length;
 
-    print('🟢 [CUBIT] Counts - Total: $totalCount, New: $newCount, Replied: $repliedCount, Closed: $closedCount');
 
     // ── Analytics maps ──────────────────────────────────────────────────────
     final Map<int, int>    monthly        = {};
@@ -260,28 +237,23 @@ class RequestDemoCubit extends Cubit<RequestDemoState> {
         .toList()
       ..sort();
 
-    print('🟢 [CUBIT] Filter options - Statuses: ${uniqueStatuses.length}, EntityTypes: ${uniqueEntityTypes.length}');
 
     // ── Apply filters ───────────────────────────────────────────────────────
     List<RequestDemoModel> filtered = all;
 
     if (_statusFilter != null) {
       filtered = filtered.where((d) => d.status.label == _statusFilter).toList();
-      print('🟢 [CUBIT] After status filter: ${filtered.length}');
     }
     if (_entityTypeFilter != null) {
       filtered = filtered.where((d) => d.entityType == _entityTypeFilter).toList();
-      print('🟢 [CUBIT] After entity type filter: ${filtered.length}');
     }
     if (_countryFilter != null) {
       filtered = filtered.where((d) => d.country == _countryFilter).toList();
-      print('🟢 [CUBIT] After country filter: ${filtered.length}');
     }
     if (_monthFilter != null) {
       filtered = filtered
           .where((d) => d.submissionDate?.month == _monthFilter)
           .toList();
-      print('🟢 [CUBIT] After month filter: ${filtered.length}');
     }
     if (_searchQuery.isNotEmpty) {
       final q = _searchQuery.toLowerCase();
@@ -293,11 +265,8 @@ class RequestDemoCubit extends Cubit<RequestDemoState> {
             d.country.toLowerCase().contains(q)    ||
             d.city.toLowerCase().contains(q);
       }).toList();
-      print('🟢 [CUBIT] After search filter: ${filtered.length}');
     }
 
-    print('🟢 [CUBIT] Final filtered count: ${filtered.length}');
-    print('🟢 [CUBIT] Emitting RequestDemoLoaded state');
 
     emit(RequestDemoLoaded(
       filtered:             filtered,
@@ -325,6 +294,5 @@ class RequestDemoCubit extends Cubit<RequestDemoState> {
       searchQuery:          _searchQuery,
     ));
 
-    print('✅ [CUBIT] _emitLoaded() completed');
   }
 }

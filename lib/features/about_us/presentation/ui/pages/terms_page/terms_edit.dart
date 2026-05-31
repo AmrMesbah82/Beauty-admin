@@ -15,7 +15,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/svg.dart';
 
-import 'package:beauty_admin/core/widget/textfield.dart';
+import 'package:beauty_admin/core/widgets/textfield.dart';
 import 'package:beauty_admin/core/custom_svg.dart';
 
 import '../../../../../../core/custom_dialog.dart';
@@ -23,14 +23,14 @@ import '../../../../../../core/main_widgets/admin_sub_navbar.dart';
 import '../../../../../../core/main_widgets/app_admin_navbar.dart';
 import '../../../../../../core/theme/appcolors.dart';
 import '../../../../../../core/theme/new_theme.dart';
-import '../../../../../../core/widget/circle_progress.dart';
+import '../../../../../../core/widgets/circle_progress.dart';
 import '../../../../../home/presentation/ui/pages/home_main.dart';
 import '../../../../data/models/about_us_model.dart';
 import '../../../controller/about_us_cubit.dart';
 import '../../../controller/about_us_state.dart';
 import 'terms_preview.dart';
 
-part '../../widget/terms_edit/doc_item.dart';
+part '../../widgets/terms_edit/doc_item.dart';
 
 const Color _kGreen = Color(0xFFD16F9A);
 const Color _kGreenSolid = Color(0xFFD16F9A);

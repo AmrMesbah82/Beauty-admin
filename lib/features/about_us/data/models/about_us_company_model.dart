@@ -1,3 +1,11 @@
+// ******************* FILE INFO *******************
+// File Name: about_us_company_model.dart
+// Description: AboutUsCompanyModel data class
+// Created by: Amr Mesbah
+// Last Update: 31/05/2026
+
+/// Module: features › about_us › data › models
+
 // ═══════════════════════════════════════════════════════════════════
 // FILE 1: about_us_company_model.dart
 // ═══════════════════════════════════════════════════════════════════

@@ -1,3 +1,11 @@
+// ******************* FILE INFO *******************
+// File Name: new_theme.dart
+// Description: Legacy theme adapter — redirects old color names to AppTheme
+// Created by: Amr Mesbah
+// Last Update: 31/05/2026
+
+/// Module: core › theme
+
 // legacy_theme_adapter.dart
 // Drop this in place of old theme files
 // It redirects old names to the new theme system
@@ -9,13 +17,6 @@ import 'package:flutter/material.dart';
 
 import 'app_theme.dart';
 import 'appcolors.dart';
-
-void updateButtonTextStyleContrast() {
-  final isPrimaryDark = AppColors.primary.computeLuminance() < 0.5;
-  final contrastColor = isPrimaryDark ? Colors.white : Colors.black;
-
-  // ✅ Only override button-specific text color
-}
 
 // ===== Legacy Color Redirects (ColorAppLight, ColorAppDark) =====
 abstract class ColorAppLight {
