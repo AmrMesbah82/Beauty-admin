@@ -133,7 +133,8 @@ Future<void> showConfirmDialog({
   String? iconAsset,
   /// Fallback icon widget if no SVG asset is given
   Widget? iconWidget,
-}) {
+})
+{
   return showDialog(
     context: context,
     barrierColor: Colors.black.withOpacity(0.4),
