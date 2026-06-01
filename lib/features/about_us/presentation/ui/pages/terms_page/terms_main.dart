@@ -14,8 +14,9 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../../../../../core/custom_svg.dart';
-import '../../../../../../core/theme/appcolors.dart';
-import '../../../../../../core/theme/new_theme.dart';
+import '../../../../../../core/theme/app_colors.dart';
+import '../../../../../../core/theme/app_font_style.dart';
+
 import '../../../../../../core/widgets/navigator.dart';
 import '../../../../data/models/about_us_model.dart';
 import '../../../controller/about_us_cubit.dart';

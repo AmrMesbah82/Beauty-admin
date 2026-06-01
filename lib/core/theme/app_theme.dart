@@ -1,23 +1,15 @@
-// ******************* FILE INFO *******************
-// File Name: app_theme.dart
-// Description: AppTheme — light/dark ThemeData and branding colors
-// Created by: Amr Mesbah
-// Last Update: 31/05/2026
-
-/// Module: core › theme
-
 // Date: 1/8/2024
 // By: Youssef Ashraf, Mohamed Ashraf, Nada Mohammed
 // Last update: 20/8/2024
 // Objectives: This file is responsible for providing the app themes that is used in the app.
 
-import 'package:beauty_admin/core/theme/text.dart';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 
-import 'appcolors.dart';
+import 'app_colors.dart';
+import 'app_font_style.dart';
 
 
 
@@ -25,7 +17,8 @@ import 'appcolors.dart';
 abstract class AppTheme {
   static bool isDark = false;
 
-  static final ThemeData lightTheme = ThemeData.light().copyWith(
+  static final ThemeData lightTheme = ThemeData.light().
+  copyWith(
     textTheme: TextTheme(
       headlineMedium: AppTextStyles.font20BlackCairoMedium,
       headlineSmall: AppTextStyles.font16BlackMediumCairo,
@@ -228,7 +221,7 @@ abstract class AppTheme {
 
     'base': Colors.white,
     'inverseBase': const Color(0xff797979),
-    'dropShadow': const Color(0xffC3C3C3).withValues(alpha: 0.5),
+    'dropShadow': const Color(0xffC3C3C3).withOpacity(0.5),
     'borderCard': const Color(0xffFFFFFF),
     'message': const Color(0xffEFEFEF),
     'messageText': const Color(0xff858585),
@@ -274,7 +267,7 @@ abstract class AppTheme {
     'warning': const Color(0xFFFF814A),
     'delete': const Color(0xFFDF1C1C),
     'differentGrey': const Color(0xFF9E9E9E),
-    'barrierColor': const Color(0XFFD9D9D9).withValues(alpha: .9),
+    'barrierColor': const Color(0XFFD9D9D9).withOpacity(.9),
     'totalBlack': const Color(0xFF000000),
     'whiteDark': Color(0xFFF2F2F2),
     'crimson': const Color(0xFFDF0C0C),
@@ -310,7 +303,7 @@ abstract class AppTheme {
     'text': Colors.white,
     'base': const Color(0xff797979),
     'inverseBase': Colors.white,
-    'dropShadow': const Color(0xffC3C3C3).withValues(alpha: 0.5),
+    'dropShadow': const Color(0xffC3C3C3).withOpacity(0.5),
     'borderCard': const Color(0xffFFFFFF),
     'message': const Color(0xffEFEFEF),
     'messageText': const Color(0xff858585),

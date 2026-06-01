@@ -29,8 +29,8 @@ import '../../features/home/presentation/controller/home_cubit.dart';
 import '../../features/master/presentation/ui/pages/master_main.dart';
 import '../../features/overview/presentation/ui/pages/overview_main.dart';
 import '../../features/owner_services/presentation/ui/pages/owner_services_main.dart';
-import '../theme/appcolors.dart';
-import '../theme/new_theme.dart';
+import '../theme/app_colors.dart';
+import '../theme/app_font_style.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // FadeRoute — smooth fade transition between pages

@@ -26,8 +26,9 @@ import '../../../../../core/constants/color.dart';
 import '../../../../../core/custom_dialog.dart';
 import '../../../../../core/main_widgets/admin_sub_navbar.dart';
 import '../../../../../core/main_widgets/app_admin_navbar.dart';
-import '../../../../../core/theme/appcolors.dart';
-import '../../../../../core/theme/new_theme.dart';
+import '../../../../../core/theme/app_colors.dart';
+import '../../../../../core/theme/app_font_style.dart';
+
 import '../../../../../core/widgets/date_pic.dart';
 import '../../../../home/presentation/ui/pages/home_main.dart';
 import '../../../data/models/master_model.dart';

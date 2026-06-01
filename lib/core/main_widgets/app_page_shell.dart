@@ -12,7 +12,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../features/home/presentation/controller/home_cubit.dart';
 import '../../features/home/presentation/controller/home_state.dart';
 import '../../features/home/presentation/controller/lang_state.dart';
-import '../theme/appcolors.dart';
+import '../theme/app_colors.dart';
 import 'app_footer.dart';
 import 'app_navbar.dart';
 

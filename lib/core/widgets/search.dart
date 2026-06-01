@@ -15,9 +15,9 @@ import 'package:beauty_admin/core/widgets/default_form.dart';
 
 import '../../features/home/presentation/controller/home_cubit.dart';
 import '../../features/home/presentation/controller/home_state.dart';
+import '../theme/app_font_style.dart';
 import '../theme/app_theme.dart';
-import '../theme/appcolors.dart';
-import '../theme/text.dart';
+import '../theme/app_colors.dart';
 
 class AppSearchTextField extends StatelessWidget {
   AppSearchTextField({

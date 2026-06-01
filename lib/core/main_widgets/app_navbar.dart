@@ -25,8 +25,8 @@ import '../../features/home/presentation/controller/home_cubit.dart';
 import '../../features/home/presentation/controller/home_state.dart';
 import '../../features/home/presentation/controller/lang_state.dart';
 import '../theme/app_theme.dart';
-import '../theme/app_weight.dart';
-import '../theme/appcolors.dart';
+import '../theme/app_font_weight.dart';
+import '../theme/app_colors.dart';
 
 class _WebColors {
   static const Color primary        = Colors.transparent;

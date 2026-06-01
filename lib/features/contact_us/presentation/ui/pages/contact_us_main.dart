@@ -7,6 +7,7 @@
 //          - Social Media Links (dropdown grid 2 per row)
 //          - Removed old: Info, Office Locations, Confirm Message
 
+import 'package:beauty_admin/core/theme/app_font_style.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -16,8 +17,8 @@ import '../../../../../core/constants/color.dart';
 import '../../../../../core/custom_svg.dart';
 import '../../../../../core/main_widgets/admin_sub_navbar.dart';
 import '../../../../../core/main_widgets/app_admin_navbar.dart';
-import '../../../../../core/theme/appcolors.dart';
-import '../../../../../core/theme/new_theme.dart';
+
+import '../../../../../core/theme/app_colors.dart';
 import '../../../../home/presentation/ui/pages/home_main.dart';
 import '../../../data/models/contact_us_model_location.dart';
 import '../../controller/contact_us_location_cubit.dart';

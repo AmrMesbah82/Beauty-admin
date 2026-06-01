@@ -29,9 +29,9 @@ import '../../features/home/data/models/home_model.dart';
 import '../../features/home/presentation/controller/home_cubit.dart';
 import '../../features/home/presentation/controller/home_state.dart';
 import '../../features/home/presentation/controller/lang_state.dart';
-import '../theme/app_weight.dart';
-import '../theme/appcolors.dart';
-import '../theme/new_theme.dart';
+import '../theme/app_font_style.dart';
+import '../theme/app_font_weight.dart';
+import '../theme/app_colors.dart';
 
 // ── Page registry ─────────────────────────────────────────────────────────────
 // Import your existing pages here

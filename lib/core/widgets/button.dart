@@ -14,7 +14,7 @@ import 'package:get/get.dart';
 import 'package:get/get_core/src/get_main.dart';
 import 'package:flutter/material.dart';
 
-import '../theme/appcolors.dart';
+import '../theme/app_colors.dart';
 
 Widget customButton({
   required String title,

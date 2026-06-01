@@ -7,7 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
-import '../theme/new_theme.dart';
+import '../theme/app_font_style.dart';
 
 
 class DeleteInternDialog extends StatelessWidget {

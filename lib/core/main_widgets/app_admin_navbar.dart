@@ -18,8 +18,10 @@ import '../../features/demos/presentation/ui/pages/demo_main_page.dart';
 import '../../features/home/presentation/controller/home_cubit.dart';
 import '../../features/home/presentation/controller/home_state.dart';
 import '../../features/inquire/presentation/ui/pages/inquiry_main.dart';
-import '../theme/app_weight.dart';
-import '../theme/appcolors.dart';
+import '../theme/app_colors.dart';
+import '../theme/app_font_weight.dart';
+import '../theme/app_font_weight.dart';
+import '../theme/app_colors.dart';
 
 
 class _BP {

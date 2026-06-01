@@ -3,10 +3,11 @@
 // Created by: Amr Mesbah
 // Purpose: Segmented horizontal bar for Candidate Score Distribution
 
-import 'package:beauty_admin/core/theme/text.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+
+import '../theme/app_font_style.dart';
 
 class ScoreSegment {
   final String label;

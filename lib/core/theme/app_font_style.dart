@@ -1,11 +1,3 @@
-// ******************* FILE INFO *******************
-// File Name: text.dart
-// Description: AppTextStyles — all text style getters
-// Created by: Amr Mesbah
-// Last Update: 31/05/2026
-
-/// Module: core › theme
-
 // Date: 29/9/2024
 // By: Youssef Ashraf, Nada Mohammed, Mohammed Ashraf
 // Last update: 15/3/2026
@@ -19,8 +11,8 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 
-import 'app_weight.dart';
-import 'appcolors.dart';
+import 'app_font_weight.dart';
+import 'app_colors.dart';
 
 abstract class AppTextStyles {
 
@@ -905,4 +897,66 @@ abstract class AppTextStyles {
     color: AppColors.text,
     fontWeight: AppFontWeights.semiBold,
   );
+}
+abstract class StyleText {
+  static TextStyle get fontSize8Weight400 =>
+      AppTextStyles.font8SecondaryBlackRegularCairo;
+  static TextStyle get fontSize10Weight400 =>
+      AppTextStyles.font10BlackCairoRegular;
+  static TextStyle get fontSize10Weight500 =>
+      AppTextStyles.font10BlackCairoMediam;
+  static TextStyle get fontSize10Weight700 =>
+      AppTextStyles.font10WhiteSemiBoldCairo;
+  static TextStyle get fontSize11Weight400 =>
+      AppTextStyles.font10SecondaryBlackCairoRegular;
+  static TextStyle get fontSize11Weight600 =>
+      AppTextStyles.font12BlackCairoSemiBold;
+  static TextStyle get fontSize12Weight400 =>
+      AppTextStyles.font12BlackCairoRegular;
+  static TextStyle get fontSize12Weight500 =>
+      AppTextStyles.font12BlackMediumCairo;
+  static TextStyle get fontSize12Weight600 =>
+      AppTextStyles.font12SecondaryBlackCairoMedium;
+  static TextStyle get fontSize13Weight400 =>
+      AppTextStyles.font13SecondaryBlackCairo;
+  static TextStyle get fontSize13Weight500 =>
+      AppTextStyles.font13SecondaryBlackCairo;
+  static TextStyle get fontSize13Weight600 =>
+      AppTextStyles.font13SecondaryBlackCairo;
+  static TextStyle get fontSize14Weight400 =>
+      AppTextStyles.font14BlackCairoRegular;
+  static TextStyle get fontSize14Weight500 =>
+      AppTextStyles.font14BlackCairoMedium;
+  static TextStyle get fontSize14Weight600 =>
+      AppTextStyles.font14BlackSemiBoldCairo;
+  static TextStyle get fontSize14Weight700 =>
+      AppTextStyles.font14BlackSemiBoldCairo;
+  static TextStyle get fontSize15Weight400 =>
+      AppTextStyles.font15BlackCairoRegular;
+  static TextStyle get fontSize15Weight500 =>
+      AppTextStyles.font15BlackCairoRegular;
+  static TextStyle get fontSize15Weight600 =>
+      AppTextStyles.font15BlackCairoRegular;
+  static TextStyle get fontSize16Weight400 =>
+      AppTextStyles.font16BlackRegularCairo;
+  static TextStyle get fontSize16Weight500 =>
+      AppTextStyles.font16BlackMediumCairo;
+  static TextStyle get fontSize16Weight600 =>
+      AppTextStyles.font16BlackSemiBoldCairo;
+  static TextStyle get fontSize16Weight700 =>
+      AppTextStyles.font16BlackSemiBoldCairo;
+  static TextStyle get fontSize18Weight500 =>
+      AppTextStyles.font18BlackMediumCairo;
+  static TextStyle get fontSize20Weight500 =>
+      AppTextStyles.font20BlackCairoMedium;
+  static TextStyle get fontSize20Weight600 =>
+      AppTextStyles.font20BlackSemiBoldCairo;
+  static TextStyle get fontSize22Weight700 =>
+      AppTextStyles.font22BlackCairoSemiBold;
+  static TextStyle get fontSize24Weight600 =>
+      AppTextStyles.font24MediumBlackCairo;
+  static TextStyle get fontSize28Weight600 =>
+      AppTextStyles.font28BlackMediumCairo;
+  static TextStyle get fontSize45Weight600 =>
+      AppTextStyles.font28BlackMediumCairo;
 }

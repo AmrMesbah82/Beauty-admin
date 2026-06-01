@@ -17,8 +17,8 @@ import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 
-import '../theme/appcolors.dart';
-import '../theme/text.dart';
+import '../theme/app_colors.dart';
+import '../theme/app_font_style.dart';
 
 
 

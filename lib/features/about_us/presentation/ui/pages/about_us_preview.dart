@@ -25,8 +25,9 @@ import 'package:flutter_svg/flutter_svg.dart';
 import '../../../../../core/constants/color.dart';
 import '../../../../../core/custom_dialog.dart';
 import '../../../../../core/main_widgets/admin_sub_navbar.dart';
-import '../../../../../core/theme/appcolors.dart';
-import '../../../../../core/theme/new_theme.dart';
+import '../../../../../core/theme/app_colors.dart';
+import '../../../../../core/theme/app_font_style.dart';
+
 import '../../../../client_services/data/models/client_services_model.dart';
 import '../../../data/models/about_us_model.dart';
 import '../../controller/about_us_cubit.dart';

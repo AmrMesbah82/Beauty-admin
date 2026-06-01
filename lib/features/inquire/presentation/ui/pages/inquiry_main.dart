@@ -26,8 +26,9 @@ import 'package:beauty_admin/core/widgets/textfield.dart';
 import '../../../../../core/constants/color.dart';
 import '../../../../../core/custom_segment_tab.dart';
 import '../../../../../core/main_widgets/app_admin_navbar.dart';
-import '../../../../../core/theme/appcolors.dart';
-import '../../../../../core/theme/new_theme.dart';
+import '../../../../../core/theme/app_colors.dart';
+import '../../../../../core/theme/app_font_style.dart';
+
 import '../../../../home/presentation/ui/pages/home_main.dart';
 import '../../../data/models/inquire_model.dart';
 import '../../controller/inquiry_cubit.dart';

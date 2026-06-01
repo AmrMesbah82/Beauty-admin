@@ -13,8 +13,8 @@ import 'package:flutter_svg/svg.dart';
 import 'package:beauty_admin/core/widgets/format.dart';
 
 
-import '../theme/appcolors.dart';
-import '../theme/new_theme.dart';
+import '../theme/app_colors.dart';
+import '../theme/app_font_style.dart';
 
 
 
@@ -132,7 +132,7 @@ class _CustomDropdownFormFieldCalenderState extends State<CustomDropdownFormFiel
                     maxHeight: 230.sp,
                     offset: const Offset(0, 0),
                     decoration: BoxDecoration(
-                      color: lightMode ? ColorAppLight.whiteColor : ColorAppDark.background,
+                      color: AppColors.card,
                       border: Border.all(color: Colors.transparent),
                       borderRadius: BorderRadius.circular(4.r),
                     ),
@@ -178,7 +178,7 @@ class _CustomDropdownFormFieldCalenderState extends State<CustomDropdownFormFiel
                     ),
                   ),
                   style: StyleText.fontSize12Weight400.copyWith(
-                    color: lightMode ? ColorAppLight.blackButton : ColorAppDark.titleValue,
+                    color:AppColors.text,
                   ),
                   items: widget.items.map((unit) {
                     return DropdownMenuItem<String>(
@@ -186,7 +186,7 @@ class _CustomDropdownFormFieldCalenderState extends State<CustomDropdownFormFiel
                       child: Text(
                         FormatHelper.capitalize(unit["value"] ?? '',),
                         style: StyleText.fontSize12Weight400.copyWith(
-                          color: lightMode ? ColorAppLight.blackButton : ColorAppDark.titleValue,
+                          color: AppColors.text,
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),

@@ -3,10 +3,11 @@
 // Created by: Amr Mesbah
 // Purpose: Green gradient funnel/pyramid chart for Hiring Stages
 
-import 'package:beauty_admin/core/theme/text.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+
+import '../theme/app_font_style.dart';
 
 class FunnelChartItem {
   final String label;

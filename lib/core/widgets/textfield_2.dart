@@ -7,15 +7,15 @@
 /// Module: core › widget
 
 
+import 'package:beauty_admin/core/theme/app_font_style.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/svg.dart';
 
 
-import '../theme/appcolors.dart';
-import '../theme/new_theme.dart';
-import '../theme/text.dart';
+import '../theme/app_colors.dart';
+
 
 
 class ArabicOnlyInputFormatter extends TextInputFormatter {
@@ -311,7 +311,7 @@ class CustomValidatedTextFieldInv extends StatelessWidget {
               hoverColor: Colors.transparent,
               hintText: hint,
               hintStyle: StyleText.fontSize12Weight500.copyWith(
-                color: lightMode ? ColorAppLight.grayTextSla : ColorAppDark.darkGrey,
+                color: AppColors.secondaryText
               ),
               filled: true,
               fillColor: fillColor ?? AppColors.background,

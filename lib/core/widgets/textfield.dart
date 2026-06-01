@@ -10,9 +10,9 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter/services.dart';
 
 
-import '../theme/appcolors.dart';
-import '../theme/new_theme.dart';
-import '../theme/text.dart';
+import '../theme/app_colors.dart';
+import '../theme/app_font_style.dart';
+
 
 class CustomValidatedTextFieldMaster extends StatefulWidget {
   final String? label;
@@ -222,9 +222,7 @@ class _CustomValidatedTextFieldMasterState
                 hintText:    widget.hint,
                 hintStyle: widget.hintStyle ??
                     StyleText.fontSize12Weight400.copyWith(
-                      color: lightMode
-                          ? ColorAppLight.grayTextSla
-                          : ColorAppDark.titleKey,
+                      color: AppColors.secondaryText,
                     ),
                 filled:      true,
                 fillColor:   resolvedFill,
@@ -249,12 +247,12 @@ class _CustomValidatedTextFieldMasterState
                 errorBorder: OutlineInputBorder(
                   borderRadius: borderRadius,
                   borderSide:
-                  BorderSide(color: ColorAppLight.redColor, width: 1),
+                  BorderSide(color: Colors.red, width: 1),
                 ),
                 focusedErrorBorder: OutlineInputBorder(
                   borderRadius: borderRadius,
                   borderSide:
-                  BorderSide(color: ColorAppLight.redColor, width: 1.5),
+                  BorderSide(color: Colors.red, width: 1.5),
                 ),
               ),
             ),
@@ -272,7 +270,7 @@ class _CustomValidatedTextFieldMasterState
               style: AppTextStyles.font10BlackCairoRegular.copyWith(
                 fontWeight: FontWeight.w700,
                 height:     1.1,
-                color:      ColorAppLight.redColor,
+                color:      Colors.red,
               ),
             ),
           )

@@ -6,8 +6,9 @@
 
 /// Module: core
 
-import 'package:beauty_admin/core/theme/appcolors.dart';
-import 'package:beauty_admin/core/theme/text.dart';
+import 'package:beauty_admin/core/theme/app_colors.dart';
+import 'package:beauty_admin/core/theme/app_font_style.dart';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/flutter_svg.dart';

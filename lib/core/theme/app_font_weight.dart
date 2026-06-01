@@ -1,11 +1,3 @@
-// ******************* FILE INFO *******************
-// File Name: app_weight.dart
-// Description: AppFontWeights — font weight constants
-// Created by: Amr Mesbah
-// Last Update: 31/05/2026
-
-/// Module: core › theme
-
 // Date: 7/8/2024
 // By: Nada Mohammed
 // Last update: 7/8/2024
