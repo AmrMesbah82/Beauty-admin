@@ -36,6 +36,7 @@ import '../../../../home/presentation/ui/pages/home_main.dart';
 import '../../../data/models/client_services_model.dart';
 import '../../controller/client_services_cubit.dart';
 import '../../controller/client_services_state.dart';
+import 'package:beauty_admin/core/constants/color.dart';
 
 part '../widgets/client_services_preview/c.dart';
 part '../widgets/client_services_preview/desktop_frame.dart';
@@ -181,7 +182,7 @@ class _ClientServicesPreviewPageState extends State<ClientServicesPreviewPage> {
                                 child: Container(
                                   height: 44.h,
                                   decoration: BoxDecoration(
-                                    color: const Color(0xFF797979),
+                                    color: ColorPick.back,
                                     borderRadius: BorderRadius.circular(6.r),
                                   ),
                                   child: Center(

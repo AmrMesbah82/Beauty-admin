@@ -32,6 +32,7 @@ import '../../../../client_services/data/models/client_services_model.dart';
 import '../../../data/models/about_us_model.dart';
 import '../../controller/about_us_cubit.dart';
 import '../../controller/about_us_state.dart';
+import 'package:beauty_admin/core/constants/color.dart';
 
 part '../widgets/about_us_preview/c.dart';
 part '../widgets/about_us_preview/desktop_frame.dart';
@@ -55,9 +56,6 @@ part '../widgets/about_us_preview/value_detail_panel_preview.dart';
 part '../widgets/about_us_preview/browser_chrome.dart';
 
 // ── Shared constants (mirrors about_page.dart) ────────────────────────────────
-const Color _kGreenLight = Color(0xFFE8F5EE);
-const Color _kSurface = Color(0xFFFFFFFF);
-const Color _kDivider = Color(0xFFDDE8DD);
 
 // ── Preview-page-only colours ─────────────────────────────────────────────────
 
@@ -203,7 +201,7 @@ class _AboutPreviewPageState extends State<AboutPreviewPage> {
                                 child: Container(
                                   height: 44.h,
                                   decoration: BoxDecoration(
-                                    color: _C.grey,
+                                    color: const Color(0xFF9E9E9E),
                                     borderRadius: BorderRadius.circular(6.r),
                                   ),
                                   child: Center(
@@ -307,7 +305,7 @@ class _AboutPreviewPageState extends State<AboutPreviewPage> {
       decoration: BoxDecoration(
         color: ColorPick.white,
         borderRadius: BorderRadius.circular(8.r),
-        border: Border.all(color: _kDivider),
+        border: Border.all(color: const Color(0xFFDDE8DD)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,

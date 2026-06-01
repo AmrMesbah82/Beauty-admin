@@ -7,16 +7,6 @@
 /// Module: features › overview › presentation › ui › widget › overview_preview
 
 part of '../../pages/overview_preview.dart';
-
-class _C {
-  static const Color primary     = Color(0xFFD16F9A);
-  static const Color back        = Color(0xFFF1F2ED);
-  static const Color labelText   = Color(0xFF333333);
-  static const Color hintText    = Color(0xFFAAAAAA);
-  static const Color border      = Color(0xFFE0E0E0);
-  static const Color sectionBg   = Color(0xFFF5F5F5);
-}
-
 // ══════════════════════════════════════════════════════════════════════════════
 // Helper — parse hex color from branding
 // ══════════════════════════════════════════════════════════════════════════════

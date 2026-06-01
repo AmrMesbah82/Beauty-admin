@@ -62,7 +62,7 @@ extension _AboutEditValidation on _AboutEditPageMasterState {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r)),
         title: Row(
           children: [
-            Icon(Icons.error_outline, color: _kRed, size: 24.sp),
+            Icon(Icons.error_outline, color: const Color(0xFFD32F2F), size: 24.sp),
             SizedBox(width: 8.w),
             Text(
               'Validation Error',
@@ -85,7 +85,7 @@ extension _AboutEditValidation on _AboutEditPageMasterState {
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('• ', style: TextStyle(color: _kRed)),
+                    Text('• ', style: TextStyle(color: const Color(0xFFD32F2F))),
                     Expanded(
                       child: Text(
                         field,
@@ -104,7 +104,7 @@ extension _AboutEditValidation on _AboutEditPageMasterState {
             onPressed: () => Navigator.pop(context),
             child: Text(
               'OK',
-              style: StyleText.fontSize13Weight500.copyWith(color: _kGreenSolid),
+              style: StyleText.fontSize13Weight500.copyWith(color: const Color(0xFFD16F9A)),
             ),
           ),
         ],

@@ -389,7 +389,7 @@ class _InquiryDetailPageState extends State<InquiryDetailPage> {
                                     child: Container(
                                       height: 48.h,
                                       decoration: BoxDecoration(
-                                        color: const Color(0xFF797979),
+                                        color: ColorPick.back,
                                         borderRadius: BorderRadius.circular(8.r),
                                       ),
                                       alignment: Alignment.center,

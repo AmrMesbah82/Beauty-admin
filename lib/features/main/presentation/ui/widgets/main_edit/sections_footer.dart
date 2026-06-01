@@ -26,7 +26,7 @@ extension _HomeEditSectionsFooter on _HomeEditPageState {
           child: Container(
             padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 7.h),
             decoration: BoxDecoration(
-                color: const Color(0xFF797979),
+                color: ColorPick.back,
                 borderRadius: BorderRadius.circular(4.r)),
             child: Row(mainAxisSize: MainAxisSize.min, children: [
               Icon(Icons.add, size: 14.sp, color: Colors.white),

@@ -35,6 +35,7 @@ import '../../../../home/presentation/ui/pages/home_main.dart';
 import '../../../data/models/master_model.dart';
 import '../../controller/master_cubit.dart';
 import '../../controller/master_state.dart';
+import 'package:beauty_admin/core/constants/color.dart';
 
 part '../widgets/master_preview/c.dart';
 part '../widgets/master_preview/desktop_frame.dart';
@@ -189,7 +190,7 @@ class _MasterPreviewPageState extends State<MasterPreviewPage> {
                                   child: Container(
                                     height: 44.h,
                                     decoration: BoxDecoration(
-                                      color: const Color(0xFF797979),
+                                      color: ColorPick.back,
                                       borderRadius: BorderRadius.circular(6.r),
                                     ),
                                     child: Center(

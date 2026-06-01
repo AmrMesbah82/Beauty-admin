@@ -7,15 +7,6 @@
 /// Module: features › about_us › presentation › ui › widget › strategy_main
 
 part of '../../pages/strategy_page/strategy_main.dart';
-
-class _C {
-  static const Color primary   = Color(0xFFD16F9A);
-  static const Color sectionBg = Color(0xFFF5F5F5);
-  static const Color cardBg    = Color(0xFFFFFFFF);
-  static const Color labelText = Color(0xFF333333);
-  static const Color hintText  = Color(0xFFAAAAAA);
-}
-
 // ── XHR image cache ───────────────────────────────────────────────────────────
 
 final Map<String, Future<Uint8List>> _strategyUrlCache = {};

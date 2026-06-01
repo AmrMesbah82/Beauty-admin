@@ -33,7 +33,7 @@ extension _ContactUsEditFormSections on _ContactUsCmsEditPageState {
             child: Text(
               'SVG is required',
               style: TextStyle(
-                  fontFamily: 'Cairo', fontSize: 11.sp, color: _kRed),
+                  fontFamily: 'Cairo', fontSize: 11.sp, color: const Color(0xFFD32F2F)),
             ),
           ),
         SizedBox(height: 16.h),
@@ -188,7 +188,7 @@ extension _ContactUsEditFormSections on _ContactUsCmsEditPageState {
             width:  110.w,
             height: 30.h,
             decoration: BoxDecoration(
-              color:        const Color(0xFF797979),
+              color:        ColorPick.back,
               borderRadius: BorderRadius.circular(4.r),
             ),
             child: Row(
@@ -255,7 +255,7 @@ extension _ContactUsEditFormSections on _ContactUsCmsEditPageState {
                             width:  18.w,
                             height: 18.h,
                             decoration: const BoxDecoration(
-                              color: _kRed,
+                              color: const Color(0xFFD32F2F),
                               shape: BoxShape.circle,
                             ),
                             child: Icon(Icons.remove,
@@ -346,7 +346,7 @@ extension _ContactUsEditFormSections on _ContactUsCmsEditPageState {
             width:  90.w,
             height: 30.h,
             decoration: BoxDecoration(
-              color:        const Color(0xFF797979),
+              color:        ColorPick.back,
               borderRadius: BorderRadius.circular(4.r),
             ),
             child: Row(
@@ -418,7 +418,7 @@ extension _ContactUsEditFormSections on _ContactUsCmsEditPageState {
             width:  20.w,
             height: 20.w,
             decoration:
-                const BoxDecoration(color: _kRed, shape: BoxShape.circle),
+                const BoxDecoration(color: const Color(0xFFD32F2F), shape: BoxShape.circle),
             child: Icon(Icons.remove, color: Colors.white, size: 12.sp),
           ),
         ),

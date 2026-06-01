@@ -33,6 +33,7 @@ import '../../controller/overview_cubit.dart';
 import '../../controller/overview_state.dart';
 import 'overview_main.dart';
 import 'overview_preview.dart';
+import 'package:beauty_admin/core/constants/color.dart';
 
 part '../widgets/overview_edit/c.dart';
 part '../widgets/overview_edit/picked_image.dart';

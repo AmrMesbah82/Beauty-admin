@@ -20,6 +20,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:beauty_admin/core/custom_svg.dart';
 import 'package:beauty_admin/core/widgets/textfield.dart';
+import 'package:beauty_admin/core/constants/color.dart';
 
 part 'main_widgets/dialogs/confirm_dialog.dart';
 part 'main_widgets/dialogs/success_dialog.dart';

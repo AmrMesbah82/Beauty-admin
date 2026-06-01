@@ -45,7 +45,7 @@ class _PreviewFooterSection extends StatelessWidget {
         children: [
           _previewImageBox(imageUrl, 200, 220,
               fallbackIcon: Icons.phone_iphone,
-              fallbackBg: _C.downloadBg),
+              fallbackBg: const Color(0xFFFCE4EC)),
           const SizedBox(width: 24),
           Expanded(
             child: Column(

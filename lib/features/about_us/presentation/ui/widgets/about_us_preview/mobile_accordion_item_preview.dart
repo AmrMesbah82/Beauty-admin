@@ -47,8 +47,8 @@ class _MobileAccordionItemPreviewState extends State<_MobileAccordionItemPreview
       duration: const Duration(milliseconds: 250),
       decoration: BoxDecoration(
         color: widget.isExpanded
-            ? _kSurface
-            : (_hovered ? hoverBg : _kSurface),
+            ? ColorPick.white
+            : (_hovered ? hoverBg : ColorPick.white),
         borderRadius: BorderRadius.circular(12.r),
         border: Border.all(
           color: _hovered && !widget.isExpanded

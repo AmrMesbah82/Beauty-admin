@@ -33,6 +33,7 @@ import 'master_edit.dart';
 import 'master_preview.dart';
 import 'dart:html' as html;
 import 'dart:ui_web' as ui_web;
+import 'package:beauty_admin/core/constants/color.dart';
 
 part '../widgets/master_main/c.dart';
 

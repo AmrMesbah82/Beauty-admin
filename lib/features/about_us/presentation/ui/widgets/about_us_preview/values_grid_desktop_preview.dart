@@ -33,7 +33,7 @@ class _ValuesGridDesktopPreviewState extends State<_ValuesGridDesktopPreview> {
       return Container(
         padding: EdgeInsets.all(24.r),
         decoration: BoxDecoration(
-          color: _kSurface,
+          color: ColorPick.white,
           borderRadius: BorderRadius.circular(12.r),
         ),
         child: Center(
@@ -55,7 +55,7 @@ class _ValuesGridDesktopPreviewState extends State<_ValuesGridDesktopPreview> {
     return Container(
       padding: EdgeInsets.all(14.r),
       decoration: BoxDecoration(
-        color: _kSurface,
+        color: ColorPick.white,
         borderRadius: BorderRadius.circular(12.r),
       ),
       child: Column(

@@ -136,7 +136,7 @@ class _RequestDemoMainPageState extends State<RequestDemoMainPage> {
                     height: 36,
                     submitted: false,
                     primaryColor: ColorPick.primary,
-                    fillColor: const Color(0xFFF1F2ED),
+                    fillColor: ColorPick.background,
                   ),
                   SizedBox(height: 20.sp),
                   Row(children: [

@@ -34,6 +34,7 @@ import '../../controller/contact_us_location_state.dart';
 import 'contact_us_preview.dart';
 import 'dart:convert';
 import 'dart:ui_web' as ui_web;
+import 'package:beauty_admin/core/constants/color.dart';
 
 part '../widgets/contact_us_edit/social_link_dropdown.dart';
 part '../widgets/contact_us_edit/reason_item.dart';
@@ -47,7 +48,6 @@ String _svgBytesToDataUrl(Uint8List bytes) {
   return 'data:image/svg+xml;base64,$base64';
 }
 
-const Color _kRed  = Color(0xFFD32F2F);
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // PAGE
@@ -167,7 +167,7 @@ class _ContactUsCmsEditPageState extends State<ContactUsCmsEditPage> {
           final waitingForSeed = !_seeded && !isLoading;
 
           return Scaffold(
-            backgroundColor: const Color(0xFFF1F2ED),
+            backgroundColor: ColorPick.background,
             body: SingleChildScrollView(
               child: SizedBox(
                 width: double.infinity,

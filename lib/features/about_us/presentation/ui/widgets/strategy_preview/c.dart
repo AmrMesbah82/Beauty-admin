@@ -7,17 +7,6 @@
 /// Module: features › about_us › presentation › ui › widget › strategy_preview
 
 part of '../../pages/strategy_page/strategy_preview.dart';
-
-class _C {
-  static const Color primary   = Color(0xFFD16F9A);
-  static const Color cardBg    = Color(0xFFFFFFFF);
-  static const Color grey      = Color(0xFF9E9E9E);
-  static const Color hintText  = Color(0xFF797979);
-  static const Color back      = Color(0xFFF1F2ED);
-  static const Color border    = Color(0xFFE0E0E0);
-  static const Color labelText = Color(0xFF333333);
-}
-
 enum _PreviewDevice { desktop, tablet, mobile }
 
 // ── Viewport constants ────────────────────────────────────────────────────────

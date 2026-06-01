@@ -186,7 +186,7 @@ extension _ClientServicesEditUiHelpers on _ClientServicesEditPageState {
         child: Container(
           padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 7.h),
           decoration: BoxDecoration(
-            color: Color(0xFF797979),
+            color: ColorPick.back,
             borderRadius: BorderRadius.circular(4.r),
           ),
           child: Row(

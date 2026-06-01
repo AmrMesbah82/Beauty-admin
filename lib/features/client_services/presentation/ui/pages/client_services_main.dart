@@ -30,6 +30,7 @@ import 'client_services_edit.dart';
 import 'client_services_preview.dart';
 import 'dart:html' as html;
 import 'dart:ui_web' as ui_web;
+import 'package:beauty_admin/core/constants/color.dart';
 
 part '../widgets/client_services_main/c.dart';
 part '../widgets/client_services_main/sections.dart';

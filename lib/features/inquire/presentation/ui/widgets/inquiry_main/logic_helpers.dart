@@ -53,7 +53,7 @@ extension _InquiryMainLogic on _InquiryMainPageState {
               CustomValidatedTextFieldMaster(
                 label: 'File Name', hint: 'Enter file name',
                 controller: fileNameCtrl, height: 36, submitted: false,
-                primaryColor: ColorPick.primary, fillColor: const Color(0xFFF1F2ED),
+                primaryColor: ColorPick.primary, fillColor: ColorPick.background,
               ),
               SizedBox(height: 20.sp),
               Row(children: [

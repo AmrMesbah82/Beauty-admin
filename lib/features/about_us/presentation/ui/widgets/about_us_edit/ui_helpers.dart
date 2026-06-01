@@ -19,7 +19,7 @@ extension _AboutEditUiHelpers on _AboutEditPageMasterState {
             Expanded(
               child: _btn(
                 label: 'Preview',
-                color: const Color(0xFF8A5C70),
+                color: ColorPick.preview,
                 onTap: _onPreview,
               ),
             ),
@@ -33,7 +33,7 @@ extension _AboutEditUiHelpers on _AboutEditPageMasterState {
                   opacity: canPublish ? 1.0 : 0.5,
                   child: _btn(
                     label: 'Publish',
-                    color: _kGreenSolid,
+                    color: const Color(0xFFD16F9A),
                     onTap: () {
                       if (!canPublish) {
                         setState(() => _submitted = true);
@@ -62,7 +62,7 @@ extension _AboutEditUiHelpers on _AboutEditPageMasterState {
             Expanded(
               child: _btn(
                 label: 'Discard',
-                color: const Color(0xFF797979),
+                color: ColorPick.back,
                 onTap: () => Navigator.pop(context),
               ),
             ),
@@ -89,7 +89,7 @@ extension _AboutEditUiHelpers on _AboutEditPageMasterState {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const CircularProgressIndicator(color: _kGreenSolid),
+              const CircularProgressIndicator(color: const Color(0xFFD16F9A)),
               SizedBox(height: 12.h),
               Text(
                 'Saving...',

@@ -45,6 +45,7 @@ import '../../controller/client_services_state.dart';
 import 'client_services_preview.dart';
 import 'dart:html' as html;
 import 'dart:ui_web' as ui_web;
+import 'package:beauty_admin/core/constants/color.dart';
 
 part '../widgets/client_services_edit/c.dart';
 part '../widgets/client_services_edit/picked_image.dart';
@@ -200,7 +201,7 @@ class _ClientServicesEditPageState extends State<ClientServicesEditPage> {
                               Expanded(
                                 child: _btn(
                                   'Preview',
-                                  Color(0xFF8A5C70),
+                                  ColorPick.preview,
                                   () => Navigator.push(
                                     context,
                                     MaterialPageRoute(
@@ -238,7 +239,7 @@ class _ClientServicesEditPageState extends State<ClientServicesEditPage> {
                               SizedBox(width: 300.w),
                               Expanded(
                                 child: _btn(
-                                    'Save For Later', Color(0xFF525252), () {
+                                    'Save For Later', ColorPick.saveForLater, () {
                                   if (!_validate()) return;
                                   showPublishConfirmDialog(
                                     title: 'DRAFTING CLIENT SERVICES DETAILS',

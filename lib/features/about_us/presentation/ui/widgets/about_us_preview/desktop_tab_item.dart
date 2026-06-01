@@ -49,8 +49,8 @@ class _DesktopTabItemState extends State<_DesktopTabItem> {
           padding: EdgeInsets.all(14.r),
           decoration: BoxDecoration(
             color: widget.isSelected
-                ? _kSurface
-                : (_hovered ? hoverBg : _kSurface),
+                ? ColorPick.white
+                : (_hovered ? hoverBg : ColorPick.white),
             borderRadius: BorderRadius.circular(12.r),
           ),
           child: Column(

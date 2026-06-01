@@ -30,14 +30,10 @@ import '../../../../data/models/about_us_model.dart';
 import '../../../controller/about_us_cubit.dart';
 import '../../../controller/about_us_state.dart';
 import 'terms_preview.dart';
+import 'package:beauty_admin/core/constants/color.dart';
 
 part '../../widgets/terms_edit/doc_item.dart';
 
-const Color _kGreen = Color(0xFFD16F9A);
-const Color _kGreenSolid = Color(0xFFD16F9A);
-const Color _kRed = Color(0xFFD32F2F);
-const Color _kSurface = Color(0xFFFFFFFF);
-const Color _kBg = Color(0xFFF2F2F2);
 
 // ── Local UI-only holder (never leaves this file) ─────────────────────────────
 
@@ -149,7 +145,7 @@ class _TermsEditPageState extends State<TermsEditPage> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('❌ SVG files only! Selected: ${file.name}'),
-            backgroundColor: _kRed,
+            backgroundColor: const Color(0xFFD32F2F),
           ),
         );
         c.complete(null);
@@ -402,7 +398,7 @@ class _TermsEditPageState extends State<TermsEditPage> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Please fill all required fields before previewing.'),
-          backgroundColor: _kRed,
+          backgroundColor: const Color(0xFFD32F2F),
         ),
       );
       return;
@@ -448,7 +444,7 @@ class _TermsEditPageState extends State<TermsEditPage> {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
               content: Text('Terms of Service saved!'),
-              backgroundColor: _kGreenSolid,
+              backgroundColor: const Color(0xFFD16F9A),
             ),
           );
           Navigator.pop(context);
@@ -457,7 +453,7 @@ class _TermsEditPageState extends State<TermsEditPage> {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text('Error: ${state.message}'),
-              backgroundColor: _kRed,
+              backgroundColor: const Color(0xFFD32F2F),
             ),
           );
         }
@@ -465,7 +461,7 @@ class _TermsEditPageState extends State<TermsEditPage> {
       builder: (context, state) {
         final loading = state is TermsLoading || state is TermsInitial;
         return Scaffold(
-          backgroundColor: Color(0xFFF1F2ED),
+          backgroundColor: ColorPick.background,
           body: Stack(
             children: [
               SizedBox(
@@ -491,7 +487,7 @@ class _TermsEditPageState extends State<TermsEditPage> {
                           child: loading
                               ? const Center(
                             child: CircularProgressIndicator(
-                              color: _kGreenSolid,
+                              color: const Color(0xFFD16F9A),
                             ),
                           )
                               : _buildForm(),
@@ -518,7 +514,7 @@ class _TermsEditPageState extends State<TermsEditPage> {
         Text(
           'Editing Terms of Service Details',
           style: StyleText.fontSize45Weight600.copyWith(
-            color: _kGreen,
+            color: const Color(0xFFD16F9A),
             fontWeight: FontWeight.w700,
           ),
         ),
@@ -571,7 +567,7 @@ class _TermsEditPageState extends State<TermsEditPage> {
             Expanded(
               child: _btn(
                 label: 'Preview',
-                color: const Color(0xFF8A5C70),
+                color: ColorPick.preview,
                 onTap: _onPreview,
               ),
             ),
@@ -579,7 +575,7 @@ class _TermsEditPageState extends State<TermsEditPage> {
             Expanded(
               child: _btn(
                 label: 'Publish',
-                color: publishEnabled ? _kGreenSolid : const Color(0xFFBDBDBD),
+                color: publishEnabled ? const Color(0xFFD16F9A) : const Color(0xFFBDBDBD),
                 onTap: publishEnabled
                     ? () {
                   showPublishConfirmDialog(
@@ -726,12 +722,12 @@ class _TermsEditPageState extends State<TermsEditPage> {
                 width: 32.w,
                 height: 32.h,
                 decoration: BoxDecoration(
-                  color: _kRed.withValues(alpha: 0.1),
+                  color: const Color(0xFFD32F2F).withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(8.r),
                 ),
                 child: Icon(
                   Icons.picture_as_pdf,
-                  color: _kRed,
+                  color: const Color(0xFFD32F2F),
                   size: 18.sp,
                 ),
               ),
@@ -756,7 +752,7 @@ class _TermsEditPageState extends State<TermsEditPage> {
                   height: 28.h,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: _kRed.withValues(alpha: 0.9),
+                    color: const Color(0xFFD32F2F).withValues(alpha: 0.9),
                   ),
                   child: Icon(
                     Icons.remove,
@@ -783,7 +779,7 @@ class _TermsEditPageState extends State<TermsEditPage> {
               children: [
                 Icon(
                   Icons.upload_file,
-                  color: _kGreenSolid,
+                  color: const Color(0xFFD16F9A),
                   size: 18.sp,
                 ),
                 SizedBox(width: 8.w),
@@ -793,7 +789,7 @@ class _TermsEditPageState extends State<TermsEditPage> {
                     fontFamily: 'Cairo',
                     fontSize: 13.sp,
                     fontWeight: FontWeight.w600,
-                    color: _kGreenSolid,
+                    color: const Color(0xFFD16F9A),
                   ),
                 ),
               ],
@@ -819,7 +815,7 @@ class _TermsEditPageState extends State<TermsEditPage> {
             width: double.infinity,
             padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 14.h),
             decoration: BoxDecoration(
-              color: _kGreenSolid,
+              color: const Color(0xFFD16F9A),
               borderRadius: BorderRadius.circular(8.r),
             ),
             child: Row(
@@ -926,7 +922,7 @@ class _TermsEditPageState extends State<TermsEditPage> {
               width: 24.w,
               height: 24.h,
               decoration: BoxDecoration(
-                color: _kGreenSolid,
+                color: const Color(0xFFD16F9A),
                 shape: BoxShape.circle,
               ),
               child: Center(

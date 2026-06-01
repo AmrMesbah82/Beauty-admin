@@ -11,13 +11,12 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../features/home/presentation/controller/home_cubit.dart';
 import '../../features/home/presentation/controller/home_state.dart';
+import 'package:beauty_admin/core/constants/color.dart';
 
 // ── Default fallback colors (used before CMS loads) ──────────────────────────
-const Color _kDefaultPrimary   = Color(0xFF008037);
-const Color _kDefaultSecondary = Color(0xFF4049B9);
 
 // ── Parse hex string → Color ──────────────────────────────────────────────────
-Color hexToColor(String hex, {Color fallback = _kDefaultPrimary}) {
+Color hexToColor(String hex, {Color fallback = ColorPick.activeColor}) {
   try {
     final clean = hex.replaceAll('#', '');
     if (clean.length == 6) return Color(int.parse('FF$clean', radix: 16));
@@ -39,8 +38,8 @@ extension HomeCmsStateX on HomeCmsState {
     _                          => '',
   };
 
-  Color get primaryColor   => hexToColor(_primaryHex,   fallback: _kDefaultPrimary);
-  Color get secondaryColor => hexToColor(_secondaryHex, fallback: _kDefaultSecondary);
+  Color get primaryColor   => hexToColor(_primaryHex,   fallback: ColorPick.activeColor);
+  Color get secondaryColor => hexToColor(_secondaryHex, fallback: const Color(0xFF4049B9));
 }
 
 // ── Read directly from BuildContext (no BlocBuilder needed) ──────────────────
@@ -51,7 +50,7 @@ extension BrandingContext on BuildContext {
       final state = read<HomeCmsCubit>().state;
       return state.primaryColor;
     } catch (_) {
-      return _kDefaultPrimary;
+      return ColorPick.activeColor;
     }
   }
 
@@ -61,7 +60,7 @@ extension BrandingContext on BuildContext {
       final state = read<HomeCmsCubit>().state;
       return state.secondaryColor;
     } catch (_) {
-      return _kDefaultSecondary;
+      return const Color(0xFF4049B9);
     }
   }
 }

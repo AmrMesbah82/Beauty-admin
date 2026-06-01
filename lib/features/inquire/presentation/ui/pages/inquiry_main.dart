@@ -34,6 +34,7 @@ import '../../../data/models/inquire_model.dart';
 import '../../controller/inquiry_cubit.dart';
 import '../../controller/inquiry_state.dart';
 import 'inquiry_details.dart';
+import 'package:beauty_admin/core/constants/color.dart';
 
 part '../widgets/inquiry_main/c.dart';
 part '../widgets/inquiry_main/pie_painter.dart';

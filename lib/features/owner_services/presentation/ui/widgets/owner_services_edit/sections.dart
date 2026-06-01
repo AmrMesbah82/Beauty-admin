@@ -213,7 +213,7 @@ extension _OwnerServicesEditSections on _OwnerServicesEditPageState {
           child: Container(
             height: 44.h,
             decoration: BoxDecoration(
-              color: Color(0xFF8A5C70),
+              color: ColorPick.preview,
               borderRadius: BorderRadius.circular(6.r),
             ),
             child: Center(

@@ -40,11 +40,6 @@ part '../../widgets/strategy_edit/nav_icon_upload_widget.dart';
 part '../../widgets/strategy_edit/strategic_house_display_widget.dart';
 part '../../widgets/strategy_edit/device_upload_row.dart';
 
-const Color _kGreen      = Color(0xFFD16F9A);
-const Color _kGreenSolid = Color(0xFFD16F9A);
-const Color _kRed        = Color(0xFFD32F2F);
-const Color _kBg         = Color(0xFFF2F2F2);
-const Color _kDraftBadge = Color(0xFFF59E0B);
 
 // ── Device type enum for image uploads ────────────────────────────────────────
 enum DeviceType { desktop, tablet, mobile }
@@ -634,7 +629,7 @@ class _StrategyEditPageState extends State<StrategyEditPage> {
       builder: (context) => AlertDialog(
         title: Row(
           children: [
-            Icon(Icons.error_outline, color: _kRed, size: 24.sp),
+            Icon(Icons.error_outline, color: const Color(0xFFD32F2F), size: 24.sp),
             SizedBox(width: 8.w),
             const Text('Validation Error'),
           ],
@@ -650,7 +645,7 @@ class _StrategyEditPageState extends State<StrategyEditPage> {
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('• ', style: TextStyle(color: _kRed)),
+                  Text('• ', style: TextStyle(color: const Color(0xFFD32F2F))),
                   Expanded(child: Text(field)),
                 ],
               ),
@@ -834,7 +829,7 @@ class _StrategyEditPageState extends State<StrategyEditPage> {
         final canPublish = _isFormValid;
 
         return Scaffold(
-          backgroundColor: _kBg,
+          backgroundColor: const Color(0xFFF2F2F2),
           body: Stack(
             children: [
               SingleChildScrollView(
@@ -859,7 +854,7 @@ class _StrategyEditPageState extends State<StrategyEditPage> {
                             loading
                                 ? const Center(
                                 child: CircularProgressIndicator(
-                                    color: _kGreenSolid))
+                                    color: const Color(0xFFD16F9A)))
                                 : _buildForm(canPublish),
                           ],
                         ),
@@ -886,19 +881,19 @@ class _StrategyEditPageState extends State<StrategyEditPage> {
           children: [
             Text('Editing Our Strategy',
                 style: StyleText.fontSize45Weight600.copyWith(
-                    color: _kGreen, fontWeight: FontWeight.w700)),
+                    color: const Color(0xFFD16F9A), fontWeight: FontWeight.w700)),
             if (_isEditingDraft) ...[
               SizedBox(width: 12.w),
               Container(
                 padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 4.h),
                 decoration: BoxDecoration(
-                  color: _kDraftBadge.withValues(alpha: 0.15),
+                  color: const Color(0xFFF59E0B).withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(4.r),
                 ),
                 child: Text(
                   'EDITING DRAFT',
                   style: StyleText.fontSize12Weight600.copyWith(
-                    color: _kDraftBadge,
+                    color: const Color(0xFFF59E0B),
                   ),
                 ),
               ),
@@ -1228,7 +1223,7 @@ class _StrategyEditPageState extends State<StrategyEditPage> {
             opacity: canPublish ? 1.0 : 0.6,
             child: _btn(
               label: 'Publish',
-              color: canPublish ? _kGreenSolid : _kGreenSolid.withValues(alpha: 0.35),
+              color: canPublish ? const Color(0xFFD16F9A) : const Color(0xFFD16F9A).withValues(alpha: 0.35),
               onTap: () {
                 if (!canPublish) {
                   setState(() => _submitted = true);
@@ -1288,7 +1283,7 @@ class _StrategyEditPageState extends State<StrategyEditPage> {
           width: double.infinity,
           padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 9.h),
           decoration: BoxDecoration(
-            color: _kGreenSolid,
+            color: const Color(0xFFD16F9A),
             borderRadius: BorderRadius.circular(8.r),
           ),
           child: Row(
@@ -1334,7 +1329,7 @@ class _StrategyEditPageState extends State<StrategyEditPage> {
             duration: const Duration(milliseconds: 200),
             padding: EdgeInsets.symmetric(vertical: 10.h),
             decoration: BoxDecoration(
-              color: isActive ? _kGreen : Colors.transparent,
+              color: isActive ? const Color(0xFFD16F9A) : Colors.transparent,
               borderRadius: BorderRadius.circular(8.r),
             ),
             child: Center(
@@ -1456,7 +1451,7 @@ class _StrategyEditPageState extends State<StrategyEditPage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const CircularProgressIndicator(color: _kGreenSolid),
+            const CircularProgressIndicator(color: const Color(0xFFD16F9A)),
             SizedBox(height: 12.h),
             Text('Saving...',
                 style: TextStyle(

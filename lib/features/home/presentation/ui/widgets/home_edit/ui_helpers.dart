@@ -74,7 +74,7 @@ extension _HomeEditUiHelpers on _HomeEditPageState {
     child: Container(
       padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 6.h),
       decoration: BoxDecoration(
-          color: const Color(0xFF797979),
+          color: ColorPick.back,
           borderRadius: BorderRadius.circular(4.r)),
       child: Row(mainAxisSize: MainAxisSize.min, children: [
         Icon(Icons.add, size: 14.sp, color: Colors.white),

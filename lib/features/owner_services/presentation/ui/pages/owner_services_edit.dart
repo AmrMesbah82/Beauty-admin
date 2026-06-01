@@ -33,6 +33,7 @@ import 'owner_services_preview.dart';
 
 import 'dart:html' as html;
 import 'dart:ui_web' as ui_web;
+import 'package:beauty_admin/core/constants/color.dart';
 
 part '../widgets/owner_services_edit/picked_image.dart';
 part '../widgets/owner_services_edit/mockup_local.dart';

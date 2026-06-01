@@ -46,12 +46,12 @@ class _TabletTabItemState extends State<_TabletTabItem> {
           decoration: BoxDecoration(
             color: widget.isSelected
                 ? widget.primaryColor
-                : (_hovered ? hoverBg : _kSurface),
+                : (_hovered ? hoverBg : ColorPick.white),
             borderRadius: BorderRadius.circular(10.r),
             border: Border.all(
               color: widget.isSelected
                   ? widget.primaryColor
-                  : (_hovered ? widget.primaryColor.withValues(alpha: 0.3) : _kDivider),
+                  : (_hovered ? widget.primaryColor.withValues(alpha: 0.3) : const Color(0xFFDDE8DD)),
             ),
           ),
           child: Row(

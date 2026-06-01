@@ -169,7 +169,7 @@ class _PreviewContentState extends State<_PreviewContent> {
                   svgAsset: svgAsset,
                   isSelected: _selectedTopTab == i,
                   primaryColor: ColorPick.primary,
-                  secondaryColor: _C.secondary,
+                  secondaryColor: const Color(0xFFE8F5EE),
                   onTap: () => setState(() => _selectedTopTab = i),
                 );
               }),
@@ -230,7 +230,7 @@ class _PreviewContentState extends State<_PreviewContent> {
                     selectedDesc: _selectedSubTab == i ? tabDescs[i] : '',
                     isSelected: _selectedSubTab == i,
                     primaryColor: ColorPick.primary,
-                    secondaryColor: _C.secondary,
+                    secondaryColor: const Color(0xFFE8F5EE),
                     onTap: () => setState(() => _selectedSubTab = i),
                   ),
                 );
@@ -244,7 +244,7 @@ class _PreviewContentState extends State<_PreviewContent> {
               tabIndex: _selectedSubTab,
               isRtl: widget.isRtl,
               primaryColor: ColorPick.primary,
-              secondaryColor: _C.secondary,
+              secondaryColor: const Color(0xFFE8F5EE),
             ),
           ),
         ],
@@ -257,7 +257,7 @@ class _PreviewContentState extends State<_PreviewContent> {
       width: double.infinity,
       padding: EdgeInsets.all(16.r),
       decoration: BoxDecoration(
-        color: _kSurface,
+        color: ColorPick.white,
         borderRadius: BorderRadius.circular(12.r),
       ),
       child: Center(
@@ -299,7 +299,7 @@ class _PreviewContentState extends State<_PreviewContent> {
                   svgAsset: svgAsset,
                   isSelected: _selectedTopTab == i,
                   primaryColor: ColorPick.primary,
-                  secondaryColor: _C.secondary,
+                  secondaryColor: const Color(0xFFE8F5EE),
                   onTap: () => setState(() => _selectedTopTab = i),
                 );
               }),
@@ -338,7 +338,7 @@ class _PreviewContentState extends State<_PreviewContent> {
                   iconUrl: tabIconUrls[i],
                   isSelected: _selectedSubTab == i,
                   primaryColor: ColorPick.primary,
-                  secondaryColor: _C.secondary,
+                  secondaryColor: const Color(0xFFE8F5EE),
                   onTap: () => setState(() => _selectedSubTab = i),
                 ),
               ),
@@ -351,7 +351,7 @@ class _PreviewContentState extends State<_PreviewContent> {
           tabIndex: _selectedSubTab,
           isRtl: widget.isRtl,
           primaryColor: ColorPick.primary,
-          secondaryColor: _C.secondary,
+          secondaryColor: const Color(0xFFE8F5EE),
         ),
       ],
     );
@@ -362,7 +362,7 @@ class _PreviewContentState extends State<_PreviewContent> {
       width: double.infinity,
       padding: EdgeInsets.all(16.r),
       decoration: BoxDecoration(
-        color: _kSurface,
+        color: ColorPick.white,
         borderRadius: BorderRadius.circular(12.r),
       ),
       child: Center(
@@ -404,7 +404,7 @@ class _PreviewContentState extends State<_PreviewContent> {
                   svgAsset: svgAsset,
                   isSelected: _selectedTopTab == i,
                   primaryColor: ColorPick.primary,
-                  secondaryColor: _C.secondary,
+                  secondaryColor: const Color(0xFFE8F5EE),
                   onTap: () => setState(() => _selectedTopTab = i),
                 );
               }),
@@ -456,7 +456,7 @@ class _PreviewContentState extends State<_PreviewContent> {
             isExpanded: isOpen,
             isRtl: widget.isRtl,
             primaryColor: ColorPick.primary,
-            secondaryColor: _C.secondary,
+            secondaryColor: const Color(0xFFE8F5EE),
             fakeWidth: widget.fakeWidth,
             onTap: () => setState(() => _selectedSubTab = isOpen ? -1 : tab.tabIndex),
           ),
@@ -470,7 +470,7 @@ class _PreviewContentState extends State<_PreviewContent> {
       width: double.infinity,
       padding: EdgeInsets.all(16.r),
       decoration: BoxDecoration(
-        color: _kSurface,
+        color: ColorPick.white,
         borderRadius: BorderRadius.circular(12.r),
       ),
       child: Center(

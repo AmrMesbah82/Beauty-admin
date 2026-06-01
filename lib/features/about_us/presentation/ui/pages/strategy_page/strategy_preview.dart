@@ -29,6 +29,7 @@ import '../../../../../home/presentation/ui/pages/home_main.dart';
 import '../../../../data/models/about_us_model.dart';
 import '../../../controller/about_us_cubit.dart';
 import '../../../controller/about_us_state.dart';
+import 'package:beauty_admin/core/constants/color.dart';
 
 part '../../widgets/strategy_preview/c.dart';
 part '../../widgets/strategy_preview/desktop_frame.dart';
@@ -238,7 +239,7 @@ class _StrategyPreviewPageState extends State<StrategyPreviewPage> {
                               child: Container(
                                 height: 44.h,
                                 decoration: BoxDecoration(
-                                  color: _C.grey,
+                                  color: const Color(0xFF9E9E9E),
                                   borderRadius: BorderRadius.circular(6.r),
                                 ),
                                 child: Center(

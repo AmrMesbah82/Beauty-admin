@@ -39,6 +39,7 @@ import 'master_main.dart';
 import 'package:flutter/widgets.dart';
 import 'dart:convert';
 import 'dart:ui_web' as ui_web;
+import 'package:beauty_admin/core/constants/color.dart';
 
 part '../widgets/master_edit/picked_image.dart';
 part '../widgets/master_edit/logic_helpers.dart';

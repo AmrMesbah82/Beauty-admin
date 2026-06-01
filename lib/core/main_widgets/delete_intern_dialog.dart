@@ -8,6 +8,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
 import '../theme/app_font_style.dart';
+import 'package:beauty_admin/core/constants/color.dart';
 
 
 class DeleteInternDialog extends StatelessWidget {
@@ -66,7 +67,7 @@ class DeleteInternDialog extends StatelessWidget {
                   'This action cannot be undone.',
               textAlign: TextAlign.center,
               style: StyleText.fontSize14Weight400.copyWith(
-                color:  const Color(0xFF666666),
+                color:  ColorPick.draftColor,
                 height: 1.5,
               ),
             ),

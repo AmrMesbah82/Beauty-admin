@@ -280,7 +280,7 @@ class _PersonIllustrationPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final green = Paint()
-      ..color = const Color(0xFF008037);
+      ..color = ColorPick.activeColor;
     final skin = Paint()
       ..color = const Color(0xFFFFCC99);
     final dark = Paint()

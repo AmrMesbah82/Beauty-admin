@@ -110,7 +110,7 @@ class _PreviewBodyState extends State<_PreviewBody> {
                             child: Container(
                               height: 44.h,
                               decoration: BoxDecoration(
-                                color: const Color(0xFF797979),
+                                color: ColorPick.back,
                                 borderRadius: BorderRadius.circular(6.r),
                               ),
                               child: Center(

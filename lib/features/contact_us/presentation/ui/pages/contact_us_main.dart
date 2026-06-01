@@ -27,6 +27,7 @@ import 'contact_us_edit.dart';
 import 'contact_us_preview.dart';
 import 'dart:html' as html;
 import 'dart:ui_web' as ui_web;
+import 'package:beauty_admin/core/constants/color.dart';
 
 part '../widgets/contact_us_main/c.dart';
 

@@ -188,7 +188,7 @@ class _PreviewContent extends StatelessWidget {
       margin: EdgeInsets.symmetric(horizontal: isMobile ? 16 : 0),
       padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 14.h),
       decoration: BoxDecoration(
-        color: _C.downloadBg,
+        color: const Color(0xFFF5F5F5),
         borderRadius: BorderRadius.circular(12.r),
       ),
       child: LayoutBuilder(
@@ -273,7 +273,7 @@ class _PreviewContent extends StatelessWidget {
         : Container(
       height: isMobile ? 200 : 280,
       width: double.infinity,
-      color: _C.downloadBg,
+      color: const Color(0xFFF5F5F5),
       child: Center(
         child: Icon(
           Icons.phone_iphone,

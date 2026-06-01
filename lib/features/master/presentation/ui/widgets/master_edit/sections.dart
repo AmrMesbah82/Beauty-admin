@@ -313,7 +313,7 @@ extension _MasterEditSections on _MasterEditPageState {
             child: Container(
               height: 44.h,
               decoration: BoxDecoration(
-                color: Color(0xFF8A5C70),
+                color: ColorPick.preview,
                 borderRadius: BorderRadius.circular(6.r),
               ),
               child: Center(
@@ -403,7 +403,7 @@ extension _MasterEditSections on _MasterEditPageState {
             child: Container(
               height: 44.h,
               decoration: BoxDecoration(
-                color: const Color(0xFF797979),
+                color: ColorPick.back,
                 borderRadius: BorderRadius.circular(6.r),
               ),
               child: Center(

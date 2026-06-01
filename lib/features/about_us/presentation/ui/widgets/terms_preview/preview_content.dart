@@ -360,7 +360,7 @@ Widget _svgWidget({
       placeholderBuilder: (_) => SizedBox(
         width: width, height: height,
         child: const Center(child: CircularProgressIndicator(
-            color: Color(0xFF008037), strokeWidth: 2)),
+            color: ColorPick.activeColor, strokeWidth: 2)),
       ),
     );
   }

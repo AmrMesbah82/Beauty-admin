@@ -32,6 +32,7 @@ import '../../features/home/presentation/controller/lang_state.dart';
 import '../theme/app_font_style.dart';
 import '../theme/app_font_weight.dart';
 import '../theme/app_colors.dart';
+import 'package:beauty_admin/core/constants/color.dart';
 
 // ── Page registry ─────────────────────────────────────────────────────────────
 // Import your existing pages here
@@ -89,8 +90,6 @@ class _BP {
   static const double mobile = 768;
 }
 
-const Color _kFallbackPrimary = Color(0xFF008037);
-const Color _kFallbackFooterBg = Color(0xFFF5F5F5);
 
 List<FooterColumnModel> _syncedFooterColumns(HomePageModel model) {
   final navByRoute = <String, NavButtonModel>{
@@ -150,11 +149,11 @@ class AppFooter extends StatelessWidget {
 
         final Color primary = _hexColor(
           model.branding.primaryColor,
-          _kFallbackPrimary,
+          ColorPick.activeColor,
         );
         final Color footerBg = _hexColor(
           model.branding.headerFooterColor,
-          _kFallbackFooterBg,
+          const Color(0xFFF5F5F5),
         );
         final List<FooterColumnModel> columns = _syncedFooterColumns(model);
 

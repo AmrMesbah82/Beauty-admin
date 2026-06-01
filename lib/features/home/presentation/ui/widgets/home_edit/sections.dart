@@ -403,7 +403,7 @@ extension _HomeEditSections on _HomeEditPageState {
           child: Container(
             padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 7.h),
             decoration: BoxDecoration(
-                color: const Color(0xFF797979),
+                color: ColorPick.back,
                 borderRadius: BorderRadius.circular(4.r)),
             child: Row(mainAxisSize: MainAxisSize.min, children: [
               Icon(Icons.add, size: 14.sp, color: Colors.white),
@@ -427,7 +427,7 @@ extension _HomeEditSections on _HomeEditPageState {
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
       SizedBox(height: 15.h),
       if (colIndex > 0) ...[
-        Divider(color: _C.divider, height: 1),
+        Divider(color: const Color(0xFFE8E8E8), height: 1),
         SizedBox(height: 12.h),
       ],
       Row(

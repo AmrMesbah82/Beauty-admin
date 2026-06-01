@@ -79,7 +79,7 @@ extension _ContactUsEditLogic on _ContactUsCmsEditPageState {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
               content:         Text('Only SVG files are allowed'),
-              backgroundColor: _kRed,
+              backgroundColor: const Color(0xFFD32F2F),
               duration:        Duration(seconds: 2),
             ),
           );

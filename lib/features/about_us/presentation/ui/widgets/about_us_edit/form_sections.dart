@@ -249,7 +249,7 @@ extension _AboutEditFormSections on _AboutEditPageMasterState {
                     vertical: 6.h,
                   ),
                   decoration: BoxDecoration(
-                    color: _kRed,
+                    color: const Color(0xFFD32F2F),
                     borderRadius: BorderRadius.circular(6.r),
                   ),
                   child: Text(

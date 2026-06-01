@@ -14,6 +14,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 import 'custom_svg.dart';
+import 'package:beauty_admin/core/constants/color.dart';
 
 
 class CustomMultiSelectDropdown extends StatefulWidget {
@@ -139,7 +140,7 @@ class _CustomMultiSelectDropdownState
       height:  fieldHeight.h,
       padding: EdgeInsets.symmetric(horizontal: 8.w),
       decoration: BoxDecoration(
-        color:        widget.dropdownColor ?? const Color(0xFFF1F2ED),
+        color:        widget.dropdownColor ?? ColorPick.background,
         borderRadius: BorderRadius.circular(widget.borderRadius.r),
       ),
       child: Row(children: [
@@ -266,7 +267,7 @@ class _CustomMultiSelectDropdownState
                   padding: EdgeInsets.symmetric(horizontal: 8.w),
                   decoration: BoxDecoration(
                     color: widget.dropdownColor ??
-                        const Color(0xFFF1F2ED),
+                        ColorPick.background,
                     borderRadius:
                     BorderRadius.circular(widget.borderRadius.r),
                   ),

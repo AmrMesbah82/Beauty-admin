@@ -37,6 +37,7 @@ import '../../controller/about_us_state.dart';
 import 'about_us_preview.dart';
 import 'dart:html' as html;
 import 'dart:ui_web' as ui_web;
+import 'package:beauty_admin/core/constants/color.dart';
 
 part '../widgets/about_us_edit/value_item.dart';
 part '../widgets/about_us_edit/validation.dart';
@@ -50,12 +51,6 @@ String _svgBytesToDataUrl(Uint8List bytes) {
   return 'data:image/svg+xml;base64,$base64';
 }
 
-const Color _kGreen = Color(0xFFD16F9A);
-const Color _kGreenSolid = Color(0xFFD16F9A);
-const Color _kGreenLight = Color(0xFFE8F5EE);
-const Color _kRed = Color(0xFFD32F2F);
-const Color _kSurface = Color(0xFFFFFFFF);
-const Color _kBg = Color(0xFFF2F2F2);
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // PAGE
@@ -299,7 +294,7 @@ class _AboutEditPageMasterState extends State<AboutEditPageMaster> {
         final bool canPublish = _isFormValid && _hasChanges && !_isSaving;
 
         return Scaffold(
-          backgroundColor: const Color(0xFFF1F2ED),
+          backgroundColor: ColorPick.background,
           body: Stack(
             children: [
               SingleChildScrollView(
@@ -320,7 +315,7 @@ class _AboutEditPageMasterState extends State<AboutEditPageMaster> {
                         child: isLoading
                             ? const Center(
                                 child: CircularProgressIndicator(
-                                  color: _kGreenSolid,
+                                  color: const Color(0xFFD16F9A),
                                 ),
                               )
                             : _buildForm(canPublish),
@@ -346,7 +341,7 @@ class _AboutEditPageMasterState extends State<AboutEditPageMaster> {
         Text(
           'Editing About Us',
           style: StyleText.fontSize45Weight600.copyWith(
-            color: _kGreen,
+            color: const Color(0xFFD16F9A),
             fontWeight: FontWeight.w700,
           ),
         ),
@@ -457,7 +452,7 @@ class _AboutEditPageMasterState extends State<AboutEditPageMaster> {
             width: double.infinity,
             padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 10.h),
             decoration: BoxDecoration(
-              color: _kGreenSolid,
+              color: const Color(0xFFD16F9A),
               borderRadius: BorderRadius.circular(8.r),
             ),
             child: Row(

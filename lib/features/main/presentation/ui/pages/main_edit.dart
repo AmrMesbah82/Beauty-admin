@@ -36,6 +36,7 @@ import '../../../../home/presentation/controller/home_cubit.dart';
 import '../../../../home/presentation/controller/home_state.dart';
 import 'main_main.dart';
 import 'main_preview.dart';
+import 'package:beauty_admin/core/constants/color.dart';
 
 part '../widgets/main_edit/c.dart';
 part '../widgets/main_edit/header_item.dart';
@@ -294,7 +295,7 @@ class _HomeEditPageState extends State<HomeEditPage> {
                                                 milliseconds: 200),
                                             height: 44.h,
                                             decoration: BoxDecoration(
-                                              color: const Color(0xFF797979),
+                                              color: ColorPick.back,
                                               borderRadius:
                                                   BorderRadius.circular(6.r),
                                             ),

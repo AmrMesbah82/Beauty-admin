@@ -38,6 +38,7 @@ import '../../../../home/presentation/controller/home_state.dart';
 import '../../../data/models/overview_model.dart';
 import '../../controller/overview_cubit.dart';
 import '../../controller/overview_state.dart';
+import 'package:beauty_admin/core/constants/color.dart';
 
 part '../widgets/overview_preview/c.dart';
 part '../widgets/overview_preview/desktop_frame.dart';
@@ -183,7 +184,7 @@ class _OverviewPreviewPageState extends State<OverviewPreviewPage> {
                                 child: Container(
                                   height: 44.h,
                                   decoration: BoxDecoration(
-                                    color: const Color(0xFF797979),
+                                    color: ColorPick.back,
                                     borderRadius: BorderRadius.circular(6.r),
                                   ),
                                   child: Center(

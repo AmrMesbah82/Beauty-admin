@@ -41,7 +41,7 @@ class _TabletContentPanel extends StatelessWidget {
     return Container(
       padding: EdgeInsets.all(14.r),
       decoration: BoxDecoration(
-        color: _kSurface,
+        color: ColorPick.white,
         borderRadius: BorderRadius.circular(12.r),
       ),
       child: Column(

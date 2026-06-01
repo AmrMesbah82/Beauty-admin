@@ -67,7 +67,7 @@ Future<bool?> _confirm(BuildContext context) => showDialog<bool>(
             borderRadius: BorderRadius.circular(40.r),
           ),
           child: Icon(Icons.edit_note,
-              size: 40.sp, color: const Color(0xFF008037)),
+              size: 40.sp, color: ColorPick.activeColor),
         ),
         SizedBox(height: 16.h),
         Text(
@@ -109,7 +109,7 @@ Future<bool?> _confirm(BuildContext context) => showDialog<bool>(
                 child: ElevatedButton(
                   onPressed: () => Navigator.pop(context, true),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF008037),
+                    backgroundColor: ColorPick.activeColor,
                     shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(8.r)),
                   ),

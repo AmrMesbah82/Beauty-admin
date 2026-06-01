@@ -66,7 +66,7 @@ extension _ContactUsEditUiHelpers on _ContactUsCmsEditPageState {
             Expanded(
               child: _btn(
                 label: 'Preview',
-                color: const Color(0xFF8A5C70),
+                color: ColorPick.preview,
                 onTap: () => Navigator.push(
                   context,
                   MaterialPageRoute(
@@ -87,7 +87,7 @@ extension _ContactUsEditUiHelpers on _ContactUsCmsEditPageState {
             Expanded(
               child: _btn(
                 label: 'Discard',
-                color: const Color(0xFF797979),
+                color: ColorPick.back,
                 onTap: () => Navigator.pop(context),
               ),
             ),

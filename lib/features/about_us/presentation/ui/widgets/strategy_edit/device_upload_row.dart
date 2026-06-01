@@ -78,7 +78,7 @@ class _DeviceUploadRow extends StatelessWidget {
               space: 8.sp,
               width: 160.w,
               radius: 8.r,
-              color: _kGreenSolid,
+              color: const Color(0xFFD16F9A),
               image: "",
               widthImage: 16.w,
               heightImage: 16.h,
@@ -97,13 +97,13 @@ class _DeviceUploadRow extends StatelessWidget {
                   ),
                   child: Row(
                     children: [
-                      Icon(Icons.delete_outline, color: _kRed, size: 16.sp),
+                      Icon(Icons.delete_outline, color: const Color(0xFFD32F2F), size: 16.sp),
                       SizedBox(width: 4.w),
                       Text(
                         'Remove',
                         style: TextStyle(
                           fontSize: 12.sp,
-                          color: _kRed,
+                          color: const Color(0xFFD32F2F),
                         ),
                       ),
                     ],
@@ -120,7 +120,7 @@ class _DeviceUploadRow extends StatelessWidget {
             style: TextStyle(
               fontFamily: 'Cairo',
               fontSize: 11.sp,
-              color: _kRed,
+              color: const Color(0xFFD32F2F),
             ),
           ),
         ],

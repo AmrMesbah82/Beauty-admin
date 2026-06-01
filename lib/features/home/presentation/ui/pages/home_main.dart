@@ -32,6 +32,7 @@ import 'dart:ui_web' as ui_web;
 
 import 'package:intl/intl.dart';
 import 'dart:ui' as ui;
+import 'package:beauty_admin/core/constants/color.dart';
 
 part '../widgets/home_main/c.dart';
 part '../widgets/home_main/sections.dart';

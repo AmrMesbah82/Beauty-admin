@@ -185,7 +185,7 @@ class _UploadDialogState extends State<_UploadDialog> {
         width: double.infinity,
         height: 150.h,
         decoration: BoxDecoration(
-          color: lightMode ? const Color(0xFFF1F2ED) : AppColors.background,
+          color: lightMode ? ColorPick.background : AppColors.background,
           borderRadius: BorderRadius.circular(4.r),
           border: Border.all(
             color: Colors.grey.withValues(alpha: 0.3),

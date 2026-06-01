@@ -21,6 +21,7 @@ import '../../../../../core/theme/app_font_style.dart';
 
 import '../../../../home/presentation/controller/home_cubit.dart';
 import '../../../../home/presentation/controller/home_state.dart';
+import 'package:beauty_admin/core/constants/color.dart';
 
 part '../widgets/main_preview/c.dart';
 part '../widgets/main_preview/desktop_frame.dart';
@@ -127,7 +128,7 @@ class _HomePreviewPageState extends State<HomePreviewPage> {
                                 child: Container(
                                   height: 44.h,
                                   decoration: BoxDecoration(
-                                    color: const Color(0xFF797979),
+                                    color: ColorPick.back,
                                     borderRadius: BorderRadius.circular(6.r),
                                   ),
                                   child: Center(

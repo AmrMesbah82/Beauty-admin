@@ -37,6 +37,7 @@ import '../../controller/request_state.dart';
 import 'request_preview.dart';
 import 'dart:convert';
 import 'dart:ui_web' as ui_web;
+import 'package:beauty_admin/core/constants/color.dart';
 
 part '../widgets/request_edit/img.dart';
 part '../widgets/request_edit/q_local.dart';
@@ -161,7 +162,7 @@ class _RequestDemoEditPageState extends State<RequestDemoEditPage> {
                           Row(
                             children: [
                               Expanded(
-                                child: _btn('Preview', Color(0xFF8A5C70),
+                                child: _btn('Preview', ColorPick.preview,
                                     () => Navigator.push(context,
                                         MaterialPageRoute(builder: (_) => const RequestDemoPreviewPage()))),
                               ),

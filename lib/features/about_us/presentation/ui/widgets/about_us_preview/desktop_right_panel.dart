@@ -43,7 +43,7 @@ class _DesktopRightPanel extends StatelessWidget {
       height: double.infinity,
       padding: EdgeInsets.all(16.r),
       decoration: BoxDecoration(
-        color: _kSurface,
+        color: ColorPick.white,
         borderRadius: BorderRadius.circular(12.r),
       ),
       child: Row(

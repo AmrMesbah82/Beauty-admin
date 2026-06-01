@@ -55,7 +55,7 @@ class _NavIconUploadWidget extends StatelessWidget {
                       shape: BoxShape.circle,
                       color: const Color(0xFFEEEEEE),
                       border: errorText != null
-                          ? Border.all(color: _kRed, width: 2)
+                          ? Border.all(color: const Color(0xFFD32F2F), width: 2)
                           : null,
                     ),
                     child: hasImage
@@ -104,7 +104,7 @@ class _NavIconUploadWidget extends StatelessWidget {
                       ),
                     )
                         : Icon(Icons.add,
-                        color: errorText != null ? _kRed : Colors.grey[600],
+                        color: errorText != null ? const Color(0xFFD32F2F) : Colors.grey[600],
                         size: 28.sp),
                   ),
                   if (hasImage && onRemove != null)
@@ -118,7 +118,7 @@ class _NavIconUploadWidget extends StatelessWidget {
                           height: 20.h,
                           decoration: const BoxDecoration(
                             shape: BoxShape.circle,
-                            color: _kRed,
+                            color: const Color(0xFFD32F2F),
                           ),
                           child: Icon(
                             Icons.close,
@@ -136,7 +136,7 @@ class _NavIconUploadWidget extends StatelessWidget {
                         height: 24.h,
                         decoration: const BoxDecoration(
                             shape: BoxShape.circle,
-                            color: _kGreenSolid),
+                            color: const Color(0xFFD16F9A)),
                         child: Icon(Icons.edit,
                             color: Colors.white, size: 13.sp),
                       ),
@@ -153,7 +153,7 @@ class _NavIconUploadWidget extends StatelessWidget {
             style: TextStyle(
               fontFamily: 'Cairo',
               fontSize: 11.sp,
-              color: _kRed,
+              color: const Color(0xFFD32F2F),
             ),
           ),
         ],

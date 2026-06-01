@@ -28,6 +28,7 @@ import '../../../../../core/theme/app_font_style.dart';
 import '../../../data/models/contact_us_model_location.dart';
 import '../../controller/contact_us_location_cubit.dart';
 import '../../controller/contact_us_location_state.dart';
+import 'package:beauty_admin/core/constants/color.dart';
 
 part '../widgets/contact_us_preview/c.dart';
 part '../widgets/contact_us_preview/preview_const.dart';

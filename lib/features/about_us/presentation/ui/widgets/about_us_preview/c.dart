@@ -7,18 +7,6 @@
 /// Module: features › about_us › presentation › ui › widget › about_us_preview
 
 part of '../../pages/about_us_preview.dart';
-
-class _C {
-  static const Color primary = Color(0xFFD16F9A);
-  static const Color secondary = Color(0xFFE8F5EE);
-  static const Color sectionBg = Color(0xFFF5F5F5);
-  static const Color cardBg = Color(0xFFFFFFFF);
-  static const Color grey = Color(0xFF9E9E9E);
-  static const Color hintText = Color(0xFFAAAAAA);
-  static const Color labelText = Color(0xFF1A1A1A);
-  static const Color border = Color(0xFFE0E0E0);
-}
-
 Color _hoverTint(Color primary) => primary.withValues(alpha: 0.12);
 
 enum _PreviewDevice { desktop, tablet, mobile }

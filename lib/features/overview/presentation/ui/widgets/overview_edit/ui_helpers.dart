@@ -70,7 +70,7 @@ extension _OverviewEditUiHelpers on _OverviewEditPageState {
     onTap: onTap,
     child: Container(
       padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 7.h),
-      decoration: BoxDecoration(color: Color(0xFF797979), borderRadius: BorderRadius.circular(4.r)),
+      decoration: BoxDecoration(color: ColorPick.back, borderRadius: BorderRadius.circular(4.r)),
       child: Row(mainAxisSize: MainAxisSize.min, children: [
         Icon(Icons.add, size: 14.sp, color: Colors.white),
         SizedBox(width: 4.w),

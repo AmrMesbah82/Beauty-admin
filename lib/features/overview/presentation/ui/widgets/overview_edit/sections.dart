@@ -287,7 +287,7 @@ extension _OverviewEditSections on _OverviewEditPageState {
         },
         child: Container(
           height: 44.h,
-          decoration: BoxDecoration(color: Color(0xFF8A5C70), borderRadius: BorderRadius.circular(6.r)),
+          decoration: BoxDecoration(color: ColorPick.preview, borderRadius: BorderRadius.circular(6.r)),
           child: Center(child: Text('Preview', style: StyleText.fontSize14Weight600.copyWith(color: Colors.white))),
         ),
       ),
@@ -360,7 +360,7 @@ extension _OverviewEditSections on _OverviewEditPageState {
         },
         child: Container(
           height: 44.h,
-          decoration: BoxDecoration(color: Color(0xFF525252), borderRadius: BorderRadius.circular(6.r)),
+          decoration: BoxDecoration(color: ColorPick.saveForLater, borderRadius: BorderRadius.circular(6.r)),
           child: Center(child: Text('Save For Later', style: StyleText.fontSize14Weight600.copyWith(color: Colors.white))),
         ),
       ),

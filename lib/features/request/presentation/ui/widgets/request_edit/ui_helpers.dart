@@ -97,7 +97,7 @@ extension _RequestEditUiHelpers on _RequestDemoEditPageState {
     child: Container(
       padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 7.h),
       decoration: BoxDecoration(
-        color: Color(0xFF797979), borderRadius: BorderRadius.circular(4.r),
+        color: ColorPick.back, borderRadius: BorderRadius.circular(4.r),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,

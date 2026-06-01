@@ -36,6 +36,7 @@ import 'about_us_edit.dart';
 import 'about_us_preview.dart';
 import 'strategy_page/strategy_main.dart';
 import 'strategy_page/strategy_preview.dart';
+import 'package:beauty_admin/core/constants/color.dart';
 
 part '../widgets/about_us_main/c.dart';
 part '../widgets/about_us_main/widgets.dart';
