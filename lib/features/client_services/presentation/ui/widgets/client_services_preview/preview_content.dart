@@ -71,9 +71,9 @@ class _PreviewContent extends StatelessWidget {
         Container(
           width: width,
           height: height,
-          color: ColorPick.primary.withOpacity(0.12),
+          color: ColorPick.primary.withValues(alpha: 0.12),
           child: Icon(Icons.image_outlined,
-              color: ColorPick.primary.withOpacity(0.4), size: 36),
+              color: ColorPick.primary.withValues(alpha: 0.4), size: 36),
         );
 
     if (url.isEmpty) return ph;
@@ -278,7 +278,7 @@ class _PreviewContent extends StatelessWidget {
         child: Icon(
           Icons.phone_iphone,
           size: isMobile ? 40 : 60,
-          color: ColorPick.primary.withOpacity(0.4),
+          color: ColorPick.primary.withValues(alpha: 0.4),
         ),
       ),
     );

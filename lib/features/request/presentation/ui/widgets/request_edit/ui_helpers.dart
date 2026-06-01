@@ -152,7 +152,7 @@ extension _RequestEditUiHelpers on _RequestDemoEditPageState {
       content = Container(
         width: 50.w, height: 50.h,
         decoration: BoxDecoration(
-          color: _sub && picked.isEmpty ? ColorPick.red.withOpacity(0.1) : const Color(0xFFD9D9D9),
+          color: _sub && picked.isEmpty ? ColorPick.red.withValues(alpha: 0.1) : const Color(0xFFD9D9D9),
           shape: BoxShape.circle,
         ),
         child: Center(

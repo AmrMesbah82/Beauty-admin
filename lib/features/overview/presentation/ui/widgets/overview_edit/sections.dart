@@ -314,7 +314,7 @@ extension _OverviewEditSections on _OverviewEditPageState {
             child: Container(
               height: 44.h,
               decoration: BoxDecoration(
-                  color: canPublish ? ColorPick.primary : ColorPick.primary.withOpacity(0.35),
+                  color: canPublish ? ColorPick.primary : ColorPick.primary.withValues(alpha: 0.35),
                   borderRadius: BorderRadius.circular(6.r)),
               child: Center(child: Text('Publish', style: StyleText.fontSize14Weight600.copyWith(color: Colors.white))),
             ),

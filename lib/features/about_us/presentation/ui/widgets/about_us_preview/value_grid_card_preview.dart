@@ -86,14 +86,14 @@ class _ValueGridCardPreviewState extends State<_ValueGridCardPreview> {
             boxShadow: sel
                 ? [
               BoxShadow(
-                color: widget.primaryColor.withOpacity(0.28),
+                color: widget.primaryColor.withValues(alpha: 0.28),
                 blurRadius: 10,
                 offset: const Offset(0, 4),
               ),
             ]
                 : [],
             border: Border.all(
-              color: _hovered && !sel ? widget.primaryColor.withOpacity(0.3) : Colors.transparent,
+              color: _hovered && !sel ? widget.primaryColor.withValues(alpha: 0.3) : Colors.transparent,
               width: 1,
             ),
           ),

@@ -153,7 +153,7 @@ class _PreviewContentState extends State<_PreviewContent> {
                         height: 24,
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
-                          color: ColorPick.primary.withOpacity(0.15),
+                          color: ColorPick.primary.withValues(alpha: 0.15),
                         ),
                         child: Icon(
                           _isEnglish ? Icons.arrow_forward : Icons.arrow_back,
@@ -211,7 +211,7 @@ class _PreviewContentState extends State<_PreviewContent> {
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
                           border: Border.all(
-                            color: ColorPick.primary.withOpacity(0.2),
+                            color: ColorPick.primary.withValues(alpha: 0.2),
                             width: 2,
                           ),
                         ),
@@ -225,18 +225,18 @@ class _PreviewContentState extends State<_PreviewContent> {
                               fit: BoxFit.scaleDown,
                               placeholder: Icon(
                                 Icons.spa_outlined,
-                                color: ColorPick.primary.withOpacity(0.4),
+                                color: ColorPick.primary.withValues(alpha: 0.4),
                                 size: 28,
                               ),
                               errorWidget: Icon(
                                 Icons.spa_outlined,
-                                color: ColorPick.primary.withOpacity(0.4),
+                                color: ColorPick.primary.withValues(alpha: 0.4),
                                 size: 28,
                               ),
                             )
                                 : Icon(
                               Icons.spa_outlined,
-                              color: ColorPick.primary.withOpacity(0.4),
+                              color: ColorPick.primary.withValues(alpha: 0.4),
                               size: 28,
                             ),
                           ),
@@ -332,18 +332,18 @@ class _PreviewContentState extends State<_PreviewContent> {
                               height: size,
                               fit: BoxFit.cover,
                               placeholder: Container(
-                                color: ColorPick.primary.withOpacity(0.12),
+                                color: ColorPick.primary.withValues(alpha: 0.12),
                                 child: Icon(
                                   Icons.image_outlined,
-                                  color: ColorPick.primary.withOpacity(0.4),
+                                  color: ColorPick.primary.withValues(alpha: 0.4),
                                   size: 36,
                                 ),
                               ),
                               errorWidget: Container(
-                                color: ColorPick.primary.withOpacity(0.08),
+                                color: ColorPick.primary.withValues(alpha: 0.08),
                                 child: Icon(
                                   Icons.broken_image_outlined,
-                                  color: ColorPick.primary.withOpacity(0.3),
+                                  color: ColorPick.primary.withValues(alpha: 0.3),
                                 ),
                               ),
                             ),
@@ -371,7 +371,7 @@ class _PreviewContentState extends State<_PreviewContent> {
                       borderRadius: BorderRadius.circular(4),
                       color: active
                           ? ColorPick.primary
-                          : ColorPick.primary.withOpacity(0.3),
+                          : ColorPick.primary.withValues(alpha: 0.3),
                     ),
                   ),
                 );
@@ -432,7 +432,7 @@ class _PreviewContentState extends State<_PreviewContent> {
                     border: Border.all(color: Colors.grey.shade200),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.04),
+                        color: Colors.black.withValues(alpha: 0.04),
                         blurRadius: 12,
                         offset: const Offset(0, 4),
                       )
@@ -454,7 +454,7 @@ class _PreviewContentState extends State<_PreviewContent> {
                               placeholder: CircleAvatar(
                                 radius: 24,
                                 backgroundColor:
-                                ColorPick.primary.withOpacity(0.15),
+                                ColorPick.primary.withValues(alpha: 0.15),
                                 child: Icon(
                                   Icons.person_outline,
                                   color: ColorPick.primary,
@@ -464,7 +464,7 @@ class _PreviewContentState extends State<_PreviewContent> {
                               errorWidget: CircleAvatar(
                                 radius: 24,
                                 backgroundColor:
-                                ColorPick.primary.withOpacity(0.15),
+                                ColorPick.primary.withValues(alpha: 0.15),
                                 child: Icon(
                                   Icons.person_outline,
                                   color: ColorPick.primary,
@@ -475,7 +475,7 @@ class _PreviewContentState extends State<_PreviewContent> {
                                 : CircleAvatar(
                               radius: 24,
                               backgroundColor:
-                              ColorPick.primary.withOpacity(0.15),
+                              ColorPick.primary.withValues(alpha: 0.15),
                               child: Icon(
                                 Icons.person_outline,
                                 color: ColorPick.primary,
@@ -508,7 +508,7 @@ class _PreviewContentState extends State<_PreviewContent> {
                         style: TextStyle(
                           fontSize: 12,
                           height: 1.6,
-                          color: AppColors.text.withOpacity(0.75),
+                          color: AppColors.text.withValues(alpha: 0.75),
                         ),
                         maxLines: 6,
                         overflow: TextOverflow.ellipsis,

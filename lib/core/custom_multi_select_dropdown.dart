@@ -282,10 +282,10 @@ class _CustomMultiSelectDropdownState
                     borderRadius:
                     BorderRadius.circular(widget.borderRadius.r),
                     border: Border.all(
-                        color: Colors.grey.withOpacity(0.3)),
+                        color: Colors.grey.withValues(alpha: 0.3)),
                     boxShadow: [
                       BoxShadow(
-                        color:      Colors.black.withOpacity(0.1),
+                        color:      Colors.black.withValues(alpha: 0.1),
                         blurRadius: 8,
                         offset:     const Offset(0, 2),
                       ),
@@ -306,7 +306,7 @@ class _CustomMultiSelectDropdownState
                   overlayColor:
                   MaterialStateProperty.resolveWith<Color?>((states) {
                     if (states.contains(MaterialState.hovered)) {
-                      return checkColor.withOpacity(0.08);
+                      return checkColor.withValues(alpha: 0.08);
                     }
                     return null;
                   }),

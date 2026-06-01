@@ -19,7 +19,7 @@ class _C {
   static const Color border = Color(0xFFE0E0E0);
 }
 
-Color _hoverTint(Color primary) => primary.withOpacity(0.12);
+Color _hoverTint(Color primary) => primary.withValues(alpha: 0.12);
 
 enum _PreviewDevice { desktop, tablet, mobile }
 

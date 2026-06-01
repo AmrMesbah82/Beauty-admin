@@ -33,9 +33,9 @@ class _PreviewContent extends StatelessWidget {
     final placeholder = Container(
       width: width,
       height: height,
-      color: ColorPick.primary.withOpacity(0.08),
+      color: ColorPick.primary.withValues(alpha: 0.08),
       child: Icon(Icons.image_outlined,
-          color: ColorPick.primary.withOpacity(0.35), size: 28),
+          color: ColorPick.primary.withValues(alpha: 0.35), size: 28),
     );
 
     if (url.isEmpty) return placeholder;
@@ -163,7 +163,7 @@ class _PreviewContent extends StatelessWidget {
                           height: 22,
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
-                            color: ColorPick.primary.withOpacity(0.15),
+                            color: ColorPick.primary.withValues(alpha: 0.15),
                           ),
                           child: Icon(
                             isEnglish

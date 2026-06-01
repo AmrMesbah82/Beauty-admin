@@ -24,7 +24,7 @@ Future<void> showUploadDialog({
 }) {
   return showDialog(
     context: context,
-    barrierColor: Colors.black.withOpacity(0.4),
+    barrierColor: Colors.black.withValues(alpha: 0.4),
     builder: (_) => _UploadDialog(
       dialogTitle: dialogTitle,
       titleFieldLabel: titleFieldLabel,
@@ -188,7 +188,7 @@ class _UploadDialogState extends State<_UploadDialog> {
           color: lightMode ? const Color(0xFFF1F2ED) : AppColors.background,
           borderRadius: BorderRadius.circular(4.r),
           border: Border.all(
-            color: Colors.grey.withOpacity(0.3),
+            color: Colors.grey.withValues(alpha: 0.3),
             width: 1,
           ),
         ),

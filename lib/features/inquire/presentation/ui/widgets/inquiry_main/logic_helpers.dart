@@ -142,7 +142,7 @@ extension _InquiryMainLogic on _InquiryMainPageState {
           child: Column(mainAxisSize: MainAxisSize.min, children: [
             Container(
               width: 64.sp, height: 64.sp,
-              decoration: BoxDecoration(color: ColorPick.primary.withOpacity(0.1), shape: BoxShape.circle),
+              decoration: BoxDecoration(color: ColorPick.primary.withValues(alpha: 0.1), shape: BoxShape.circle),
               child: Icon(Icons.check_circle, color: ColorPick.primary, size: 40.sp),
             ),
             SizedBox(height: 16.h),

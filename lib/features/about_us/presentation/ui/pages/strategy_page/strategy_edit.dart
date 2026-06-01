@@ -891,7 +891,7 @@ class _StrategyEditPageState extends State<StrategyEditPage> {
               Container(
                 padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 4.h),
                 decoration: BoxDecoration(
-                  color: _kDraftBadge.withOpacity(0.15),
+                  color: _kDraftBadge.withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(4.r),
                 ),
                 child: Text(
@@ -1215,7 +1215,7 @@ class _StrategyEditPageState extends State<StrategyEditPage> {
       Expanded(
         child: _btn(
           label: 'Preview',
-          color: const Color(0xFFD16F9A).withOpacity(.5),
+          color: const Color(0xFFD16F9A).withValues(alpha: .5),
           onTap: _onPreview,
         ),
       ),
@@ -1227,7 +1227,7 @@ class _StrategyEditPageState extends State<StrategyEditPage> {
             opacity: canPublish ? 1.0 : 0.6,
             child: _btn(
               label: 'Publish',
-              color: canPublish ? _kGreenSolid : _kGreenSolid.withOpacity(0.35),
+              color: canPublish ? _kGreenSolid : _kGreenSolid.withValues(alpha: 0.35),
               onTap: () {
                 if (!canPublish) {
                   setState(() => _submitted = true);

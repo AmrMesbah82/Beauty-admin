@@ -115,7 +115,7 @@ class _PreviewContentState extends State<_PreviewContent> {
             Text(
               isEnglish ? 'Legal' : 'قانوني',
               style: TextStyle(
-                color:      Colors.white.withOpacity(0.65),
+                color:      Colors.white.withValues(alpha: 0.65),
                 fontSize:   _isMobileView ? 11 : 13,
                 fontWeight: FontWeight.w500,
                 letterSpacing: 1.5,
@@ -152,7 +152,7 @@ class _PreviewContentState extends State<_PreviewContent> {
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-              color:      Colors.black.withOpacity(0.05),
+              color:      Colors.black.withValues(alpha: 0.05),
               blurRadius: 10,
               offset:     const Offset(0, 2))
         ],

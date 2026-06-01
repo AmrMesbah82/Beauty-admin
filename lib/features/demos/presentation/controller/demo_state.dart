@@ -24,8 +24,7 @@ class RequestDemoLoading extends RequestDemoState {}
 
 class RequestDemoError extends RequestDemoState {
   final String message;
-  final List<RequestDemoModel>? lastItems;
-  RequestDemoError(this.message, {this.lastItems});
+  RequestDemoError(this.message);
 }
 
 // ─── List / Main page ────────────────────────────────────────────────────────

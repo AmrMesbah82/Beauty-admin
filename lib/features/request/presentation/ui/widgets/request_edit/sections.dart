@@ -146,7 +146,7 @@ extension _RequestEditSections on _RequestDemoEditPageState {
                       width: 38.sp, height: 22.sp, padding: 3.sp,
                       borderRadius: 20.sp, toggleSize: 16.sp,
                       activeColor: ColorPick.primary,
-                      inactiveColor: Colors.grey.withOpacity(.16),
+                      inactiveColor: Colors.grey.withValues(alpha: .16),
                       value: q.required,
                       onToggle: (v) => setState(() => q.required = v),
                     ),

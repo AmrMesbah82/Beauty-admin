@@ -38,7 +38,7 @@ class _ColorWheelOverlayState extends State<_ColorWheelOverlay> {
         child: GestureDetector(
           onTap: widget.onClose,
           behavior: HitTestBehavior.translucent,
-          child: Container(color: Colors.black.withOpacity(0.3)),
+          child: Container(color: Colors.black.withValues(alpha: 0.3)),
         ),
       ),
       Center(
@@ -58,7 +58,7 @@ class _ColorWheelOverlayState extends State<_ColorWheelOverlay> {
                   borderRadius: BorderRadius.circular(12.r),
                   boxShadow: [
                     BoxShadow(
-                        color: Colors.black.withOpacity(.2),
+                        color: Colors.black.withValues(alpha: .2),
                         blurRadius: 24,
                         offset: const Offset(0, 8)),
                   ],

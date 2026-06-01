@@ -24,7 +24,7 @@ Future<void> showPublishConfirmDialog({
   return showDialog(
     context: context,
     barrierDismissible: false, // prevent accidental dismiss while saving
-    barrierColor: Colors.black.withOpacity(0.4),
+    barrierColor: Colors.black.withValues(alpha: 0.4),
     builder: (_) => _PublishConfirmDialog(
       title: title,
       subtitle: subtitle,
@@ -125,7 +125,7 @@ class _PublishConfirmDialogState extends State<_PublishConfirmDialog> {
                 child: Text(
                   widget.subtitle,
                   style: StyleText.fontSize13Weight400.copyWith(
-                    color: AppColors.text.withOpacity(0.6),
+                    color: AppColors.text.withValues(alpha: 0.6),
                   ),
                 ),
               ),

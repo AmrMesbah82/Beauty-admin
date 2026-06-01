@@ -225,7 +225,7 @@ class _CustomDropdownFormFieldInvMasterState
                       borderRadius:
                       BorderRadius.circular(4.r),
                       border: Border.all(
-                        color: widget.primaryColor.withOpacity(0.3),
+                        color: widget.primaryColor.withValues(alpha: 0.3),
                       ),
                     ),
                     scrollbarTheme: ScrollbarThemeData(
@@ -244,11 +244,11 @@ class _CustomDropdownFormFieldInvMasterState
                     MaterialStateProperty.resolveWith<Color?>(
                             (states) {
                           if (states.contains(MaterialState.hovered)) {
-                            return widget.primaryColor.withOpacity(0.12);
+                            return widget.primaryColor.withValues(alpha: 0.12);
                           }
                           if (states.contains(MaterialState.focused) ||
                               states.contains(MaterialState.selected)) {
-                            return widget.primaryColor.withOpacity(0.08);
+                            return widget.primaryColor.withValues(alpha: 0.08);
                           }
                           return null;
                         }),

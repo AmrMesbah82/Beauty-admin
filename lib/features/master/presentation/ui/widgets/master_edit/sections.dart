@@ -30,7 +30,7 @@ extension _MasterEditSections on _MasterEditPageState {
                   borderRadius: 20.sp,
                   toggleSize: 16.sp,
                   activeColor: ColorPick.primary,
-                  inactiveColor: Colors.grey.withOpacity(.16),
+                  inactiveColor: Colors.grey.withValues(alpha: .16),
                   value: _headerVisibility,
                   onToggle: (val) => setState(() => _headerVisibility = val),
                 ),
@@ -153,7 +153,7 @@ extension _MasterEditSections on _MasterEditPageState {
                   borderRadius: 20.sp,
                   toggleSize: 16.sp,
                   activeColor: ColorPick.primary,
-                  inactiveColor: Colors.grey.withOpacity(.16),
+                  inactiveColor: Colors.grey.withValues(alpha: .16),
                   value: _footerVisibility,
                   onToggle: (val) => setState(() => _footerVisibility = val),
                 ),
@@ -356,13 +356,13 @@ extension _MasterEditSections on _MasterEditPageState {
                   duration: const Duration(milliseconds: 200),
                   height: 44.h,
                   decoration: BoxDecoration(
-                    color: canPublish ? ColorPick.primary : ColorPick.primary.withOpacity(0.35),
+                    color: canPublish ? ColorPick.primary : ColorPick.primary.withValues(alpha: 0.35),
                     borderRadius: BorderRadius.circular(6.r),
                   ),
                   child: Center(
                     child: Text('Publish',
                         style: StyleText.fontSize14Weight600.copyWith(
-                          color: Colors.white.withOpacity(canPublish ? 1.0 : 0.55),
+                          color: Colors.white.withValues(alpha: canPublish ? 1.0 : 0.55),
                         )),
                   ),
                 ),

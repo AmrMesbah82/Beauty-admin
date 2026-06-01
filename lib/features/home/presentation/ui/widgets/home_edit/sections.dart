@@ -209,7 +209,7 @@ extension _HomeEditSections on _HomeEditPageState {
                         padding: 3.sp, borderRadius: 20.sp,
                         toggleSize: 16.sp,
                         activeColor: ColorPick.primary,
-                        inactiveColor: Colors.grey.withOpacity(.16),
+                        inactiveColor: Colors.grey.withValues(alpha: .16),
                         value: _navStatus[index],
                         onToggle: (val) {
                           setState(() => _navStatus[index] = val);
@@ -333,7 +333,7 @@ extension _HomeEditSections on _HomeEditPageState {
                 padding: 3.sp, borderRadius: 20.sp,
                 toggleSize: 16.sp,
                 activeColor: ColorPick.primary,
-                inactiveColor: Colors.grey.withOpacity(.16),
+                inactiveColor: Colors.grey.withValues(alpha: .16),
                 value: item.status,
                 onToggle: (val) {
                   setState(() => item.status = val);

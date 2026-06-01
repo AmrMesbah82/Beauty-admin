@@ -392,7 +392,7 @@ extension _HomeMainSections on _HomeMainPageState {
                   decoration: BoxDecoration(
                     color: link.visibility
                         ? ColorPick.primary
-                        : Colors.grey.withOpacity(0.3),
+                        : Colors.grey.withValues(alpha: 0.3),
                     borderRadius: BorderRadius.circular(10.r),
                   ),
                   child: Align(
@@ -521,7 +521,7 @@ extension _HomeMainSections on _HomeMainPageState {
                     decoration: BoxDecoration(
                       color: status
                           ? ColorPick.primary
-                          : Colors.grey.withOpacity(0.3),
+                          : Colors.grey.withValues(alpha: 0.3),
                       borderRadius: BorderRadius.circular(10.r),
                     ),
                     child: Align(

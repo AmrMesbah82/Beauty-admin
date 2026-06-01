@@ -664,7 +664,7 @@ extension _RequestDemoMainSections on _RequestDemoMainPageState {
     if (n == 0) return [];
     return List.generate(n, (i) {
       final opacity = 1.0 - (i * 0.15).clamp(0.0, 0.6);
-      return ColorPick.primary.withOpacity(opacity);
+      return ColorPick.primary.withValues(alpha: opacity);
     });
   }
 

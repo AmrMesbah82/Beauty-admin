@@ -216,7 +216,7 @@ class _MasterEditPageState extends State<MasterEditPage> {
                                   padding: EdgeInsets.symmetric(
                                       horizontal: 10.w, vertical: 4.h),
                                   decoration: BoxDecoration(
-                                    color: ColorPick.draftColor.withOpacity(0.15),
+                                    color: ColorPick.draftColor.withValues(alpha: 0.15),
                                     borderRadius: BorderRadius.circular(4.r),
                                   ),
                                   child: Text(

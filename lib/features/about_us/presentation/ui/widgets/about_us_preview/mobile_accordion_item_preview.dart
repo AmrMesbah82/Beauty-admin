@@ -52,7 +52,7 @@ class _MobileAccordionItemPreviewState extends State<_MobileAccordionItemPreview
         borderRadius: BorderRadius.circular(12.r),
         border: Border.all(
           color: _hovered && !widget.isExpanded
-              ? widget.primaryColor.withOpacity(0.25)
+              ? widget.primaryColor.withValues(alpha: 0.25)
               : Colors.transparent,
           width: 1,
         ),
@@ -116,7 +116,7 @@ class _MobileAccordionItemPreviewState extends State<_MobileAccordionItemPreview
                       decoration: BoxDecoration(
                         color: widget.isExpanded
                             ? widget.primaryColor
-                            : widget.primaryColor.withOpacity(0.15),
+                            : widget.primaryColor.withValues(alpha: 0.15),
                         borderRadius: BorderRadius.circular(6.r),
                       ),
                       child: Icon(

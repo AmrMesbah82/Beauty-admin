@@ -51,7 +51,7 @@ class _TabletTabItemState extends State<_TabletTabItem> {
             border: Border.all(
               color: widget.isSelected
                   ? widget.primaryColor
-                  : (_hovered ? widget.primaryColor.withOpacity(0.3) : _kDivider),
+                  : (_hovered ? widget.primaryColor.withValues(alpha: 0.3) : _kDivider),
             ),
           ),
           child: Row(

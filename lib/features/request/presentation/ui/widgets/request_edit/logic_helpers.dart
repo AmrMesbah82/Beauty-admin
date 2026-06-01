@@ -170,7 +170,7 @@ extension _RequestEditLogic on _RequestDemoEditPageState {
                   style: StyleText.fontSize16Weight600.copyWith(color: AppColors.text)),
               SizedBox(height: 8.h),
               Text(message, textAlign: TextAlign.center,
-                  style: StyleText.fontSize12Weight400.copyWith(color: AppColors.text.withOpacity(0.6))),
+                  style: StyleText.fontSize12Weight400.copyWith(color: AppColors.text.withValues(alpha: 0.6))),
               SizedBox(height: 20.h),
               GestureDetector(
                 onTap: () => Navigator.of(ctx).pop(),
@@ -254,7 +254,7 @@ extension _RequestEditLogic on _RequestDemoEditPageState {
                 constraints: BoxConstraints(maxHeight: 300.h),
                 child: SingleChildScrollView(
                   child: Text(errorMessage, textAlign: TextAlign.left,
-                      style: StyleText.fontSize12Weight400.copyWith(color: AppColors.text.withOpacity(0.8))),
+                      style: StyleText.fontSize12Weight400.copyWith(color: AppColors.text.withValues(alpha: 0.8))),
                 ),
               ),
               SizedBox(height: 20.h),
@@ -340,7 +340,7 @@ extension _RequestEditLogic on _RequestDemoEditPageState {
                       style: StyleText.fontSize16Weight600.copyWith(color: AppColors.text)),
                   SizedBox(height: 8.h),
                   Text('Your changes have been published successfully', textAlign: TextAlign.center,
-                      style: StyleText.fontSize12Weight400.copyWith(color: AppColors.text.withOpacity(0.6))),
+                      style: StyleText.fontSize12Weight400.copyWith(color: AppColors.text.withValues(alpha: 0.6))),
                   SizedBox(height: 20.h),
                   GestureDetector(
                     onTap: () {
@@ -383,7 +383,7 @@ extension _RequestEditLogic on _RequestDemoEditPageState {
                       style: StyleText.fontSize16Weight600.copyWith(color: AppColors.text)),
                   SizedBox(height: 8.h),
                   Text('An error occurred: ${e.toString()}', textAlign: TextAlign.center,
-                      style: StyleText.fontSize12Weight400.copyWith(color: AppColors.text.withOpacity(0.6))),
+                      style: StyleText.fontSize12Weight400.copyWith(color: AppColors.text.withValues(alpha: 0.6))),
                   SizedBox(height: 20.h),
                   GestureDetector(
                     onTap: () => Navigator.of(ctx).pop(),

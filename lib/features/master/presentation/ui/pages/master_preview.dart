@@ -213,7 +213,7 @@ class _MasterPreviewPageState extends State<MasterPreviewPage> {
                                     height: 44.h,
                                     decoration: BoxDecoration(
                                       color: _isSaving
-                                          ? ColorPick.primary.withOpacity(0.5)
+                                          ? ColorPick.primary.withValues(alpha: 0.5)
                                           : ColorPick.primary,
                                       borderRadius: BorderRadius.circular(6.r),
                                     ),
@@ -247,7 +247,7 @@ class _MasterPreviewPageState extends State<MasterPreviewPage> {
             // ── Full-screen saving overlay ────────────────────────────
             if (_isSaving)
               Container(
-                color: Colors.black.withOpacity(0.35),
+                color: Colors.black.withValues(alpha: 0.35),
                 child: const Center(
                     child: CircularProgressIndicator(color: ColorPick.primary)),
               ),

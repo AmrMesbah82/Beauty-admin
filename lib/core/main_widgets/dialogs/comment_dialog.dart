@@ -26,7 +26,7 @@ Future<void> showCommentDialog({
 }) {
   return showDialog(
     context: context,
-    barrierColor: Colors.black.withOpacity(0.4),
+    barrierColor: Colors.black.withValues(alpha: 0.4),
     builder: (_) => _CommentDialog(
       title: title,
       fieldLabel: fieldLabel,

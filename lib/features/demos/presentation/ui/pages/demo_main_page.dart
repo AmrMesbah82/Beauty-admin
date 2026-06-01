@@ -265,7 +265,7 @@ class _RequestDemoMainPageState extends State<RequestDemoMainPage> {
             Container(
               width: 64.sp, height: 64.sp,
               decoration: BoxDecoration(
-                  color: ColorPick.primary.withOpacity(0.1),
+                  color: ColorPick.primary.withValues(alpha: 0.1),
                   shape: BoxShape.circle),
               child: Icon(Icons.check_circle,
                   color: ColorPick.primary, size: 40.sp),
@@ -476,7 +476,7 @@ class _RequestDemoMainPageState extends State<RequestDemoMainPage> {
                                     Colors.grey.shade400,
                                     Colors.grey.shade300,
                                     ColorPick.primary,
-                                    ColorPick.primary.withOpacity(0.7),
+                                    ColorPick.primary.withValues(alpha: 0.7),
                                   ],
                                 )),
                           ),
@@ -501,8 +501,8 @@ class _RequestDemoMainPageState extends State<RequestDemoMainPage> {
                                   counts: noEmployeesCounts,
                                   colors: [
                                     ColorPick.primary,
-                                    ColorPick.primary.withOpacity(0.7),
-                                    ColorPick.primary.withOpacity(0.5),
+                                    ColorPick.primary.withValues(alpha: 0.7),
+                                    ColorPick.primary.withValues(alpha: 0.5),
                                     Colors.grey.shade400,
                                     Colors.grey.shade300,
                                   ],

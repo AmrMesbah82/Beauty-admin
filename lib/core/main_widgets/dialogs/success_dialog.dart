@@ -21,7 +21,7 @@ Future<void> showSuccessDialog({
 }) {
   return showDialog(
     context: context,
-    barrierColor: Colors.black.withOpacity(0.4),
+    barrierColor: Colors.black.withValues(alpha: 0.4),
     builder: (_) => _SuccessDialog(
       title: title,
       subtitle: subtitle,
@@ -70,7 +70,7 @@ class _SuccessDialog extends StatelessWidget {
             subtitle,
             textAlign: TextAlign.center,
             style: StyleText.fontSize12Weight400.copyWith(
-              color: AppColors.text.withOpacity(0.6),
+              color: AppColors.text.withValues(alpha: 0.6),
             ),
           ),
           SizedBox(height: 24.h),

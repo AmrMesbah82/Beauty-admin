@@ -103,7 +103,7 @@ extension _InquiryMainCharts on _InquiryMainPageState {
               ClipRRect(
                 borderRadius: BorderRadius.circular(4.r),
                 child: Column(mainAxisSize: MainAxisSize.min, children: [
-                  Container(height: emptyH.h, color: ColorPick.primary.withOpacity(0.3)),
+                  Container(height: emptyH.h, color: ColorPick.primary.withValues(alpha: 0.3)),
                   Container(height: fillH.h,  color: ColorPick.primary),
                 ]),
               ),

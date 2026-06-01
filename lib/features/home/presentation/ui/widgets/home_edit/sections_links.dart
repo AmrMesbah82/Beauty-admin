@@ -233,7 +233,7 @@ extension _HomeEditSectionsLinks on _HomeEditPageState {
               padding: 3.sp, borderRadius: 20.sp,
               toggleSize: 16.sp,
               activeColor: ColorPick.primary,
-              inactiveColor: Colors.grey.withOpacity(.16),
+              inactiveColor: Colors.grey.withValues(alpha: .16),
               value: _links[i].visibility,
               onToggle: (val) {
                 setState(() => _links[i].visibility = val);
@@ -365,7 +365,7 @@ extension _HomeEditSectionsLinks on _HomeEditPageState {
           child: Container(
             height: 44.h,
             decoration: BoxDecoration(
-              color: ColorPick.primary.withOpacity(0.5),
+              color: ColorPick.primary.withValues(alpha: 0.5),
               borderRadius: BorderRadius.circular(6.r),
             ),
             child: Center(
@@ -406,7 +406,7 @@ extension _HomeEditSectionsLinks on _HomeEditPageState {
             decoration: BoxDecoration(
               color: canPublish
                   ? ColorPick.primary
-                  : ColorPick.primary.withOpacity(0.5),
+                  : ColorPick.primary.withValues(alpha: 0.5),
               borderRadius: BorderRadius.circular(6.r),
             ),
             child: Center(

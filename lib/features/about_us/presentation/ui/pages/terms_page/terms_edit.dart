@@ -725,7 +725,7 @@ class _TermsEditPageState extends State<TermsEditPage> {
                 width: 32.w,
                 height: 32.h,
                 decoration: BoxDecoration(
-                  color: _kRed.withOpacity(0.1),
+                  color: _kRed.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(8.r),
                 ),
                 child: Icon(
@@ -755,7 +755,7 @@ class _TermsEditPageState extends State<TermsEditPage> {
                   height: 28.h,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: _kRed.withOpacity(0.9),
+                    color: _kRed.withValues(alpha: 0.9),
                   ),
                   child: Icon(
                     Icons.remove,

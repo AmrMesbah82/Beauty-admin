@@ -339,13 +339,13 @@ class _FooterMobile extends StatelessWidget {
           Row(
             children: [
               Expanded(
-                child: Divider(color: primary.withOpacity(0.5), thickness: 1),
+                child: Divider(color: primary.withValues(alpha: 0.5), thickness: 1),
               ),
               SizedBox(width: 10.w),
               ..._socialIconsRaw(model.socialLinks, primary),
               SizedBox(width: 10.w),
               Expanded(
-                child: Divider(color: primary.withOpacity(0.5), thickness: 1),
+                child: Divider(color: primary.withValues(alpha: 0.5), thickness: 1),
               ),
             ],
           ),
@@ -441,7 +441,7 @@ class _DownloadAppRow extends StatelessWidget {
               width: iconSize + 8.w,
               height: iconSize + 8.w,
               decoration: BoxDecoration(
-                border: Border.all(color: primary.withOpacity(0.3)),
+                border: Border.all(color: primary.withValues(alpha: 0.3)),
                 borderRadius: BorderRadius.circular(6.r),
               ),
               child: Center(
@@ -481,7 +481,7 @@ class _DownloadAppRow extends StatelessWidget {
               width: iconSize + 8.w,
               height: iconSize + 8.w,
               decoration: BoxDecoration(
-                border: Border.all(color: primary.withOpacity(0.3)),
+                border: Border.all(color: primary.withValues(alpha: 0.3)),
                 borderRadius: BorderRadius.circular(6.r),
               ),
               child: Center(
